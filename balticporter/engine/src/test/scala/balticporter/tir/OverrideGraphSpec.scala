@@ -141,7 +141,7 @@ class OverrideGraphSpec extends munit.FunSuite:
   test("…and a parent whose surface is NOT closed still anchors — the default is knowledge, not optimism") {
     // `java.util.Comparator`'s default methods grew across releases, so it is deliberately absent
     // from `jdkPlatform`: an incomplete entry would turn a counted over-refusal into a silent
-    // under-refusal, which is the trade DESIGN.md §8.5 chose against.
+    // under-refusal, which is the trade the engine chose against.
     assert(!ExternalSurface.default.isKnown("java.util.Comparator"))
     val (p, g) = graphOf(
       """
@@ -158,8 +158,8 @@ class OverrideGraphSpec extends munit.FunSuite:
     // An enum's one unparsed ancestor is `java.lang.Enum`, whose surface is CLOSED harder than any
     // interface's in `jdkPlatform` (JLS 8.1.4 forbids naming it as a direct superclass), so stating
     // it here is admissible on this map's own contract and would lift these anchors. It is refused
-    // anyway, with a number: `ENGINE-LIMITS.md` CT10 measured 32 -> 41 errors on sge-visui, because
-    // the anchor was MASKING the enum-constructor clause rather than causing it.
+    // anyway, because the anchor was MASKING the enum-constructor clause rather than causing it,
+    // and lifting it raised the port's error count.
     assert(!ExternalSurface.default.isKnown("java.lang.Enum"))
     val (p, g) = graphOf(
       """
@@ -195,7 +195,7 @@ class OverrideGraphSpec extends munit.FunSuite:
     assert(!c.isAnchored, c.externalAnchors.toString)
     assertEquals(fqns(p, c.members), Set("Text#getBundle"))
     // …and the PUBLIC sibling in the same enum still anchors, so the narrowing is the modifier and
-    // not the type: an over-refusal lifted for everything would be CT10's measured dead end.
+    // not the type: an over-refusal lifted for everything is a measured dead end.
     assert(g.closureOf(sym(p, "Text#get")).isAnchored)
   }
 
@@ -282,7 +282,6 @@ class OverrideGraphSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
   // A GENERIC PARENT, INSTANTIATED — the edge a descriptor comparison cannot see
-  // (ENGINE-LIMITS.md C16)
   // -------------------------------------------------------------------------
 
   test("an override across a GENERIC parent instantiated at a concrete argument IS an edge") {

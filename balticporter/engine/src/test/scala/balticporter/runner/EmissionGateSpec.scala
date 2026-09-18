@@ -6,7 +6,7 @@ import balticporter.tir.*
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** THE EMISSION GATE (`DESIGN.md` §6.4) — a port with an OPEN marker does not get written. */
+/** THE EMISSION GATE — a port with an OPEN marker does not get written. */
 class EmissionGateSpec extends munit.FunSuite:
 
   private def java(dir: Path, rel: String, src: String): Unit =
@@ -37,7 +37,7 @@ class EmissionGateSpec extends munit.FunSuite:
     )
     (root, src)
 
-  /** mints an OPEN marker at `member`'s body — standing in for a frontend refusal point, which is what §6.5 adopts first and which no fixture Java can reach on demand.
+  /** mints an OPEN marker at `member`'s body — standing in for a frontend refusal point that no fixture Java can reach on demand.
     */
   private class Mint(member: String = "twice") extends Phase:
     def name:                                                       String      = "test/mint"
@@ -84,8 +84,8 @@ class EmissionGateSpec extends munit.FunSuite:
     val e           = intercept[RuntimeException](port.execute())
     assert(e.getMessage.contains("EMISSION REFUSED"), e.getMessage)
     assert(e.getMessage.contains("1 open unportability marker(s)"), e.getMessage)
-    // the message carries the §1 classification of the fix, because an error an agent cannot
-    // classify costs it a full investigation (§4.45).
+    // the message carries the universal/configured/library-rule classification of the fix,
+    // because an error an agent cannot classify costs it a full investigation.
     assert(e.getMessage.contains("engine (true of every Java program):"), e.getMessage)
     assert(e.getMessage.contains("constructor-topology"), e.getMessage)
     // NOTHING on disk. Not a partial tree, not an older one — the gate runs before the wipe.

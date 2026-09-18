@@ -69,7 +69,7 @@ class ServiceProvidersSpec extends munit.FunSuite:
   tmp.test("a provider the port DROPS is a finding: the descriptor would advertise a class that is not there") { dir =>
     val f = descriptor(dir, "p.Spi", "p.impl.Alpha\np.impl.Beta\n")
     // the drop is asked of the UPSTREAM name, because that is the namespace a `dropTypes` key is
-    // written in (§4.56) — asking the emitted one is the same key read in the wrong namespace.
+    // written in — asking the emitted one is the same key read in the wrong namespace.
     val fs      = ServiceProviders.findings(ServiceProviders.plan(List(f), rename), _ == "p.impl.Beta", renaming = true)
     val dropped = fs.filter(_.kind == ServiceProviders.Kind.DroppedProvider.slug)
     assertEquals(dropped.map(_.owner), List("p.impl.Beta"))
@@ -101,7 +101,8 @@ class ServiceProvidersSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // …and the residue that is about the READER rather than about the file (ENGINE-LIMITS.md P9)
+  // …and the residue that is about the READER rather than about the file: Scala.js and Native
+  // resolve providers by registration nothing in a ported library triggers
   // -------------------------------------------------------------------------------------------
 
   tmp.test("a descriptor shipped by a port with a NON-JVM target is counted unwired — `shipped` alone would say the opposite") { dir =>

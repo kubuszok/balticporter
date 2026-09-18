@@ -32,7 +32,7 @@ class BoundaryRemedySpec extends munit.FunSuite:
   }
 
   test("…and none of them is emission-affecting, which is what an `accept` MEANS") {
-    // Not decoration: `emissionAffecting` is what puts a selection in §1.5's MUST-agree column. An
+    // Not decoration: `emissionAffecting` is what puts a selection in the base/dependent MUST-agree column. An
     // accept moves a row between two lanes and changes no byte, so a dependent that inherited one
     // and a base that declared it cannot produce two ports that fail to compile together.
     menus.flatMap(_._1.remedies).foreach(r => assert(!clue(r).emissionAffecting))
@@ -99,8 +99,10 @@ class BoundaryRemedySpec extends munit.FunSuite:
   }
 
   test("…and NOTHING drains a `lost-clause`, which is an engine bug and not a port's to silence") {
-    // The one kind in this check that is reachable from no manifest key (`DESIGN.md` §8.2,
-    // `ENGINE-LIMITS.md` CT5). Asserted on the MENU and not on the run's plumbing on purpose: the
+    // The one kind in this check that is reachable from no manifest key: a class with no promoted
+    // or synthesised primary constructor still gets one that only hosts the `using` clause,
+    // otherwise its body has no context in scope, and a port cannot opt into that. Asserted on the
+    // MENU and not on the run's plumbing on purpose: the
     // run appends those rows after the drain has already happened, and a property that held only
     // because of WHERE a list was concatenated is a property one refactor away from being false.
     val ids = ContextSeamCheck.remedies.map(_.kind).toSet
@@ -115,8 +117,10 @@ class BoundaryRemedySpec extends munit.FunSuite:
   }
 
   test("…and a REFUSED kind (`ReifiedOccurrence`, `InexpressibleParent`) has no entry at all") {
-    // K18 and K5.7 — known divergences the engine refuses to repair, not review lists. An `accept`
-    // on either would drain a defect rather than a question.
+    // Reified occurrences (`instanceof`/downcasts asking about a runtime object retyping cannot
+    // answer) and the `Map.Entry` parent kept because `Tuple2` cannot host it — known divergences
+    // the engine refuses to repair, not review lists. An `accept` on either would drain a defect
+    // rather than a question.
     val kinds = CollectionBoundaryCheck.remedies.map(_.kind).toSet
     assert(!clue(kinds).contains(CollectionBoundaryCheck.Issue.ReifiedOccurrence.toString))
     assert(!clue(kinds).contains(CollectionBoundaryCheck.Issue.InexpressibleParent.toString))

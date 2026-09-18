@@ -5,7 +5,7 @@ class SrcMapSpec extends munit.FunSuite:
   private def e(unit: String, member: String, kind: String, s: Int, en: Int, jp: String = "p/Foo.java", jl: Int = 1) =
     SrcMap.Entry(unit, member, kind, s, en, jp, jl, "deadbeef")
 
-  // --- the source root, derived from the PORT (CLAUDE.md §4.6) -------------------------------
+  // --- the source root, derived from the PORT -------------------------------------------------
 
   test("the Java source root is DERIVED from the unit, not read from a flag") {
     assertEquals(

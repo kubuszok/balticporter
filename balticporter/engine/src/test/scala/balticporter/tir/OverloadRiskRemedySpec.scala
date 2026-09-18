@@ -5,7 +5,7 @@ import balticporter.core.{ PolicyIssue, PolicyReport }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 
-/** `overload-risk`'s MENU — the first EMISSION-AFFECTING remedy (`DESIGN.md` §8.16). */
+/** `overload-risk`'s MENU — the first EMISSION-AFFECTING remedy. */
 class OverloadRiskRemedySpec extends munit.FunSuite:
 
   private val Java =
@@ -135,7 +135,7 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // the refusal — what keeps this inside T17
+  // the refusal — the risky-overload cases predicting the resolved member needs a full resolver
   // -------------------------------------------------------------------------------------------
 
   test("ascribe REFUSES where javac's alternative cannot be WRITTEN, and the finding stays") {
@@ -187,7 +187,7 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
     val List(r) = plan.refusals: @unchecked
     assertEquals(r.guard, "static-callee")
     assert(clue(r.why).contains("tag"))
-    // the drained half fell and the refused half stayed — which is the pair §5 asks a reader to read.
+    // the drained half fell and the refused half stayed — which is the pair a reader needs to see together.
     assertEquals(lane(out, plan), List("BoxingPhaseSpan tag/1@9"))
   }
 

@@ -4,7 +4,9 @@ import balticporter.core.ManifestAgreement.Kind
 import balticporter.tir.{ Phase, RuleScope }
 import balticporter.transform.*
 
-/** `ENGINE-LIMITS.md` CT8 — a DEPENDENT declaring the per-declaration half of a base's holder. */
+/** A dependent may add context-threading policy for its own types, while the shared part of that policy is inherited from the base and may not be restated — a DEPENDENT declaring the per-declaration
+  * half of a base's holder.
+  */
 class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
 
   /** the base's holder, in the shape the reference bundle's config uses. */
@@ -108,7 +110,7 @@ class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
   }
 
   test("the merged fingerprint MOVES, and equals the same policy stated INLINE") {
-    // §8.13's third obligation, plus the containment test a `mirroring` module is held to: a module
+    // the containment test a `mirroring` module is held to: a module
     // that writes one instance holding both halves must fingerprint the same as base-plus-extension,
     // or it would be `SurfaceMissing` for a phase it demonstrably runs.
     val inline = globals(List(holder(_.copy(sites = Map("com.dep.U#<clinit>" -> ContextSite.LazyInit)))))
@@ -185,7 +187,7 @@ class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
   }
 
   test("a dependent's `cache` entry for its OWN type merges, and the fingerprint says so") {
-    // CT8's own shape at the fifth key: the holder is the base's and the TYPE is the dependent's, so
+    // the same shape at the fifth key: the holder is the base's and the TYPE is the dependent's, so
     // there is no manifest but the dependent's in which the entry could be written.
     val b   = base(List(globals(List(holder()))))
     val dep = b.extendedBy(
@@ -194,12 +196,12 @@ class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
     assertEquals(dep.surfaceFold.refusals, Nil)
     assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
     assert(clue(merged(dep).surfaceFingerprint).contains("com.dep.Boot^depCtx"))
-    // …and it is NOT the base's answer: the base still fingerprints without it (§1.5's D1).
+    // …and it is NOT the base's answer: the base still fingerprints without it.
     assert(!clue(merged(b).surfaceFingerprint).contains("depCtx"))
   }
 
   test("a holder with NO `cache` fingerprints exactly as it did before the key existed") {
-    // §1(b)'s no-op rule read at the FINGERPRINT: an unused per-declaration key must not move
+    // the no-op rule read at the FINGERPRINT: an unused per-declaration key must not move
     // `policy=` in twenty published port maps on the day it is added. The literal is the shape this
     // renderer had before `cache`, so the assertion cannot drift with the code it guards.
     // NEGATIVE: render the segment unconditionally and this reads `…|com.dep.S=>…||`.
@@ -219,7 +221,7 @@ class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // the `governs` screen — the rule CT8 asked for by name
+  // the `governs` screen — the shared-not-restated rule asked for by name
   // -------------------------------------------------------------------------------------------
 
   test("INTRUSION: a dependent whose `sites` key names a BASE declaration is FATAL") {
@@ -251,8 +253,8 @@ class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
 
   test("…and the base's OWN holder FQN is never an intrusion for a module that extends it") {
     // the base already holds `com.demo.Gdx` as a subject, so a merge reports it as nothing ADDED.
-    // Without that, every extension of an inherited holder would be refused — which is CT8 closed
-    // in name and open in fact.
+    // Without that, every extension of an inherited holder would be refused — closing the rule
+    // in name and leaving it open in fact.
     val b   = base(List(globals(List(holder()))))
     val dep = b.extendedBy(
       PortManifest(

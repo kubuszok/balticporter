@@ -102,7 +102,7 @@ class PortRunSpec extends munit.FunSuite:
     // pair of path prefixes answers exactly. A port whose scope is several trees in several modules
     // has no source root short of their common ancestor, and that ancestor contains the resolution
     // roots — so "under `sourceRoot`" alone answered YES for every unit in the model and the whole
-    // resolved library was re-emitted (546 files against 90 in scope, `CLAUDE.md` §4.56).
+    // resolved library was re-emitted.
     val (root, src) = fixture()
     val nested      = root.resolve("java2")
     java(
@@ -206,7 +206,7 @@ class PortRunSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------------------------
-  // a MERGED phase's policy findings, held to the manifest that can fix them (DESIGN.md §8.13)
+  // a MERGED phase's policy findings, held to the manifest that can fix them
   // ---------------------------------------------------------------------------------------------
 
   /** a base and a dependent that each declare a `type-redirect` with one MALFORMED member key, so the fold merges them and one instance carries both findings.
@@ -248,11 +248,11 @@ class PortRunSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------------------------
-  // a REFUSED merge stops the run BEFORE the pipeline (ENGINE-LIMITS.md CT9 Face B)
+  // a REFUSED merge stops the run BEFORE the pipeline
   // ---------------------------------------------------------------------------------------------
 
   /** a base and a dependent that each declare a `class-table` — a `SurfacePolicy` with NO `MergeablePolicy` — with different tables for one key. The fold cannot compose them, so both instances stay
-    * in the effective pipeline: the shape that used to run only the later one.
+    * in the effective pipeline.
     */
   private def refusedPair(): PortManifest =
     PortManifest(
@@ -285,11 +285,10 @@ class PortRunSpec extends munit.FunSuite:
   }
 
   test("NEGATIVE: two EQUAL instances COLLAPSE TO ONE, and the run is green") {
-    // REPINNED. This used to assert only that the run was green, and it was green for the wrong
-    // reason: `Pipeline.order` keeps both instances since CT9 Face B, so the phase ran TWICE and
-    // the emitted file was correct only because `ClassTableTransform`'s rewrite happens to be
-    // IDEMPOTENT — a property of that one phase, which nothing asked of it and which the next
-    // contract-less phase need not have.
+    // Asserting only that the run was green would be green for the wrong reason: `Pipeline.order`
+    // keeps both instances, so the phase ran TWICE and the emitted file was correct only because
+    // `ClassTableTransform`'s rewrite happens to be IDEMPOTENT — a property of that one phase,
+    // which nothing asked of it and which the next contract-less phase need not have.
     val (root, src) = fixture()
     val table       = Map("com.demo.Widget#of" -> "com.demo.Widget#classFor")
     val m           =
@@ -301,7 +300,7 @@ class PortRunSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------------------------
-  // the `governs` screen asks what the base EMITS (ENGINE-LIMITS.md CT9 Face A), end to end
+  // the `governs` screen asks what the base EMITS, end to end
   // ---------------------------------------------------------------------------------------------
 
   /** a dependent whose OWN declaration lives INSIDE the base's claimed namespace — a library's own test module, which is the shape no prefix can separate from the module it tests.
@@ -328,8 +327,8 @@ class PortRunSpec extends munit.FunSuite:
     )
 
   test("a dependent's key at an FQN the base's published map does NOT emit is ADMITTED") {
-    // CT9 Face A. `com.demo.WidgetTest` is inside the base's `governs` claim and the base has never
-    // parsed it — a drop cannot say that, and the base's map does: no entry, nothing stands there.
+    // `com.demo.WidgetTest` is inside the base's `governs` claim and the base has never parsed it
+    // — a drop cannot say that, and the base's map does: no entry, nothing stands there.
     val (root, src, other) = sharedNamespaceFixture()
     val rep                = root.resolve("report")
     publishBase(root, "basemod", List("com.demo.Widget", "com.demo.Gadget"))
@@ -501,7 +500,7 @@ class PortRunSpec extends munit.FunSuite:
     // Under a forked test JVM the working directory is the SUBPROJECT's, so this suite published
     // maps into the repository — `runner/port-report/`, and once a committed `port-report/jar/`
     // holding this file's own `PortRun("k", …)` fixture. A `git status` that cannot tell a decision
-    // from an artefact is precisely what §5.5's discipline rests on.
+    // from an artefact is exactly what this guards against.
     val here   = DebugFlags.root.resolve("port-report")
     def listed = if !Files.exists(here) then Set.empty[String]
     else Files.walk(here).iterator().asScala.map(_.toString).toSet
@@ -548,9 +547,9 @@ class PortRunSpec extends munit.FunSuite:
   }
 
   test("a RENAMING port writes both namespaces, so the drop reaches a stack frame that says `sge.`") {
-    // The measurement-integrity defect this closes: policy is written UPSTREAM and the rename runs
-    // LAST (§4.56), so an artifact holding only the manifest FQN was compared against emitted
-    // frames and matched nothing — the derived classifier had never fired on a renaming port.
+    // Policy is written UPSTREAM and the rename runs LAST, so an artifact holding only the
+    // manifest FQN was compared against emitted frames and matched nothing — the derived
+    // classifier had never fired on a renaming port.
     val (root, src) = fixture()
     val rep         = root.resolve("report")
     val inject      = root.resolve("overrides")
@@ -606,7 +605,7 @@ class PortRunSpec extends munit.FunSuite:
     val fs       = PortRun.baseSurfaceFindings(List(unconsumed, consumed))
     assertEquals(fs.map(_.check).distinct, List(PortRun.BaseSurface))
     assertEquals(fs.map(f => f.kind -> f.owner), List("unanswered" -> "p.Base#m", "shaped emitted text" -> "p.Other"))
-    // \u00a74.45 \u2014 the classification rides in `detail`, so an agent holding only findings.tsv has it
+    // the classification rides in `detail`, so an agent holding only findings.tsv has it
     assert(clue(fs.head.detail).contains("port policy"), fs.head.detail)
     assert(fs.head.detail.contains("[base: base-mod]"), fs.head.detail)
     // no origin: a contract question is about a SYMBOL, and a plausible-looking path would be worse
@@ -697,7 +696,7 @@ class PortRunSpec extends munit.FunSuite:
   }
 
   test("a DROPPED NILARY CONSTRUCTOR carries a porter note in the body it is missing from (C11)") {
-    // `ENGINE-LIMITS.md` C11: `Font()` delegates WITH ARGUMENTS in front of a class whose primary is
+    // `Font()` delegates WITH ARGUMENTS in front of a class whose primary is
     // scala's own implicit nilary one, so it cannot be emitted and cannot be replaced by anything
     // that is not a wrong answer. `OmissionCheck` gives that a NUMBER; the number answers an agent
     // holding the run directory, and the agent this engine has is reading the emitted file, where
@@ -706,7 +705,7 @@ class PortRunSpec extends munit.FunSuite:
     // TWO roots with super(args): Font(int) and Font(int, String). The WIDEST (int, String) is
     // promoted; Font() chains to Font(int), the OTHER root, so reachesCtor(Font(), promotedPrimary)
     // is false. Sub extends Font forces argument-free extends, the fixpoint withholds the
-    // promotion, falls to Plan.none, and the nilary is dropped (C11) even though it DOES NOT chain
+    // promotion, falls to Plan.none, and the nilary is dropped even though it DOES NOT chain
     // to the promoted primary — the case a nilary that DOES chain (kept alive) is the contrast for.
     java(
       src,
@@ -770,10 +769,10 @@ class PortRunSpec extends munit.FunSuite:
   }
 
   // =========================================================================================
-  // a SYNTHESISED unit belongs to ONE module (ENGINE-LIMITS.md §13 O5, CLAUDE.md §1.5)
+  // a SYNTHESISED unit belongs to ONE module
   // =========================================================================================
 
-  /** the smallest phase that reproduces O5: it MINTS a top-level unit with no `Origin`. */
+  /** the smallest phase that mints a top-level unit with no `Origin`, to exercise which module owns it. */
   final private class MintUnit(fqn: String) extends Phase:
     def name = s"mint-unit:$fqn"
     override def run(program: Program): Program =
@@ -811,9 +810,9 @@ class PortRunSpec extends munit.FunSuite:
     (root, src, other)
 
   test("a SYNTHESISED unit at an FQN a base already emits FAILS THE RUN") {
-    // The belt to the phase's own suspenders. `PrimitiveToOpaqueTransform` now fences its mint on
+    // The belt to the phase's own suspenders. `PrimitiveToOpaqueTransform` fences its mint on
     // `RunScope.emits`; this is what catches the NEXT phase to mint without asking, which will not
-    // have read O5. Nothing else can see it — the duplicate compiles nowhere and counts nothing.
+    // know the rule. Nothing else can see it — the duplicate compiles nowhere and counts nothing.
     val (root, src, other) = dependentFixture()
     val rep                = root.resolve("report")
     publishBase(root, "basemod", List("com.demo.Handle"))
@@ -886,9 +885,9 @@ class PortRunSpec extends munit.FunSuite:
   test("an APPLIED selection reaches the emitted file as a porter note") {
     // The whole loop in one assertion: the manifest names a member and a remedy id, the run binds
     // the key before the pipeline, the phase that DECLARED that remedy is handed the selection, its
-    // application becomes a `Decision`, and the decision becomes the note §4.575 owes the reader at
-    // the line. Nothing else in the run can see any of it — a resolution moves no check count that a
-    // port without one would not also report.
+    // application becomes a `Decision`, and the decision becomes the note the reader sees beside
+    // the code, at the line. Nothing else in the run can see any of it — a resolution moves no
+    // check count that a port without one would not also report.
     val (root, src) = fixture()
     val r           = PortRun(
       label = "demo",
@@ -958,7 +957,7 @@ class PortRunSpec extends munit.FunSuite:
     // The `Unrenamed` row means "this port moves names and did not move THIS one". Derived from
     // `packageRenames` alone, a port whose whole rename policy is `typeRenames`/`subPackages`/
     // `flattenNestedTypes` was told, of every provider line it DID move, that it renames nothing —
-    // §4.56's fast-path guard, in a lane whose whole subject is the two namespaces.
+    // a fast-path guard that only checked one of the two namespaces.
     assert(runWith(PortManifest("demo", typeRenames = Map("com.demo.Widget" -> "q.W"))).renamesAnything)
     assert(runWith(PortManifest("demo", subPackages = Map("com.demo.Widget" -> "inner"))).renamesAnything)
     assert(runWith(PortManifest("demo", flattenNestedTypes = Set("com.demo.Widget"))).renamesAnything)

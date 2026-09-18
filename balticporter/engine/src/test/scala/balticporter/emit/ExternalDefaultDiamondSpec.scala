@@ -4,7 +4,8 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
 /** JLS 8.4.8: where a SUPERCLASS declares a concrete member and an EXTERNAL interface parent carries a JLS 9.4.3 `default` of the same name and arity, the class member wins in java and scala reports
-  * `E164`. The diamond forwarder mints the class-wins override off the frontend's recorded defaults (`ENGINE-LIMITS.md` K39, `CLAUDE.md` §4.56).
+  * `E164`. The diamond forwarder mints the class-wins override off the frontend's recorded defaults, because a class member implementing an external interface's default method is legal Java but a
+  * conflicting inheritance in Scala.
   */
 class ExternalDefaultDiamondSpec extends munit.FunSuite:
 

@@ -193,7 +193,7 @@ class PortRunProjectSpec extends munit.FunSuite:
     assert(!Files.exists(none.resolve("build.sbt")), "a declared dependency is not a request for a build")
   }
 
-  // -- the upstream NOTICE, for a library whose licence lives in ONE file (CLAUDE.md §4.57) -------
+  // -- the upstream NOTICE, for a library whose licence lives in ONE file -------------------------
 
   test("a declared notice is COPIED beside the emitted code, into the build product") {
     val (root, src) = fixture()
@@ -216,7 +216,7 @@ class PortRunProjectSpec extends munit.FunSuite:
       )
     )
     // beside the sources, in `src_managed/` — the tree `clean` removes and `.gitignore` names, never
-    // the port ROOT, where an untracked file blurs decision and artefact (§5.5). Byte-for-byte: the
+    // the port ROOT, where an untracked file blurs decision and artefact. Byte-for-byte: the
     // port ships the upstream's own notice, not a rendering of it.
     assertEquals(Files.readString(port.resolve("src_managed/LICENSE")), Files.readString(license))
     assert(files(port).contains("src_managed/LICENSE"), clue(files(port)))

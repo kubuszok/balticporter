@@ -1,6 +1,6 @@
 package balticporter.tir
 
-/** The ONE `k=v` payload grammar (CLAUDE.md §4.575), now that it has a SECOND consumer. */
+/** The ONE `k=v` payload grammar, now that it has a SECOND consumer. */
 class KeyValuesSpec extends munit.FunSuite:
 
   test("a value with WHITESPACE is quoted and round-trips whole") {
@@ -14,7 +14,7 @@ class KeyValuesSpec extends munit.FunSuite:
   }
 
   test("nothing may OPEN or CLOSE a Scala comment — the delimiters are spaced, never dropped") {
-    // Scala block comments NEST (§4.58), so a value carrying an opening delimiter swallows the rest
+    // Scala block comments NEST, so a value carrying an opening delimiter swallows the rest
     // of the emitted file. Neutralised rather than rejected: a value that cannot be rendered safely
     // is still information.
     val out = KeyValues.render(List("why" -> "see the /* marker */ above"))
@@ -30,8 +30,8 @@ class KeyValuesSpec extends munit.FunSuite:
 
   test("NEGATIVE: an UNKNOWN key is KEPT, and a malformed token costs its pair and not the row") {
     // A payload written by a NEWER engine must degrade to "I do not understand this key", never to
-    // a parse failure that discards the keys this engine does understand — `DESIGN.md` §8.3's
-    // per-question degradation, at the grammar rather than at the artifact.
+    // a parse failure that discards the keys this engine does understand — the same per-question
+    // degradation as an older schema map, at the grammar rather than at the artifact.
     assertEquals(KeyValues.parse("form=class fromTheFuture=7"), Map("form" -> "class", "fromTheFuture" -> "7"))
     // a quote that never closes takes the rest of the payload and stops; the pairs before it stand.
     assertEquals(KeyValues.parse("""a=1 b="unclosed"""), Map("a" -> "1", "b" -> "unclosed"))
@@ -43,7 +43,7 @@ class KeyValuesSpec extends munit.FunSuite:
   test("the PORTER NOTE and the port map are the SAME grammar, not two spellings of one") {
     // The whole reason the primitives moved to `api`. A reader that has learned the note's spelling
     // must be able to read a `shape` column, and two renderings of one grammar is exactly the drift
-    // §4.56 is about.
+    // to avoid.
     assertEquals(PorterNote.safe("a\tb"), KeyValues.safe("a\tb"))
     assertEquals(PorterNote.value("a b"), KeyValues.value("a b"))
   }

@@ -5,8 +5,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Phase, Pipeline, Program, RuleScope }
 
-/** `ClassTableTransform` — the §1(b) REDIRECT of a name lookup at a port's own table. Its scope is an opt-OUT (`Everywhere(Set.empty)` is the pre-scope path) and two instances compose only over
-  * DISJOINT scopes (`ENGINE-LIMITS.md` P10).
+/** `ClassTableTransform` — the parameterised REDIRECT of a name lookup at a port's own table. Its scope is an opt-OUT (`Everywhere(Set.empty)` is the pre-scope path) and two instances compose only
+  * over DISJOINT scopes.
   */
 class ClassTableTransformSpec extends munit.FunSuite:
 

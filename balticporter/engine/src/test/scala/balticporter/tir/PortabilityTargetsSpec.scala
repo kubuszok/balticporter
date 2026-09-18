@@ -2,7 +2,7 @@ package balticporter.tir
 
 import balticporter.catalog.{ ApiRows, Platform, Verdict }
 
-/** `PortabilityCheck` as a §1(b) phase — the TARGET SET is the parameter, and this is what stops the parameterisation from being a lane reset.
+/** `PortabilityCheck` as a parameterised phase — the TARGET SET is the parameter, and this is what stops the parameterisation from being a lane reset.
   */
 class PortabilityTargetsSpec extends munit.FunSuite:
 
@@ -66,7 +66,7 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     assert(kept.contains("java.nio.channels.SocketChannel"))
     assert(kept.contains("java.text.Collator"))
     // …and ServiceLoader is on NEITHER removal list any more: its row's non-JVM verdicts are
-    // `Depend` on a cross-platform wrapper (DESIGN.md §8.19), so both halves moved to the
+    // `Depend` on a cross-platform wrapper, so both halves moved to the
     // build-graph lane. The Native half is the one this port still asks, and it is asked THERE.
     assertEquals(PortabilityCheck.rulesFor(jvmNative).filter(_.api == "java.util.ServiceLoader"), Nil)
     val loaders = PortabilityCheck.dependencyRulesFor(jvmNative).filter(_.api == "java.util.ServiceLoader")

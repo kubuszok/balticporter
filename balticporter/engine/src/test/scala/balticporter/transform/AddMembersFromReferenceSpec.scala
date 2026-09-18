@@ -6,8 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Pipeline, PolicyBinder, RunScope }
 import balticporter.verify.ReferenceSources
 
-/** `AddMembersTransform.fromReference`: a hand port's own member is spliced VERBATIM from the reference tree by name — class or companion as the reference has it, the imports it mentions ahead of it
-  * (DESIGN.md §8.30).
+/** `AddMembersTransform.fromReference`: a hand port's own member is spliced VERBATIM from the reference tree by name — class or companion as the reference has it, the imports it mentions ahead of it.
   */
 class AddMembersFromReferenceSpec extends munit.FunSuite:
   private val javaSrc =

@@ -4,7 +4,7 @@ import balticporter.catalog.CatalogLog
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.runner.PortRun
 
-/** THE `omissions` MENU — three accepts on a lane of seven kinds (`DESIGN.md` §8.16). */
+/** THE `omissions` MENU — three accepts on a lane of seven kinds. */
 class OmissionRemedySpec extends munit.FunSuite:
 
   private val Java =
@@ -43,7 +43,7 @@ class OmissionRemedySpec extends munit.FunSuite:
   }
 
   test("…and none is emission-affecting, which is what an `accept` MEANS") {
-    // `emissionAffecting` is what puts a selection in §1.5's MUST-agree column. These three move a
+    // `emissionAffecting` is what puts a selection in the base/dependent MUST-agree column. These three move a
     // row between two lanes and change no signature, so a base and a dependent choosing differently
     // cannot produce two ports that compile alone and fail together.
     OmissionCheck.remedies.foreach(r => assert(!clue(r).emissionAffecting))
@@ -71,10 +71,12 @@ class OmissionRemedySpec extends munit.FunSuite:
 
   test("no remedy answers a LOSS: super-args, nilary ctor, cause message, anon member, lambda return") {
     // Each is an omission where the port runs LESS than java and no reading of the site yields
-    // "this is fine": C3 (padding refused), C11 (all three keeps measured worse), the Throwable
-    // delegation refusal, T1's residue, and M6/I9 — which is a WORK ITEM rather than a refusal, so
-    // accepting it would retire it silently. Asserted on the MENU rather than on a drain, because a
-    // property that held only because of which rows a fixture produced is one refactor from false.
+    // "this is fine": padding a dropped super call is refused (super-args), keeping all three
+    // ctors still measures worse (nilary ctor), the Throwable delegation refusal (cause message),
+    // an anonymous-class-body residue (anon member), and a lambda whose return needs a nameable
+    // result type (lambda return) — which is a WORK ITEM rather than a refusal, so accepting it
+    // would retire it silently. Asserted on the MENU rather than on a drain, because a property
+    // that held only because of which rows a fixture produced is one refactor from false.
     val answered = OmissionCheck.remedies.flatMap(_.kinds).toSet
     List(
       OmissionCheck.Kind.DroppedSuperArgs,
@@ -135,7 +137,7 @@ class OmissionRemedySpec extends munit.FunSuite:
   test("…and the member id refuses a bare TYPE key, which is what keeps the pair honest") {
     // `Remedy.Subject.OwnedMember` binds through `bindMember`, whose grammar has no `#`-less form:
     // a port that wrote the type key against the member id is told so rather than silently binding
-    // to something else. The two refusals stay each other's opposite (`DESIGN.md` §8.16).
+    // to something else. The two refusals stay each other's opposite.
     val p  = program
     val pl = plan(p, Map("com.demo.Widget" -> "accept-dropped-annotation"))
     assertEquals(pl.entries.map(_.target), List(scala.None))
@@ -151,7 +153,7 @@ class OmissionRemedySpec extends munit.FunSuite:
   }
 
   test("an EMPTY plan drains nothing and returns the findings unchanged") {
-    // §1(b)'s empty-parameter rule at a menu: a port that selects nothing sees the lane it had.
+    // the empty-parameter rule at a menu: a port that selects nothing sees the lane it had.
     val rows = OmissionCheck.Kind.all.map(row(_, SymId.None))
     assertEquals(OmissionCheck.resolved(ResolutionPlan.empty, rows), rows)
   }

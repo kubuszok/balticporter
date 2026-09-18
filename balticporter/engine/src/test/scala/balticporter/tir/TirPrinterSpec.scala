@@ -2,8 +2,8 @@ package balticporter.tir
 
 import TypeRepr.*
 
-/** The printer's own gate. A pretty-printer with no test is a pretty-printer that quietly stops descending — the same defect shape CLAUDE.md §3 records for hand-rolled traversals, and one that is
-  * invisible precisely because the output still *looks* fine.
+/** The printer's own gate. A pretty-printer with no test is a pretty-printer that quietly stops descending — the same defect shape a hand-rolled traversal has, and one that is invisible precisely
+  * because the output still *looks* fine.
   */
 class TirPrinterSpec extends munit.FunSuite:
 

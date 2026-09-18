@@ -5,7 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ OpaqueSpec, Pipeline, RuleScope, RunScope }
 import balticporter.tir.PolicyBinder
 
-/** An opaque value reaching an EXTERNAL callee is unwrapped: the class-file formal is java's primitive (CLAUDE.md §4.56, K15), and the seam is counted.
+/** An opaque value reaching an EXTERNAL callee is unwrapped: the class-file formal is java's primitive, a fact a retyping phase cannot move, and the seam is counted.
   */
 class OpaqueExternalCalleeSpec extends munit.FunSuite:
   private val java =

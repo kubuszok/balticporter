@@ -81,7 +81,7 @@ class PorterNoteSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // E8 — the coverage check, in BOTH directions
+  // the coverage check, in BOTH directions — a decision with no note, a note with no decision
   // -------------------------------------------------------------------------
 
   private val sym     = SymId(1)

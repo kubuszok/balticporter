@@ -193,7 +193,7 @@ class ResolutionSpec extends munit.FunSuite:
   test("…and `NeverApplied` names the THIRD cause — a phase this run SKIPPED") {
     // `SourceAbsent` answers for a remedy whose declarer is not in `surface`; nothing answers for one
     // that IS and was killed by `balticporter.skipPhases` (read inside `Pipeline.run`, after the
-    // vocabulary is assembled), which is §4.6's own hazard — a leftover `debug.properties` entry
+    // vocabulary is assembled), which is a kill-switch's own hazard — a leftover `debug.properties` entry
     // moves no count and fails no check.
     val p         = program
     val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)
@@ -329,7 +329,7 @@ class ResolutionSpec extends munit.FunSuite:
     assertEquals(plan.entries.head.target, Some(widget.id))
     assertEquals(plan.selected(widget.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind).map(_.remedy.id), Some("spec-type"))
     // …and it carries NO `MemberKey`, because a type key is not one and fabricating a member name
-    // for it would be a value the reader could not tell from a real answer (§4.6).
+    // for it would be a value the reader could not tell from a real answer.
     assertEquals(plan.entries.head.resolution.flatMap(_.key), scala.None)
     assertEquals(PolicyReport.fromBindings(binder.bindings).findings.filter(_.phase == Resolution.Seam), Nil)
   }
@@ -363,7 +363,7 @@ class ResolutionSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // the DRAIN — a resolution is a MOVE, and both halves come from one traversal (CLAUDE.md §5)
+  // the DRAIN — a resolution is a MOVE, and both halves come from one traversal
   // -------------------------------------------------------------------------------------------
 
   /** a residue row as every real lane has one: a SITE (its own line) inside a DECLARATION. The two are separate fields here for the same reason they are separate in the artifacts — see the
@@ -393,7 +393,7 @@ class ResolutionSpec extends munit.FunSuite:
     assertEquals(plan.troubles, Nil)
     // …and the two artifacts answer at DIFFERENT granularities on purpose: two rows MOVED, so two
     // `resolved` findings — the drained lane must fall by exactly that — and ONE decision, because a
-    // decision is per DECLARATION (§5.1) and becomes a porter note. One per site put the same
+    // decision is per DECLARATION and becomes a porter note. One per site put the same
     // sentence twice above one `val` the first time a real selection broadcast.
     assertEquals(plan.decisions.map(_.subjectFqn), List("com.demo.Widget#size"))
     assertEquals(plan.decisions.map(_.origin.line), List(4))

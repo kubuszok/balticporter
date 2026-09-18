@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, DecisionLog, Phase, Pipeline, PolicyBinder, Program, RewriteTrace, RuleScope, RunScope, SymId }
 
-/** `RegistryTransform` — the §1(b) mechanism replacing reflective instantiation with a `Class`-keyed registry (`ENGINE-LIMITS.md` P10). Every refusal kind is asserted, not sampled (CLAUDE.md §3).
+/** `RegistryTransform` — the parameterised mechanism replacing reflective instantiation with a `Class`-keyed registry. Every refusal kind is asserted, not sampled.
   */
 class RegistryTransformSpec extends munit.FunSuite:
   import RegistryTransform.*
@@ -207,7 +207,7 @@ class RegistryTransformSpec extends munit.FunSuite:
     val r    = run(p)
     val rows = p.findings.filter(_.issue == RegistryCheck.Issue.OutOfScope)
     assert(clue(rows).nonEmpty)
-    // …and the java call SURVIVES where it was refused, loudly (§3).
+    // …and the java call SURVIVES where it was refused, loudly.
     assert(clue(r.out).contains("Reflector.newInstance(c)"))
   }
 
@@ -215,7 +215,7 @@ class RegistryTransformSpec extends munit.FunSuite:
     val p            = new RegistryTransform(List(Registry("com.demo.Namer#build", objectAt, RuleScope.Only(Set("com.demo")))))
     val (after, log) = Pipeline.runTraced(parse(), List(p))
     assertEquals(clue(p.findings.count(_.issue == RegistryCheck.Issue.NonClassArg)), 1)
-    // …and the java call SURVIVES where it was refused, loudly (§3).
+    // …and the java call SURVIVES where it was refused, loudly.
     assert(new TirEmitter(after, notes = log).emit.contains("Namer.build(\"x\")"))
   }
 
@@ -281,9 +281,11 @@ class RegistryTransformSpec extends munit.FunSuite:
     val (after, log) = Pipeline.runTraced(before, List(p), new PolicyBinder(before, before.members, emitsNothing))
     val out          = new TirEmitter(after, notes = log).emit
     // the DEPENDENT's model of a base unit still moves — a model in which the base calls the
-    // retired member reports the base's dropped type as this module's residue (D2)…
+    // retired member reports the base's dropped type as this module's residue, since every
+    // per-site report and rewrite filters by structural ownership…
     assert(clue(out).contains("com.demo.ComponentFactories.create(c)"))
-    // …but the unit belongs to the module that EMITS the site (O5), and so do the findings.
+    // …but the unit belongs to the module that EMITS the site, since a unit a phase mints has no
+    // source origin and only the owning module may write it, and so do the findings.
     assert(!out.contains("object ComponentFactories"))
     assertEquals(clue(p.findings), Nil)
     assertEquals(log.all.count(_.kind == Decision.Kind.AddedMember), 0)

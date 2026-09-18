@@ -98,7 +98,7 @@ class DependencyCoverageSpec extends munit.FunSuite:
     assertEquals(DependencyCheck.uncovered(List(req), List(dep.copy(name = "something-else"))).size, 1)
   }
 
-  // ---- the 2×2 (ENGINE-LIMITS.md P8) --------------------------------------------------------
+  // ---- the 2×2: whether a declared dependency is still needed, read from both programs -------
 
   private val Time    = ArtifactDep("io.github.cquiroz", "scala-java-time", "2.6.0")
   private val Wrapper = ArtifactDep("org.example", "wrapper", "1.0")
@@ -150,7 +150,7 @@ class DependencyCoverageSpec extends munit.FunSuite:
 
   test("2×2 no/yes — INTRODUCED: a phase redirected INTO the artifact, and the entry must STAY") {
     // the pre-pipeline program uses nothing this artifact answers; the emitted program names one of
-    // its classes outright, because a `type-redirect` put it there (DESIGN.md §8.19). Today's check
+    // its classes outright, because a `type-redirect` put it there. Today's check
     // reports this as a coordinate that fired on nothing and tells the reader to remove it, which
     // emits a build that cannot resolve the code the redirect wrote.
     val emitted = List(typeRow("org.example.wrapper.Providers"))
@@ -158,7 +158,7 @@ class DependencyCoverageSpec extends munit.FunSuite:
     assertEquals(d.cell, DependencyCheck.Cell.Introduced)
     assert(d.cell.keep, "the coordinate the emitted code names must never be reported as removable")
     assertEquals(DependencyCheck.unneeded(List(d)), Nil)
-    // …and it is now VISIBLE, which is the other half of P8: both usage lanes were blind to it.
+    // …and it is now VISIBLE: both usage lanes were blind to it before this check read both programs.
     assertEquals(DependencyCheck.reportDeclared(List(d)).map(_.kind), List("introduced by translation"))
   }
 
@@ -180,7 +180,7 @@ class DependencyCoverageSpec extends munit.FunSuite:
   }
 
   test("…and an UNREADABLE jar is a THIRD value, never a `no`") {
-    // §4.6: a default the caller cannot tell from a real answer is a fabricated fact. Read as "the
+    // a default the caller cannot tell from a real answer is a fabricated fact. Read as "the
     // artifact provides nothing" an offline run invents a remove instruction for a live coordinate;
     // read as "it provides everything" it silences every genuinely stale one. So the cell says so,
     // and it KEEPS — a run that knows less does not get to give an instruction.
@@ -217,7 +217,7 @@ class DependencyCoverageSpec extends munit.FunSuite:
   }
 
   test("a NESTED class matches at a SEPARATOR and never by prefix") {
-    // the provides-set holds every enclosing prefix, so the test is equality (§4.56). A jar declaring
+    // the provides-set holds every enclosing prefix, so the test is equality. A jar declaring
     // `a.b.Outer` must not answer for `a.b.OuterThing`.
     val d = cellOf(Nil, Nil, Nil, List(typeRow("a.b.OuterThing")), Wrapper, known("a.b.Outer"))
     assertEquals(d.cell, DependencyCheck.Cell.Unused)
@@ -244,11 +244,12 @@ class DependencyCoverageSpec extends munit.FunSuite:
     DependencyCheck.declarations(List(Wrapper), Nil, Nil, Nil, after, provides, splicedAfter = spliced).head
 
   test("a `call-site-substitution` ALONE answers the emitted column — the static-utility shape") {
-    // The shape P8's fix cannot see through either of its two evidences: the port rewrites the CALL
-    // and declares no TYPE, so the emitted program names the artifact on every line the template
-    // wrote and interns NOTHING for it (`Tree.Opaque.raw` is text the engine deliberately does not
-    // parse). Both halves read `No`, the cell is `Stale`, and the instruction says remove the
-    // coordinate the emitted code cannot compile without — P8 re-entering through the other seam.
+    // The shape neither the original nor the emitted symbol tables can see: the port rewrites the
+    // CALL and declares no TYPE, so the emitted program names the artifact on every line the
+    // template wrote and interns NOTHING for it (`Tree.Opaque.raw` is text the engine deliberately
+    // does not parse). Both halves read `No`, the cell is `Stale`, and the instruction says remove
+    // the coordinate the emitted code cannot compile without — the same blind spot re-entering
+    // through the other evidence.
     val spliced = Set("org.example.wrapper.Providers.load")
     val d       = cellWithSpliced(Nil, spliced, known("org.example.wrapper.Providers"))
     assertEquals(d.cell, DependencyCheck.Cell.Introduced)
@@ -262,7 +263,7 @@ class DependencyCoverageSpec extends munit.FunSuite:
 
   test("a spliced name is cut at a SEPARATOR against the jar's own listing, never by prefix") {
     // the member half: `…Providers.load` is not a class, and only the artifact's listing can say
-    // which prefix of it is (§4.56).
+    // which prefix of it is.
     assert(DependencyCheck.namesClass("a.b.Providers.load", Set("a.b.Providers")))
     assert(DependencyCheck.namesClass("a.b.Providers", Set("a.b.Providers")))
     assert(!DependencyCheck.namesClass("a.b.ProvidersThing.load", Set("a.b.Providers")))
@@ -293,7 +294,7 @@ class DependencyCoverageSpec extends munit.FunSuite:
   }
 
   test("…and the runs are read off the PROGRAM, so any phase that mints a `Tree.Opaque` is covered") {
-    // derived and never asked of the phases (`CLAUDE.md` §1): a phase is the one thing that could be
+    // derived and never asked of the phases: a phase is the one thing that could be
     // wrong about what it introduced, and the tree simply has the node.
     val body = Tree.Opaque("org.example.wrapper.Providers.load()", TinyProgram.tInt, TinyProgram.O)
     val add  = TinyProgram.addDef.copy(rhs = Some(body))
@@ -308,8 +309,8 @@ class DependencyCoverageSpec extends munit.FunSuite:
     // the one pair the four cells could not spell. The columns are not asked the same way: the
     // emitted one can answer `Yes` from the CATALOG half, which needs no jar, and the original one
     // then falls through to a listing this run could not read. `Introduced`'s advice opens with
-    // "no ORIGINAL usage names this artifact", which is exactly what is not known — §4.6's
-    // fabricated fact in the column that decides nothing. Same KEEP; a different sentence.
+    // "no ORIGINAL usage names this artifact", which is exactly what is not known — a fabricated
+    // fact in the column that decides nothing. Same KEEP; a different sentence.
     val d = DependencyCheck.declarations(List(Time), Nil, Nil, List(req(Time)), Nil, _ => DependencyCheck.Provides.Unverifiable("no network")).head
     assertEquals(d.cell, DependencyCheck.Cell.IntroducedOriginalUnknown)
     assert(d.cell.keep)
@@ -321,7 +322,7 @@ class DependencyCoverageSpec extends munit.FunSuite:
   // ---- the artifact a BUILD reads (`run-latest/dependencies.tsv`) ---------------------------
 
   test("the published rows say which coordinates a JVM COMPILE of the emitted code needs") {
-    // one value, one spelling (§1.5) at the build layer: this file is what `scripts/_lib.sh`
+    // one value, one spelling at the build layer: this file is what `scripts/_lib.sh`
     // derives a lane's `--dependency`/`--repository` from, so a coordinate can be wrong in one
     // place instead of three. The column is derived from the EVIDENCE and never from the shape of
     // the coordinate — a catalog `Depend` artifact answers a JDK API this JVM already has
@@ -337,8 +338,8 @@ class DependencyCoverageSpec extends munit.FunSuite:
 
   test("…and an UNVERIFIABLE coordinate takes the INCLUDING arm") {
     // a jar on a classpath that does not need it costs a resolution; a missing one is a wall of
-    // errors that are not the port's — so the unknown side of §4.6's rule is the safe one HERE,
-    // which is the opposite direction from the cell's own advice and is stated as such.
+    // errors that are not the port's — so the unknown side of the rule includes it HERE, which is
+    // the opposite direction from the cell's own advice and is stated as such.
     val d = cellOf(Nil, Nil, Nil, Nil, Wrapper, _ => DependencyCheck.Provides.Unverifiable("offline"))
     assertEquals(DependencyCheck.declaredTsv(List(d), _.toString).head.split('\t')(6), "yes")
   }

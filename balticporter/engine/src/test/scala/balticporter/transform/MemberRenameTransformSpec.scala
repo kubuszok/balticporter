@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
-/** `member-rename` — the manifest's way to reach [[MemberRenamer]] (CLAUDE.md §1(b), §4.55). */
+/** `member-rename` — the manifest's way to reach [[MemberRenamer]]. */
 class MemberRenameTransformSpec extends munit.FunSuite:
 
   // ---- fixtures ------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
   private def sym(p: Program, fqn: String): SymId =
     p.symbols.all.find(_.fullName == fqn).map(_.id).getOrElse(fail(s"no symbol named $fqn"))
 
-  /** the emitted CODE with the porter notes stripped — a note names the UPSTREAM member on purpose (§4.575's `from=`), so a text search that forgets reports a phantom.
+  /** the emitted CODE with the porter notes stripped — a note names the UPSTREAM member on purpose (the `from=` key), so a text search that forgets reports a phantom.
     */
   private def code(out: String): String =
     out.linesIterator.filterNot(l => l.contains(PorterNote.Marker) || l.trim.startsWith("—")).mkString("\n")
@@ -78,7 +78,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
     List("com.demo.Window#close", "com.demo.Dialog#close", "com.demo.Picker#close").foreach(f => assertEquals(r.nameOf(f), Some("closeWindow"), f))
 
-    // the call site inside `Picker#go` follows the symbol, for free (§4.55's exactness argument)
+    // the call site inside `Picker#go` follows the symbol, for free
     assert(clue(code(r.out)).contains("closeWindow()"), r.out)
     assert(!code(r.out).contains(" close()"), s"`close` survives somewhere:\n${r.out}")
     // …and a member that merely SHARES the class is untouched
@@ -89,7 +89,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assertEquals(clue(renamed).size, 3)
     assert(renamed.forall(_.reason == Reason.Configured("member-rename", "com.demo.Window#close")))
 
-    // …and the note is beside the code (§4.575), AFTER the upstream comment, never before it
+    // …and the note is beside the code, AFTER the upstream comment, never before it
     assert(clue(r.out).contains("/* porter: renamed-member"), r.out)
     assert(r.out.contains("phase=member-rename"))
     val doc  = r.out.indexOf("shuts it.")
@@ -158,9 +158,10 @@ class MemberRenameTransformSpec extends munit.FunSuite:
   }
 
   test("a component that reaches a declaration this run does NOT EMIT is refused, base named") {
-    // the D2 shape: a dependent's `Program` contains its base. `RunScope.whole` is the base port's
-    // answer and would let this through; a real scope refuses, because renaming a base's
-    // declaration here emits an `override` of a member the base does not have (§1.5).
+    // a dependent's `Program` contains its base, so every check filters by structural ownership.
+    // `RunScope.whole` is the base port's answer and would let this through; a real scope refuses,
+    // because renaming a base's declaration here emits an `override` of a member the base does
+    // not have.
     val before = parse(windows)
     val ph     = new MemberRenameTransform(Map("com.demo.Picker#close" -> "closeWindow"))
     val theirs = before.units.map(_.symbol).filter(u => before.symbolOf(u).exists(_.fullName.contains("Window"))).toSet
@@ -174,7 +175,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assert(f.head.detail.contains("resolution root"), f.head.detail)
   }
 
-  // ---- 4. the merge contract (§1.5, DESIGN.md §8.13) -------------------------------------------
+  // ---- 4. the merge contract -------------------------------------------------------------------
 
   private def merge(a: Map[String, String], b: Map[String, String]) =
     new MemberRenameTransform(a).mergedWith(new MemberRenameTransform(b))
@@ -254,7 +255,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assertEquals(order.map(_.name), List("collections", "a", "b", "globals->implicits", "member-rename", "type-redirect"))
   }
 
-  // ---- 6. SYMBOLIC NAMES with @targetName (CLAUDE.md §1(b)) ------------------------------------
+  // ---- 6. SYMBOLIC NAMES with @targetName --------------------------------------------------------
 
   /** A Vec2 hierarchy with `add/sub/scl/dot/len2`, overloads, and an override chain — the shape a game-engine math library actually has. The reference hand port (`sge.math.Vector2`) renames `add` to
     * `+`, `sub` to `-`, etc. with `@targetName`.

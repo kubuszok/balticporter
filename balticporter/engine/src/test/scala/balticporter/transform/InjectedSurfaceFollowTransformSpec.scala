@@ -5,7 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 import munit.FunSuite
 
-/** Calls into a dropped type follow the injected replacement's spelling (`DESIGN.md` §8.28). */
+/** Calls into a dropped type follow the injected replacement's spelling. */
 class InjectedSurfaceFollowTransformSpec extends FunSuite:
   private val javaSrc =
     """package q;

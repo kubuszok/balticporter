@@ -66,7 +66,7 @@ class DecisionSpec extends munit.FunSuite:
   test("a phase reused for a SECOND run reports that run's decisions only") {
     // `Determinism.Full` translates twice through the same phase instances, and a porting program
     // that ports two source sets does the same. A buffer that survived would report the first
-    // run's decisions as the second's — the exact contamination §5.1 records for the global srcmap.
+    // run's decisions as the second's — the exact contamination a global recording buffer produces.
     val phase = new Deciding("once")
     val a     = Pipeline.runTraced(TinyProgram.program, List(phase))._2
     val b     = Pipeline.runTraced(TinyProgram.program, List(phase))._2

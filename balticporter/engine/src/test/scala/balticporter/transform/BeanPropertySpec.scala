@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
-/** [[BeanPropertyTransform]] — the positives, and one negative per refusal DESIGN.md §8.5 names.
+/** [[BeanPropertyTransform]] — the positives, and one negative per refusal the `var`/`val` collapse names.
   *
   * Every negative asserts TWO things: the pair is untouched, and the refusal is COUNTED. A silent skip and a counted one look identical in the emitted file and are opposite facts about the port.
   */
@@ -29,8 +29,8 @@ class BeanPropertySpec extends munit.FunSuite:
     val (after, log) = Pipeline.runTraced(before, List(phase), new PolicyBinder(before, before.members), balticporter.catalog.CatalogLog.discarding, rewrites, idioms)
     Ran(before, after, phase, log, idioms, rewrites)
 
-  /** what the member the UPSTREAM called `fqn` is called now. Resolved by SYMBOL — a rename moves `fullName` too (§4.56), so looking the result up by the old name finds nothing and reads as a missing
-    * member rather than as a successful rename.
+  /** what the member the UPSTREAM called `fqn` is called now. Resolved by SYMBOL — a rename moves `fullName` too, so looking the result up by the old name finds nothing and reads as a missing member
+    * rather than as a successful rename.
     */
   private def nameOf(r: Ran, fqn: String): String =
     r.before.symbols.all.find(_.fullName == fqn).map(_.id).flatMap(r.after.symbolOf).map(_.name).getOrElse(s"<no $fqn>")
@@ -59,7 +59,7 @@ class BeanPropertySpec extends munit.FunSuite:
     assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
     assert(clue(r.out).contains("def opacity: scala.Float"))
     assert(r.out.contains("def opacity_="))
-    // the emitter's own §4.55 pass moved the FIELD out of the way — the `DeferToEmitter` contract.
+    // the emitter's own renaming pass moved the FIELD out of the way — the `DeferToEmitter` contract.
     assert(clue(r.out).contains("opacity$field"))
     assertEquals(r.out.linesIterator.count(_.contains("getOpacity")), 0)
     assertEquals(r.out.linesIterator.count(_.contains("setOpacity")), 0)
@@ -179,7 +179,7 @@ class BeanPropertySpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // the no-op, which is the §1(b) gate
+  // the no-op, which is the parameterised-phase gate
   // -------------------------------------------------------------------------------------------
 
   test("EMPTY pairs is a structural no-op — byte-identical output, and the SAME program back") {
@@ -354,16 +354,16 @@ class BeanPropertySpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // THE `var`/`val` COLLAPSE — DESIGN.md §8.5. One positive per shape, and one negative per guard:
+  // THE `var`/`val` COLLAPSE. One positive per shape, and one negative per guard:
   // an idiom transform's safety argument IS its refusal enumeration, so a guard with no fixture is
-  // a claim nothing checks (`CLAUDE.md` §3).
+  // a claim nothing checks.
   // -------------------------------------------------------------------------------------------
 
   private def collapse(java: String, target: BeanPropertyTransform.Target, pairs: (String, String)*): Ran =
     ran(java, new BeanPropertyTransform(pairs.toMap, pairs.map((k, _) => k -> target).toMap))
 
   /** the guard a run declined every configured pair under — the `idiom(refused)` row's own string, read from the log the run owns rather than re-derived, because the phase is the one place that holds
-    * both halves at the moment it files (§4.6, K2.5).
+    * both halves at the moment it files.
     */
   private def guards(r: Ran): List[String] =
     r.idioms.all.collect { case IdiomCandidate(_, IdiomVerdict.Refused(g, _), _, _, _) => g }
@@ -390,8 +390,8 @@ class BeanPropertySpec extends munit.FunSuite:
     assertEquals(converted(r), 1)
     assert(clue(r.out).contains("var name: java.lang.String = \"\""))
     assertEquals(r.out.linesIterator.count(_.contains("def name")), 0)
-    // …and the `$field` noise the emitter's §4.55 pass used to leave behind is GONE with it: there
-    // is no method called `name` any more, so there is no clash to resolve.
+    // …and the `$field` noise the emitter's renaming pass would otherwise leave behind is GONE
+    // with it: there is no method called `name` any more, so there is no clash to resolve.
     assert(!clue(r.out).contains("name$field"))
   }
 
@@ -501,7 +501,7 @@ class BeanPropertySpec extends munit.FunSuite:
     "a `val`'s decision records the SECOND reflective fact — its backing field is `final` and\n" +
       "     java's was not"
   ) {
-    // §8.5's guard 5 records that the JVM METHOD NAMES move. A `val` moves one more thing, at the
+    // One guard already records that the JVM METHOD NAMES move. A `val` moves one more thing, at the
     // FIELD and in the other direction: `MutableStorage` asks for a declaration initialiser and no
     // assignment IN THIS PROGRAM — never for java's `final` keyword, deliberately — so the java
     // field routinely was not final and the emitted one is. A reflective writer (`setAccessible` +
@@ -679,9 +679,9 @@ class BeanPropertySpec extends munit.FunSuite:
   }
 
   test("declaring the collapse AND `public-field-accessors` over one type is a contradiction") {
-    // K21 face 2 PUTS java-bean names on a field for a reflective framework to find; the collapse
-    // TAKES them off. The two policies are asked for separately and only the run sees both, so the
-    // refusal is what stops a port getting neither.
+    // `public-field-accessors` PUTS java-bean names on a field for a reflective framework to find;
+    // the collapse TAKES them off. The two policies are asked for separately and only the run sees
+    // both, so the refusal is what stops a port getting neither.
     val r = ran(
       varSrc,
       new BeanPropertyTransform(Map("Layer#name" -> "getName/setName"), Map("Layer#name" -> BeanPropertyTransform.Target.Var), RuleScope.Only(Set("Layer")))

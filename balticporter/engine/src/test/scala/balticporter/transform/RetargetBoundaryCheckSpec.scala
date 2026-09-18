@@ -22,7 +22,7 @@ class RetargetBoundaryCheckSpec extends munit.FunSuite:
     assert(clue(c).contains("removing iterator"), "IteratorRemove should name the approach")
   }
 
-  // ---- empty retargeted map is a no-op by arithmetic (§1(a)) ----
+  // ---- empty retargeted map is a no-op by arithmetic ----
 
   test("check with empty retargeted map returns Nil") {
     // RetargetBoundaryCheck.check short-circuits on `retargeted.isEmpty` before reading units.

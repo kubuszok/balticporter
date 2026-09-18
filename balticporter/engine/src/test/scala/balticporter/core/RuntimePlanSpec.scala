@@ -56,8 +56,7 @@ class RuntimePlanSpec extends munit.FunSuite:
       val n = RuntimePlan.of(List(new CollectionsTransform), RuntimeMode.Vendored).writeSources(dir)
       // ELEVEN, and the list is the phase's `runtimeTypes`: the four shims — java's `Iterable`,
       // `Collection`, `Iterator` and `ListIterator`, none of which has a scala counterpart a class
-      // can EXTEND (CLAUDE.md §4.5; `ListIterator` arrived when K23's refusal was re-read) —
-      // `JavaCollections` (a mirror of `java.util.
+      // can EXTEND — `JavaCollections` (a mirror of `java.util.
       assertEquals(n, 11)
       val written = Files.readString(dir.resolve("balticporter/runtime/JavaIterator.scala"))
       assertEquals(written, RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator"))

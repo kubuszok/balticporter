@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** `ContextHolder.through`: a class handed the service a mapped static lives on reads the static off its own member and takes no clause (DESIGN.md §8.4).
+/** `ContextHolder.through`: a class handed the service a mapped static lives on reads the static off its own member and takes no clause.
   */
 class ContextThroughSpec extends munit.FunSuite:
   private val java =

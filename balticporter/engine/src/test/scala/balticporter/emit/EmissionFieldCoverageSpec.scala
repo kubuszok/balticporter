@@ -510,9 +510,8 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     )(
       // JS-E05's other half, and it is NOT the failure the proposal predicted: the conditional's
       // JLS-computed type is applied by the FRONTEND, to each OPERAND (`SpoonTir.promotedBranch`),
-      // because a conversion goes where java performed it and an emitter-side ascription is a CAST
-      // — which is the whole of K17. After that the `if` really HAS java's type and the emitter has
-      // nothing to ascribe.
+      // because a conversion goes where java performed it and an emitter-side ascription is a CAST.
+      // After that the `if` really HAS java's type and the emitter has nothing to ascribe.
       "tpe" -> Metadata(
         "the branches carry the type: `SpoonTir.promotedBranch` converts each " +
           "OPERAND to java's computed type, so this field is what that pass decided and never a " +
@@ -922,8 +921,8 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     // ---- MethodRef ----------------------------------------------------------------------------
     // `referent` is the JLS 15.13.1 split at `Type::name` and it is a FIELD precisely because it
     // decides the emitted shape by itself: `Static(n)` is a qualified NAME for every `n` but ZERO,
-    // where scala refuses to eta-expand a nullary method and the form becomes a lambda too
-    // (`ENGINE-LIMITS.md` G32); `Instance(n)` is an (n+1)-parameter lambda.
+    // where Scala 3 does not eta-expand a nullary method from a bare name and the form becomes a
+    // lambda too, with arity read from the reference node; `Instance(n)` is an (n+1)-parameter lambda.
     probe(Tree.MethodRef(Left(tt(tOth)), M1, tOth, O, Referent.Instance(0)), hostTerm)(
       "qualifier" -> Tree.MethodRef(Right(Tree.Ident(OTHER, tOth, O)), M1, tOth, O, Referent.Instance(0)),
       "method" -> Tree.MethodRef(Left(tt(tOth)), M2, tOth, O, Referent.Instance(0)),

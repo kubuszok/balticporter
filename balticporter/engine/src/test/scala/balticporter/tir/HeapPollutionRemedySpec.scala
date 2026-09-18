@@ -4,7 +4,7 @@ import balticporter.catalog.CatalogLog
 import balticporter.core.{ PolicyIssue, PolicyReport }
 import balticporter.frontend.spoon.SpoonTir
 
-/** THE FIRST MENU, END TO END — `heap-pollution`'s `acknowledge` (`DESIGN.md` §8.16). */
+/** THE FIRST MENU, END TO END — `heap-pollution`'s `acknowledge`. */
 class HeapPollutionRemedySpec extends munit.FunSuite:
 
   private val Java =
@@ -38,7 +38,7 @@ class HeapPollutionRemedySpec extends munit.FunSuite:
     assertEquals(HeapPollutionCheck.Acknowledge.lane, HeapPollutionCheck.Name)
     assertEquals(HeapPollutionCheck.Acknowledge.kind, HeapPollutionCheck.Issue.Unacknowledged.toString)
     // NOT emission-affecting: applying it changes no type, no parameter and no body, so two modules
-    // choosing differently cannot produce two ports that compile alone and fail together (§1.5).
+    // choosing differently cannot produce two ports that compile alone and fail together.
     assert(!HeapPollutionCheck.Acknowledge.emissionAffecting)
     // …and it answers ONE kind. The two kinds here PARTITION the lane — an `Acknowledged` row is
     // java's own author's statement — so `alsoKinds` would erase the distinction they exist for.
@@ -83,7 +83,7 @@ class HeapPollutionRemedySpec extends munit.FunSuite:
     assertEquals(d.reason, Reason.Configured("resolutions", "com.demo.Vault#keep(T[])"))
     assertEquals(d.detail.get("remedy"), Some("acknowledge"))
     assertEquals(d.detail.get("drains"), Some("heap-pollution(Unacknowledged)"))
-    // the porter note is what carries this to the reader at the emitted line (§4.575).
+    // the porter note is what carries this to the reader at the emitted line.
     assert(PorterNote.Rendered(Decision.Kind.SelectedRemedy))
   }
 
@@ -123,8 +123,8 @@ class HeapPollutionRemedySpec extends munit.FunSuite:
 
   test("a declaration this run does NOT emit is another module's row — D2 at the resolution ledger") {
     // A dependent's `Program` CONTAINS its base's units, so an inherited selection binds here too.
-    // Applied, it would file a `remediation(resolved)` row about a declaration this module does not
-    // write — the shape `ENGINE-LIMITS.md` D2 records five times on the reporting side.
+    // Applied, it would file a `remediation(resolved)` row about a declaration this module does
+    // not write, misattributing the base's finding to the dependent.
     val p      = program
     val binder = new PolicyBinder(p, p.members, RunScope.of(Set.empty, Map.empty))
     binder.resolving(ResolutionPlan.of(Map("com.demo.Vault#keep(T[])" -> "acknowledge"), vocabulary, vocabulary.byId.keySet, binder))

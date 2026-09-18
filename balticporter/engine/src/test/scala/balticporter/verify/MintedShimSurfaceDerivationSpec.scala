@@ -4,7 +4,8 @@ import scala.meta.*
 import balticporter.core.RuntimeArtifact
 import balticporter.transform.CollectionsTransform
 
-/** `CollectionsTransform.OverridesShim` says what the four STANDALONE targets declare, and this suite is the derivation that proves it — `ENGINE-LIMITS.md` K28.
+/** `CollectionsTransform.OverridesShim` says what the four STANDALONE targets declare, and this suite is the derivation that proves it: when a class is re-parented onto a Scala collection, the new
+  * parent's members sit beside Java's own and fail override checks that only run after typer errors reach zero, and the engine resolves these clashes itself, never through port policy.
   */
 class MintedShimSurfaceDerivationSpec extends munit.FunSuite:
 

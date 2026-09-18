@@ -246,10 +246,9 @@ class ManifestSpec extends munit.FunSuite:
   }
 
   test("MERGE: a base and a dependent that each configure a `type-redirect` now COMPOSE, and run") {
-    // `ENGINE-LIMITS.md` D9's first row, from the other side: before the merge contract this pair
-    // was 1 fatal `SurfaceDivergence` and the base could not gain the phase at all. Both keys name
-    // types the base DROPS, which is what the `governs` screen requires of an added subject
-    // (DESIGN.md §8.13).
+    // Before the merge contract this pair was 1 fatal `SurfaceDivergence` and the base could not
+    // gain the phase at all. Both keys name types the base DROPS, which is what the `governs`
+    // screen requires of an added subject.
     val (root, base, dep) = twoModules()
     val core              = PortManifest(
       "core",
@@ -345,7 +344,7 @@ class ManifestSpec extends munit.FunSuite:
     // declarations routinely live inside that package — a TEST SOURCE SET always does, `src/test/
     // java/<pkg>` being the same package as `src/main/java/<pkg>` — so a screen that reads the
     // claim alone makes every key such a module declares about its OWN members an intrusion, and
-    // leaves it no way to comply. §1.
+    // leaves it no way to comply.
     val base                              = PortManifest("core", governs = Set("com.demo"))
     val m                                 = base.extendedBy(PortManifest("ext", dropMethods = Set("com.demo.OwnTest#helper()")))
     def run(entries: List[PortMap.Entry]) =
@@ -385,13 +384,13 @@ class ManifestSpec extends munit.FunSuite:
     assertEquals(PortManifest.fingerprint(fwd(Set("a", "b"))), PortManifest.fingerprint(fwd(Set("b", "a"))))
     assertNotEquals(PortManifest.fingerprint(fwd(Set("a"))), PortManifest.fingerprint(fwd(Set("a", "b"))))
     // a phase with NO parameter declares an EMPTY policy, so two instances in a base chain compare
-    // equal and merge (K43); a phase declaring nothing would render its bare name — the blind spot
+    // equal and merge; a phase declaring nothing would render its bare name — the blind spot
     assertEquals(PortManifest.fingerprint(new MutableParamsTransform), "reassigned-params->var[]")
     // …and one that DOES carries it, even when the policy is the default: the collections phase
     // takes a `RuleScope`, and two modules scoping it differently emit signatures that each compile
-    // alone and cannot compile together, which is precisely what `SurfacePolicy` is for (§1.5). The
+    // alone and cannot compile together, which is precisely what `SurfacePolicy` is for. The
     // default scope renders empty; what follows the `;` is the MAPPING TABLE's digest, which is
-    // engine policy rather than instance policy and is in the fingerprint for §1.
+    // engine policy rather than instance policy and is in the fingerprint too.
     val collections = PortManifest.fingerprint(new CollectionsTransform)
     assert(collections.startsWith("java-collections->scala[;mapping="), clue(collections))
     assertEquals(collections, PortManifest.fingerprint(new CollectionsTransform), "not stable")

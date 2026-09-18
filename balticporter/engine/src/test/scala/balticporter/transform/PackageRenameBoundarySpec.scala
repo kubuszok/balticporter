@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, Pipeline }
 
-/** A DECLARED per-type package move publishes the type's package-private members, readers or no readers in this program (a base never sees its dependent's, ENGINE-LIMITS.md K43).
+/** A DECLARED per-type package move publishes the type's package-private members, readers or no readers in this program — a base never sees its dependent's readers.
   */
 class PackageRenameBoundarySpec extends munit.FunSuite:
   private val java =

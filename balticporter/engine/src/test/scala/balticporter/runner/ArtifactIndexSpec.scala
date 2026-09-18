@@ -38,8 +38,7 @@ class ArtifactIndexSpec extends munit.FunSuite:
   }
 
   test("an entry names its class and EVERY ENCLOSING PREFIX, cut only at `$`") {
-    // so the match against a program's symbol name is an equality test rather than a `startsWith`,
-    // which is CLAUDE.md §4.56 at a jar listing.
+    // so the match against a program's symbol name is an equality test rather than a `startsWith`.
     assertEquals(ArtifactIndex.namesOf("a/b/C.class"), List("a.b.C"))
     assertEquals(ArtifactIndex.namesOf("a/b/Outer$Inner.class"), List("a.b.Outer", "a.b.Outer$Inner"))
     // a scala module class carries no name after the separator, so it names its own companion
@@ -65,7 +64,7 @@ class ArtifactIndexSpec extends munit.FunSuite:
   }
 
   test("a jar that cannot be RESOLVED is Unverifiable — never an empty provides-set") {
-    // §4.6: `Known(Set.empty)` is indistinguishable from "this artifact declares nothing the port
+    // `Known(Set.empty)` is indistinguishable from "this artifact declares nothing the port
     // names", which is a REMOVE instruction. An offline run must not be able to produce one.
     val got = ArtifactIndex.provides(ArtifactDep("o", "n", "1"), scala.None, "3", _ => Left("no network"))
     got match
@@ -133,7 +132,7 @@ class ArtifactIndexSpec extends munit.FunSuite:
   test("the supplier resolves one coordinate ONCE, however many times the 2×2 asks") {
     // the 2×2 asks about the same coordinate up to twice, once per program; with a cold cache that
     // would be two resolutions of one artifact. Memoised per RUN and never globally — two runs in
-    // one JVM are two answers (§5.1).
+    // one JVM are two answers.
     var calls  = 0
     val jar    = jarOf("p/A.class")
     val supply = ArtifactIndex.supplier(scala.None, "3", _ => { calls += 1; Right(List(jar)) })
@@ -167,7 +166,7 @@ class ArtifactIndexSpec extends munit.FunSuite:
     // `~/Library/Application Support/Coursier` is the platform default on macOS. Filtered on
     // `!contains(' ')` the resolution drops every jar it found, the list is empty, and the
     // coordinate reads a PERMANENT `Unverifiable` on a machine that is online and has the artifact
-    // on disk — exactly the shape the `--intransitive` flag order shipped (ENGINE-LIMITS.md P8).
+    // on disk — exactly the shape the `--intransitive` flag order shipped.
     val dir  = Files.createTempDirectory("artifact index ")
     val here = Files.copy(jarOf("p/Spaced.class"), dir.resolve("app support.jar"))
     assert(here.toString.contains(' '), here.toString)

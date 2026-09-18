@@ -4,8 +4,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ DecisionLog, Phase, Pipeline, Program, RuleScope }
 
-/** `ElementWitnessTransform` — the §1(b) mechanism moving an element-typed array onto a type-class WITNESS and dropping java's implicit `Object` bound. Every refusal kind is asserted, not sampled
-  * (CLAUDE.md §3).
+/** `ElementWitnessTransform` — the parameterised mechanism moving an element-typed array onto a type-class WITNESS and dropping java's implicit `Object` bound. Every refusal kind is asserted, not
+  * sampled.
   */
 class ElementWitnessTransformSpec extends munit.FunSuite:
   import ElementWitnessTransform.*

@@ -53,7 +53,7 @@ class DebugFlagsMainSpec extends munit.FunSuite:
   test("a flag a PORT is supposed to supply is marked as the FALLBACK it is") {
     // The one thing an operator cannot see otherwise: `baseReports` changes what a run EMITS (it
     // decides which base contracts are found), so a leftover entry makes this checkout emit
-    // differently at the same commit with every count identical — §4.6's `reportPathRoot` lesson.
+    // differently at the same commit with every count identical.
     val out = DebugFlagsMain.render(root("debug.properties" -> "balticporter.baseReports=/tmp/x"), Map.empty, scala.None)
     assert(out.contains("(FALLBACK"), out)
     assert(out.contains("a port states this in its own configuration"), out)

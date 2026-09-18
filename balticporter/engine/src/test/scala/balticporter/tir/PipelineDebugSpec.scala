@@ -2,7 +2,8 @@ package balticporter.tir
 
 import java.nio.file.{ Files, Path }
 
-/** The kill switch of CLAUDE.md §4.6, exercised. A flag that is wired but never used is exactly the defect class §3 is about, so each of these asserts the OUTPUT changed, not that the flag parsed.
+/** The debug kill switches, exercised. A flag that is wired but never used is exactly the defect class a compile count cannot see, so each of these asserts the OUTPUT changed, not that the flag
+  * parsed.
   */
 class PipelineDebugSpec extends munit.FunSuite:
 

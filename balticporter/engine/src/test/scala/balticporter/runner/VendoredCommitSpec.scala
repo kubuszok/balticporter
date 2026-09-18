@@ -3,7 +3,7 @@ package balticporter.runner
 import java.nio.file.{ Files, Path }
 
 /** [[VendoredCommit]] against a REAL git repository built in a temp dir — the helper shells out, so a mock would test the string formatter and skip the only part that can break. Negative case
-  * included: a check (here, a fallback) that has never fired is not known to work (CLAUDE.md §3).
+  * included: a check (here, a fallback) that has never fired is not known to work.
   */
 class VendoredCommitSpec extends munit.FunSuite:
 

@@ -4,7 +4,7 @@ import balticporter.catalog.CatalogLog
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.runner.PortRun
 
-/** THE `jdk-surface` MENU — one accept, at an EXTERNAL callee (`DESIGN.md` §8.16). */
+/** THE `jdk-surface` MENU — one accept, at an EXTERNAL callee. */
 class JdkSurfaceRemedySpec extends munit.FunSuite:
 
   private val Java =

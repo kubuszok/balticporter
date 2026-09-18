@@ -122,8 +122,8 @@ class PortConfigSpec extends munit.FunSuite:
     assertEquals(fromConf.phases, Nil)
 
     // A `Phase` is a class instance and has no structural equality, so the manifests are compared
-    // the way §1.5's own agreement check compares them: the declarative half verbatim, the surface
-    // by FINGERPRINT — which is exactly the identity that decides whether two modules agree.
+    // the way the agreement check between modules compares them: the declarative half verbatim,
+    // the surface by FINGERPRINT — which is exactly the identity that decides whether two modules agree.
     val (a, b) = (fromConf.manifest.get, byHand.manifest.get)
     assertEquals(a.name, b.name)
     assertEquals(a.governs, b.governs)
@@ -501,8 +501,8 @@ class PortConfigSpec extends munit.FunSuite:
     assertEquals(m.effectivePackageRenames, byHand.effectivePackageRenames)
     // base phases first, then this module's own — the order `effectiveSurface` guarantees
     assertEquals(fingerprints(m), fingerprints(byHand))
-    // `inject` is the field §1.5 puts on the must-DIFFER side: exactly one module ships each
-    // replacement file, so a dependent that inherited it would define the same FQN twice.
+    // `inject` is not inherited: exactly one module ships each replacement file, so a
+    // dependent that inherited it would define the same FQN twice.
     assertEquals(m.inject, Nil)
     assertEquals(m.substitutions.inject, Nil)
   }
@@ -560,9 +560,9 @@ class PortConfigSpec extends munit.FunSuite:
   }
 
   test("a base contributes its MANIFEST and nothing else — its build halves are not junk") {
-    // The base conf below carries a full `input`/`output`/`provenance`; none of it is this run's
-    // business (§1.5's must-differ column), and reporting it as an unread key would make every
-    // real two-module port unloadable.
+    // The base conf below carries a full `input`/`output`/`provenance`; none of it is this
+    // dependent's build, and reporting it as an unread key would make every real two-module
+    // port unloadable.
     val base =
       """label = "base"
         |input  { sourceRoot = "java" }
@@ -586,8 +586,8 @@ class PortConfigSpec extends munit.FunSuite:
 
   test("`baseReports` is the PORT's, resolved against the conf and reaching BOTH readers") {
     // Which base maps a run discovers decides EMITTED TEXT (the constructor plan, the class-vs-object
-    // question, §4.55's field names, the `export` lists), so it belongs to the port and not to an
-    // operator's `debug.properties` — §4.6's `reportPathRoot` lesson at an input that shapes output.
+    // question, renamed field names, the `export` lists), so it belongs to the port and not to an
+    // operator's `debug.properties` — an input that shapes output must come from the port.
     val prev = Option(System.getProperty("balticporter.baseReports"))
     try
       System.clearProperty("balticporter.baseReports")
@@ -613,11 +613,11 @@ class PortConfigSpec extends munit.FunSuite:
       assertEquals(m.baseReports.map(_.getFileName.toString), List("published", "elsewhere"))
       assert(m.baseReports.forall(_.isAbsolute), m.baseReports.toString)
       // …and NOT inherited: a base's own `baseReports` says where ITS bases published, which is a
-      // fact about that module's build and none of this run's business (§1.5's must-differ column).
+      // fact about that module's build and none of this run's business.
       assertEquals(m.baseChain.map(_.baseReports), List(Nil))
       // …and ANCHORED, so a `{ transform = "port-map-migration" }` entry — which loads its maps at
       // CONSTRUCTION time, through a factory that takes nothing but its own view — reads the same
-      // value `PortRun` will. One value, both readers (D6.5).
+      // value `PortRun` will. One value, both readers.
       assertEquals(balticporter.tir.DebugFlags.baseReports.map(_.getFileName.toString), List("published", "elsewhere"))
     finally
       prev match
@@ -630,8 +630,8 @@ class PortConfigSpec extends munit.FunSuite:
     // The flat form is published — every port that writes it must keep working — so the entry that
     // grew `memberRenames` spells itself as an object BESIDE it, in the same map. The identity
     // compared is `surfaceFingerprint`, because that is what decides whether two modules agree
-    // about the emitted surface (§1.5), and because an entry with no renames must still render
-    // exactly what it always did or every base/dependent pair predating this feature disagrees.
+    // about the emitted surface, and because an entry with no renames must still render exactly
+    // what it always did or every base/dependent pair predating this feature disagrees.
     def fp(entries: String) = PortConfig
       .load(
         fixture(
@@ -663,7 +663,7 @@ class PortConfigSpec extends munit.FunSuite:
     // The same compatible extension as `type-redirect`'s, one phase over — and the assertion that
     // matters is the LAST one: two entries that name the same accessors and ask for different
     // SHAPES must not compare equal, or `SurfaceMissing` cannot see the difference and a same-name
-    // pair can be neither compared nor composed (`ENGINE-LIMITS.md` CT9).
+    // pair can be neither compared nor composed.
     def fp(entries: String) = PortConfig
       .load(
         fixture(
@@ -711,8 +711,8 @@ class PortConfigSpec extends munit.FunSuite:
   }
 
   test("`base` composes a phase's POLICY through the SAME fold — no second truth on the conf path") {
-    // D9 noted the hole was identical on both paths, so the fix has to be: `base = "…"` IS
-    // `extendedBy`, and the merge lives on the manifest rather than in the run (DESIGN.md §8.13).
+    // The hole was identical on both paths, so the fix has to be: `base = "…"` IS `extendedBy`,
+    // and the merge lives on the manifest rather than in the run.
     // Nothing was added to `PortConfig` for this test to pass, which is the point of it.
     val base =
       """label = "base"
@@ -801,7 +801,7 @@ class PortConfigSpec extends munit.FunSuite:
   test("`package-rename` as a surface entry is refused BY NAME, pointing at the manifest field") {
     // Not "unknown transform": a port told that would reasonably conclude the feature is missing.
     // It is not missing — it is manifest DATA, because it must run after every other phase and
-    // `runsAfter` cannot say "after everything" (CLAUDE.md §4.56).
+    // `runsAfter` cannot say "after everything".
     val f = fixture(
       Minimal.replace("""manifest { name = "demo" }""", """manifest { name = "demo", surface = [ { transform = "package-rename" } ] }""")
     )
@@ -882,8 +882,8 @@ class PortConfigSpec extends munit.FunSuite:
   }
 
   test("a declared classpathFile that is not there is FATAL, never an empty classpath") {
-    // §5.1's missing-input rule, and it bites harder here: an unresolved `org.junit.Assert` import
-    // does not fail the frontend, it resolves WRONGLY.
+    // A missing input must fail loudly, and it bites harder here: an unresolved `org.junit.Assert`
+    // import does not fail the frontend, it resolves WRONGLY.
     val f = fixture(
       """label = "demo"
         |input  { sourceRoot = "java", classpathFile = "nope.txt" }
@@ -906,7 +906,7 @@ class PortConfigSpec extends munit.FunSuite:
   test("discovery finds the engine's built-ins AND a factory the engine knows nothing about") {
     val found = TransformRegistry.discover().names
     BuiltinFactories.all.map(_.name).foreach(n => assert(found.contains(n), s"$n was not discovered"))
-    // …and a stranger's, registered exactly the way a porting repository registers a §1(c) rule.
+    // …and a stranger's, registered exactly the way a porting repository registers a library-specific rule.
     // A registry that only ever saw classes from its own jar would pass every test the engine can
     // write and fail the first consumer.
     assert(clue(found).contains("spec-echo"))
@@ -962,7 +962,7 @@ class PortConfigSpec extends munit.FunSuite:
 
   test("an UNKNOWN remedy id is refused at LOAD, with the alternatives listed") {
     // The loud door. A value silently ignored here is a port that selected a remedy and got none,
-    // which reads exactly like a port that never asked — the §1(b) no-op this whole front door
+    // which reads exactly like a port that never asked — the silent no-op this whole front door
     // exists to prevent.
     val f = fixture(
       Minimal.replace(

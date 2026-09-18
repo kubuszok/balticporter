@@ -4,8 +4,8 @@ import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
 import balticporter.transform.{ ClassTableTransform, StaticForwarderTransform }
 
-/** A §1(b) rule's POLICY is a bag of strings the compiler cannot check, so a typo in it is a silent no-op: the phase runs, matches nothing, and the port keeps the very construct the policy was
-  * written to remove. These pin the complaint — and, just as importantly, pin that a CORRECT key produces no complaint, because a check that cries wolf is turned off and then it is not a check at
+/** A parameterised phase's POLICY is a bag of strings the compiler cannot check, so a typo in it is a silent no-op: the phase runs, matches nothing, and the port keeps the very construct the policy
+  * was written to remove. These pin the complaint — and, just as importantly, pin that a CORRECT key produces no complaint, because a check that cries wolf is turned off and then it is not a check at
   * all.
   */
 class PolicySpec extends munit.FunSuite:
@@ -26,7 +26,7 @@ class PolicySpec extends munit.FunSuite:
 
   private val caller = Tree.ClassDef(CALLER, parents = Nil, selfType = None, body = Nil, origin = O)
   // The wrapper is a UNIT this program declares, so its members are OWNED (`Program.owned` climbs
-  // to a `units` symbol, §4.56). Without it every key here would bind `ExternalOnly` — correctly,
+  // to a `units` symbol). Without it every key here would bind `ExternalOnly` — correctly,
   // since a policy that rewrites declarations has nothing to rewrite in a type it only references.
   private val wrapper = Tree.ClassDef(WRAPPER, parents = Nil, selfType = None, body = Nil, origin = O)
 
@@ -164,8 +164,8 @@ class PolicySpec extends munit.FunSuite:
 
     val all = PolicyReport.collect(fwd, tbl)
     assertEquals(all.keys, Set("com.x.Wrapper#getNaem", "com.x.Wrapper#fromName"))
-    // every line names the key AND says which of CLAUDE.md §1's three kinds the fix is, so a
-    // reader in another repository needs no investigation to act on it.
+    // every line names the key AND says which of engine/configured/library-specific the fix is,
+    // so a reader in another repository needs no investigation to act on it.
     all.findings.foreach { f =>
       assert(clue(f.render).contains(f.key))
       assert(f.render.contains("port policy"))

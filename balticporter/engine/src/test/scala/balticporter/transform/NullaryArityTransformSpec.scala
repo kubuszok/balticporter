@@ -39,7 +39,7 @@ class NullaryArityTransformSpec extends munit.FunSuite:
   private val everywhere = RuleScope.Everywhere()
 
   // -------------------------------------------------------------------------------------------
-  // §1(b): the no-op default, and the fingerprint segment that is OMITTED at it
+  // the no-op default, and the fingerprint segment that is OMITTED at it
   // -------------------------------------------------------------------------------------------
 
   test("scope = Only(Set.empty) is the no-op — the same program, identically") {
@@ -79,8 +79,9 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assert(clue(b.surfaceFingerprint).contains("except:com.bar"))
   }
 
-  /** `Everywhere(Set.empty)` is the WHOLE-PROGRAM derivation, not the no-op — this phase ADDS a declaration shape, so §1(b)'s adds-vs-retypes rule puts its no-op at `Only(Set.empty)`. The two must
-    * therefore FINGERPRINT DIFFERENTLY: rendered equal, `SurfaceMissing` could not tell a port that runs the phase over everything from one that does not run it at all (`ENGINE-LIMITS.md` CT9).
+  /** `Everywhere(Set.empty)` is the WHOLE-PROGRAM derivation, not the no-op — this phase ADDS a declaration shape, so a phase that adds declarations (unlike one that retypes) puts its no-op at
+    * `Only(Set.empty)`. The two must therefore FINGERPRINT DIFFERENTLY: rendered equal, `SurfaceMissing` could not tell a port that runs the phase over everything from one that does not run it at
+    * all.
     */
   test("Everywhere() is NOT the no-op, and does NOT fingerprint equal to it") {
     val on  = new NullaryArityTransform(everywhere)
@@ -141,7 +142,7 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assertEquals(ds.head.reason, Reason.Universal("nullary-arity"))
   }
 
-  /** The scope is a REFUSAL like any other: a member the scope declines is one whose `()` the run kept, and §3 wants the seam the scope created counted rather than dropped.
+  /** The scope is a REFUSAL like any other: a member the scope declines is one whose `()` the run kept, and every seam a scope creates must be counted rather than dropped.
     */
   test("a type OUTSIDE the scope keeps `()` and files an OutOfScope row") {
     val r = ran(
@@ -160,7 +161,7 @@ class NullaryArityTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // the population: EVERY owned nilary value-returning declaration takes exactly one row (§3)
+  // the population: EVERY owned nilary value-returning declaration takes exactly one row
   // -------------------------------------------------------------------------------------------
 
   /** A `static` is emitted onto the companion. The skip predates the lane; it is the same claim about the emitted surface as every other guard, so it is COUNTED rather than silent.
@@ -276,8 +277,8 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assert(clue(why).exists(_.contains("java.lang.Object")), "the anchor's own FQN is what an agent classifies the row by")
   }
 
-  /** The SHIM FAMILY (CLAUDE.md §4.5): a library's own class implementing a java collection interface keeps JAVA's arity, because the interface is a class file no phase can move. `hasNext()` is the
-    * shape every collection library is made of.
+  /** The SHIM FAMILY: a library's own class implementing a java collection interface keeps JAVA's arity, because the interface is a class file no phase can move. `hasNext()` is the shape every
+    * collection library is made of.
     */
   test("the shim family: `hasNext()` under `java.util.Iterator` stays `hasNext()`") {
     val r = ran(
@@ -415,7 +416,7 @@ class NullaryArityTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // MergeablePolicy — §1.5: two modules scoping this differently emit signatures that cannot
+  // MergeablePolicy — two modules scoping this differently emit signatures that cannot
   // compile together, so the composition is the PHASE's answer and a disagreement is a finding
   // -------------------------------------------------------------------------------------------
 
@@ -472,7 +473,8 @@ class NullaryArityTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // substituted-owner filter (D14, §1.5)
+  // substituted-owner filter — a dependent follows the base's published renames rather than
+  // re-detecting its own
   // -------------------------------------------------------------------------------------------
 
   test("candidates on a substituted owner type are skipped") {

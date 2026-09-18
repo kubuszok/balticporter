@@ -5,7 +5,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Pipeline, RuleScope }
 
-/** A DROPPED type's members are read literally by the nullability phase: an injection stands at the name with signatures the phase cannot see (CLAUDE.md §4.56, K15).
+/** A DROPPED type's members are read literally by the nullability phase: an injection stands at the name with signatures the phase cannot see, since an external callee's signature is a class-file
+  * fact a retyping phase cannot move.
   */
 class NullabilityDroppedTypeSpec extends munit.FunSuite:
   private val java =

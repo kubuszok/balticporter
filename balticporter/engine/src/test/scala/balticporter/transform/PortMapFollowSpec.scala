@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Pipeline, RuleScope }
 
-/** [[PortMapTransform]]'s follow of a base's PUBLISHED member spelling where only the FORM moved (`first()` -> `first`): no name to rename, still a call site to rewrite (ENGINE-LIMITS K51).
+/** [[PortMapTransform]]'s follow of a base's PUBLISHED member spelling where only the FORM moved (`first()` -> `first`): no name to rename, still a call site to rewrite.
   */
 class PortMapFollowSpec extends munit.FunSuite:
 

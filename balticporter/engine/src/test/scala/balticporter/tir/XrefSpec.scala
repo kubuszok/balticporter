@@ -31,7 +31,7 @@ class XrefSpec extends munit.FunSuite:
   private val O               = Origin.synthetic
   private def tt(t: TypeRepr) = TypeTree(t, O)
 
-  /** an EXTERNAL symbol — `owner = SymId.None`, which is what makes it external (§4.56: ownership is decided by climbing the owner chain to a unit, never from the name).
+  /** an EXTERNAL symbol — `owner = SymId.None`, which is what makes it external (ownership is decided by climbing the owner chain to a unit, never from the name).
     */
   private def sym(id: SymId, name: String, info: TypeRepr) =
     Symbol(id, name, name, Flags(), SymId.None, info)

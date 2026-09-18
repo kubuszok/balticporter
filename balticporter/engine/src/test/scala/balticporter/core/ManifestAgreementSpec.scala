@@ -124,7 +124,7 @@ class ManifestAgreementSpec extends munit.FunSuite:
   }
 
   test("an EMPTY base manifest is not asked for a map — that is how a non-ported root is declared") {
-    // CLAUDE.md §1.5: a resolution root that is not a ported module is declared with an empty
+    // a resolution root that is not a ported module is declared with an empty
     // manifest, and holding one to the obligation to publish a map would turn a statement into a
     // finding. It also must not claim any namespace, so nothing under it is `BaseSurfaceAbsent`.
     val vendored = PortManifest(name = "vendored")
@@ -134,7 +134,7 @@ class ManifestAgreementSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------
-  // M6 — the PER-TYPE half of the rename policy is shared surface, and is INHERITED
+  // the PER-TYPE half of the rename policy is shared surface, and is INHERITED
   // ---------------------------------------------------------------------------
 
   private val moving = PortManifest(
@@ -237,7 +237,7 @@ class ManifestAgreementSpec extends munit.FunSuite:
   }
 
   test("a TYPE-RENAMED type is found by EMITTED name when the upstream lookup misses (D16)") {
-    // D16 made the port map's `upstream` column carry java's own FQN (`…ui.List`). The dependent's
+    // The port map's `upstream` column carries java's own FQN (`…ui.List`). The dependent's
     // `upstreamFqn` uses `sym.name` — the post-type-rename simple name (`SgeList`) — combined with
     // the pre-rename package from the java path, producing `…ui.SgeList`. Neither the upstream
     // column nor the `upstreamFqn` match. The emitted-name fallback finds the entry through

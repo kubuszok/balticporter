@@ -3,7 +3,7 @@ package balticporter.transform
 import balticporter.tir.RuleScope
 
 /** The `families` parameter on [[CollectionsTransform]]: additional collection families added alongside the JDK defaults. Tests the collision check, fingerprinting, `MergeablePolicy` composition, and
-  * per-entry scopes (D12).
+  * per-entry scopes, which keep a dependent's own retyping from disagreeing with the base's published surface.
   */
 class CollectionsFamiliesSpec extends munit.FunSuite {
 
@@ -84,7 +84,7 @@ class CollectionsFamiliesSpec extends munit.FunSuite {
     assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
   }
 
-  // ---- PER-ENTRY SCOPES (D12) ----
+  // ---- PER-ENTRY SCOPES ----
 
   test("familyScopeOf defaults to Everywhere when no scope is declared") {
     val ct = new CollectionsTransform(families = Map("com.lib.Array" -> ("scala.collection.mutable.ArrayBuffer", Kind.Seq)))

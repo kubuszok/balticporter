@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, DecisionLog, Pipeline, Program, Reason }
 
-/** AddMembersTransform — the §1(b) mechanism for appending hand-port members to a mechanically translated class.
+/** AddMembersTransform — the parameterised mechanism for appending hand-port members to a mechanically translated class.
   */
 class AddMembersTransformSpec extends munit.FunSuite:
   import AddMembersTransform.MemberSpec

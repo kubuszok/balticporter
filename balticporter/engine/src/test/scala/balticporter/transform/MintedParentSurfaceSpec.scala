@@ -2,7 +2,8 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** The two tables `CollectionsTransform.strippedOverrides` decides an `override` modifier from, asserted against what they are quoting — `ENGINE-LIMITS.md` K28.
+/** The two tables `CollectionsTransform.strippedOverrides` decides an `override` modifier from, asserted against what they are quoting: when a class is re-parented onto a Scala collection, the new
+  * parent's members sit beside Java's own and fail override checks that only run after typer errors reach zero, and the engine resolves these clashes itself, never through port policy.
   */
 class MintedParentSurfaceSpec extends munit.FunSuite:
 
@@ -114,7 +115,9 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // THE SUBSUMPTION TABLE — `ENGINE-LIMITS.md` K28.1.
+  // THE SUBSUMPTION TABLE — when re-parenting gives a class two collection parents that declare
+  // the same member, the redundant parent is dropped and the Scala parent's required members are
+  // synthesised as bridges.
 
   import CollectionsTransform.SubsumesShim
 

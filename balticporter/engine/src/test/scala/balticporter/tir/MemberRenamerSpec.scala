@@ -5,7 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 
 /** [[MemberRenamer]] — a component renamed whole, or not at all.
   *
-  * The assertions that matter are the negatives: a half-applied rename compiles, moves no count and breaks a contract in somebody else's repository (DESIGN.md §8.5).
+  * The assertions that matter are the negatives: a half-applied rename compiles, moves no count and breaks a contract in somebody else's repository.
   */
 class MemberRenamerSpec extends munit.FunSuite:
 
@@ -111,8 +111,8 @@ class MemberRenamerSpec extends munit.FunSuite:
 
   test("EFFECTIVE names, PARENTS-FIRST: a child is held against what its ancestor WILL be called") {
     // `Base#tag` is renamed to `label`; `Sub` already declares `label`, so the collision is only
-    // visible if the child is tested against the ancestor's NEW name. Reading original names is
-    // §4.55's recorded mistake.
+    // visible if the child is tested against the ancestor's NEW name. Reading original names
+    // misses it.
     val (p, out, refusals, _) = run(
       """
       class Base { String tag() { return "t"; } }
@@ -143,7 +143,7 @@ class MemberRenamerSpec extends munit.FunSuite:
     )
     assertEquals(refusals, Nil)
     assertEquals(out.symbolOf(sym(p, "Thing#getWidth")).get.name, "width")
-    // …and the emitter's own §4.55 pass does exactly what was deferred to it.
+    // …and the emitter's own renaming pass does exactly what was deferred to it.
     val text = emitted(out)
     assert(clue(text).contains("width$field"), "the field did not move out of the way")
     assert(text.contains("def width"))
@@ -245,7 +245,7 @@ class MemberRenamerSpec extends munit.FunSuite:
   test("a request naming an EXTERNAL symbol is refused — there is no declaration to rename") {
     val (_, _, refusals, _) = run(
       """class Thing { void go(String s) { s.length(); } }""",
-      // found STRUCTURALLY: an interned external is a symbol with no unit above it (§4.56), which is
+      // found STRUCTURALLY: an interned external is a symbol with no unit above it, which is
       // the same test `Program.owned` makes — never by spelling its name.
       pr =>
         List(

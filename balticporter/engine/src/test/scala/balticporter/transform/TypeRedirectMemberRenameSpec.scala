@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
-/** `type-redirect`'s MEMBER RENAMES — a target that spells the member differently (DESIGN.md §8.5). */
+/** `type-redirect`'s MEMBER RENAMES — a target that spells the member differently. */
 class TypeRedirectMemberRenameSpec extends munit.FunSuite:
 
   // ---- fixtures ------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
   private def sym(p: Program, fqn: String): SymId =
     p.symbols.all.find(_.fullName == fqn).map(_.id).getOrElse(fail(s"no symbol named $fqn"))
 
-  /** the emitted CODE with the porter notes stripped — see the §4.575 note at its one use. */
+  /** the emitted CODE with the porter notes stripped. */
   private def code(out: String): String =
     out.linesIterator.filterNot(l => l.contains(PorterNote.Marker) || l.trim.startsWith("—")).mkString("\n")
 
@@ -87,7 +87,7 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     // …and the CALL SITE, for free: the emitter renders every reference through the symbol's name
     assert(clue(out).contains("d.close()"), "the call site did not follow the symbol")
     // …and NOTHING is still called `dispose` — read off the CODE, with the notes stripped, because
-    // a note names the upstream member on purpose (§4.575's `from=`) and a text search that forgets
+    // a note names the upstream member on purpose (the `from=` key) and a text search that forgets
     // that reports a phantom (`SubstitutionCheck.dangling`'s first run with notes).
     assert(!code(out).contains("dispose"), s"`dispose` survives somewhere:\n$out")
 
@@ -98,7 +98,7 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     val renamed = r.log.all.filter(_.kind == Decision.Kind.RenamedMember)
     assertEquals(clue(renamed).size, 4)
     assert(renamed.forall(_.reason == Reason.Configured("type-redirect", "com.demo.Disposable#dispose -> close")))
-    // …and the note is beside the code (§4.575), after the upstream comment, never before it
+    // …and the note is beside the code, after the upstream comment, never before it
     assert(clue(out).contains("/* porter: renamed-member"), out)
     assert(out.contains("phase=type-redirect"))
     val doc  = out.indexOf("frees it.")
@@ -208,7 +208,7 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     assertEquals(clue(fs).size, 1, ph.policyReport.render)
     assert(fs.head.detail.contains("com.demo.Pooled#close"), fs.head.render)
     assertEquals(fs.head.about, balticporter.core.PolicyFinding.About.ThisRun)
-    // …and the classification the row ENDS in is the one this reader can act on (§4.45): not
+    // …and the classification the row ENDS in is the one this reader can act on: not
     // "fix this key in the manifest", which names a string this module may not own.
     assert(fs.head.render.contains("in THIS module"), fs.head.render)
   }
@@ -326,7 +326,7 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     // with it, because the run reads a finding's key for its shared-surface SUBJECT — cut at `#`,
     // `MergeablePolicy.subjectOf` — to decide whether the manifest being reported on can fix it. A
     // bare segment is its own subject, matches no contributed set, and was DROPPED from a merged
-    // phase's report: the dependent's own typo, silently unreported (DESIGN.md §8.13).
+    // phase's report: the dependent's own typo, silently unreported.
     val ph = phase(Map("dispose(Class<T>)" -> "close"))
     run(clean, ph)
     val fs = ph.policyReport.of(PolicyIssue.Malformed)

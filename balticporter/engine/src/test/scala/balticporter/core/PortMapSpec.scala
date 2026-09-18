@@ -52,7 +52,7 @@ class PortMapSpec extends munit.FunSuite:
 
   test("the search path comes from the PORT; the flag is the fallback, and it is CHOSEN not merged") {
     // A base's map decides emitted text, so which maps a run discovers is part of the run's identity
-    // (§4.6's `reportPathRoot` lesson at an input that shapes the OUTPUT). Left to the flag alone, a
+    // — an input that shapes the OUTPUT must come from the port. Left to the flag alone, a
     // leftover `debug.properties` entry adds a base and two checkouts at the same commit emit
     // differently with every count identical — so a port that states its own IGNORES the flag.
     // Merging would leave exactly that failure in place for every port that had stated one.
@@ -78,7 +78,7 @@ class PortMapSpec extends munit.FunSuite:
       // supposed to state it — an operator has no other way to see that.
       assert(balticporter.tir.DebugFlags.PortSupplied.contains("balticporter.baseReports"))
       // …and it is in `known`, so `just debug-flags` cannot mark it as a key nothing will look up —
-      // which is the one thing an operator cannot see any other way (§4.6).
+      // which is the one thing an operator cannot see any other way.
       assert(balticporter.tir.DebugFlags.known.contains("balticporter.baseReports"))
       assert(clue(balticporter.tir.DebugFlags.active).exists(_.startsWith("baseReports=")))
     finally
@@ -114,7 +114,7 @@ class PortMapSpec extends munit.FunSuite:
   }
 
   test("a SUBSTITUTED type carries its shape payload so a dependent gets Published, not Unknown") {
-    // The defect this test pins: D16 made `droppedEntries` produce only `Dropped` rows, losing
+    // The defect this test pins: `droppedEntries` produced only `Dropped` rows, losing
     // the `Substituted` disposition's contract payload. A `Substituted` entry with no shape made
     // `PublishedSurface.typeShape` answer `Unknown` — and every dependent's `PortRun.execute`
     // failed FATAL ("no declared base publishes a contract row") for types like
@@ -158,7 +158,7 @@ class PortMapSpec extends munit.FunSuite:
   }
 
   test("a RENAMING port still pairs a drop with its injection — the two are in different namespaces") {
-    // CLAUDE.md §4.56. `dropTypes` is a manifest key, so it is UPSTREAM; `injected` is the set of
+    // `dropTypes` is a manifest key, so it is UPSTREAM; `injected` is the set of
     // files the run WROTE, so it is EMITTED. Compared directly the test is false for every renaming
     // port, and `Substituted` had therefore never once been produced by one: libGDX drops
     // `com.badlogic.gdx.utils.Json`, injects `sge.utils.Json`, and its map carried `Dropped` beside
@@ -187,7 +187,7 @@ class PortMapSpec extends munit.FunSuite:
   }
 
   test("a rename that does not COVER a dropped name leaves it alone — cut only at a separator") {
-    // The §4.56 prefix rule, at this join: `up.streaming` must not be rewritten by a `up.stream`
+    // The prefix rule, at this join: `up.streaming` must not be rewritten by a `up.stream`
     // entry, or a drop would be paired with an injection that has nothing to do with it.
     val m = build(
       dropTypes = Set("up.streaming.Gone"),
@@ -202,8 +202,8 @@ class PortMapSpec extends munit.FunSuite:
     // The origin is ground truth. Inverting the rename works only while the rename is injective,
     // and a real one need not be: flattening two upstream packages onto one target makes
     // `port.ui.X` genuinely ambiguous, and every shared type then becomes unfindable to a
-    // dependent — which looks the base up BY UPSTREAM NAME. Same rule as the provenance header
-    // (CLAUDE.md §4.57): take the path from `Origin`, never reconstruct it from the FQN.
+    // dependent — which looks the base up BY UPSTREAM NAME. Same rule as the provenance header:
+    // take the path from `Origin`, never reconstruct it from the FQN.
     val srcEntry = SrcMap.Entry("port.ui.Widget", "port.ui.Widget#draw(Batch)", "def", 1, 2, "up/stream/lib/ui/Widget.java", 10, "d0")
     val m        = PortMap.of(
       "m",
@@ -408,7 +408,7 @@ class PortMapSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------
-  // schema 3 — the base-surface contract (DESIGN.md §8.3)
+  // schema 3 — the base-surface contract
   // ---------------------------------------------------------------------------
 
   test("schema 3: a type row carries what was EMITTED, and it round-trips") {
@@ -457,7 +457,7 @@ class PortMapSpec extends munit.FunSuite:
   }
 
   test("NEGATIVE: an OLDER schema degrades PER QUESTION — never wholesale, and never a crash") {
-    // §8.3's rule: refusing a schema-2 map outright tells a dependent "your base is unusable" where
+    // refusing a schema-2 map outright tells a dependent "your base is unusable" where
     // the truth is "your base is one engine version behind, and here are the questions I cannot ask
     // it". The row must still be READ; only its contract answer is absent.
     val m    = build(emitted = List("p.C"), members = List(member("p.C", "p.C#f()")))
@@ -485,8 +485,7 @@ class PortMapSpec extends munit.FunSuite:
   test("schema 3: the POLICY fingerprint makes a base MANIFEST edit visible, with every source digest matching") {
     // The whole reason the third fingerprint exists. `engine=` and `sources=` do not move when the
     // base's manifest changes, and the `shape` payload is full of policy outcomes — so without this
-    // the map is `Fresh` and WRONG, which is D4's signature failure re-entering through the
-    // artifact built to prevent it.
+    // the map is `Fresh` and WRONG, the exact failure this fingerprint exists to close off.
     val (root, _, m0) = basePort("package p; class C { int f() { return 1; } }")
     val m             = m0.copy(policy = PortMap.policyDigest(List("rename[a->b]")))
     assertEquals(PortMap.freshness(m, "eng", List(root), PortMap.policyDigest(List("rename[a->b]"))), PortMap.Freshness.Fresh)
@@ -506,7 +505,7 @@ class PortMapSpec extends munit.FunSuite:
   }
 
   test("schema 4: `jdk=` round-trips, and it is the ONE header field the other three agree through") {
-    // The measured defect (`ENGINE-LIMITS.md` M5.10): a frontend on JDK 24 emitted
+    // The JDK version is an input to every measurement: a frontend on JDK 24 emitted
     // `override def getChars` where the same sources on 22 emit none, because
     // `java.lang.CharSequence` gained the member in 23. The engine, the java and the policy were
     // all provably unchanged — so this spec asserts exactly that shape, with the other three
@@ -540,7 +539,7 @@ class PortMapSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------
-  // R1 — the map goes stale against the base's emitted output
+  // the map goes stale against the base's emitted output
   // ---------------------------------------------------------------------------
 
   /** a base's Java tree: one file, one member attributed to it. */
@@ -598,7 +597,7 @@ class PortMapSpec extends munit.FunSuite:
     assert(clue(PortMap.freshness(bare, "eng", Nil)).isInstanceOf[PortMap.Freshness.Unverified])
   }
 
-  /** a base whose source root is a multi-module CHECKOUT — the shape D11's second half is about. */
+  /** a base whose source root is a multi-module CHECKOUT, where a file's directory path does not match its Java package declaration. */
   private def checkoutBase(body: String) =
     val root = Files.createTempDirectory("portmap-checkout")
     val java = root.resolve("mod/src/main/java/p/C.java")
@@ -619,11 +618,10 @@ class PortMapSpec extends munit.FunSuite:
     (root, java, m)
 
   test("a base whose root is a CHECKOUT is verifiable from a dependent's MODULE roots") {
-    // D11's second half: the publisher's `javaPath` is `mod/src/main/java/p/C.java` and a dependent
-    // resolves the same library through the module directory itself, so NOT ONE of the base's paths
-    // lies under its roots — 422 of 422 on the port that found this. The package-relative form is a
-    // SUFFIX of the published path by construction (the package is in the `upstream` column), so
-    // nothing is guessed and no schema column is added.
+    // The publisher's `javaPath` is `mod/src/main/java/p/C.java` and a dependent resolves the same
+    // library through the module directory itself, so NOT ONE of the base's paths lies under its
+    // roots. The package-relative form is a SUFFIX of the published path by construction (the
+    // package is in the `upstream` column), so nothing is guessed and no schema column is added.
     val (root, java, m) = checkoutBase("package p; class C { int f() { return 1; } }")
     val moduleRoot      = root.resolve("mod/src/main/java")
     assertEquals(PortMap.freshness(m, "eng", List(moduleRoot)), PortMap.Freshness.Fresh)
@@ -682,10 +680,10 @@ class PortMapSpec extends munit.FunSuite:
   }
 
   test("discovery keys on the map's OWN module header, prefers run-latest, and excludes the caller") {
-    // R2 lives or dies on the exclusion: a module that read its own map would have its behaviour
-    // depend on its previous output, and a port would stop being reproducible from sources plus
-    // policy. The exclusion is by module NAME because that is what a `PortManifest` declares — a
-    // report directory is named after the migration PROGRAM and the two need not agree.
+    // A module that read its own map would have its behaviour depend on its previous output, and
+    // a port would stop being reproducible from sources plus policy. The exclusion is by module
+    // NAME because that is what a `PortManifest` declares — a report directory is named after
+    // the migration PROGRAM and the two need not agree.
     val reports = Files.createTempDirectory("port-report")
     def put(dir: String, run: String, module: String, marker: String): Unit =
       val d = reports.resolve(s"$dir/$run")

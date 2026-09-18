@@ -1,6 +1,6 @@
 package balticporter.tir
 
-/** `Pipeline.order` orders INSTANCES, not names — `ENGINE-LIMITS.md` CT9 Face B. */
+/** `Pipeline.order` orders INSTANCES, not names — a phase's policy is part of its fingerprint, so two differently configured instances must not be treated as the same phase. */
 class PipelineOrderSpec extends munit.FunSuite:
 
   /** adds `by` to every integer literal, so "did this instance run" is readable off the tree. */
@@ -62,7 +62,7 @@ class PipelineOrderSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
   // …and nothing else moves. Every port in the corpus has distinct phase names, so the ordering
-  // this produces for them has to be the one it always produced (CLAUDE.md §5: zero movement).
+  // this produces for them has to be the one it always produced: zero movement.
   // -------------------------------------------------------------------------------------------
 
   test("stable in declaration order: every phase as EARLY as its constraints allow") {

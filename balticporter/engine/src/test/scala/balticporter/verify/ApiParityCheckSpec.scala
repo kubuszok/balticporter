@@ -631,7 +631,7 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assert(!ApiParityCheck.isNullWrapped("Int"))
   }
 
-  // ---- a hand-port file is a PARTY only if its header names an upstream (CLAUDE.md §1b) ----
+  // ---- a hand-port file is a PARTY only if its header names an upstream ----
 
   private val partySrc =
     """/* Ported from com.example.Widget.
@@ -753,7 +753,7 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assert(names.contains("shout"), s"extension method lost: $decls")
   }
 
-  // ---- a type parameter's NAME is not API (alpha-equivalence, CLAUDE.md §3.5) ----
+  // ---- a type parameter's NAME is not API (alpha-equivalence) ----
 
   private def divergences(
     emittedSrc:   String,
@@ -878,7 +878,7 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assertEquals(divs.map(_.family), List("rule"), divs.map(_.detail).toString)
   }
 
-  // ---- C4: the type comparison an UNASCRIBED `inline val` used to skip ----
+  // ---- the type comparison an UNASCRIBED `inline val` used to skip ----
 
   test("an unascribed `inline val` is compared at its CONSTANT type — the opaque row, not `rule`") {
     val divs = divergences(
@@ -919,7 +919,7 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assertEquals(divs.map(_.family), List("signature", "signature"), divs.map(_.detail).toString)
   }
 
-  // ---- C3: `final` carried onto a val from a java FIELD is JS-C53 ----
+  // ---- `final` carried onto a val from a java FIELD is JS-C53 ----
 
   test("`final` on a val the port map calls a java FIELD is api-parity(rule), citing JS-C53") {
     val divs = divergences(

@@ -14,7 +14,7 @@ class CollectionsHandledDerivationSpec extends munit.FunSuite:
   private val source: String =
     Files.readString(Path.of(engineDir).resolve("balticporter/transform/CollectionsTransform.scala"))
 
-  /** Call rewrites live in CollectionsCalls.scala (split out of CollectionsTransform, context diet S3). */
+  /** Call rewrites live in CollectionsCalls.scala, split out of CollectionsTransform to keep each file small. */
   private val callsSource: String =
     Files.readString(Path.of(engineDir).resolve("balticporter/transform/CollectionsCalls.scala"))
 

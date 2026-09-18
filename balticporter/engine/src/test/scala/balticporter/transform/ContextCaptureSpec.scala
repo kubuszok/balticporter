@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** `ContextHolder.capture`: a static's VALUE becomes a field of the type plus companion applies; the type takes no clause, callers pass the context's value at construction (DESIGN.md §8.4).
+/** `ContextHolder.capture`: a static's VALUE becomes a field of the type plus companion applies; the type takes no clause, callers pass the context's value at construction.
   */
 class ContextCaptureSpec extends munit.FunSuite:
   private val java =

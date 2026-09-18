@@ -3,7 +3,7 @@ package balticporter.core
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** CLAUDE.md §5.4's rule, and the DUPLICATION scan that keeps it one rule. */
+/** Compare paths through `toRealPath` on both sides, and the DUPLICATION scan that keeps it one rule. */
 class RealPathSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------

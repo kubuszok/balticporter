@@ -66,7 +66,7 @@ class CollapseDivergenceSpec extends munit.FunSuite:
   }
 
   test("a base that emits the TYPE and publishes no member row is UNKNOWN, never 'not collapsed'") {
-    // Assuming the base did not collapse it would be §4.6's fabricated fact: a default the caller
+    // Assuming the base did not collapse it would be a fabricated fact: a default the caller
     // cannot tell from a real answer. Non-fatal, and only where this run DID collapse — a run that
     // refused agrees with every reading of an absent row.
     val silent = base("base-mod", List("p.Base"), Nil)

@@ -3,7 +3,7 @@ package balticporter.core
 import balticporter.core.ManifestAgreement.{ BasePort, Kind }
 import balticporter.tir.SrcMap
 
-/** PER-LOCATION SELECTION AS SHARED SURFACE — the §1.5 half of `resolutions`. */
+/** PER-LOCATION SELECTION AS SHARED SURFACE — the inherited half of `resolutions`. */
 class ResolutionAgreementSpec extends munit.FunSuite:
 
   private def mapOf(module: String = "base", emitted: List[String] = Nil, dropTypes: Set[String] = Set.empty, injected: Set[String] = Set.empty) =
@@ -51,7 +51,7 @@ class ResolutionAgreementSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // …and the comparison is what two keys NAME, never the two strings (§4.56 at a policy key)
+  // …and the comparison is what two keys NAME, never the two strings
   // -------------------------------------------------------------------------------------------
 
   test("TWO SPELLINGS of one member with two ids is the same divergence — the string test saw none") {

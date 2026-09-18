@@ -4,8 +4,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 import munit.FunSuite
 
-/** `ReferencePolicy.derive` reads SPELLING off a reference tree: an opaque slot, a nullable member, a parenless accessor; overloads that disagree are counted, never guessed (`PROGRESS.md` §13.31 step
-  * 1).
+/** `ReferencePolicy.derive` reads SPELLING off a reference tree: an opaque slot, a nullable member, a parenless accessor; overloads that disagree are counted, never guessed.
   */
 class ReferencePolicySpec extends FunSuite:
 

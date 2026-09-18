@@ -254,11 +254,11 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
     assert(r.toString.contains("2"))
   }
 
-  // ---- forEach pool: monotonic, no wrap (M10 shape) ----
+  // ---- forEach pool: monotonic, no wrap ----
 
   test("ForEach pool pre-allocates 64 entries to prevent modular wrap") {
     // The pool was 8 with `forEachSeq % 8`; at nesting > 8 the names wrapped and the inner
-    // lambda silently shadowed the outer's captures (M10's shape). Now the pool is 64 with a
+    // lambda silently shadowed the outer's captures. Now the pool is 64 with a
     // require guard instead of wrap.
     val ct = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"), retargetRewrites = Map("com.a.X" -> Map(("entries", 0) -> ForEach("foreachEntry", 2))))
     assert(ct.retargetRewrites.nonEmpty)
@@ -471,7 +471,7 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
 
   // ---- Construct.dropTrailing: supplier-derived element type ----
   // The engine's retargetConstruct derives element types from a dropped supplier (MethodRef)
-  // when the constructor type is raw or Object-applied; this is a §1(a) fact about raw types
+  // when the constructor type is raw or Object-applied; this is a universal fact about raw types
   // and ArraySupplier. The spec tests construction-time properties only; the runtime derivation
   // is exercised through the SortTest/TextureAtlas end-to-end gate (gdx-test-measure).
 

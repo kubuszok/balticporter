@@ -3,7 +3,7 @@ package balticporter.runner
 import balticporter.catalog.FixKind
 import balticporter.tir.{ ConfigView, Phase, Remedy, RemedySource, TransformFactory }
 
-/** A factory the ENGINE knows nothing about, registered the way a porting repository registers its own §1(c) rule: a class plus one `META-INF/services` line, discovered on the classpath.
+/** A factory the ENGINE knows nothing about, registered the way a porting repository registers its own library-specific rule: a class plus one `META-INF/services` line, discovered on the classpath.
   */
 final class SpecEchoFactory extends TransformFactory:
   def name: String = "spec-echo"

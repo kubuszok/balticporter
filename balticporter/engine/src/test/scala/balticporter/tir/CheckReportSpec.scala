@@ -132,10 +132,10 @@ class CheckReportSpec extends munit.FunSuite:
   }
 
   test("every written run records WHICH JVM it ran on — the input to emitted text nothing else names") {
-    // `ENGINE-LIMITS.md` M5.10: the frontend reads an external type's members out of a CLASS FILE,
-    // so the JDK decides the emitted text — and a lane cannot force the migration's JVM, because
-    // `sbt -client` forks it from a server whose JVM was chosen earlier (§4.6's marker-file
-    // boundary). Recording it is what makes `jdk_guard` possible at all.
+    // The JDK version is an input to every measurement: the frontend reads an external type's
+    // members out of a CLASS FILE, so the JDK decides the emitted text — and a lane cannot force
+    // the migration's JVM, because `sbt -client` forks it from a server whose JVM was chosen
+    // earlier. Recording it is what makes `jdk_guard` possible at all.
     val tmp = Files.createTempDirectory("bp-report-jvm")
     try
       withProps("balticporter.report" -> "on", "balticporter.reportDir" -> tmp.toString) {
@@ -159,7 +159,7 @@ class CheckReportSpec extends munit.FunSuite:
   }
 
   test("an ABSENT system property is `?` and never empty — an empty spec version means 'do not compare'") {
-    // §4.6: a default the caller cannot distinguish from a real answer is a fabricated fact. `""`
+    // a default the caller cannot distinguish from a real answer is a fabricated fact. `""`
     // is the value `PortMap.freshness` reads as "published before the field existed", i.e. DO NOT
     // COMPARE, so a JVM that would not say must not be able to produce it.
     assert(balticporter.core.JvmInfo.specification.nonEmpty)
@@ -182,14 +182,14 @@ class CheckReportSpec extends munit.FunSuite:
     // forked test JVM that command is the build's own worker — `sbt.internal.worker1.WorkerMain`
     // under sbt 2. Any suite that turned reporting on without naming a directory therefore
     // published `<subproject>/port-report/WorkerMain/` into the checkout: an artifact write that
-    // was gated on a FLAG and not on the artifact layer (§5.1, the `PortMap.write` precedent).
+    // was gated on a FLAG and not on the artifact layer, the same mistake `PortMap.write` made.
     withProps("sun.java.command" -> "sbt.internal.worker1.WorkerMain --tcp 49786", "balticporter.report" -> "on") {
       assertEquals(CheckReport.mainClassKey, scala.None)
       assert(!CheckReport.enabled, "reporting must not turn on for a JVM with no port identity")
       assertEquals(CheckReport.dir.getFileName.toString, CheckReport.NoMainClass)
     }
     // …while a port's OWN migration main still names its directory, which is the measurement
-    // identity CLAUDE.md §2.1 keeps stable across a module rename.
+    // identity kept stable across a module rename.
     withProps("sun.java.command" -> "com.example.port.WidgetMigrate", "balticporter.report" -> "on") {
       assertEquals(CheckReport.mainClassKey, Some("WidgetMigrate"))
       assert(CheckReport.enabled)

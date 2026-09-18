@@ -2,7 +2,7 @@ package balticporter.emit
 
 import balticporter.frontend.spoon.SpoonTir
 
-/** A java FIELD named like a method an UNPARSED ancestor declares — `ENGINE-LIMITS.md` K28.2. */
+/** A java FIELD named like a method an UNPARSED ancestor declares must be renamed, checked only against external parents whose member list is known. */
 class FieldShadowsExternalSpec extends munit.FunSuite:
 
   private def fieldNames(java: String, owner: String): Set[String] =

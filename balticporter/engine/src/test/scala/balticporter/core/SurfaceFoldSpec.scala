@@ -4,7 +4,7 @@ import balticporter.core.ManifestAgreement.Kind
 import balticporter.tir.{ Phase, RuleScope }
 import balticporter.transform.{ ClassTableTransform, NullabilityTransform, StaticForwarderTransform, TypeRedirectTransform }
 
-/** The merge contract — DESIGN.md §8.13, closing `ENGINE-LIMITS.md` D9. */
+/** The merge contract: a parameterised phase configured in a base manifest composes with a dependent's instance through a declared merge; without one, two instances are a fatal surface divergence. */
 class SurfaceFoldSpec extends munit.FunSuite:
 
   private def redirect(rs: (String, String)*): TypeRedirectTransform =
@@ -56,13 +56,13 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   test("the fold is IDEMPOTENT and its instance is STABLE — a merged phase is built once") {
     val dep = base(List(redirect("com.other.A" -> "com.dep.A"))).extendedBy(PortManifest("dep", surface = List(redirect("com.other.B" -> "com.dep.B"))))
-    // a `def` would hand the pipeline one instance and the policy report another (DESIGN.md §8.13)
+    // a `def` would hand the pipeline one instance and the policy report another
     assert(dep.effectiveSurface.head eq dep.effectiveSurface.head)
     assertEquals(dep.effectiveSurface.map(_ eq dep.surfaceFold.phases.head), List(true))
   }
 
   // -------------------------------------------------------------------------------------------
-  // D1: the base is the base AS THE BASE RAN IT
+  // the base is the base AS THE BASE RAN IT
   // -------------------------------------------------------------------------------------------
 
   test("a dependent's merge does not reach the BASE's own effective surface") {
@@ -181,7 +181,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   }
 
   test("two EQUAL instances of a contract-less phase COLLAPSE TO ONE, and report nothing") {
-    // The pre-CT9 pipeline keyed phases by NAME and ran one of two; ordering INSTANCES turned the
+    // A pipeline keyed phases by NAME and ran one of two; ordering INSTANCES turned the
     // same append into "the phase runs TWICE over one program", which is a promise no implementor
     // of a contract-less phase ever made. Proving them equal is what licenses the dedup, so the
     // dedup is where the proof lands — and `effectiveSurface.size` is the assertion that sees it.
@@ -210,15 +210,15 @@ class SurfaceFoldSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   /** a parameterised phase that implements NEITHER contract — the shape whose fingerprint is its NAME, so two configurations of it render identically. Declared here rather than borrowed from a
-    * production phase: which engine phase happens to lack `SurfacePolicy` is a fact that should change (and F2 changed one), and a spec pinned to it would silently stop testing this.
+    * production phase: which engine phase happens to lack `SurfacePolicy` is a fact that can change, and a spec pinned to a real one would silently stop testing this.
     */
   final private class Unreadable(val table: Map[String, String]) extends Phase:
     def name: String = "unreadable"
 
   test("UNVERIFIABLE: two instances of a phase with no `SurfacePolicy` are FATAL, however configured") {
     // The blind spot `PortManifest.fingerprint` documents, reached through the fold: these two
-    // tables differ and the rendering cannot say so. Deduping would drop one policy silently —
-    // CT9 Face B under a new name — so the engine refuses instead of guessing.
+    // tables differ and the rendering cannot say so. Deduping would drop one policy silently, so
+    // the engine refuses instead of guessing.
     val dep = base(List(new Unreadable(Map("a" -> "1")))).extendedBy(PortManifest("dep", surface = List(new Unreadable(Map("a" -> "2")))))
     assertEquals(dep.effectiveSurface.size, 2)
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Unverifiable))
@@ -258,7 +258,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
     val dep = base(List(redirect("com.other.A" -> "com.dep.A"))).extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
     assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
     // the merge STANDS — an intrusion is a statement about the base's OUTPUT, not a failure to
-    // compose two policies, and a confirmed one stops the run at the gate (DESIGN.md §8.13)
+    // compose two policies, and a confirmed one stops the run at the gate
     assertEquals(dep.effectiveSurface.size, 1)
     assertEquals(dep.surfaceFold.refusals, Nil)
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
@@ -294,7 +294,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
     root
 
   test("a drop the base REPLACES is an intrusion — the injected shim IS shared surface") {
-    // §1.5's asymmetry read correctly: a drop and its replacement are two decisions, and the second
+    // a drop and its replacement are two decisions, and the second
     // one puts a file at that FQN. Re-pointing references at a type of this module's own would
     // compile alone and could not compile against the base — the very failure the screen is for.
     val b = PortManifest(
@@ -327,7 +327,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   test("the injection is matched in the EMITTED namespace — a renaming base is the normal case") {
     // the two sides are in different namespaces: the drop key is upstream, the shim's FQN is where
     // the file sits in the port. Compared directly, this screen would never fire on a renaming
-    // port — §4.56, the failure `PortMap`'s `Substituted` was bitten by.
+    // port — the failure `PortMap`'s `Substituted` was bitten by.
     val b = PortManifest(
       "base",
       governs = Set("com.demo"),
@@ -363,7 +363,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   test("a subject OUTSIDE every base's claim is allowed, and the claim cuts at a separator") {
     val b = PortManifest("base", governs = Set("com.demo"), surface = List(redirect("com.other.A" -> "com.dep.A")))
-    // `com.demo` must not cover `com.demonstrate` (§4.56)
+    // `com.demo` must not cover `com.demonstrate`
     val ok = b.extendedBy(PortManifest("dep", surface = List(redirect("com.demonstrate.W" -> "com.dep.W"))))
     assertEquals(ok.surfaceFold.refusals, Nil)
     val bad = b.extendedBy(PortManifest("dep", surface = List(redirect("com.demo.W" -> "com.dep.W"))))
@@ -388,9 +388,9 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   // …and this is a real dependent port's shape: it redirects a type its base DROPS and supplies
   // nothing at (ashley re-points `com.badlogic.gdx.utils.ReflectionPool` at its own replacement).
-  // The attribution lives HERE and not in the title on purpose: the §1 enforcement grep reads code
-  // lines and skips comments, so a library name inside a `test("…")` string is a library name in
-  // CODE that the grep cannot see — and a fixture that names one is exactly what §1 forbids.
+  // The attribution lives HERE and not in the title on purpose: the no-named-library grep reads
+  // code lines and skips comments, so a library name inside a `test("…")` string is a library name
+  // in CODE that the grep cannot see — and a fixture that names one is exactly what the engine forbids.
   test("…and the same screen admits it when the base DROPS the type") {
     val b   = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"))
     val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"), surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
@@ -407,7 +407,6 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
   // …and the criterion is what the base EMITS, which only its PUBLISHED MAP can say
-  // (ENGINE-LIMITS.md CT9 Face A, DESIGN.md §8.13)
   // -------------------------------------------------------------------------------------------
 
   /** the base, as a run FOUND it: a manifest and a usable published map. */
@@ -419,7 +418,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   private def replaces(fqn: String, at: String) =
     PortMap.Entry("type", fqn, at, PortMap.Disposition.Substituted)
 
-  /** a dependent whose OWN declaration lives inside the base's claimed namespace — the whole of CT9 Face A. `com.demo.WidgetTest` is a test module's suite beside `com.demo.Widget`.
+  /** a dependent whose OWN declaration lives inside the base's claimed namespace. `com.demo.WidgetTest` is a test module's suite beside `com.demo.Widget`.
     */
   private def intruding(subject: String) =
     val b = PortManifest("base", governs = Set("com.demo"), surface = List(redirect("com.other.A" -> "com.dep.A")))
@@ -465,7 +464,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   }
 
   test("NO USABLE MAP falls back to re-derivation — the answer that shipped, and it says so") {
-    // D1's rule: `BasePort.map` is empty for a map never published AND for one proven stale, and the
+    // `BasePort.map` is empty for a map never published AND for one proven stale, and the
     // two take the same path. The fallback REFUSES, which is the safe direction for a screen, and it
     // is reported as weaker beside this finding rather than silently taken.
     val (b, dep) = intruding("com.demo.WidgetTest")
@@ -515,7 +514,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   test("a MIRRORING module that restates the base's table in full SUBSUMES it, and is not `SurfaceMissing`") {
     // `mirroring` inherits nothing, so there is no fold to read — the containment question is asked
-    // through the phase's own `mergedWith` instead of a second notion of it (DESIGN.md §8.13).
+    // through the phase's own `mergedWith` instead of a second notion of it.
     val b   = base(List(redirect("com.other.A" -> "com.dep.A")))
     val ext = PortManifest("ext", governs = Set("com.dep"), surface = List(redirect("com.other.A" -> "com.dep.A", "com.other.B" -> "com.dep.B"))).mirroring(b)
     assertEquals(ManifestAgreement.check(Some(ext), Nil, foreignRoots = true).map(_.kind), Nil)

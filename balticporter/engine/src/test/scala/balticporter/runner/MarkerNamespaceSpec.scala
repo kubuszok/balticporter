@@ -2,7 +2,7 @@ package balticporter.runner
 
 import balticporter.tir.*
 
-/** THE CONSERVATION CHECK ACROSS A RENAME — `CLAUDE.md` §4.56's two-namespace rule, applied to the one artifact in the run that holds BOTH programs.
+/** THE CONSERVATION CHECK ACROSS A RENAME — the upstream/emitted two-namespace rule, applied to the one artifact in the run that holds BOTH programs.
   */
 class MarkerNamespaceSpec extends munit.FunSuite:
 

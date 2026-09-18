@@ -65,7 +65,7 @@ class CorrelateSpec extends munit.FunSuite:
   }
 
   // =========================================================================================
-  // the test runner — the lane that catches CLAUDE.md §4.4
+  // the test runner — the lane that catches java statement semantics scala does not share
   // =========================================================================================
 
   // verbatim shape of MUnit under scala-cli, including the two cases that anchor differently
@@ -350,7 +350,7 @@ class CorrelateSpec extends munit.FunSuite:
        |""".stripMargin
 
   test("a drop declared UPSTREAM classifies a failure whose frames are in the EMITTED namespace") {
-    // The defect this closes: `dropped-types.tsv` held `p.Buf` (policy is written upstream, §4.56),
+    // The defect this closes: `dropped-types.tsv` held `p.Buf` (policy is written upstream),
     // every frame said `sge.Buf`, and the comparison matched nothing — on every renaming port,
     // silently, for the whole life of the rule. The port writes both names now.
     val ts = Correlate.locateTests(Correlate.parseTests(renamedLog), SrcMap.Index.empty, Nil, Set.empty, Set(Correlate.Dropped("p.Buf", "sge.Buf")))

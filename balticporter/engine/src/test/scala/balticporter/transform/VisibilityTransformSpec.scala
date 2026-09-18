@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** `VisibilityTransform`: a listed member ships public where java declared it narrower (DESIGN.md §8.30). */
+/** `VisibilityTransform`: a listed member ships public where java declared it narrower. */
 class VisibilityTransformSpec extends munit.FunSuite:
   private val javaSrc =
     """package com.demo;

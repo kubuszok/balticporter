@@ -248,8 +248,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // SetterOnlyInterface — the Cullable seam (CLAUDE.md §1 b: a pair is applied over its WHOLE
-  // override component or refused as a unit)
+  // SetterOnlyInterface — the Cullable seam: a pair is applied over its WHOLE
+  // override component or refused as a unit
   // -------------------------------------------------------------------------------------------
 
   /** `Cullable` declares ONLY `setCullingArea`; `Group` declares the pair. The setter component reaches `Cullable`, `x.cullingArea = v` is scalac's `x.cullingArea_=(v)` with the GETTER on the LHS,
@@ -378,7 +378,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // substituted-owner filter (D14, §1.5)
+  // substituted-owner filter — a dependent follows the base's published renames rather than
+  // re-detecting its own
   // -------------------------------------------------------------------------------------------
 
   test("auto-detection skips owner types in baseSubstitutedOwners") {

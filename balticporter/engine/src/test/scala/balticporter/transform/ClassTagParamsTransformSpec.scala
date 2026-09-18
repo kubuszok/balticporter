@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** `ClassTagParamsTransform`: a `Class<T>` parameter becomes a `ClassTag[T]` context clause, the body reads the class off the tag, an owned call passing `X.class` names `[X]` (DESIGN.md §8.30).
+/** `ClassTagParamsTransform`: a `Class<T>` parameter becomes a `ClassTag[T]` context clause, the body reads the class off the tag, an owned call passing `X.class` names `[X]`.
   */
 class ClassTagParamsTransformSpec extends munit.FunSuite:
   private val javaSrc =

@@ -5,7 +5,7 @@ import balticporter.tir.*
 
 import java.nio.file.{ Files, Path }
 
-/** `decisions.tsv` end to end — the channel that answers "HOW did the porter arrive at this code?" for an agent in another repository (CLAUDE.md §4.45).
+/** `decisions.tsv` end to end — the channel that answers "HOW did the porter arrive at this code?" for an agent in another repository running a published engine with no session context.
   */
 class DecisionProvenanceSpec extends munit.FunSuite:
 
@@ -116,7 +116,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     assertEquals(drop.head.reason, Reason.Configured("substitutions", "com.demo.Widget"))
     assertEquals(drop.head.detail("fired"), "yes")
     assertEquals(drop.head.detail("own"), "yes")
-    // …and BOTH namespaces, because policy is upstream and the rename runs last (§4.56)
+    // …and BOTH namespaces, because policy is upstream and the rename runs last
     assertEquals(drop.head.detail("emitted"), "sge.Widget")
     // the subject is anchored on the Java file it was decided about
     assert(clue(drop.head.origin.javaPath).endsWith("com/demo/Widget.java"))
@@ -519,7 +519,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     assert(PorterNote.AtDeclaration(Decision.Kind.FunnelledCtor))
     val note = text.linesIterator.find(_.contains("porter: funnelled-ctor")).getOrElse("")
     assert(clue(note).nonEmpty, text)
-    // the §1 classification first, then the detail a reader cannot get off the emitted line
+    // the universal/configured/library-rule classification first, then the detail a reader cannot get off the emitted line
     assert(note.contains("reason=universal"), note)
     assert(note.contains("rule=ctor-funnel"), note)
     assert(note.contains("shape=synthesised-primary"), note)
@@ -551,7 +551,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // a DEPENDENT publishes its OWN decisions and no others (ENGINE-LIMITS D2)
+  // a DEPENDENT publishes its OWN decisions and no others
   // -------------------------------------------------------------------------
 
   /** two source trees: `base/` is only RESOLVED against, `dep/` is what the run converts — the structural shape of every dependent port.
@@ -594,7 +594,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
         frontend = FrontendConfig(dep, List("com/dep/Uses.java"), Nil, resolutionRoots = List(base)),
         phases = Nil, // a manifest SUPPLIES the phases; passing both would give the run two policies
         // resolution roots outside this run's own tree ARE a dependent port, and one that declares
-        // no base is itself a fatal finding (§1.5) — so the shared surface arrives as a value.
+        // no base is itself a fatal finding — so the shared surface arrives as a value.
         manifest = Some(
           PortManifest(
             name = "base",

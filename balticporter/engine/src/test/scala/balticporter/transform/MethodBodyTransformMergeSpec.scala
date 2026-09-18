@@ -2,7 +2,7 @@ package balticporter.transform
 
 import balticporter.core.{ PortManifest, SurfaceFold }
 
-/** MethodBodyTransform's MergeablePolicy — the fix for `ENGINE-LIMITS.md` D9 at this phase. */
+/** MethodBodyTransform's MergeablePolicy — a base and a dependent instance of this phase compose through a declared merge, or two instances are a fatal surface divergence. */
 class MethodBodyTransformMergeSpec extends munit.FunSuite:
 
   private def mbt(entries: (String, String)*) = new MethodBodyTransform(entries.toMap)

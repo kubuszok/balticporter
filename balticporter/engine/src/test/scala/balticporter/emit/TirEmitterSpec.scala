@@ -158,9 +158,9 @@ class TirEmitterSpec extends munit.FunSuite:
 
   // -- …and a `Spread` is ONE argument, rendered `xs*` --------------------------------------------
   //
-  // The mirror node (K6.5, fourth case): java forwards an array it already holds through a `T...`
+  // The mirror node, fourth case: java forwards an array it already holds through a `T...`
   // slot. Unspread at an EXTERNAL callee the array conforms as one element, silently where the
-  // repeated element is `Object`. §6: `xs*`, never `xs: _*`.
+  // repeated element is `Object`. `xs*`, never `xs: _*`.
 
   test("a Spread argument renders as the scala spread, and stays ONE argument") {
     val CLS = SymId(41)
@@ -199,7 +199,7 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(!text.contains(": _*"), clue(text))
   }
 
-  // -- an INFERENCE VARIABLE must never reach the output (F5's emitter half) ----------------------
+  // -- an INFERENCE VARIABLE must never reach the output -------------------------------------------
 
   test("an unresolved type variable renders as `?`, never as its marker name") {
     val CLS  = SymId(41)
@@ -241,7 +241,7 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(!clue(text).contains("?T"), "an inference variable reached the output")
   }
 
-  // -- an enhanced-for BINDING REASSIGNED in the body (F16) ---------------------------------------
+  // -- an enhanced-for BINDING REASSIGNED in the body ----------------------------------------------
 
   private def foreachBody(assignBinding: Boolean): String =
     val CLS  = SymId(61)
@@ -280,8 +280,8 @@ class TirEmitterSpec extends munit.FunSuite:
     val text = foreachBody(assignBinding = true)
     assert(clue(text).contains("for (obj$e <- "), clue(text))
     assert(text.contains("var obj: java.lang.Object = obj$e"), clue(text))
-    // no CAST: the widening is K7's reason to re-bind and this is not it — the generator already
-    // yields the declared type.
+    // no CAST: a re-bind exists to cast a variable declared at a wider type than the loop's
+    // element, and this is not that case — the generator already yields the declared type.
     assert(!text.contains("asInstanceOf"), clue(text))
   }
 
@@ -291,7 +291,7 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(!text.contains("obj$e"), clue(text))
   }
 
-  // -- K9: enhanced-for over a KEPT JDK Iterable -----------------------------------------------
+  // -- enhanced-for over a KEPT JDK Iterable, emitted as java's own iterator loop ---------------
 
   /** build a ForEach loop over an iterable whose head type has the given FQN. */
   private def k9ForEach(
@@ -433,7 +433,7 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(!text.contains(" if "), clue(text))
   }
 
-  // -- externalParenless (P11) ---------------------------------------------------------------
+  // -- externalParenless ----------------------------------------------------------------------
   //
   // A call to an external member listed in `externalParenless` is emitted WITHOUT `()`.
   // On the JVM, Scala 3 auto-applies a Java nullary method; on JS/Native, the platform shim

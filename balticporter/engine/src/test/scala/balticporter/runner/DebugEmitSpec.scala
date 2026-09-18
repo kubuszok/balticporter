@@ -107,11 +107,12 @@ class DebugEmitSpec extends munit.FunSuite:
   }
 
   test("…and the phases `PortRun` WEAVES are nameable too — the SPI is not the whole pipeline") {
-    // An idiom phase is §1(a), so it reaches no `TransformFactory` — a knob on an (a) is the shape
-    // §1 forbids. Resolved through the registry alone the diagnostic answered "unknown transform"
-    // about phases that run in EVERY port and cannot be turned off, which is exactly §4.6's promise
-    // ("is this phase even responsible" costs one run and no diff) failing for the two phases an
-    // operator cannot switch off any other way.
+    // An idiom phase is universal and unparameterised, so it reaches no `TransformFactory` — a
+    // knob on it is the shape the engine forbids. Resolved through the registry alone the
+    // diagnostic answered "unknown transform" about phases that run in EVERY port and cannot be
+    // turned off, which is exactly the debug flags' promise ("is this phase even responsible"
+    // costs one run and no diff) failing for the two phases an operator cannot switch off any
+    // other way.
     assertEquals(DebugEmit.phasesFor(List("sam-anon->lambda")).map(_.map(_.name)), Right(List("sam-anon->lambda")))
     assertEquals(
       DebugEmit.phasesFor(List("collections", "sam-anon->lambda")).map(_.map(_.name)),

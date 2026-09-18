@@ -111,7 +111,7 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "a rewrite-target name or a member/arity — it names no member, it is a synthetic symbol " +
           "namespace for minted SymIds and a fingerprint rendering format")
     ),
-    // CollectionsRetarget/Reified/Boundary/Policy/Calls split out of CollectionsTransform (context diet S3):
+    // CollectionsRetarget/Reified/Boundary/Policy/Calls are split out of CollectionsTransform to keep each file small:
     // same phase, same sites, same reasoning as the `CollectionsTransform.scala` entry above —
     // each `fullName ==` below is a mint-or-reuse lookup against a WELL-KNOWN external FQN
     // (`java.util.Iterator`, `balticporter.runtime.JavaIterator`, `scala.Array`, `java.lang.Object`,
@@ -185,7 +185,7 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "under exactly that key; it is engine identity, never a policy key")
     ),
     "TestFrameworkTransform.scala" -> Map(
-      // NO `fullName ==` entry any more. The JUnit FQNs this phase knows are still §1(a) universal
+      // NO `fullName ==` entry any more. The JUnit FQNs this phase knows are still universal
       // knowledge about a test framework — but there are THREE assertion classes, so the question
       // became set membership (`AssertClasses`) and the equality spelling left the file. An
       // exemption for a shape nobody uses is a rule nobody is following, which is what this spec's
