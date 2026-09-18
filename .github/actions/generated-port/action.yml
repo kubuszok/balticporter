@@ -1,0 +1,100 @@
+name: Baltic Porter generated port
+description: >
+  For a repository that generates Scala sources with Baltic Porter inside its sbt build: the
+  generated tree for this commit, produced ONCE per distinct input set and shared between jobs and
+  workflows through the Actions cache. `generate` restores the tree or, on a miss, initialises the
+  upstream submodule, runs the generation command and saves it; `restore` only restores (no
+  submodule, no generation) and fails when the entry is missing.
+  `generate` needs the Scala toolchain on the PATH; `restore` needs nothing.
+  The key covers everything the tree depends on: the engine artifact pinned in the build, the
+  upstream commit this checkout records, the generator source, the JDK major (it decides what a
+  member overrides) and whatever else the caller passes as `key-extra`.
+
+inputs:
+  mode:
+    description: generate | restore
+    default: restore
+  key:
+    description: cache key to restore (the `key` output of a `generate` run); required for `restore`
+    default: ""
+  path:
+    description: directory of the generated tree, relative to the workspace (it holds the generator's marker file)
+    required: true
+  submodule:
+    description: path of the git submodule with the upstream sources
+    required: true
+  command:
+    description: command that runs the generation
+    default: sbt generatePort
+  pin-file:
+    description: build file that pins the balticporter-corpus artifact
+    default: project/plugins.sbt
+  generator:
+    description: the generator source; a change to it invalidates the tree
+    default: project/BalticPorterGen.scala
+  key-extra:
+    description: further input the tree depends on, already reduced to a short string (e.g. the tree hash of a reference directory)
+    default: ""
+
+outputs:
+  key:
+    description: the cache key the generated tree is stored under
+    value: ${{ steps.key.outputs.key }}
+
+runs:
+  using: composite
+  steps:
+    - name: Compute the generated-port key
+      id: key
+      shell: bash
+      env:
+        GIVEN_KEY: ${{ inputs.key }}
+        PIN_FILE: ${{ inputs.pin-file }}
+        GENERATOR: ${{ inputs.generator }}
+        SUBMODULE: ${{ inputs.submodule }}
+        KEY_EXTRA: ${{ inputs.key-extra }}
+        TREE_PATH: ${{ inputs.path }}
+      run: |
+        set -euo pipefail
+        if [ -n "$GIVEN_KEY" ]; then
+          echo "key=$GIVEN_KEY" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        pin=$(grep -oE 'balticporter-corpus" % "[^"]+' "$PIN_FILE" | head -1 | sed 's/.*"//')
+        upstream=$(git ls-tree HEAD "$SUBMODULE" | awk '{print $3}')
+        generator=$(git hash-object "$GENERATOR")
+        jdk=$(java -XshowSettings:properties -version 2>&1 | awk '/java.specification.version/ {print $3}')
+        test -n "$pin" && test -n "$upstream" && test -n "$generator" && test -n "$jdk"
+        name=$(basename "$TREE_PATH")
+        echo "key=generated-port-v1-$name-jdk$jdk-$pin-$upstream-$generator-$KEY_EXTRA" >> "$GITHUB_OUTPUT"
+
+    - name: Restore the generated port
+      id: restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ steps.key.outputs.key }}
+        enableCrossOsArchive: true
+        fail-on-cache-miss: ${{ inputs.mode == 'restore' }}
+
+    - name: Checkout the upstream submodule
+      if: inputs.mode == 'generate' && steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        SUBMODULE: ${{ inputs.submodule }}
+      run: git submodule update --init --depth=1 "$SUBMODULE"
+
+    - name: Generate the port
+      if: inputs.mode == 'generate' && steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        GENERATE_COMMAND: ${{ inputs.command }}
+      run: bash -c "$GENERATE_COMMAND"
+
+    - name: Save the generated port
+      if: inputs.mode == 'generate' && steps.restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ steps.key.outputs.key }}
+        enableCrossOsArchive: true
