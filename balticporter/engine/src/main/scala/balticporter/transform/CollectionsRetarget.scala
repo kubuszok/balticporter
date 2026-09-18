@@ -288,7 +288,7 @@ private[transform] trait CollectionsRetarget:
           val operandFqn = operandHead.flatMap(p.symbolOf).map(_.fullName).getOrElse("?")
           val targetFqn  = targetSym.map(_.fullName).getOrElse("?")
           seam(
-            "type test at retarget type (K18)",
+            "type test at retarget type",
             TirPrinter.tpe(t.tpt.tpe, TirPrinter.Style.canonical),
             s"provably false: final target $targetFqn unrelated to $operandFqn",
             t.origin,
@@ -298,7 +298,7 @@ private[transform] trait CollectionsRetarget:
           Tree.Literal(Constant.BoolC(false), t.tpe, t.origin)
         else
           seam(
-            "type test at retarget type (K18)",
+            "type test at retarget type",
             TirPrinter.tpe(t.tpt.tpe, TirPrinter.Style.canonical),
             "erased test — the element kind is not checked",
             t.origin,
@@ -349,7 +349,7 @@ private[transform] trait CollectionsRetarget:
       headSym(mapped).foreach { h =>
         if retargetTargetToSource.contains(h) then
           seam(
-            "classOf at retarget type (K20)",
+            "classOf at retarget type",
             "reified class literal",
             TirPrinter.tpe(mapped, TirPrinter.Style.canonical),
             lit.origin,

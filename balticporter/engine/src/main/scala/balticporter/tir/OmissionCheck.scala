@@ -64,7 +64,7 @@ object OmissionCheck extends RemedySource:
     emissionAffecting = false,
     fix = FixKind.Universal,
     what = "the port has READ the promoted constructor body and states that running it on this " +
-      "path is not observable — the divergence C6 counts, examined"
+      "path is not observable — the divergence the omissions check counts, examined"
   )
 
   /** THE ANNOTATION IS RIGHT TO LOSE HERE — complement of `FrontendConfig.preservedAnnotations`. An argument-bearing java annotation the frontend could not carry is reported rather than emitted bare

@@ -1262,7 +1262,7 @@ object Differences:
       "UNCITED — an anonymous subclass per constant",
       Silent,
       Partial(
-        "fields and methods are collected; instance-init blocks and nested types are not, so the step-4 order inside a constant body is unreached — and a constant body is now also what makes the enum inexpressible as a scala 3 `enum` (T21), so such an enum is not a `java.lang.Enum` either"
+        "fields and methods are collected; instance-init blocks and nested types are not, so the step-4 order inside a constant body is unreached — and a constant body is now also what makes the enum inexpressible as a scala 3 `enum`, so such an enum is not a `java.lang.Enum` either"
       ),
       measured(
         "A Java enum constant with its own class body becomes its own case carrying that body's fields and initialisers, overriding whichever methods it overrides."

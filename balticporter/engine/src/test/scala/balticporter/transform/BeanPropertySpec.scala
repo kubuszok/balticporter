@@ -347,7 +347,7 @@ class BeanPropertySpec extends munit.FunSuite:
     assertEquals(new BeanPropertyTransform().surfaceFingerprint, "")
   }
 
-  test("…and two configurations differing ONLY in `target` do NOT compare equal (CT9)") {
+  test("…and two configurations differing ONLY in `target` do NOT compare equal") {
     val d = new BeanPropertyTransform(Map("a#x" -> "getX/setX"))
     val v = new BeanPropertyTransform(Map("a#x" -> "getX/setX"), Map("a#x" -> BeanPropertyTransform.Target.Var))
     assertNotEquals(d.surfaceFingerprint, v.surfaceFingerprint)

@@ -1318,7 +1318,7 @@ final case class PortRun(
       plans.droppedNilaryCtor(cd).flatMap { _ =>
         program.symbolOf(cd.symbol).map(_.fullName).filter(_.nonEmpty).map { owner =>
           s"$owner#<init>()" ->
-            balticporter.tir.Surface.render(balticporter.tir.Surface.MemberShape(refusal = "ctor-funnel/nilary-dropped(C11)"))
+            balticporter.tir.Surface.render(balticporter.tir.Surface.MemberShape(refusal = "ctor-funnel/nilary-dropped"))
         }
       }
     }.toMap

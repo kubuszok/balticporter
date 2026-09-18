@@ -46,7 +46,7 @@ class EnumConstantBodySpec extends PortSuite:
     assert(!squareBody.contains("val "), clue(squareBody))
   }
 
-  test("a constant body method with @Override gets the `override` keyword (T8)") {
+  test("a constant body method with @Override gets the `override` keyword") {
     // Java @Override in a constant body is an anonymous class body. The frontend must pass
     // `overridesInherited(m)` to `execDef`, or the emitted method has @java.lang.Override but
     // no `override` keyword, which is E164 "overrides nothing" in scala.

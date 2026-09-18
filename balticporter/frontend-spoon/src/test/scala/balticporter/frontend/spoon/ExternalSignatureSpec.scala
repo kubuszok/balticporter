@@ -150,7 +150,7 @@ class ExternalSignatureSpec extends munit.FunSuite:
     assertEquals(sig(external("java.lang.Object", "equals")), Some(List("java.lang.Object") -> "scala.Boolean"))
   }
 
-  test("an external member still carries its OWNER and its interning-key fullName (P4)") {
+  test("an external member still carries its OWNER and its interning-key fullName") {
     val s = external("java.util.regex.Pattern", "matcher")
     assert(s.fullName.startsWith("@"), s"external fullName is the interning key, got ${s.fullName}")
     assert(program.definitionOf(s.id).isEmpty)

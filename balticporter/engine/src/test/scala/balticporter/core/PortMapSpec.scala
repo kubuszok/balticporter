@@ -225,7 +225,7 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(m.members.head.upstream, "up.stream.lib.ui.Widget#draw(Batch)")
   }
 
-  test("a TYPE RENAME is inverted by the FULL rename table, so `upstream` is java's FQN (D16)") {
+  test("a TYPE RENAME is inverted by the FULL rename table, so `upstream` is java's FQN") {
     // The defect: `typeRenames` changes a simple name (`List` -> `SgeList`), and a map that only
     // sees the PACKAGE renames cannot invert it. The `upstream` column then carries the post-rename
     // name (`up.stream.lib.ui.SgeWidget`), and every consumer that joins the map to the pre-rename
@@ -255,7 +255,7 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(m.members.head.upstream, "up.stream.lib.ui.Widget#draw(Batch)")
   }
 
-  test("a type rename with a NESTED TYPE produces the upstream name for both (D16)") {
+  test("a type rename with a NESTED TYPE produces the upstream name for both") {
     // `List$ListStyle` -> `SgeList$ListStyle`: both the outer and the inner must carry the upstream
     // FQN. The inner's emitted name is `port.ui.SgeList$ListStyle` and its upstream must be
     // `up.stream.lib.ui.List$ListStyle`.
@@ -285,7 +285,7 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(innerMember.upstream, "up.stream.lib.ui.List$ListStyle#font")
   }
 
-  test("a type in BOTH `emittedTypes` and `dropTypes` produces only the Dropped row (D16)") {
+  test("a type in BOTH `emittedTypes` and `dropTypes` produces only the Dropped row") {
     // A type whose upstream FQN is in `dropTypes` is genuinely DROPPED — even if a phantom of it
     // appears in `emittedTypes` due to a namespace mismatch in the caller's filter. `PortMap.of`
     // filters `typeEntries` against `dropTypes` by upstream name, so only the Dropped row remains.

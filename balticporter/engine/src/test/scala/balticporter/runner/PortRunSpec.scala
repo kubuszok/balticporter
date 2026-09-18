@@ -695,7 +695,7 @@ class PortRunSpec extends munit.FunSuite:
     assertEquals(supers.map(_.owner), List("com.demo.Kept"))
   }
 
-  test("a DROPPED NILARY CONSTRUCTOR carries a porter note in the body it is missing from (C11)") {
+  test("a DROPPED NILARY CONSTRUCTOR carries a porter note in the body it is missing from") {
     // `Font()` delegates WITH ARGUMENTS in front of a class whose primary is
     // scala's own implicit nilary one, so it cannot be emitted and cannot be replaced by anything
     // that is not a wrong answer. `OmissionCheck` gives that a NUMBER; the number answers an agent

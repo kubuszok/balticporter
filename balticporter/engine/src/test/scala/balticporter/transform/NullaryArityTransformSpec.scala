@@ -506,7 +506,7 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assert(defn.exists(_.paramss.nonEmpty), "the method must keep its empty parameter clause")
   }
 
-  test("a declaration in a unit this run does not EMIT keeps its arity — refused as NotEmitted (K51)") {
+  test("a declaration in a unit this run does not EMIT keeps its arity — refused as NotEmitted") {
     val base = """package com.base;
                  |public class Box { public int width () { return 1; } }
                  |""".stripMargin

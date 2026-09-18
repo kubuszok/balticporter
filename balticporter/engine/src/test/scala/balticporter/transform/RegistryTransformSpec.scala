@@ -165,7 +165,7 @@ class RegistryTransformSpec extends munit.FunSuite:
 
   // ---- composed with the NAME table -------------------------------------------------------------
 
-  test("`newInstance(forName(s))` composes: the name table keys the registry (P10)") {
+  test("`newInstance(forName(s))` composes: the name table keys the registry") {
     val js = java.replace(
       "Object plain(Class<?> c) { return Reflector.newInstance(c); }",
       "Object plain(Class<?> c) { return Reflector.newInstance(Reflector.forName(\"x\")); }"

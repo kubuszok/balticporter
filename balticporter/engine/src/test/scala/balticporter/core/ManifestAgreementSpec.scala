@@ -236,7 +236,7 @@ class ManifestAgreementSpec extends munit.FunSuite:
     assertEquals(fs.head.subject, "ScalaJs, ScalaNative")
   }
 
-  test("a TYPE-RENAMED type is found by EMITTED name when the upstream lookup misses (D16)") {
+  test("a TYPE-RENAMED type is found by EMITTED name when the upstream lookup misses") {
     // The port map's `upstream` column carries java's own FQN (`…ui.List`). The dependent's
     // `upstreamFqn` uses `sym.name` — the post-type-rename simple name (`SgeList`) — combined with
     // the pre-rename package from the java path, producing `…ui.SgeList`. Neither the upstream

@@ -141,7 +141,7 @@ class CollectionsFamiliesSpec extends munit.FunSuite {
     assertEquals(merged.added, Set("com.lib.B"))
   }
 
-  test("mergedWith unions two `Only` scopes — a dependent widens its base's scope onto its own entry (K43)") {
+  test("mergedWith unions two `Only` scopes — a dependent widens its base's scope onto its own entry") {
     val base   = new CollectionsTransform(scope = RuleScope.Only(Set("com.lib.base")))
     val dep    = new CollectionsTransform(scope = RuleScope.Only(Set("com.lib.dep")))
     val merged = base.mergedWith(dep).toOption.get.phase.asInstanceOf[CollectionsTransform]
