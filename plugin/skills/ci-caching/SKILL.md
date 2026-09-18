@@ -59,6 +59,10 @@ Rules that keep it that way:
 
 - `~/.cache/sbt/v2` through `actions/cache`: the remote cache supersedes it, and per-OS keys made it
   worse.
+- Dependencies per job (`coursier/cache-action`, setup-java's `cache: sbt`): every job saves its own
+  1–2 GB entry, a repository has 10 GB, and eviction is least-recently-used — one run pushed the
+  12 MB generated-port entry out and the next job failed on `fail-on-cache-miss`. Before adding ANY
+  cache, check `gh api repos/<owner>/<repo>/actions/cache/usage` and the size of what it would save.
 - Native toolchain tasks (`nativeConfig`, discovered clang paths): machine-specific outputs poisoned
   other operating systems once; they are `Def.uncached` and the remote cache is namespaced per OS.
 - Scaladoc with the remote cache ON: sbt 2 replays a cached *failure*, and scaladoc crashes
