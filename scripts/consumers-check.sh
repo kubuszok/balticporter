@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Regression-test the engine against the libraries that consume it.
+#
+#   scripts/consumers-check.sh [jvm|full] [consumer ...]
+#
+# Publishes the committed engine to the local Ivy repository, then, for each consumer checkout found
+# beside this repository, makes a scratch clone of the consumer's HEAD, points its engine pin
+# at the freshly published version, regenerates the port and runs the consumer's own test aliases.
+# Nothing in the consumer's checkout is modified. One result row per consumer is printed at the end;
+# the exit code is the number of consumers that failed.
+#
+#   jvm   (default)  ci-jvm-3
+#   full             ci-jvm-3 ; test-js-3 ; test-native-3
+set -u
+
+level="${1:-jvm}"
+[ $# -gt 0 ] && shift
+case "$level" in
+  jvm) tasks="ci-jvm-3" ;;
+  full) tasks="ci-jvm-3 ; test-js-3 ; test-native-3" ;;
+  *) echo "usage: $0 [jvm|full] [consumer ...]" >&2; exit 64 ;;
+esac
+if [ $# -gt 0 ]; then consumers=("$@"); else consumers=(lls sge); fi
+
+root="$(cd "$(dirname "$0")/.." && pwd -P)"
+work="$root/.balticporter/consumers-check"
+engine_jdk="${BP_ENGINE_JAVA_HOME:-$HOME/.sdkman/candidates/java/22.0.2-graalce}"
+consumer_jdk="${BP_CONSUMER_JAVA_HOME:-$HOME/.sdkman/candidates/java/25.0.2-zulu}"
+mkdir -p "$work"
+
+if [ -n "$(git -C "$root" status --porcelain --untracked-files=no)" ]; then
+  echo "consumers-check: commit first - the published version is the commit hash" >&2
+  exit 65
+fi
+hash="$(git -C "$root" rev-parse HEAD)"
+version="$hash-SNAPSHOT"
+
+echo "== publishing the engine as $version"
+(cd "$root" && JAVA_HOME="$engine_jdk" PATH="$engine_jdk/bin:$PATH" sbt --client "reload; publishLocal") \
+  > "$work/engine-publish.log" 2>&1
+if [ $? -ne 0 ] || ! ls "$HOME/.ivy2/local/com.kubuszok/balticporter-corpus_3/$version" > /dev/null 2>&1; then
+  echo "consumers-check: publishLocal failed or did not produce $version - see $work/engine-publish.log" >&2
+  exit 66
+fi
+
+failed=0
+summary=""
+for name in "${consumers[@]}"; do
+  src="$root/../$name"
+  if [ ! -d "$src/.git" ] && [ ! -f "$src/.git" ]; then
+    summary+="$name\tskipped\tno checkout beside this repository\n"
+    continue
+  fi
+  src="$(cd "$src" && pwd -P)"
+  tree="$work/$name"
+  log="$work/$name.log"
+
+  # A local clone, not a linked worktree: the consumers derive their version through JGit, which
+  # cannot read a linked worktree's object database.
+  rm -rf "$tree"
+  if ! git clone --quiet --local "$src" "$tree" > "$log" 2>&1; then
+    summary+="$name\tFAILED\tcould not clone the consumer's checkout ($log)\n"
+    failed=$((failed + 1))
+    continue
+  fi
+
+  # The upstream Java is a submodule: reuse the consumer's checkout of it instead of cloning again.
+  while read -r sub; do
+    [ -z "$sub" ] && continue
+    if [ -e "$src/$sub/.git" ]; then
+      rm -rf "${tree:?}/$sub"
+      ln -s "$src/$sub" "$tree/$sub"
+    fi
+  done < <(git -C "$src" config --file .gitmodules --get-regexp 'submodule\..*\.path' 2> /dev/null | awk '{print $2}')
+
+  pins="$tree/project/plugins.sbt"
+  if ! /usr/bin/grep -q -E '[0-9a-f]{40}-SNAPSHOT' "$pins"; then
+    summary+="$name\tFAILED\tno engine pin found in project/plugins.sbt\n"
+    failed=$((failed + 1))
+    continue
+  fi
+  perl -pi -e "s/[0-9a-f]{40}-SNAPSHOT/$version/g" "$pins"
+  printf '\nresolvers += Resolver.defaultLocal\n' >> "$pins"
+
+  echo "== $name: generatePort ; $tasks   (log: $log)"
+  (cd "$tree" && JAVA_HOME="$consumer_jdk" PATH="$consumer_jdk/bin:$PATH" sbt --client "generatePort ; $tasks") \
+    >> "$log" 2>&1
+  code=$?
+  (cd "$tree" && JAVA_HOME="$consumer_jdk" PATH="$consumer_jdk/bin:$PATH" sbt --client shutdown) > /dev/null 2>&1
+
+  errors="$(/usr/bin/grep -c '^\[error\]' "$log")"
+  tests="$(/usr/bin/grep -o -E 'Total [0-9]+, Failed [0-9]+, Errors [0-9]+' "$log" | tr -d ',' |
+    awk '{t += $2; f += $4; e += $6; n++} END {if (n) printf "%d tests in %d modules, %d failed, %d errors", t, n, f, e}')"
+  if [ "$code" -eq 0 ]; then
+    summary+="$name\tok\t${tests:-no test summary}\n"
+  else
+    summary+="$name\tFAILED\texit $code, $errors error lines; ${tests:-no test summary} ($log)\n"
+    failed=$((failed + 1))
+  fi
+done
+
+echo
+echo "engine $version, level $level"
+printf "%b" "$summary" | column -t -s "$(printf '\t')"
+exit "$failed"
