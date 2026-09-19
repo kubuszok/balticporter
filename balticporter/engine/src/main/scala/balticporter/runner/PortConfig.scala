@@ -24,27 +24,58 @@ object PortConfig:
     "module-info.java"
   )
 
-  /** Load a `.conf` into a [[PortRun]]. */
+  /** Load a `.conf` into a [[PortRun]].
+    *
+    * `roots` overrides the configuration's NAMED PATH ROOTS. A configuration declares `roots { name = "path" }` (relative to the file, like every path) and writes a path under one as `"@name/rest"`;
+    * whoever runs it — a build that took the configuration out of a jar — says where those roots are on ITS disk. An override for a name the file does not declare is refused: it would silently do
+    * nothing.
+    */
   def load(
     conf:             Path,
     args:             Seq[String] = Nil,
     registry:         TransformRegistry = TransformRegistry.discover(),
-    frontendRegistry: FrontendRegistry = FrontendRegistry.discover()
+    frontendRegistry: FrontendRegistry = FrontendRegistry.discover(),
+    roots:            Map[String, Path] = Map.empty
   ): PortRun =
     val file = conf.toAbsolutePath.normalize
     val view = HoconView.root(HoconView.parse(file))
-    val run  = read(view, file, args, registry, frontendRegistry, Nil)
+    refuseUndeclaredRoots(view, file, roots)
+    val run = read(view, file, args, registry, frontendRegistry, Nil, roots)
     refuseUnread(view, file)
     run
 
   /** Extract only the manifest from a `.conf`, for spec or embedder use. */
-  def manifest(conf: Path, registry: TransformRegistry = TransformRegistry.discover()): PortManifest =
+  def manifest(conf: Path, registry: TransformRegistry = TransformRegistry.discover(), roots: Map[String, Path] = Map.empty): PortManifest =
     val file = conf.toAbsolutePath.normalize
     val view = HoconView.root(HoconView.parse(file))
+    refuseUndeclaredRoots(view, file, roots)
     manifestOnly(view)
-    val m = readManifest(view, file, registry, Nil)
+    val m = readManifest(view, file, registry, Nil, roots)
     refuseUnread(view, file)
     m
+
+  /** Where a configuration's paths are resolved: the file's directory, and its named roots — the file's own declarations with the caller's overrides on top. A base configuration is anchored at ITS
+    * directory with ITS declarations; the same overrides apply to the names it declares.
+    */
+  final private class Anchor(val dir: Path, val roots: Map[String, Path])
+
+  private def anchorOf(view: HoconView, file: Path, overrides: Map[String, Path]): Anchor =
+    val dir      = file.getParent
+    val declared = view.stringMap("roots").getOrElse(Map.empty).map { (name, s) =>
+      val p = Path.of(s)
+      name -> (if p.isAbsolute then p.normalize else dir.resolve(p).normalize)
+    }
+    new Anchor(dir, declared ++ overrides.filter((name, _) => declared.contains(name)).map((name, p) => name -> p.toAbsolutePath.normalize))
+
+  private def refuseUndeclaredRoots(view: HoconView, file: Path, overrides: Map[String, Path]): Unit =
+    val declared = view.stringMap("roots").getOrElse(Map.empty).keySet
+    val unknown  = overrides.keySet -- declared
+    if unknown.nonEmpty then
+      throw ConfigError(
+        file.toString,
+        s"path root(s) ${unknown.toList.sorted.mkString(", ")} overridden by the caller but not declared under `roots` " +
+          s"(declared: ${if declared.isEmpty then "none" else declared.toList.sorted.mkString(", ")}). An override nothing reads would silently do nothing."
+      )
 
   /** Mark non-manifest keys as read so they are not reported as junk when loading as a base. */
   private def manifestOnly(view: HoconView): Unit =
@@ -68,9 +99,10 @@ object PortConfig:
     args:             Seq[String],
     registry:         TransformRegistry,
     frontendRegistry: FrontendRegistry,
-    seen:             List[Path]
+    seen:             List[Path],
+    roots:            Map[String, Path]
   ): PortRun =
-    val dir     = file.getParent
+    val dir     = anchorOf(view, file, roots)
     val label   = view.requireString("label")
     val input   = view.requireChild("input")
     val output  = view.requireChild("output")
@@ -96,7 +128,7 @@ object PortConfig:
       frontend = frontend,
       // Phases come from the manifest; this path never passes a second source.
       phases = Nil,
-      manifest = Some(readManifest(view, file, registry, seen)),
+      manifest = Some(readManifest(view, file, registry, seen, roots)),
       provenance = view
         .child("provenance")
         .map(p =>
@@ -140,9 +172,10 @@ object PortConfig:
     view:     HoconView,
     file:     Path,
     registry: TransformRegistry,
-    seen:     List[Path]
+    seen:     List[Path],
+    roots:    Map[String, Path]
   ): PortManifest =
-    val dir = file.getParent
+    val dir = anchorOf(view, file, roots)
     val m   = view.requireChild("manifest")
     // Anchor base report paths before surface entries (port-map-migration loads maps at construction).
     // Only for this run's own conf (`seen.isEmpty`), not a base's.
@@ -202,7 +235,7 @@ object PortConfig:
           )
         val baseView = HoconView.root(HoconView.parse(baseFile))
         manifestOnly(baseView)
-        val base = readManifest(baseView, baseFile, registry, seen :+ baseFile)
+        val base = readManifest(baseView, baseFile, registry, seen :+ baseFile, roots)
         refuseUnread(baseView, baseFile)
         base.extendedBy(own)
 
@@ -269,7 +302,7 @@ object PortConfig:
     balticporter.catalog.ArtifactDep(entry.requireString("org"), entry.requireString("name"), entry.requireString("rev"), cross, entry.string("resolver"))
 
   /** Parse one `resources` entry. Root is conf-relative; files are classpath paths. Absent files = empty. */
-  private def resourceEntry(dir: Path)(entry: ConfigView): balticporter.core.ResourceTree =
+  private def resourceEntry(dir: Anchor)(entry: ConfigView): balticporter.core.ResourceTree =
     balticporter.core.ResourceTree(resolvePath(dir, entry.requireString("root")), entry.strings("files").getOrElse(Nil))
 
   private def surfaceEntry(registry: TransformRegistry)(entry: ConfigView): balticporter.tir.Phase =
@@ -282,7 +315,7 @@ object PortConfig:
 
   /** Frontend classpath from `classpath` entries and/or `classpathFile` (path-separator-joined). A declared file that is missing is fatal (an unresolved classpath causes silent misresolution).
     */
-  private def classpath(input: ConfigView, dir: Path): List[Path] =
+  private def classpath(input: ConfigView, dir: Anchor): List[Path] =
     val listed   = input.strings("classpath").getOrElse(Nil).map(resolvePath(dir, _))
     val fromFile = input.string("classpathFile").toList.flatMap { s =>
       val f = resolvePath(dir, s)
@@ -297,10 +330,21 @@ object PortConfig:
     }
     listed ++ fromFile
 
-  /** Resolve relative to the conf file's directory; absolute paths taken as-is. Lexical normalize. */
-  private def resolvePath(dir: Path, s: String): Path =
-    val p = Path.of(s)
-    if p.isAbsolute then p.normalize else dir.resolve(p).normalize
+  /** Resolve `@name/rest` under the named root, anything else relative to the conf file's directory; absolute paths taken as-is. Lexical normalize. A root nobody declared is refused by name. */
+  private def resolvePath(anchor: Anchor, s: String): Path =
+    if s.startsWith("@") then
+      val (name, rest) = s.drop(1).span(_ != '/')
+      val root         = anchor.roots.getOrElse(
+        name,
+        throw ConfigError(
+          s,
+          s"no path root named `$name` (declared: ${if anchor.roots.isEmpty then "none" else anchor.roots.keys.toList.sorted.mkString(", ")}); declare it under `roots { $name = \"…\" }`"
+        )
+      )
+      root.resolve(rest.stripPrefix("/")).normalize
+    else
+      val p = Path.of(s)
+      if p.isAbsolute then p.normalize else anchor.dir.resolve(p).normalize
 
   /** File list: explicit `files` or glob-walked. Sorted for deterministic emission order. */
   private def selectFiles(input: ConfigView, sourceRoot: Path): List[String] =

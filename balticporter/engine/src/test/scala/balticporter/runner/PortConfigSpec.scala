@@ -151,6 +151,48 @@ class PortConfigSpec extends munit.FunSuite:
     assertEquals(f.frontend.sourceRoot.getParent, f.portRoot.getParent)
   }
 
+  // named path roots: a configuration taken out of a jar is told where its inputs and outputs are
+
+  private val Rooted =
+    """label = "demo"
+      |roots  { upstream = ".", work = "scratch" }
+      |input  { sourceRoot = "@upstream/java" }
+      |output { portRoot = "@work/out", sourceSet = "main" }
+      |manifest { name = "demo" }
+      |""".stripMargin
+
+  test("a path under a named root resolves against the root's declared default, relative to the conf") {
+    val conf = fixture(Rooted)
+    val run  = PortConfig.load(conf)
+    assertEquals(run.frontend.sourceRoot, conf.getParent.resolve("java").normalize)
+    assertEquals(run.portRoot, conf.getParent.resolve("scratch/out").normalize)
+  }
+
+  test("the caller's override of a named root wins, and only moves the paths under that root") {
+    val conf      = fixture(Rooted)
+    val elsewhere = Files.createTempDirectory("portconf-out")
+    val run       = PortConfig.load(conf, roots = Map("work" -> elsewhere))
+    assertEquals(run.portRoot, elsewhere.toAbsolutePath.normalize.resolve("out"))
+    assertEquals(run.frontend.sourceRoot, conf.getParent.resolve("java").normalize)
+  }
+
+  test("an override for a root the conf does not declare is refused by name") {
+    val e = intercept[balticporter.tir.ConfigError](PortConfig.load(fixture(Rooted), roots = Map("upstrem" -> Path.of("/tmp"))))
+    assert(clue(e.getMessage).contains("upstrem"))
+    assert(clue(e.getMessage).contains("upstream, work"))
+  }
+
+  test("a path under a root nobody declared is refused by name") {
+    val conf = fixture(Rooted.replace("@work/out", "@wrok/out"))
+    val e    = intercept[balticporter.tir.ConfigError](PortConfig.load(conf))
+    assert(clue(e.getMessage).contains("wrok"))
+  }
+
+  test("a conf with no roots and no overrides loads exactly as before") {
+    val run = PortConfig.load(fixture(Minimal), roots = Map.empty)
+    assertEquals(run.frontend.sourceRoot.getFileName.toString, "java")
+  }
+
   test("a CLI --determinism flag beats the file; the file beats the default") {
     val f = fixture(Minimal + "determinism = \"off\"\n")
     assertEquals(PortConfig.load(f).determinism, Determinism.Off)

@@ -100,6 +100,31 @@ Emitted Scala always lands at `<portRoot>/src_managed/{main,test}/scala` — git
 [Getting started](getting-started.md)). `src/` is where the hand-written part of a port lives — the
 files a library needs and the engine cannot derive, listed under `manifest.inject` below.
 
+### `roots` — a configuration that can be run from somewhere else
+
+Every path in a `.conf` is relative to the file. That stops working the moment the file is not
+where you wrote it — for instance when a build takes it out of a published jar. Name the
+directories the port depends on, give each a default, and write paths under them as `@name/…`:
+
+```hocon
+roots {
+  upstream = "../my-lib"      # the Java checkout
+  work     = "target/port"    # output and scratch
+}
+input  { sourceRoot = "@upstream/src/main/java" }
+output { portRoot   = "@work", sourceSet = "main" }
+```
+
+Whoever runs the configuration says where the roots are on their disk:
+
+```scala
+PortConfig.load(conf, roots = Map("upstream" -> upstreamDir, "work" -> targetDir)).execute()
+```
+
+An override for a root the file does not declare, and a path under a root nobody declared, are both
+refused by name — a misspelt root would otherwise silently do nothing. A `base = "…"` configuration
+is resolved with its own declarations and the same overrides.
+
 Name the port for its **destination**, never for the upstream library: the directory, the top-level
 `label` and `manifest.name` should all agree on the identifier the emitted Scala is going to become
 in your build (`mylib-core`, not `my-lib-1.2`).
