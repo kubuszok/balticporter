@@ -3,8 +3,8 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** A call the retyping moved onto a runtime shim is spelled the way the shim declares the member. The shims carry java's arity everywhere but the members in `ShimParenless`, and emitting `c.isEmpty()`
-  * against a parenless declaration is a typer error the port cannot see until the whole module compiles.
+/** A call the retyping moved onto a runtime shim is spelled the way the shim declares the member. The shims carry java's arity everywhere but the members in `ShimParenless`, and emitting
+  * `c.isEmpty()` against a parenless declaration is a typer error the port cannot see until the whole module compiles.
   */
 class ShimParenlessCallSpec extends PortSuite:
 
