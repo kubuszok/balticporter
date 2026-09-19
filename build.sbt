@@ -845,7 +845,7 @@ lazy val `port-ssg-liquid` = (projectMatrix in file("ported/ssg-liquid"))
       "com.fasterxml.jackson.core"      % "jackson-databind"          % "2.13.4.2",
       "com.fasterxml.jackson.core"      % "jackson-annotations"       % "2.15.0",
       "com.fasterxml.jackson.datatype"  % "jackson-datatype-jsr310"   % "2.15.0",
-      "ua.co.k"                          % "strftime4j"                % "1.0.6",
+      // …and no strftime4j: the date filter's strftime pattern is evaluated by hand-written Scala.
       // multiarch-serviceloader — declared by the port's manifest (`LiqpPolicy.dependencies`),
       // derived from `run-latest/dependencies.tsv` in the scala-cli lanes via `declared_dep_flags`.
       // The emitted Scala names `multiarch.serviceloader.ServiceProviders` outright. The snapshot
