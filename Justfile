@@ -250,13 +250,10 @@ gltf_tests    := "../sge/original-src/gdx-gltf/gltf/test"
 # output that `LiqpClasspath` javacs into `{{liqp_parser_classes}}` and hands the frontend as a
 # CLASSPATH (decision D-liqp-1, stated in balticporter/corpus/ports/liqp/main.conf).
 #
-# ONE directory, read by the frontend, by scalac and by the test run. It was two until D-liqp-1b:
-# the parser's own signature named `liqp.TemplateParser.ErrorMode` while the port emits
-# `ssg.liquid`, so scalac needed upstream `liqp` beside the parser or it ABORTED
-# (`AssertionError` out of `ClassfileParser`) rather than reporting anything — and the frontend had
-# to be kept away from exactly those class files, a `liqp` class file being a second definition of
-# every ported type. `LiqpClasspath` now rewrites the generated sources into the emitted namespace
-# before javac reads them, so there is no seam left for a second directory to soften.
+# A FRONTEND INPUT ONLY, since the port replaced the ANTLR runtime and the generated lexer and
+# parser with hand-written Scala: the frontend still has to RESOLVE `liquid.parser.v4.LiquidLexer`
+# and the ANTLR types inside the declarations that policy re-points, and neither the compile
+# classpath nor the test run reads this directory any more.
 liqp_src      := "../ssg/original-src/liqp"
 liqp_parser_classes := "out/liqp-parser-classes"
 # flexmark-java is the second corpus library vendored under **ssg** rather than under sge. Its
@@ -388,33 +385,10 @@ n4j_deps      := ""
 # on purpose, and left as a variable rather than dropped from the lane: the day the port grows a
 # test source set this is the line that gains a coordinate.
 jbump_deps    := ""
-# liqp's `pom.xml`, at COMPILE scope, verbatim — including the one that reads like a typo and is
-# not: `jackson.databind.version` is 2.13.4.2 while `jackson.version` is 2.15.0, two properties in
-# the same pom. A port resolves what the library DECLARES (see `ashley_deps` for what guessing
-# cost). The ANTLR-generated parser is NOT a coordinate — it is a directory of class files the
-# lane adds with `--jar` (see `liqp_parser_classes`).
-#
-# WHAT IS NOT HERE, and why: `multiarch-serviceloader` — the coordinate D-liqp-12's redirect points
-# `java.util.ServiceLoader` at, which the EMITTED scala names outright — used to be spelled here as
-# a third copy of a fact the port's `.conf` and the generated build already state. Nothing compared
-# the copies, so a revision bumped in the manifest and not here would compile this lane against a
-# DIFFERENT JAR with every check count, every member digest and every test outcome flat. The run now
-# PUBLISHES what it declared (`run-latest/dependencies.tsv`) and the lane derives its
-# `--dependency`/`--repository` from that file through `declared_dep_flags` (scripts/_lib.sh), so
-# the coordinate — and the Central Portal snapshot repo it needs, which is not Maven Central — can
-# only be wrong in one place. What stays below is what `pom.xml` declares and the manifest does not.
-liqp_deps     := "--dependency org.antlr:antlr4-runtime:4.13.0 --dependency com.fasterxml.jackson.core:jackson-core:2.15.0 --dependency com.fasterxml.jackson.core:jackson-databind:2.13.4.2 --dependency com.fasterxml.jackson.core:jackson-annotations:2.15.0 --dependency com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0 --dependency ua.co.k:strftime4j:1.0.6"
-# …and what the TEST source set adds on top of it. `junit:junit:4.13.1` is the ONE test-scope
-# dependency `pom.xml` declares; `org.hamcrest:hamcrest-core:1.3` arrives with it TRANSITIVELY and
-# is deliberately NOT named here — a port resolves what the library DECLARES, and hamcrest is not
-# a coordinate liqp has.
-#
-# BOTH jars are RUN dependencies, not only frontend ones, and that is a decision rather than an
-# oversight: `TestFrameworkTransform` maps `org.junit.Assert` onto `munit.Assertions` and has no
-# matcher algebra, so liqp's 767 `assertThat(x, is(y))` sites stay on hamcrest. Measured — a
-# hamcrest `AssertionError` produces MUnit's `==> X` marker per test and the suite CONTINUES, so
-# `reconcile_outcomes` loses nothing by it. munit is the runner the conversion targets.
-liqp_test_deps := "--dependency junit:junit:4.13.1 --dependency org.scalameta::munit:1.0.2"
+# liqp declares its compile and test coordinates in the generated sbt build (`port-ssg-liquid` in
+# `build.sbt`) and nowhere else. The two `liqp_deps`/`liqp_test_deps` variables that used to stand
+# here were read by nothing after the lane moved off scala-cli, and one of them still named
+# antlr4-runtime — a coordinate the port no longer has on its compile classpath at all.
 # JUnit 4.12 — gdx-gltf's OWN `junitVersion`, from its root `build.gradle`, not the 4.13.2 the
 # other lanes happen to use. The suite is converted to MUnit by `TestFrameworkTransform`, so the
 # junit coordinate is not what RUNS it; it is here because scala-cli must resolve the same surface
