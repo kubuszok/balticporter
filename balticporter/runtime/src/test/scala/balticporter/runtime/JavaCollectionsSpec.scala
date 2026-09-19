@@ -1231,3 +1231,13 @@ class JavaCollectionsSpec extends munit.FunSuite:
     JavaCollections.sort(xs, byFirst)
     assertEquals(xs.toList, List((1, "b"), (1, "d"), (2, "a"), (2, "c")), "stable: ties keep their order")
   }
+
+  test("a java map entry is an entry beside the tuple, and reads as the pair it holds") {
+    val e = new java.util.AbstractMap.SimpleEntry[String, Integer]("a", 1)
+    assert(JavaCollections.Reified.isEntry(e))
+    assert(JavaCollections.Reified.isEntry(("a", 1)))
+    assert(!JavaCollections.Reified.isEntry("a"))
+    assertEquals[Any, Any](JavaCollections.Reified.asEntry(e), ("a", Integer.valueOf(1)))
+    val t = ("b", 2)
+    assert(JavaCollections.Reified.asEntry(t) eq t)
+  }

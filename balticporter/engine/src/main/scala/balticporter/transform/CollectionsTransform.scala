@@ -1347,7 +1347,9 @@ object CollectionsTransform:
     "scala.collection.mutable.Map" -> "Map",
     JavaCollectionFqn -> "Collection",
     JavaIterableFqn -> "Iterable",
-    JavaIteratorFqn -> "Iterator"
+    JavaIteratorFqn -> "Iterator",
+    // a tuple is concrete but immutable: the pair read off a java entry answers every read it has
+    "scala.Tuple2" -> "Entry"
   )
 
   /** `JavaCollections.Reified`, whose members [[reifiedHelper]] names. */

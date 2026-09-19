@@ -483,7 +483,7 @@ object JavaCollections {
   // REIFIED OCCURRENCES — an `instanceof` and a downcast ask about a RUNTIME OBJECT
 
   /** the two halves of a REIFIED occurrence: `is*` answers java's `instanceof`, `as*` performs java's downcast. `CollectionsTransform` emits these where it retyped the tested/cast type; where the
-    * target is a CONCRETE one no live view can produce (`mutable.HashMap`, `ArrayBuffer`, `Tuple2`) it emits nothing and counts the refusal instead.
+    * target is a CONCRETE one no live view can produce (`mutable.HashMap`, `ArrayBuffer`) it emits nothing and counts the refusal instead.
     */
   object Reified {
 
@@ -593,6 +593,16 @@ object JavaCollections {
       case it: java.util.Iterator[?] =>
         JavaIterator.from(it.asInstanceOf[java.util.Iterator[Any]].asScala)
       case other => other.asInstanceOf[JavaIterator[?]]
+    }
+
+    /** java's `x instanceof java.util.Map.Entry`: a class of the port's own that implements the java interface keeps that parent (a tuple cannot be inherited from), so both are entries. */
+    def isEntry(x: Any): Boolean = x.isInstanceOf[scala.Tuple2[?, ?]] || x.isInstanceOf[java.util.Map.Entry[?, ?]]
+
+    /** java's `(java.util.Map.Entry<K,V>) x`. A tuple is immutable, so the pair read off a java entry answers every read the tuple has; its identity is not the entry's. */
+    def asEntry(x: Any): scala.Tuple2[?, ?] = x match {
+      case t: scala.Tuple2[?, ?]        => t
+      case e: java.util.Map.Entry[?, ?] => (e.getKey, e.getValue)
+      case other => other.asInstanceOf[scala.Tuple2[?, ?]]
     }
 
     // -----------------------------------------------------------------------------------------

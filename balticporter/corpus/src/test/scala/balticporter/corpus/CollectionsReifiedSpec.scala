@@ -56,6 +56,32 @@ class CollectionsReifiedSpec extends PortSuite:
     )
   }
 
+  test(
+    "a map ENTRY is asked about in both representations: a class of the program's own keeps java's parent and is no tuple"
+  ) {
+    val (_, _, out) = ported(
+      """package demo;
+        |import java.util.*;
+        |final class Pair<K, V> implements Map.Entry<K, V> {
+        |  private final K k; private final V v;
+        |  Pair(K k, V v) { this.k = k; this.v = v; }
+        |  public K getKey() { return k; }
+        |  public V getValue() { return v; }
+        |  public V setValue(V x) { throw new UnsupportedOperationException(); }
+        |  @Override public boolean equals(Object o) {
+        |    if (!(o instanceof Map.Entry)) return false;
+        |    Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+        |    return Objects.equals(k, e.getKey()) && Objects.equals(v, e.getValue());
+        |  }
+        |  @Override public int hashCode() { return Objects.hash(k, v); }
+        |}
+        |""".stripMargin
+    )
+    assert(clue(out).contains(s"$Reified.isEntry("))
+    assert(out.contains(s"$Reified.asEntry("))
+    assert(!out.contains("o.isInstanceOf[scala.Tuple2"), "two equal pairs compared false behind the bare tuple test")
+  }
+
   test("the SHIM targets are reified positions too — Collection, Iterable, Iterator") {
     val (_, _, out) = ported(
       """package demo;
