@@ -25,15 +25,20 @@ object FlexmarkTestClasspath:
   /** the one test-scope coordinate the poms declare. hamcrest-core 1.3 is its transitive. */
   val TestCoordinates: List[String] = List("junit:junit:4.13.2")
 
-  def cache(repoRoot: Path): Path = repoRoot.resolve("out/flexmark-test-classpath.txt")
+  /** the file the markdown test configurations read as `@work/flexmark-test-classpath.txt`. */
+  val FileName = "flexmark-test-classpath.txt"
 
-  /** Guarantee the test classpath file exists and AGREES with the main one, building it if not: the cached line is reusable only if it still STARTS with the main classpath, entry for entry, AND was
-    * resolved from the test coordinates this port declares NOW.
+  def cache(repoRoot: Path): Path = repoRoot.resolve("out").resolve(FileName)
+
+  def ensure(repoRoot: Path): Path = ensureIn(repoRoot.resolve("out"))
+
+  /** Guarantee the test classpath file exists in `work` (the configurations' `work` root) and AGREES with the main one, building it if not: the cached line is reusable only if it still STARTS with
+    * the main classpath, entry for entry, AND was resolved from the test coordinates this port declares NOW.
     */
-  def ensure(repoRoot: Path): Path =
+  def ensureIn(work: Path): Path =
     val mainEntries =
-      Files.readString(FlexmarkClasspath.ensure(repoRoot)).trim.split(File.pathSeparator).filter(_.nonEmpty).toList
-    val out      = cache(repoRoot)
+      Files.readString(FlexmarkClasspath.ensureIn(work)).trim.split(File.pathSeparator).filter(_.nonEmpty).toList
+    val out      = work.resolve(FileName)
     val key      = ClasspathCache.key(TestCoordinates)
     val existing = if Files.exists(out) then Files.readString(out).trim else ""
     val carried  = existing.split(File.pathSeparator).filter(_.nonEmpty).toList
