@@ -41,8 +41,14 @@ object FlexmarkClasspath:
     "org.nibor.autolink:autolink:0.6.0"
   )
 
-  def cache(repoRoot: Path): Path = repoRoot.resolve("out/flexmark-classpath.txt")
+  /** the file the markdown configurations read as `@work/flexmark-classpath.txt`. */
+  val FileName = "flexmark-classpath.txt"
+
+  def cache(repoRoot: Path): Path = repoRoot.resolve("out").resolve(FileName)
 
   /** Guarantee the classpath file exists, resolving it once if it does not. Returns its path. */
-  def ensure(repoRoot: Path): Path =
-    ClasspathCache.ensure(cache(repoRoot), "ssg-md", Coordinates)
+  def ensure(repoRoot: Path): Path = ensureIn(repoRoot.resolve("out"))
+
+  /** The same, in the directory the caller gives the configurations as their `work` root — a consumer's own `target/`, never this repository. */
+  def ensureIn(work: Path): Path =
+    ClasspathCache.ensure(work.resolve(FileName), "ssg-md", Coordinates)
