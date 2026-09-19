@@ -167,7 +167,10 @@ object LlsPolicy:
         // the witness for an element type that KEEPS java's `Object` bound: the one lls itself
         // uses for reference elements, which is the representation java's `Object[]` already had.
         boxedWitness = Some("lowlevel.MkArray.anyRef[scala.AnyRef].asInstanceOf[lowlevel.MkArray[{elem}]]")
-      )
+      ),
+      // the answer to every array the step above counts as presented to java's code as `Object[]`;
+      // its own group, so a dependent's body replacements keep the positions that dependent chose
+      new balticporter.transform.MethodBodyTransform(LlsPrimitiveArrays.bodies, group = "primitive-arrays")
     )
   )
 
