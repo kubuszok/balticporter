@@ -116,33 +116,33 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
   // File-based oracle (reads actual reference files)
   // -----------------------------------------------------------------------
 
+  private def terserCompressRefRoot: Option[java.nio.file.Path] =
+    val cpRef = getClass.getResource("/reference/terser/compress/Common.scala")
+    if cpRef != null && cpRef.getProtocol == "file" then Some(java.nio.file.Path.of(cpRef.toURI).getParent)
+    else ConsumerCheckout.referenceScala("ssg-js").map((dir, _) => dir.resolve("ssg/js/compress"))
+
   test("file-based oracle: parse actual ssg-js reference"):
-    val refRoot = {
-      val cpRef = getClass.getResource("/reference/terser/compress/Common.scala")
-      if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent
-      else java.nio.file.Path.of("/nonexistent")
-    }
-    if java.nio.file.Files.exists(refRoot) then
-      val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildFromDirectory(refRoot)
-      // Inference methods
-      val isBool = oracle.get("Inference", "isBoolean")
-      assert(isBool.isDefined, "should find Inference.isBoolean from file")
-      assertEquals(isBool.get.returnType, "Boolean")
+    val refRoot = terserCompressRefRoot
+    assume(refRoot.exists(java.nio.file.Files.exists(_)), "no classpath snapshot and no ssg-js reference checkout available")
+    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildFromDirectory(refRoot.get)
+    // Inference methods
+    val isBool = oracle.get("Inference", "isBoolean")
+    assert(isBool.isDefined, "should find Inference.isBoolean from file")
+    assertEquals(isBool.get.returnType, "Boolean")
 
-      // Common methods
-      val merge = oracle.get("Common", "mergeSequence")
-      assert(merge.isDefined, "should find Common.mergeSequence from file")
-      assertEquals(merge.get.returnType, "ArrayBuffer[AstNode]")
+    // Common methods
+    val merge = oracle.get("Common", "mergeSequence")
+    assert(merge.isDefined, "should find Common.mergeSequence from file")
+    assertEquals(merge.get.returnType, "ArrayBuffer[AstNode]")
 
-      // TightenBody methods
-      val tighten = oracle.get("TightenBody", "tightenBody")
-      assert(tighten.isDefined, "should find TightenBody.tightenBody from file")
+    // TightenBody methods
+    val tighten = oracle.get("TightenBody", "tightenBody")
+    assert(tighten.isDefined, "should find TightenBody.tightenBody from file")
 
-      // Print statistics
-      println(s"File-based oracle: ${oracle.methods.size} method signatures extracted")
-      val byObj = oracle.methods.groupBy(_._1._1)
-      for (obj, sigs) <- byObj.toList.sortBy(_._1) do println(s"  $obj: ${sigs.size} methods")
-    else println("SKIP: ssg-js reference not available")
+    // Print statistics
+    println(s"File-based oracle: ${oracle.methods.size} method signatures extracted")
+    val byObj = oracle.methods.groupBy(_._1._1)
+    for (obj, sigs) <- byObj.toList.sortBy(_._1) do println(s"  $obj: ${sigs.size} methods")
 
   // -----------------------------------------------------------------------
   // Integration: emitter with oracle produces typed output
@@ -210,25 +210,20 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
     reportTypeCoverage("hardcoded", results)
 
   test("emitter with oracle: batch emit with file-based oracle"):
-    val refRoot = {
-      val cpRef = getClass.getResource("/reference/terser/compress/Common.scala")
-      if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent
-      else java.nio.file.Path.of("/nonexistent")
-    }
-    if !java.nio.file.Files.exists(refRoot) then println("SKIP: ssg-js reference not available")
-    else
-      val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildForEmitter(refRoot)
-      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser-compress-fileoracle")
-      java.nio.file.Files.createDirectories(outDir)
+    val refRoot = terserCompressRefRoot
+    assume(refRoot.exists(java.nio.file.Files.exists(_)), "no classpath snapshot and no ssg-js reference checkout available")
+    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildForEmitter(refRoot.get)
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser-compress-fileoracle")
+    java.nio.file.Files.createDirectories(outDir)
 
-      val results = balticporter.corpus.terser.TerserCompressEmitter.emitAll(loadRast, hierarchy, Some(oracle))
+    val results = balticporter.corpus.terser.TerserCompressEmitter.emitAll(loadRast, hierarchy, Some(oracle))
 
-      for (mod, source, _) <- results do
-        val path = outDir.resolve(s"${mod.objectName}.scala")
-        java.nio.file.Files.writeString(path, source)
+    for (mod, source, _) <- results do
+      val path = outDir.resolve(s"${mod.objectName}.scala")
+      java.nio.file.Files.writeString(path, source)
 
-      assertEquals(results.size, 10, "should emit all 10 compress modules")
-      reportTypeCoverage("file-based", results)
+    assertEquals(results.size, 10, "should emit all 10 compress modules")
+    reportTypeCoverage("file-based", results)
 
   private def reportTypeCoverage(
     label:   String,

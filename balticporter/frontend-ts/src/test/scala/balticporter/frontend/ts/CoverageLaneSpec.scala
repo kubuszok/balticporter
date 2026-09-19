@@ -140,25 +140,25 @@ class CoverageLaneSpec extends munit.FunSuite:
   test("integration: coverage report for Terser Common"):
     val refOpt  = loadReference("/reference/terser/compress/Common.scala")
     val rastOpt = loadRast("/rast/terser/lib/compress/common.rast.json")
-    (refOpt, rastOpt) match
-      case (Some(ref), Some(rast)) =>
-        val fns     = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
-        val bodyMap = scala.collection.mutable.Map.empty[String, List[(String, Int)]]
-        for fn <- fns do
-          val entry      = dedicated.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
-          val translated = dedicated.DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-          val key        = snakeToCamel(fn.name)
-          bodyMap(key) = bodyMap.getOrElse(key, Nil) :+ (translated.scalaBody, translated.refusalCount)
+    assume(refOpt.isDefined, "reference resource /reference/terser/compress/Common.scala not found")
+    assume(rastOpt.isDefined, "RAST resource /rast/terser/lib/compress/common.rast.json not found")
+    val ref  = refOpt.get
+    val rast = rastOpt.get
 
-        val result = ParityDerive.derive(ref, bodyMap.toMap)
-        val report = CoverageLane.analyze(result.bodies, "Common")
-        println(CoverageLane.formatDetailedReport(report))
+    val fns     = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
+    val bodyMap = scala.collection.mutable.Map.empty[String, List[(String, Int)]]
+    for fn <- fns do
+      val entry      = dedicated.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
+      val translated = dedicated.DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+      val key        = snakeToCamel(fn.name)
+      bodyMap(key) = bodyMap.getOrElse(key, Nil) :+ (translated.scalaBody, translated.refusalCount)
 
-        val verdicts = BodyVerdicts.autoClassify(result.bodies)
-        println(BodyVerdicts.formatSummary(verdicts))
+    val result = ParityDerive.derive(ref, bodyMap.toMap)
+    val report = CoverageLane.analyze(result.bodies, "Common")
+    println(CoverageLane.formatDetailedReport(report))
 
-        assert(report.totalMethods >= 10, s"Expected >= 10 methods, got ${report.totalMethods}")
-        assert(report.rastDerived >= 5, s"Expected >= 5 RAST, got ${report.rastDerived}")
+    val verdicts = BodyVerdicts.autoClassify(result.bodies)
+    println(BodyVerdicts.formatSummary(verdicts))
 
-      case _ =>
-        println("SKIP: reference or RAST not found")
+    assert(report.totalMethods >= 10, s"Expected >= 10 methods, got ${report.totalMethods}")
+    assert(report.rastDerived >= 5, s"Expected >= 5 RAST, got ${report.rastDerived}")

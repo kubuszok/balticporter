@@ -24,15 +24,11 @@ class KaTeXEmitterSpec extends munit.FunSuite:
           stream.close()
           None
 
+  // Classpath snapshot first (self-contained); the live ssg checkout as a fallback.
   private val katexRefRoot: java.nio.file.Path =
     val cpRef = getClass.getResource("/reference/katex/Options.scala")
     if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent
-    else
-      val candidates = List(
-        sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
-        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg"))
-      ).flatten
-      candidates.map(_.resolve("ssg-katex/src/main/scala/ssg/katex")).find(p => java.nio.file.Files.exists(p.resolve("Options.scala"))).getOrElse(java.nio.file.Path.of("nonexistent"))
+    else ConsumerCheckout.referenceScala("ssg-katex").map((dir, _) => dir.resolve("ssg/katex")).getOrElse(java.nio.file.Path.of("nonexistent"))
 
   // -----------------------------------------------------------------------
   // Category 2: Classes — RAST node extraction
@@ -135,37 +131,37 @@ class KaTeXEmitterSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("parity: Options.scala method boundaries"):
-    if !java.nio.file.Files.exists(katexRefRoot.resolve("Options.scala")) then println("SKIP: ssg-katex reference not found")
-    else
-      val source  = new String(java.nio.file.Files.readAllBytes(katexRefRoot.resolve("Options.scala")))
-      val lines   = source.split("\n", -1).toList
-      val methods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(lines)
-      println(s"Options.scala: found ${methods.size} methods")
-      for m <- methods.take(10) do println(s"  ${m.name} (lines ${m.signatureLine}-${m.bodyEndLine}, private=${m.isPrivate})")
-      assert(methods.size >= 10, s"Expected >= 10 methods in Options.scala, got ${methods.size}")
+    assume(java.nio.file.Files.exists(katexRefRoot.resolve("Options.scala")), s"Options.scala not found under $katexRefRoot")
+    val source  = new String(java.nio.file.Files.readAllBytes(katexRefRoot.resolve("Options.scala")))
+    val lines   = source.split("\n", -1).toList
+    val methods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(lines)
+    println(s"Options.scala: found ${methods.size} methods")
+    for m <- methods.take(10) do println(s"  ${m.name} (lines ${m.signatureLine}-${m.bodyEndLine}, private=${m.isPrivate})")
+    assert(methods.size >= 10, s"Expected >= 10 methods in Options.scala, got ${methods.size}")
 
   test("parity: emitWithParity on ParseError"):
-    if !java.nio.file.Files.exists(katexRefRoot.resolve("ParseError.scala")) then println("SKIP: ssg-katex reference not found")
-    else
-      val rast              = loadRast("/rast/katex/src/ParseError.rast.json")
-      val refPath           = katexRefRoot.resolve("ParseError.scala")
-      val (source, summary) = balticporter.corpus.katex.KaTeXEmitter.emitWithParity(rast, refPath)
-      println(
-        s"ParseError parity: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST-matched, ${summary.keptFromReference} kept"
-      )
-      assert(source.contains("ParseError"), "should contain ParseError")
+    assume(
+      java.nio.file.Files.exists(katexRefRoot.resolve("ParseError.scala")),
+      s"ParseError.scala not found under $katexRefRoot"
+    )
+    val rast              = loadRast("/rast/katex/src/ParseError.rast.json")
+    val refPath           = katexRefRoot.resolve("ParseError.scala")
+    val (source, summary) = balticporter.corpus.katex.KaTeXEmitter.emitWithParity(rast, refPath)
+    println(
+      s"ParseError parity: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST-matched, ${summary.keptFromReference} kept"
+    )
+    assert(source.contains("ParseError"), "should contain ParseError")
 
   // -----------------------------------------------------------------------
   // Full batch analysis
   // -----------------------------------------------------------------------
 
   test("batch: analyze all KaTeX modules"):
-    if !java.nio.file.Files.exists(katexRefRoot) then println("SKIP: ssg-katex reference not found at " + katexRefRoot)
-    else
-      val summary = balticporter.corpus.katex.KaTeXEmitter.analyzeAll(tryLoadRast, katexRefRoot)
-      println("\n" + balticporter.corpus.katex.KaTeXEmitter.formatBatchSummary(summary))
-      assert(summary.foundRast >= 50, s"Expected >= 50 RAST files, got ${summary.foundRast}")
-      assert(summary.functionDefs >= 30, s"Expected >= 30 function defs, got ${summary.functionDefs}")
+    assume(java.nio.file.Files.exists(katexRefRoot), s"ssg-katex reference not found at $katexRefRoot")
+    val summary = balticporter.corpus.katex.KaTeXEmitter.analyzeAll(tryLoadRast, katexRefRoot)
+    println("\n" + balticporter.corpus.katex.KaTeXEmitter.formatBatchSummary(summary))
+    assert(summary.foundRast >= 50, s"Expected >= 50 RAST files, got ${summary.foundRast}")
+    assert(summary.functionDefs >= 30, s"Expected >= 30 function defs, got ${summary.functionDefs}")
 
   // -----------------------------------------------------------------------
   // Type mapping
@@ -193,49 +189,47 @@ class KaTeXEmitterSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("batch: emitAllWithParity writes all core modules"):
-    if !java.nio.file.Files.exists(katexRefRoot) then println("SKIP: ssg-katex reference not found at " + katexRefRoot)
-    else
-      val outDir  = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-katex-parity")
-      val results = balticporter.corpus.katex.KaTeXEmitter.emitAllWithParity(tryLoadRast, katexRefRoot, outDir)
+    assume(java.nio.file.Files.exists(katexRefRoot), s"ssg-katex reference not found at $katexRefRoot")
+    val outDir  = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-katex-parity")
+    val results = balticporter.corpus.katex.KaTeXEmitter.emitAllWithParity(tryLoadRast, katexRefRoot, outDir)
 
-      println("\n=== KaTeX Core Module Parity ===")
-      println(balticporter.corpus.katex.KaTeXEmitter.formatParitySummaryTable(results.map(_._2)))
+    println("\n=== KaTeX Core Module Parity ===")
+    println(balticporter.corpus.katex.KaTeXEmitter.formatParitySummaryTable(results.map(_._2)))
 
-      for (mod, summary) <- results do
-        println(
-          s"  ${mod.objectName}: ${summary.totalMethods} methods, " +
-            s"${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref"
-        )
+    for (mod, summary) <- results do
+      println(
+        s"  ${mod.objectName}: ${summary.totalMethods} methods, " +
+          s"${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref"
+      )
 
-      assert(results.size >= 20, s"Expected >= 20 modules emitted, got ${results.size}")
+    assert(results.size >= 20, s"Expected >= 20 modules emitted, got ${results.size}")
 
-      val totalRast = results.map(_._2.matchedFromRast).sum
-      println(s"\nTotal RAST-derived bodies: $totalRast")
-      println(s"Emitted to: $outDir")
+    val totalRast = results.map(_._2.matchedFromRast).sum
+    println(s"\nTotal RAST-derived bodies: $totalRast")
+    println(s"Emitted to: $outDir")
 
   // -----------------------------------------------------------------------
   // Step 2: Batch parity-derive for function modules
   // -----------------------------------------------------------------------
 
   test("batch: emitAllFunctionsWithParity writes function modules"):
-    if !java.nio.file.Files.exists(katexRefRoot) then println("SKIP: ssg-katex reference not found at " + katexRefRoot)
-    else
-      val outDir  = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-katex-functions-parity")
-      val results = balticporter.corpus.katex.KaTeXEmitter.emitAllFunctionsWithParity(tryLoadRast, katexRefRoot, outDir)
+    assume(java.nio.file.Files.exists(katexRefRoot), s"ssg-katex reference not found at $katexRefRoot")
+    val outDir  = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-katex-functions-parity")
+    val results = balticporter.corpus.katex.KaTeXEmitter.emitAllFunctionsWithParity(tryLoadRast, katexRefRoot, outDir)
 
-      val summaries = results.map(_._3)
-      println("\n=== KaTeX Function Module Parity ===")
-      println(balticporter.corpus.katex.KaTeXEmitter.formatFunctionParitySummaryTable(summaries))
+    val summaries = results.map(_._3)
+    println("\n=== KaTeX Function Module Parity ===")
+    println(balticporter.corpus.katex.KaTeXEmitter.formatFunctionParitySummaryTable(summaries))
 
-      val withParity = summaries.filter(_.usedParity)
-      val stubs      = summaries.filterNot(_.usedParity)
-      println(s"With parity: ${withParity.map(_.objectName).mkString(", ")}")
-      if stubs.nonEmpty then println(s"Stub only: ${stubs.map(_.objectName).mkString(", ")}")
+    val withParity = summaries.filter(_.usedParity)
+    val stubs      = summaries.filterNot(_.usedParity)
+    println(s"With parity: ${withParity.map(_.objectName).mkString(", ")}")
+    if stubs.nonEmpty then println(s"Stub only: ${stubs.map(_.objectName).mkString(", ")}")
 
-      assert(results.size >= 30, s"Expected >= 30 function modules emitted, got ${results.size}")
-      assert(withParity.size >= 25, s"Expected >= 25 function modules with parity, got ${withParity.size}")
+    assert(results.size >= 30, s"Expected >= 30 function modules emitted, got ${results.size}")
+    assert(withParity.size >= 25, s"Expected >= 25 function modules with parity, got ${withParity.size}")
 
-      println(s"Emitted to: $outDir")
+    println(s"Emitted to: $outDir")
 
   // -----------------------------------------------------------------------
   // Output inspection
@@ -276,53 +270,43 @@ class KaTeXEmitterSpec extends munit.FunSuite:
 
   test("katex-spec: emit tests via vitest→MUnit"):
     val result = emitKatexSpec("/rast/katex/test/katex-spec.rast.json", "KaTeXSpecGenerated")
-    result match
-      case Some(r) =>
-        println(s"\n=== katex-spec.rast.json ===")
-        println(s"Tests: ${r.testCount}, Ignored: ${r.ignoredCount}")
-        println(s"Assertions: ${r.assertionCounts.toList.sortBy(-_._2).map { case (k, v) => s"$k($v)" }.mkString(", ")}")
-        println(s"Lines: ${r.scala.linesIterator.size}")
-        println(s"Written to: ${katexTestOutDir.resolve("KaTeXSpecGenerated.scala")}")
-        assert(r.testCount >= 500, s"Expected >= 500 tests from katex-spec, got ${r.testCount}")
-      case None =>
-        println("SKIP: katex-spec.rast.json failed to load or emit")
+    assume(result.isDefined, "katex-spec.rast.json failed to load or emit")
+    val r = result.get
+    println(s"\n=== katex-spec.rast.json ===")
+    println(s"Tests: ${r.testCount}, Ignored: ${r.ignoredCount}")
+    println(s"Assertions: ${r.assertionCounts.toList.sortBy(-_._2).map { case (k, v) => s"$k($v)" }.mkString(", ")}")
+    println(s"Lines: ${r.scala.linesIterator.size}")
+    println(s"Written to: ${katexTestOutDir.resolve("KaTeXSpecGenerated.scala")}")
+    assert(r.testCount >= 500, s"Expected >= 500 tests from katex-spec, got ${r.testCount}")
 
   test("errors-spec: emit tests via vitest→MUnit"):
     val result = emitKatexSpec("/rast/katex/test/errors-spec.rast.json", "ErrorsSpecGenerated")
-    result match
-      case Some(r) =>
-        println(s"errors-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
-        assert(r.testCount >= 1, s"Expected >= 1 test, got ${r.testCount}")
-      case None =>
-        println("SKIP: errors-spec failed")
+    assume(result.isDefined, "errors-spec.rast.json failed to load or emit")
+    val r = result.get
+    println(s"errors-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
+    assert(r.testCount >= 1, s"Expected >= 1 test, got ${r.testCount}")
 
   test("mathml-spec: emit tests via vitest→MUnit"):
     val result = emitKatexSpec("/rast/katex/test/mathml-spec.rast.json", "MathMLSpecGenerated")
-    result match
-      case Some(r) =>
-        println(s"mathml-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
-        assert(r.testCount >= 1, s"Expected >= 1 test, got ${r.testCount}")
-      case None =>
-        println("SKIP: mathml-spec failed")
+    assume(result.isDefined, "mathml-spec.rast.json failed to load or emit")
+    val r = result.get
+    println(s"mathml-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
+    assert(r.testCount >= 1, s"Expected >= 1 test, got ${r.testCount}")
 
   test("dup-spec: emit tests via vitest→MUnit"):
     val result = emitKatexSpec("/rast/katex/test/dup-spec.rast.json", "DupSpecGenerated")
-    result match
-      case Some(r) =>
-        println(s"dup-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
-        // dup-spec uses a non-standard test pattern (no describe/it blocks),
-        // so 0 tests is expected — the emitter only handles describe/it
-      case None =>
-        println("SKIP: dup-spec failed")
+    assume(result.isDefined, "dup-spec.rast.json failed to load or emit")
+    val r = result.get
+    println(s"dup-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
+  // dup-spec uses a non-standard test pattern (no describe/it blocks),
+  // so 0 tests is expected — the emitter only handles describe/it
 
   test("unicode-spec: emit tests via vitest→MUnit"):
     val result = emitKatexSpec("/rast/katex/test/unicode-spec.rast.json", "UnicodeSpecGenerated")
-    result match
-      case Some(r) =>
-        println(s"unicode-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
-        assert(r.testCount >= 1, s"Expected >= 1 test, got ${r.testCount}")
-      case None =>
-        println("SKIP: unicode-spec failed")
+    assume(result.isDefined, "unicode-spec.rast.json failed to load or emit")
+    val r = result.get
+    println(s"unicode-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
+    assert(r.testCount >= 1, s"Expected >= 1 test, got ${r.testCount}")
 
   test("batch: emit all KaTeX test specs"):
     val specs = List(

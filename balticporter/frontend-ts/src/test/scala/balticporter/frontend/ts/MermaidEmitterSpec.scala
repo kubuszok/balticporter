@@ -953,18 +953,11 @@ class MermaidEmitterSpec extends munit.FunSuite:
 
   // -- Styles parity-derive ---------------------------------------------------
 
+  // Classpath snapshot first (self-contained); the live ssg checkout as a fallback.
   private val mermaidRefRoot: java.nio.file.Path =
     val cpRef = getClass.getResource("/reference/mermaid/flowchart/FlowchartStyles.scala")
     if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent.getParent // up from flowchart/ to mermaid/
-    else
-      val candidates = List(
-        sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
-        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg"))
-      ).flatten
-      candidates
-        .map(_.resolve("ssg-mermaid/src/main/scala/ssg/mermaid/diagrams"))
-        .find(p => java.nio.file.Files.exists(p.resolve("flowchart/FlowchartStyles.scala")))
-        .getOrElse(java.nio.file.Path.of("nonexistent"))
+    else ConsumerCheckout.referenceScala("ssg-mermaid").map((dir, _) => dir.resolve("ssg/mermaid/diagrams")).getOrElse(java.nio.file.Path.of("nonexistent"))
 
   private def tryLoadRastOpt(resource: String): Option[RastFile] =
     val stream = getClass.getResourceAsStream(resource)
@@ -980,25 +973,26 @@ class MermaidEmitterSpec extends munit.FunSuite:
           None
 
   test("styles parity: FlowchartStyles.scala"):
-    if !java.nio.file.Files.exists(mermaidRefRoot.resolve("flowchart/FlowchartStyles.scala")) then println("SKIP: ssg-mermaid reference not found")
-    else
-      val rast              = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
-      val refPath           = mermaidRefRoot.resolve("flowchart/FlowchartStyles.scala")
-      val (source, summary) = balticporter.corpus.mermaid.MermaidEmitter.emitStylesWithParity(rast, refPath)
-      println(
-        s"FlowchartStyles: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref"
-      )
-      assert(source.contains("FlowchartStyles"), "should preserve FlowchartStyles object")
+    assume(
+      java.nio.file.Files.exists(mermaidRefRoot.resolve("flowchart/FlowchartStyles.scala")),
+      s"FlowchartStyles.scala not found under $mermaidRefRoot"
+    )
+    val rast              = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
+    val refPath           = mermaidRefRoot.resolve("flowchart/FlowchartStyles.scala")
+    val (source, summary) = balticporter.corpus.mermaid.MermaidEmitter.emitStylesWithParity(rast, refPath)
+    println(
+      s"FlowchartStyles: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref"
+    )
+    assert(source.contains("FlowchartStyles"), "should preserve FlowchartStyles object")
 
   test("batch: styles parity for all diagram types"):
-    if !java.nio.file.Files.exists(mermaidRefRoot) then println("SKIP: ssg-mermaid reference not found at " + mermaidRefRoot)
-    else
-      val outDir    = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid-parity")
-      val results   = balticporter.corpus.mermaid.MermaidEmitter.emitAllStylesWithParity(tryLoadRastOpt, mermaidRefRoot, outDir)
-      val summaries = results.map(_._2)
+    assume(java.nio.file.Files.exists(mermaidRefRoot), s"ssg-mermaid reference not found at $mermaidRefRoot")
+    val outDir    = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid-parity")
+    val results   = balticporter.corpus.mermaid.MermaidEmitter.emitAllStylesWithParity(tryLoadRastOpt, mermaidRefRoot, outDir)
+    val summaries = results.map(_._2)
 
-      println("\n=== Mermaid Styles Parity ===")
-      println(balticporter.corpus.mermaid.MermaidEmitter.formatStylesParitySummaryTable(summaries))
-      println(s"Emitted ${results.size} styles modules to $outDir")
+    println("\n=== Mermaid Styles Parity ===")
+    println(balticporter.corpus.mermaid.MermaidEmitter.formatStylesParitySummaryTable(summaries))
+    println(s"Emitted ${results.size} styles modules to $outDir")
 
-      assert(results.size >= 10, s"Expected >= 10 styles modules, got ${results.size}")
+    assert(results.size >= 10, s"Expected >= 10 styles modules, got ${results.size}")

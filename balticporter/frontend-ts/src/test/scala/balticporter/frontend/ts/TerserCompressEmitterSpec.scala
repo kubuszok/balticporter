@@ -232,18 +232,23 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
   // Parity-derive emission: reference structure + RAST bodies
   // -----------------------------------------------------------------------
 
-  private val referenceRoot: java.nio.file.Path =
-    // Classpath resource first (self-contained)
+  // Classpath snapshot first (self-contained); the live ssg checkout as a fallback, for whichever
+  // file the snapshot has not captured. `referenceRootLayout` names which one it used, for the
+  // `assume` messages below.
+  private val referenceRootLayout: Either[String, (java.nio.file.Path, String)] =
     val cpRef = getClass.getResource("/reference/terser/compress/Common.scala")
-    if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent
+    if cpRef != null && cpRef.getProtocol == "file" then Right((java.nio.file.Path.of(cpRef.toURI).getParent, "classpath snapshot"))
     else
-      val candidates = List(
-        sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
-        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
-        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg"))
-      ).flatten
-      val compressDir = "ssg-js/src/main/scala/ssg/js/compress"
-      candidates.map(_.resolve(compressDir)).find(p => java.nio.file.Files.exists(p.resolve("Common.scala"))).getOrElse(java.nio.file.Path.of("nonexistent"))
+      ConsumerCheckout.referenceScala("ssg-js") match
+        case Some((dir, layout)) => Right((dir.resolve("ssg/js/compress"), s"ssg checkout ($layout)"))
+        case None                =>
+          Left(
+            "no classpath snapshot at /reference/terser/compress/Common.scala and no ssg checkout found " +
+              "(set -Dbalticporter.ssgRoot=<path> or BALTICPORTER_SSG_ROOT)"
+          )
+
+  private val referenceRoot: java.nio.file.Path =
+    referenceRootLayout.fold(_ => java.nio.file.Path.of("nonexistent"), _._1)
 
   test("parity: findMethodBoundaries on synthetic input"):
     val source = List(
@@ -307,129 +312,131 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
     assertEquals(complex.bodyEndLine, 27)
 
   test("parity: findMethodBoundaries on Common.scala"):
-    if !java.nio.file.Files.exists(referenceRoot.resolve("Common.scala")) then println("SKIP: ssg reference not found at " + referenceRoot)
-    else
-      val source  = new String(java.nio.file.Files.readAllBytes(referenceRoot.resolve("Common.scala")))
-      val lines   = source.split("\n", -1).toList
-      val methods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(lines)
-      println(s"Common.scala: found ${methods.size} methods:")
-      for m <- methods do println(s"  ${m.name} (lines ${m.signatureLine}-${m.bodyEndLine}, private=${m.isPrivate})")
-      // Common.scala has around 20+ methods including private ones
-      assert(methods.size >= 15, s"Expected >= 15 methods, got ${methods.size}")
-      // Verify known methods exist
-      val names = methods.map(_.name).toSet
-      assert(names.contains("mergeSequence"), "should find mergeSequence")
-      assert(names.contains("makeSequence"), "should find makeSequence")
-      assert(names.contains("bestOf"), "should find bestOf")
-      assert(names.contains("isEmpty"), "should find isEmpty")
-      assert(names.contains("walkParent"), "should find walkParent")
+    assume(java.nio.file.Files.exists(referenceRoot.resolve("Common.scala")), s"Common.scala not found under $referenceRoot")
+    val source  = new String(java.nio.file.Files.readAllBytes(referenceRoot.resolve("Common.scala")))
+    val lines   = source.split("\n", -1).toList
+    val methods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(lines)
+    println(s"Common.scala: found ${methods.size} methods:")
+    for m <- methods do println(s"  ${m.name} (lines ${m.signatureLine}-${m.bodyEndLine}, private=${m.isPrivate})")
+    // Common.scala has around 20+ methods including private ones
+    assert(methods.size >= 15, s"Expected >= 15 methods, got ${methods.size}")
+    // Verify known methods exist
+    val names = methods.map(_.name).toSet
+    assert(names.contains("mergeSequence"), "should find mergeSequence")
+    assert(names.contains("makeSequence"), "should find makeSequence")
+    assert(names.contains("bestOf"), "should find bestOf")
+    assert(names.contains("isEmpty"), "should find isEmpty")
+    assert(names.contains("walkParent"), "should find walkParent")
 
   test("parity: emitWithParity on Common.scala"):
-    if !java.nio.file.Files.exists(referenceRoot.resolve("Common.scala")) then println("SKIP: ssg reference not found at " + referenceRoot)
-    else
-      val rast              = loadRast("/rast/terser/lib/compress/common.rast.json")
-      val refPath           = referenceRoot.resolve("Common.scala")
-      val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitWithParity(rast, refPath, hierarchy, isDeFmethod = false)
+    assume(java.nio.file.Files.exists(referenceRoot.resolve("Common.scala")), s"Common.scala not found under $referenceRoot")
+    val rast              = loadRast("/rast/terser/lib/compress/common.rast.json")
+    val refPath           = referenceRoot.resolve("Common.scala")
+    val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitWithParity(rast, refPath, hierarchy, isDeFmethod = false)
 
-      println(s"\n=== Parity-derive: Common.scala ===")
-      println(s"Total methods: ${summary.totalMethods}")
-      println(s"RAST-derived bodies: ${summary.matchedFromRast}")
-      println(s"Reference bodies kept: ${summary.keptFromReference}")
-      println(s"Total refusals: ${summary.refusalCount}")
-      println(s"\nMatch details:")
-      for (name, src) <- summary.matchDetails do println(s"  $name -> $src")
+    println(s"\n=== Parity-derive: Common.scala ===")
+    println(s"Total methods: ${summary.totalMethods}")
+    println(s"RAST-derived bodies: ${summary.matchedFromRast}")
+    println(s"Reference bodies kept: ${summary.keptFromReference}")
+    println(s"Total refusals: ${summary.refusalCount}")
+    println(s"\nMatch details:")
+    for (name, src) <- summary.matchDetails do println(s"  $name -> $src")
 
-      // Source should contain the reference's package and imports
-      assert(source.contains("package ssg"), "should preserve package")
-      assert(source.contains("import scala.collection.mutable.ArrayBuffer"), "should preserve imports")
-      assert(source.contains("object Common"), "should preserve object name")
+    // Source should contain the reference's package and imports
+    assert(source.contains("package ssg"), "should preserve package")
+    assert(source.contains("import scala.collection.mutable.ArrayBuffer"), "should preserve imports")
+    assert(source.contains("object Common"), "should preserve object name")
 
-      // At least some methods should be matched from RAST (filtered down
-      // by containsUncompilablePatterns — JS-API bodies are kept as reference)
-      assert(summary.matchedFromRast >= 3, s"Expected >= 3 RAST matches, got ${summary.matchedFromRast}")
+    // At least some methods should be matched from RAST (filtered down
+    // by containsUncompilablePatterns — JS-API bodies are kept as reference)
+    assert(summary.matchedFromRast >= 3, s"Expected >= 3 RAST matches, got ${summary.matchedFromRast}")
 
-      // Write to output for inspection
-      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
-      java.nio.file.Files.createDirectories(outDir)
-      java.nio.file.Files.writeString(outDir.resolve("Common.scala"), source)
-      println(s"\nEmitted to: ${outDir.resolve("Common.scala")}")
-      println(s"Line count: ${source.linesIterator.size}")
+    // Write to output for inspection
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
+    java.nio.file.Files.createDirectories(outDir)
+    java.nio.file.Files.writeString(outDir.resolve("Common.scala"), source)
+    println(s"\nEmitted to: ${outDir.resolve("Common.scala")}")
+    println(s"Line count: ${source.linesIterator.size}")
 
   test("parity: emitWithParity on GlobalDefs.scala"):
-    if !java.nio.file.Files.exists(referenceRoot.resolve("GlobalDefs.scala")) then println("SKIP: ssg reference not found at " + referenceRoot)
-    else
-      val rast              = loadRast("/rast/terser/lib/compress/global-defs.rast.json")
-      val refPath           = referenceRoot.resolve("GlobalDefs.scala")
-      val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitWithParity(rast, refPath, hierarchy, isDeFmethod = true)
+    assume(
+      java.nio.file.Files.exists(referenceRoot.resolve("GlobalDefs.scala")),
+      s"GlobalDefs.scala not found under $referenceRoot"
+    )
+    val rast              = loadRast("/rast/terser/lib/compress/global-defs.rast.json")
+    val refPath           = referenceRoot.resolve("GlobalDefs.scala")
+    val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitWithParity(rast, refPath, hierarchy, isDeFmethod = true)
 
-      println(s"\n=== Parity-derive: GlobalDefs.scala ===")
-      println(s"Total: ${summary.totalMethods}, RAST: ${summary.matchedFromRast}, Ref: ${summary.keptFromReference}")
-      for (name, src) <- summary.matchDetails do println(s"  $name -> $src")
+    println(s"\n=== Parity-derive: GlobalDefs.scala ===")
+    println(s"Total: ${summary.totalMethods}, RAST: ${summary.matchedFromRast}, Ref: ${summary.keptFromReference}")
+    for (name, src) <- summary.matchDetails do println(s"  $name -> $src")
 
-      assert(source.contains("object GlobalDefs"), "should preserve object name")
+    assert(source.contains("object GlobalDefs"), "should preserve object name")
 
-      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
-      java.nio.file.Files.createDirectories(outDir)
-      java.nio.file.Files.writeString(outDir.resolve("GlobalDefs.scala"), source)
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
+    java.nio.file.Files.createDirectories(outDir)
+    java.nio.file.Files.writeString(outDir.resolve("GlobalDefs.scala"), source)
 
   test("parity: emitAllWithParity batch"):
-    if !java.nio.file.Files.exists(referenceRoot) then println("SKIP: ssg reference not found at " + referenceRoot)
-    else
-      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
-      java.nio.file.Files.createDirectories(outDir)
+    assume(java.nio.file.Files.exists(referenceRoot), s"ssg-js compress reference not found at $referenceRoot")
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
+    java.nio.file.Files.createDirectories(outDir)
 
-      val results = balticporter.corpus.terser.TerserCompressEmitter.emitAllWithParity(loadRast, hierarchy, referenceRoot)
+    val results = balticporter.corpus.terser.TerserCompressEmitter.emitAllWithParity(loadRast, hierarchy, referenceRoot)
 
-      for (mod, source, summary) <- results do
-        val path = outDir.resolve(s"${summary.objectName}.scala")
-        java.nio.file.Files.writeString(path, source)
+    for (mod, source, summary) <- results do
+      val path = outDir.resolve(s"${summary.objectName}.scala")
+      java.nio.file.Files.writeString(path, source)
 
-      val summaries = results.map(_._3)
-      println("\n=== Parity-derive Summary ===")
-      println(balticporter.corpus.terser.TerserCompressEmitter.formatParitySummaryTable(summaries))
+    val summaries = results.map(_._3)
+    println("\n=== Parity-derive Summary ===")
+    println(balticporter.corpus.terser.TerserCompressEmitter.formatParitySummaryTable(summaries))
 
-      // Verify we got results for modules that have reference files
-      assert(results.nonEmpty, "should emit at least some modules")
-      println(s"\nEmitted ${results.size} modules to $outDir")
+    // Verify we got results for modules that have reference files
+    assert(results.nonEmpty, "should emit at least some modules")
+    println(s"\nEmitted ${results.size} modules to $outDir")
 
   // -----------------------------------------------------------------------
   // Non-compress module parity-derive (Item 1)
   // -----------------------------------------------------------------------
 
-  private val ssgJsRoot: java.nio.file.Path =
+  // Classpath snapshot first (self-contained); the live ssg checkout as a fallback.
+  private val ssgJsRootLayout: Either[String, (java.nio.file.Path, String)] =
     val cpRef = getClass.getResource("/reference/terser/scope/ScopeAnalysis.scala")
-    if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent.getParent // up from scope/ to terser/
+    if cpRef != null && cpRef.getProtocol == "file" then Right((java.nio.file.Path.of(cpRef.toURI).getParent.getParent, "classpath snapshot")) // up from scope/ to terser/
     else
-      val candidates = List(
-        sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
-        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
-        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg"))
-      ).flatten
-      val jsDir = "ssg-js/src/main/scala/ssg/js"
-      candidates.map(_.resolve(jsDir)).find(p => java.nio.file.Files.exists(p.resolve("scope/ScopeAnalysis.scala"))).getOrElse(java.nio.file.Path.of("nonexistent"))
+      ConsumerCheckout.referenceScala("ssg-js") match
+        case Some((dir, layout)) => Right((dir.resolve("ssg/js"), s"ssg checkout ($layout)"))
+        case None                =>
+          Left(
+            "no classpath snapshot at /reference/terser/scope/ScopeAnalysis.scala and no ssg checkout found " +
+              "(set -Dbalticporter.ssgRoot=<path> or BALTICPORTER_SSG_ROOT)"
+          )
+
+  private val ssgJsRoot: java.nio.file.Path =
+    ssgJsRootLayout.fold(_ => java.nio.file.Path.of("nonexistent"), _._1)
 
   test("non-compress: emitAllNonCompressWithParity batch"):
-    if !java.nio.file.Files.exists(ssgJsRoot) then println("SKIP: ssg-js reference not found at " + ssgJsRoot)
-    else
-      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity-noncompress")
-      java.nio.file.Files.createDirectories(outDir)
+    assume(java.nio.file.Files.exists(ssgJsRoot), s"ssg-js reference not found at $ssgJsRoot")
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity-noncompress")
+    java.nio.file.Files.createDirectories(outDir)
 
-      val results = balticporter.corpus.terser.TerserCompressEmitter.emitAllNonCompressWithParity(loadRast, hierarchy, ssgJsRoot)
+    val results = balticporter.corpus.terser.TerserCompressEmitter.emitAllNonCompressWithParity(loadRast, hierarchy, ssgJsRoot)
 
-      for (mod, source, summary) <- results do
-        val path = outDir.resolve(s"${summary.objectName}.scala")
-        java.nio.file.Files.writeString(path, source)
+    for (mod, source, summary) <- results do
+      val path = outDir.resolve(s"${summary.objectName}.scala")
+      java.nio.file.Files.writeString(path, source)
 
-      val summaries = results.map(_._3)
-      println("\n=== Non-compress Parity-derive Summary ===")
-      println(balticporter.corpus.terser.TerserCompressEmitter.formatNonCompressParitySummaryTable(summaries))
+    val summaries = results.map(_._3)
+    println("\n=== Non-compress Parity-derive Summary ===")
+    println(balticporter.corpus.terser.TerserCompressEmitter.formatNonCompressParitySummaryTable(summaries))
 
-      assert(results.nonEmpty, "should emit at least some non-compress modules")
-      println(s"\nEmitted ${results.size} non-compress modules to $outDir")
+    assert(results.nonEmpty, "should emit at least some non-compress modules")
+    println(s"\nEmitted ${results.size} non-compress modules to $outDir")
 
-      // Verify at least some RAST bodies are used
-      val totalRast = summaries.map(_.matchedFromRast).sum
-      println(s"Total RAST-derived bodies across all non-compress modules: $totalRast")
+    // Verify at least some RAST bodies are used
+    val totalRast = summaries.map(_.matchedFromRast).sum
+    println(s"Total RAST-derived bodies across all non-compress modules: $totalRast")
 
   test("non-compress: scope DEFMETHOD extraction"):
     val rast    = loadRast("/rast/terser/lib/scope.rast.json")
@@ -604,19 +611,18 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
     assert(result.scalaBody.contains("CompressorFlags.hasFlag"), s"Expected CompressorFlags.hasFlag in: ${result.scalaBody}")
 
   test("body-translation: improved parity rate with reduced uncompilable patterns"):
-    if !java.nio.file.Files.exists(referenceRoot) then println("SKIP: ssg reference not found at " + referenceRoot)
-    else
-      val results      = balticporter.corpus.terser.TerserCompressEmitter.emitAllWithParity(loadRast, hierarchy, referenceRoot)
-      val summaries    = results.map(_._3)
-      val totalRast    = summaries.map(_.matchedFromRast).sum
-      val totalMethods = summaries.map(_.totalMethods).sum
+    assume(java.nio.file.Files.exists(referenceRoot), s"ssg-js compress reference not found at $referenceRoot")
+    val results      = balticporter.corpus.terser.TerserCompressEmitter.emitAllWithParity(loadRast, hierarchy, referenceRoot)
+    val summaries    = results.map(_._3)
+    val totalRast    = summaries.map(_.matchedFromRast).sum
+    val totalMethods = summaries.map(_.totalMethods).sum
 
-      println(s"\n=== Improved Parity Rate ===")
-      println(balticporter.corpus.terser.TerserCompressEmitter.formatParitySummaryTable(summaries))
+    println(s"\n=== Improved Parity Rate ===")
+    println(balticporter.corpus.terser.TerserCompressEmitter.formatParitySummaryTable(summaries))
 
-      val pctRast = if totalMethods > 0 then totalRast * 100.0 / totalMethods else 0.0
-      println(f"Overall: $totalRast/$totalMethods (${pctRast}%.1f%%) bodies from RAST")
+    val pctRast = if totalMethods > 0 then totalRast * 100.0 / totalMethods else 0.0
+    println(f"Overall: $totalRast/$totalMethods (${pctRast}%.1f%%) bodies from RAST")
 
-      // With reduced uncompilable patterns, we should get significantly more than before
-      // Before: ~15% RAST rate. After: should be above 30%.
-      assert(totalRast >= 10, s"Expected >= 10 RAST-derived bodies, got $totalRast")
+    // With reduced uncompilable patterns, we should get significantly more than before
+    // Before: ~15% RAST rate. After: should be above 30%.
+    assert(totalRast >= 10, s"Expected >= 10 RAST-derived bodies, got $totalRast")

@@ -227,10 +227,11 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
   // Reference-derived type improvement
   // --------------------------------------------------------------------------
 
+  // Classpath snapshot first (self-contained); the live ssg checkout as a fallback.
   private val astReferenceRoot = {
     val cpRef = getClass.getResource("/reference/terser/ast/AstNode.scala")
     if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent
-    else java.nio.file.Path.of("/nonexistent")
+    else ConsumerCheckout.referenceScala("ssg-js").map((dir, _) => dir.resolve("ssg/js/ast")).getOrElse(java.nio.file.Path.of("/nonexistent"))
   }
 
   private val astReferenceFiles = List(
@@ -263,43 +264,42 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
     assertEquals(fields(1).fieldName, "readOnlyField")
 
   test("generateFromReference uses reference types when available"):
-    if !java.nio.file.Files.exists(astReferenceRoot) then println("SKIP: ssg reference not found at " + astReferenceRoot)
-    else
-      val rast      = loadRast("/rast/terser/lib/ast.rast.json")
-      val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
-      val sources   = loadReferenceSources
-      assert(sources.nonEmpty, "Should find reference sources")
+    assume(java.nio.file.Files.exists(astReferenceRoot), s"ssg-js ast reference not found at $astReferenceRoot")
+    val rast      = loadRast("/rast/terser/lib/ast.rast.json")
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val sources   = loadReferenceSources
+    assert(sources.nonEmpty, "Should find reference sources")
 
-      // Parse fields from reference
-      val allFields = sources.flatMap(balticporter.corpus.terser.AstDtsGenerator.parseFieldsFromScala)
-      val fieldMap  = balticporter.corpus.terser.AstDtsGenerator.buildFieldTypeMap(allFields)
+    // Parse fields from reference
+    val allFields = sources.flatMap(balticporter.corpus.terser.AstDtsGenerator.parseFieldsFromScala)
+    val fieldMap  = balticporter.corpus.terser.AstDtsGenerator.buildFieldTypeMap(allFields)
 
-      println(s"\nReference field coverage:")
-      println(s"  Total parsed fields: ${allFields.size}")
-      println(s"  Distinct JS classes with fields: ${fieldMap.size}")
+    println(s"\nReference field coverage:")
+    println(s"  Total parsed fields: ${allFields.size}")
+    println(s"  Distinct JS classes with fields: ${fieldMap.size}")
 
-      // Generate with and without reference
-      val dtsHeuristic = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy, balticporter.corpus.terser.AstDtsGenerator.commonDefmethodDecls)
-      val dtsReference = balticporter.corpus.terser.AstDtsGenerator.generateFromReference(hierarchy, sources)
+    // Generate with and without reference
+    val dtsHeuristic = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy, balticporter.corpus.terser.AstDtsGenerator.commonDefmethodDecls)
+    val dtsReference = balticporter.corpus.terser.AstDtsGenerator.generateFromReference(hierarchy, sources)
 
-      // The reference version should differ from heuristic (more specific types)
-      val metrics = balticporter.corpus.terser.AstDtsGenerator.countDerivedVsHeuristic(hierarchy, fieldMap)
-      println(s"\nDerivation metrics:")
-      println(s"  Total DEFNODE fields: ${metrics.totalFields}")
-      println(s"  Reference-derived:    ${metrics.referenceDerived}")
-      println(s"  Heuristic fallback:   ${metrics.heuristicFallback}")
-      val pct = if metrics.totalFields > 0 then metrics.referenceDerived * 100.0 / metrics.totalFields else 0.0
-      println(f"  Coverage:             $pct%.1f%%")
+    // The reference version should differ from heuristic (more specific types)
+    val metrics = balticporter.corpus.terser.AstDtsGenerator.countDerivedVsHeuristic(hierarchy, fieldMap)
+    println(s"\nDerivation metrics:")
+    println(s"  Total DEFNODE fields: ${metrics.totalFields}")
+    println(s"  Reference-derived:    ${metrics.referenceDerived}")
+    println(s"  Heuristic fallback:   ${metrics.heuristicFallback}")
+    val pct = if metrics.totalFields > 0 then metrics.referenceDerived * 100.0 / metrics.totalFields else 0.0
+    println(f"  Coverage:             $pct%.1f%%")
 
-      // Reference-derived count should be meaningfully higher than 0
-      assert(metrics.referenceDerived > 0, s"Expected some reference-derived fields, got ${metrics.referenceDerived}")
+    // Reference-derived count should be meaningfully higher than 0
+    assert(metrics.referenceDerived > 0, s"Expected some reference-derived fields, got ${metrics.referenceDerived}")
 
-      // Write both versions for manual comparison
-      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/dts-comparison")
-      java.nio.file.Files.createDirectories(outDir)
-      java.nio.file.Files.writeString(outDir.resolve("ast-heuristic.d.ts"), dtsHeuristic)
-      java.nio.file.Files.writeString(outDir.resolve("ast-reference.d.ts"), dtsReference)
-      println(s"\nOutput: $outDir/ast-{heuristic,reference}.d.ts")
+    // Write both versions for manual comparison
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/dts-comparison")
+    java.nio.file.Files.createDirectories(outDir)
+    java.nio.file.Files.writeString(outDir.resolve("ast-heuristic.d.ts"), dtsHeuristic)
+    java.nio.file.Files.writeString(outDir.resolve("ast-reference.d.ts"), dtsReference)
+    println(s"\nOutput: $outDir/ast-{heuristic,reference}.d.ts")
 
   test("countDerivedVsHeuristic returns correct counts"):
     val hierarchy = List(
