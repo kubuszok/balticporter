@@ -122,6 +122,11 @@ reach because there is no single declaration to rewrite the body of.
 { transform = "method-body", bodies { "com.example.Grid#step()" = "{ tick += 1 }" } }
 ```
 
+A manifest that needs two sets of bodies at two different points in the pipeline names the second
+one with `group`: instances of the same group fold into one at the shared position, and a named
+group keeps the place it was declared at. Omit it and the manifest has one shared instance — two
+unnamed entries in one `surface` list are two instances of the same phase.
+
 ### Renaming, arity and visibility
 
 **`member-rename`** renames a member across its whole override family — every implementation and

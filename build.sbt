@@ -828,8 +828,8 @@ lazy val `port-sge-visui-usl` = (projectMatrix in file("ported/sge-visui-usl"))
 
 // ---------------------------------------------------------------------------------------------
 // port-ssg-liquid — liqp (ported/ssg-liquid). Standalone. ssg_flags.
-// The ANTLR-generated parser classes are a jar/classdir on the classpath, not a source dependency.
-// The lane adds them with `unmanagedJars` pointed at the output directory.
+// The ANTLR runtime and the parser generated from liqp's grammar are inputs to the FRONTEND only:
+// the port replaces them with hand-written Scala, so neither is on this compile's classpath.
 // ---------------------------------------------------------------------------------------------
 lazy val `port-ssg-liquid` = (projectMatrix in file("ported/ssg-liquid"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
@@ -838,7 +838,9 @@ lazy val `port-ssg-liquid` = (projectMatrix in file("ported/ssg-liquid"))
   .settings(
     name := "balticporter-port-ssg-liquid",
     libraryDependencies ++= Seq(
-      "org.antlr"                       % "antlr4-runtime"            % "4.13.0",
+      // NO antlr4-runtime, and no generated-parser class directory below: the port replaces the
+      // ANTLR runtime and the generated lexer/parser with hand-written Scala, and the ONLY proof
+      // of that is this classpath. A reference the replacement missed is a compile error here.
       "com.fasterxml.jackson.core"      % "jackson-core"              % "2.15.0",
       "com.fasterxml.jackson.core"      % "jackson-databind"          % "2.13.4.2",
       "com.fasterxml.jackson.core"      % "jackson-annotations"       % "2.15.0",
@@ -853,23 +855,6 @@ lazy val `port-ssg-liquid` = (projectMatrix in file("ported/ssg-liquid"))
       "junit"                            % "junit"                     % "4.13.1" % Test,
     ),
     resolvers += "Central Portal Snapshots" at "https://central.sonatype.com/repository/maven-snapshots",
-    // The ANTLR parser class directory, produced by `LiqpClasspath` during the migration.
-    // sbt 2.0's `Classpath` is `Seq[Attributed[HashedVirtualFileRef]]`; `fileConverter` converts
-    // a `java.io.File` to the `HashedVirtualFileRef` sbt 2.0 expects.
-    Compile / unmanagedClasspath ++= {
-      val parserDir = (ThisBuild / baseDirectory).value / "out" / "liqp-parser-classes"
-      if (parserDir.exists()) {
-        val fc = fileConverter.value
-        Seq(Attributed.blank(fc.toVirtualFile(parserDir.toPath)))
-      } else Nil
-    },
-    Test / unmanagedClasspath ++= {
-      val parserDir = (ThisBuild / baseDirectory).value / "out" / "liqp-parser-classes"
-      if (parserDir.exists()) {
-        val fc = fileConverter.value
-        Seq(Attributed.blank(fc.toVirtualFile(parserDir.toPath)))
-      } else Nil
-    },
     // The SPI descriptor and test fixture resources.
     Test / unmanagedResourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "ssg-liquid" / "src_managed" / "main" / "resources",
     // The test working directory — liqp's 45 tests read `./snippets/`, `./_includes/` and

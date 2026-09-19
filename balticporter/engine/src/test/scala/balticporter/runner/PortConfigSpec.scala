@@ -2,7 +2,7 @@ package balticporter.runner
 
 import balticporter.core.{ FrontendConfig, ManifestAgreement, PortManifest, Provenance, RuntimeMode }
 import balticporter.tir.{ ConfigError, Descriptor, Param, RuleScope }
-import balticporter.transform.{ BeanPropertyTransform, CollectionsTransform, MutableParamsTransform, TestFrameworkTransform, TypeRedirectTransform }
+import balticporter.transform.{ BeanPropertyTransform, CollectionsTransform, MethodBodyTransform, MutableParamsTransform, TestFrameworkTransform, TypeRedirectTransform }
 
 import java.nio.file.{ Files, Path }
 
@@ -240,6 +240,34 @@ class PortConfigSpec extends munit.FunSuite:
         )
       ),
       RuleScope.Only(Set("com.demo")): RuleScope
+    )
+  }
+
+  test("a method-body group reaches the phase, and no group is the shared instance") {
+    def groupsOf(conf: String) =
+      PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collect { case m: MethodBodyTransform => m.group }
+    assertEquals(
+      groupsOf(
+        Minimal.replace(
+          """manifest { name = "demo" }""",
+          """manifest { name = "demo", surface = [ { transform = "method-body", bodies { "com.demo.Widget#labels" = "{ null }" } } ] }"""
+        )
+      ),
+      List("")
+    )
+    // two instances in ONE manifest is exactly what a group is for: without it the second entry
+    // would be a second unnamed instance of the same phase.
+    assertEquals(
+      groupsOf(
+        Minimal.replace(
+          """manifest { name = "demo" }""",
+          """manifest { name = "demo", surface = [
+            |  { transform = "method-body", bodies { "com.demo.Widget#labels" = "{ null }" } },
+            |  { transform = "method-body", group = "late", bodies { "com.demo.Gadget#toString" = "{ \"g\" }" } }
+            |] }""".stripMargin
+        )
+      ),
+      List("", "late")
     )
   }
 

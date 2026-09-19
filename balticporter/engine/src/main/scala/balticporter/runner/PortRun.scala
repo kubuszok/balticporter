@@ -256,7 +256,10 @@ final case class PortRun(
     val substituted = program.symbols.all.collect { case s if Substituted.tags(s) => s.id }.toSet
     if substituted.nonEmpty then say(s"substitution blast radius:\n${RewriteTrace.impactSummary(program, substituted)}")
 
-    val mismatches = RewriteTrace.check(program)
+    // Only over code this run WRITES: a call inside a unit the port drops emits no text, so it can
+    // disagree with nothing — the same exclusion the omission check makes three lines down.
+    val writtenUnits = emittedUnits(program, translated.emitOrder).map(_.symbol).toSet
+    val mismatches   = RewriteTrace.check(program, writtenUnits.contains)
     CheckReport.record(PortRun.Signature, mismatches.map(_.report))
     if mismatches.isEmpty then say("signature check: all call sites agree with their declarations")
     else

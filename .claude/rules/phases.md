@@ -194,6 +194,15 @@ sees the kind); the screen is *would a reader act differently*.
 
 ## More measured rules
 
+- **A constructor's body is not a body `method-body` can reach**, and the seam that replaces what it
+  builds is a REDIRECT of the type it builds. Scala promotes a java constructor into the class body,
+  where the locals become members, so `MethodBodyTransform` refuses `<init>` outright (the funnel owns
+  it). liqp's `Template` constructs the generated ANTLR lexer there; re-pointing
+  `liquid.parser.v4.LiquidLexer` at a hand-written class whose constructor takes java's own arguments
+  in java's own order replaced it with no key at all, and the one method that wired the lexer up
+  (`Template.parse`) took an ordinary body. A redirect target is minted when nothing in the program
+  declares it, which is exactly the injected-replacement case. `method-body`'s `group` is what lets
+  one manifest carry two body sets at two pipeline positions; two unnamed entries are two instances.
 - A `T | Null` union is not accepted where an abstract type parameter `T` is expected, so a nullable
   value at a type-parameter slot must use a named wrapper type instead of the union target.
 - An opaque type that replaces a Java class is retyped against an already injected opaque type

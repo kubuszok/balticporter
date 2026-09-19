@@ -258,11 +258,14 @@ final class MemberRenameFactory extends TransformFactory:
   def fromConfig(config: ConfigView): Phase =
     new MemberRenameTransform(config.stringMap("renames").getOrElse(Map.empty), config.bool("derive").getOrElse(false))
 
-/** `{ transform = "method-body", bodies { "a.B#m()" = "{ … }" } }` */
+/** `{ transform = "method-body", group = "…", bodies { "a.B#m()" = "{ … }" } }`
+  *
+  * `group` names an instance that keeps its own pipeline position instead of folding into the shared one; omitted, the manifest carries one shared instance.
+  */
 final class MethodBodyFactory extends TransformFactory:
   def name = "method-body"
   def fromConfig(config: ConfigView): Phase =
-    new MethodBodyTransform(config.stringMap("bodies").getOrElse(Map.empty))
+    new MethodBodyTransform(config.stringMap("bodies").getOrElse(Map.empty), config.string("group").getOrElse(""))
 
 /** `{ transform = "add-members", members { "owner.Fqn" = [ { name, arity, source, why? } ] } }`
   *

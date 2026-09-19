@@ -233,6 +233,11 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 
 ## More rules (one line each)
 
+- A check over EMITTED code is scoped to the units the run WRITES, not to the whole model: a dropped
+  type's body stays in the program (the drop removes the declaration from emission, not the tree),
+  so the signature check reported 5 orphaned calls inside a dropped visitor — calls whose text is
+  never written. `RewriteTrace.check` takes the written-unit set; an unknown enclosing position
+  answers "written", because not knowing where a use is is no evidence that nothing is emitted.
 - A raw Java generic type is rendered with wildcard arguments (`[?]`) everywhere it appears, and the
   wildcard form must stay consistent between a member and its overrides, not just at the declaration.
 - A callee's own type variables mean nothing at the call site: coerce an argument using the call's

@@ -36,11 +36,25 @@ object RewriteTrace:
         .mkString("\n")
 
   /** Uses that disagree with their declaration's current signature: call arity, type-argument arity, and orphaned calls (member with no declaration left).
+    *
+    * `emits` answers whether a top-level unit is one the run WRITES. A call inside a unit the run drops cannot disagree with anything, because no text is emitted for it; the default answers yes for
+    * every unit, which is the whole program.
     */
-  def check(program: Program): List[Mismatch] =
-    callArity(program) ++ typeArity(program) ++ orphanedCalls(program)
+  def check(program: Program, emits: SymId => Boolean = _ => true): List[Mismatch] =
+    val written = writtenUsage(program, emits)
+    callArity(program, written) ++ typeArity(program) ++ orphanedCalls(program, written)
 
-  private def callArity(program: Program): List[Mismatch] =
+  /** Is this usage in code the run emits? A usage whose enclosing declaration is not known answers YES: an unknown position is not evidence that nothing is written, and dropping it would hide a real
+    * disagreement.
+    */
+  private def writtenUsage(program: Program, emits: SymId => Boolean): Usage => Boolean = u =>
+    if u.enclosing == SymId.None then true
+    else
+      RunScope.unitOf(program, u.enclosing) match
+        case SymId.None => true
+        case unit       => emits(unit)
+
+  private def callArity(program: Program, written: Usage => Boolean): List[Mismatch] =
     program.referenced.toList.flatMap { s =>
       program.definitionOf(s) match
         case Some(d: Tree.DefDef) =>
@@ -49,7 +63,7 @@ object RewriteTrace:
           val name    = program.symbolOf(s).map(_.fullName).getOrElse("?")
           def disagrees(n: Int): Boolean =
             if varargs then n < ps.size - 1 else n != ps.size
-          program.usages(s).collect {
+          program.usages(s).filter(written).collect {
             case Usage(UsageKind.Call, a: Tree.Apply, _) if disagrees(a.args.size) =>
               Mismatch("call arity", s, name, ps.size, a.args.size, a.origin)
           }
@@ -58,7 +72,7 @@ object RewriteTrace:
 
   /** Calls to members whose owner we define but which have no declaration left. Confined to owned types; external members have no declaration by construction.
     */
-  private def orphanedCalls(program: Program): List[Mismatch] =
+  private def orphanedCalls(program: Program, written: Usage => Boolean): List[Mismatch] =
     program.referenced.toList.flatMap { s =>
       val sym    = program.symbolOf(s)
       val ownerD = sym.map(_.owner).filter(_ != SymId.None).flatMap(program.definitionOf)
@@ -74,7 +88,7 @@ object RewriteTrace:
       if known || enumSynthetic || asText || !ownerD.exists(_.isInstanceOf[Tree.ClassDef]) then Nil
       else
         val name = sym.map(_.fullName).getOrElse("?")
-        program.usages(s).collect { case Usage(UsageKind.Call, a: Tree.Apply, _) =>
+        program.usages(s).filter(written).collect { case Usage(UsageKind.Call, a: Tree.Apply, _) =>
           Mismatch("call to a member with no declaration", s, name, 0, a.args.size, a.origin)
         }
     }

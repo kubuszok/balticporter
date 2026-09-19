@@ -63,3 +63,32 @@ class SubstitutionPolicySpec extends munit.FunSuite:
     )
     assertEquals(r.render, "  none")
   }
+
+  /** A dropped type's body is still in the model — the frontend removes the DECLARATION from what is emitted, not the tree the checks read — so the signature check has to be told which units are
+    * written. A call inside a dropped type emits no text and can disagree with nothing.
+    */
+  test("an orphaned call inside a DROPPED type is not a signature mismatch") {
+    val source =
+      """package demo;
+        |class Target {
+        |  Target(Ctx c) { }
+        |  Target(int line) { }
+        |}
+        |class Ctx { }
+        |class Walker {
+        |  Target make(Ctx c) { return new Target(c); }
+        |}
+        |""".stripMargin
+    val subs = Substitutions(dropTypes = Set("demo.Walker"), dropMethods = Set("demo.Target#<init>(Ctx)"))
+    val p    = SpoonTir.fromSource(source, subs = subs)
+
+    val orphanName = "call to a member with no declaration"
+    // told nothing, the check reads the whole program and reports the dropped type's own call
+    val whole = balticporter.tir.RewriteTrace.check(p).filter(_.what == orphanName)
+    assertEquals(clue(whole).size, 1)
+
+    // told which units are written, it reports nothing: `Walker` is not one of them
+    val written = p.units.filterNot(u => p.symbolOf(u.symbol).exists(_.fullName == "demo.Walker")).map(_.symbol).toSet
+    val emitted = balticporter.tir.RewriteTrace.check(p, written.contains).filter(_.what == orphanName)
+    assertEquals(clue(emitted), Nil)
+  }
