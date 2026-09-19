@@ -361,16 +361,25 @@ object PortConfig:
         if !Files.isDirectory(sourceRoot) then throw ConfigError(input.at("sourceRoot"), s"$sourceRoot is not a directory")
         val include = matchers(input, "includeGlobs", DefaultInclude)
         val exclude = matchers(input, "excludeGlobs", DefaultExclude)
-        val walk    = Files.walk(sourceRoot)
-        try
-          walk.iterator.asScala
-            .filter(Files.isRegularFile(_))
-            .map(p => sourceRoot.relativize(p))
-            .filter(rel => include.exists(_.matches(rel)) && !exclude.exists(_.matches(rel)))
-            .map(_.toString)
-            .toList
-            .sorted
-        finally walk.close()
+        // Links are followed: a source root that IS a symbolic link (a submodule linked in from another
+        // checkout) otherwise walks as the link alone — zero files, and a run that converts nothing.
+        val walk     = Files.walk(sourceRoot, java.nio.file.FileVisitOption.FOLLOW_LINKS)
+        val selected =
+          try
+            walk.iterator.asScala
+              .filter(Files.isRegularFile(_))
+              .map(p => sourceRoot.relativize(p))
+              .filter(rel => include.exists(_.matches(rel)) && !exclude.exists(_.matches(rel)))
+              .map(_.toString)
+              .toList
+              .sorted
+          finally walk.close()
+        if selected.isEmpty then
+          throw ConfigError(
+            input.at("sourceRoot"),
+            s"no file under $sourceRoot matches the include/exclude globs — a port that converts nothing is a misconfiguration, not a result"
+          )
+        selected
 
   private def matchers(input: ConfigView, key: String, default: List[String]) =
     input

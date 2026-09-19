@@ -188,6 +188,21 @@ class PortConfigSpec extends munit.FunSuite:
     assert(clue(e.getMessage).contains("wrok"))
   }
 
+  test("a source root that is a symbolic link is walked through the link") {
+    val conf = fixture(Minimal)
+    val dir  = conf.getParent
+    Files.move(dir.resolve("java"), dir.resolve("java-real"))
+    Files.createSymbolicLink(dir.resolve("java"), dir.resolve("java-real"))
+    val run = PortConfig.load(conf)
+    assertEquals(run.frontend.files, List("com/demo/Gadget.java", "com/demo/Widget.java"))
+  }
+
+  test("a source root under which nothing is selected is refused, not converted as an empty port") {
+    val conf = fixture(Minimal.replace("input  { sourceRoot = \"java\" }", "input  { sourceRoot = \"java\", includeGlobs = [\"**.kt\"] }"))
+    val e    = intercept[balticporter.tir.ConfigError](PortConfig.load(conf))
+    assert(clue(e.getMessage).contains("converts nothing"))
+  }
+
   test("a conf with no roots and no overrides loads exactly as before") {
     val run = PortConfig.load(fixture(Minimal), roots = Map.empty)
     assertEquals(run.frontend.sourceRoot.getFileName.toString, "java")
