@@ -6,9 +6,12 @@ import balticporter.tir.*
 /** Replaces a named method's or field's body with ready-made Scala, keeping the rest of the class mechanically translated — the seam `dropTypes`/`inject`/`dropMethods` cannot express. Runs as a phase
   * so the replacement lands in the TIR before checks read it. Refuses constructors (`CtorFunnel`'s job). Empty `bodies` = no-op. `bodies` keys `owner#name[(P1,P2)]` → Scala source spliced verbatim at
   * term position, not type-checked by the engine.
+  *
+  * `group` names an instance that must keep its own pipeline position. Same-name phases of a base and its dependents fold into ONE phase at the base's position, which moves every body a dependent
+  * placed deliberately before or after another phase; a base that replaces bodies of its own names its instance, and only instances of the same group fold. Empty = the shared, unnamed group.
   */
-final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
-  def name: String = "method-body-substitution"
+final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty, val group: String = "") extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
+  def name: String = if group.isEmpty then "method-body-substitution" else s"method-body-substitution($group)"
 
   /** What the run resolved each declared key to. `bySym` orders bare keys before precise ones so a precise `X#m(int)` wins over a bare `X#m` at the same member deterministically.
     */
@@ -41,7 +44,7 @@ final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty) ext
       if conflicts.nonEmpty then Left(conflicts.mkString("; "))
       else
         val added = o.bodies.keySet -- bodies.keySet
-        Right(MergeablePolicy.Merged(new MethodBodyTransform(bodies ++ o.bodies), added.map(MergeablePolicy.subjectOf)))
+        Right(MergeablePolicy.Merged(new MethodBodyTransform(bodies ++ o.bodies, group), added.map(MergeablePolicy.subjectOf)))
     case _ => Left(s"expected MethodBodyTransform, got ${later.getClass.getSimpleName}")
 
   def subjects: Set[String] = bodies.keySet.map(MergeablePolicy.subjectOf)

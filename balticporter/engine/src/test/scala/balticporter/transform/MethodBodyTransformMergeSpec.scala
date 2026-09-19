@@ -111,3 +111,32 @@ class MethodBodyTransformMergeSpec extends munit.FunSuite:
     assertEquals(eff.head.bodies("com.dep.Engine#createComponent(Class)"), "lowlevel.Nullable(factory.create(componentType))")
     assertEquals(eff.head.bodies("com.demo.AssetManager#clear"), "{ this.finish() }")
   }
+
+  // ---- a named group keeps its own position ----
+
+  test("a base's named group does not absorb a dependent's unnamed instance") {
+    val grouped = new MethodBodyTransform(Map("com.demo.A#foo" -> "1 + 1"), group = "own")
+    val b       = base(List(grouped))
+    val dep     = b.extendedBy(PortManifest("dep", governs = Set("com.dep"), surface = List(mbt("com.dep.B#bar" -> "2 + 2"))))
+
+    assertEquals(dep.surfaceFold.refusals, Nil)
+    val eff = dep.effectiveSurface.collect { case t: MethodBodyTransform => t }
+    assertEquals(clue(eff.map(_.name)), List("method-body-substitution(own)", "method-body-substitution"))
+    assertEquals(eff.map(_.bodies.keySet), List(Set("com.demo.A#foo"), Set("com.dep.B#bar")))
+  }
+
+  test("two instances of one named group still fold, and the fold keeps the group") {
+    val b   = base(List(new MethodBodyTransform(Map("com.demo.A#foo" -> "1 + 1"), group = "own")))
+    val dep = b.extendedBy(
+      PortManifest("dep", governs = Set("com.dep"), surface = List(new MethodBodyTransform(Map("com.dep.B#bar" -> "2 + 2"), group = "own")))
+    )
+
+    assertEquals(dep.surfaceFold.refusals, Nil)
+    val eff = dep.effectiveSurface.collect { case t: MethodBodyTransform => t }
+    assertEquals(clue(eff.map(_.name)), List("method-body-substitution(own)"))
+    assertEquals(eff.head.bodies.keySet, Set("com.demo.A#foo", "com.dep.B#bar"))
+  }
+
+  test("an empty group is the phase's plain name") {
+    assertEquals(mbt().name, "method-body-substitution")
+  }
