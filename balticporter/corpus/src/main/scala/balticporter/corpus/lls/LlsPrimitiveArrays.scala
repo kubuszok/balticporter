@@ -28,7 +28,35 @@ object LlsPrimitiveArrays:
        |  return array.asInstanceOf[lowlevel.util.DynamicArray[${if field.startsWith("keys") then "K" else "V"}]]
        |}""".stripMargin
 
+  /** java compares two arrays element by element through its RAW view of the other one (`Object[]`). No cast is written there — the view comes from the raw `Array` type — so nothing counts it, and on
+    * a primitive-backed array it throws. The elements are read through `get` instead, which boxes a primitive. `same` decides one pair; for identity on a primitive store, value equality is the only
+    * meaning "the same element" has.
+    */
+  private def elementwise(same: String) =
+    s"""{
+       |  if (`object`.asInstanceOf[scala.AnyRef] eq this) { return true } else ()
+       |  if (!this.ordered) { return false } else ()
+       |  if (!`object`.isInstanceOf[lowlevel.util.DynamicArray[?]]) { return false } else ()
+       |  val array: lowlevel.util.DynamicArray[?] = `object`.asInstanceOf[lowlevel.util.DynamicArray[?]]
+       |  if (!array.ordered) { return false } else ()
+       |  val n: scala.Int = this.size
+       |  if (n != array.size) { return false } else ()
+       |  var i: scala.Int = 0
+       |  while (i < n) {
+       |    val o1: $Obj = this.get(i).asInstanceOf[$Obj]
+       |    val o2: $Obj = array.get(i).asInstanceOf[$Obj]
+       |    if (!($same)) { return false } else ()
+       |    i += 1
+       |  }
+       |  return true
+       |}""".stripMargin
+
   val bodies: Map[String, String] = Map(
+    s"$U.Array#equals(Object)" -> elementwise("if (o1 == null) o2 == null else o1.equals(o2)"),
+    s"$U.Array#equalsIdentity(Object)" ->
+      elementwise(
+        s"if (this.items.isInstanceOf[scala.Array[scala.AnyRef]] && array.items.isInstanceOf[scala.Array[scala.AnyRef]]) o1 eq o2 else (if (o1 == null) o2 == null else o1.equals(o2))"
+      ),
     s"$U.Array#sort()" ->
       s"{ $Within(this.items, 0, this.size)((refs, lo, hi) => lowlevel.util.Sort.instance().sort(refs, lo, hi)) }",
     s"$U.Sort#sort(Array)" ->

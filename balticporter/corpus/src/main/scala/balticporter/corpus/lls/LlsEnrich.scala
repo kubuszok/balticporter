@@ -39,8 +39,29 @@ object LlsEnrich:
   )
 
   private[corpus] def arrayMembers(k: ArrayKind): List[(String, MemberSpec)] =
-    val E      = k.elem
-    val why    = "lls collection API on the emitted array surface"
+    val E   = k.elem
+    val why = "lls collection API on the emitted array surface"
+    // How an INLINE member reads the backing array. Its body is expanded where the element type is
+    // known, so `this.items` typed `Array[T]` becomes `Array[String]` there and the JVM casts the
+    // whole store — which is an `Object[]` for an array built with the reference type class
+    // (measured: 15 sge tests, `Object[] cannot be cast to String[]`). Three cases:
+    //   * a primitive array kind (no type parameter): the array type is concrete, read it directly;
+    //   * generic with the array type class: resolve it at the call site, as the hand-written lls
+    //     did — a primitive element is read unboxed, a reference one through `Array[AnyRef]`;
+    //   * generic without it: `Array[AnyRef]`, each element narrowed.
+    // `loop(result)(body)` yields the member's body; `body` sees the element as `elem` and the index as `i`.
+    def loop(resultType: String, before: String, go: String, body: String, result: String): String =
+      if k.tparams.isEmpty then s"{ $before val items = this.items; var i: scala.Int = 0; while (i < this.size && $go) { val elem: $E = items(i); $body; i += 1 }; $result }"
+      else if k.mk.nonEmpty then
+        // No local typed as an array: where the element type is NOT known at the call site (generic
+        // code) the type class resolves to the reference one statically, and a local typed
+        // `Array[AnyRef]` would cast a primitive store. Untyped, the array only ever reaches the
+        // type class's own `get`, which knows what it holds.
+        s"lowlevel.MkArray.withResolved[$E, $resultType](scala.Predef.summon[lowlevel.MkArray[$E]]) { [B, Mk <: lowlevel.MkArray[B]] => (mk0: Mk) => " +
+          s"{ $before val raw: scala.Any = this.items; var i: scala.Int = 0; while (i < this.size && $go) { " +
+          s"val elem: $E = mk0.get(mk0.castArray(raw.asInstanceOf[scala.Array[?]]), i).asInstanceOf[$E]; $body; i += 1 }; $result } }"
+      else
+        s"{ $before val items = this.items.asInstanceOf[scala.Array[scala.AnyRef]]; var i: scala.Int = 0; while (i < this.size && $go) { val elem: $E = items(i).asInstanceOf[$E]; $body; i += 1 }; $result }"
     val common = List(
       ("apply", 1, s"def apply(index: scala.Int): $E = this.get(index)"),
       ("update", 2, s"def update(index: scala.Int, value: $E): scala.Unit = this.set(index, value)"),
@@ -49,21 +70,16 @@ object LlsEnrich:
       // the higher-order members are `inline` with an `inline` function parameter, as the hand-written lls had
       // them: the loop is expanded at the call site, so no function object is created and — the element type
       // being known there — the array is read without boxing (lls's README states both)
-      ("foreach", 1, s"inline def foreach(inline f: $E => scala.Unit): scala.Unit = { var i: scala.Int = 0; while (i < this.size) { f(this.items(i)); i += 1 } }"),
-      ("indexWhere",
-       1,
-       s"inline def indexWhere(inline p: $E => scala.Boolean): scala.Int = { var i: scala.Int = 0; var r: scala.Int = -1; while (i < this.size && r < 0) { if (p(this.items(i))) { r = i } else () ; i += 1 }; r }"
-      ),
+      ("foreach", 1, s"inline def foreach(inline f: $E => scala.Unit): scala.Unit = ${loop("scala.Unit", "", "true", "f(elem)", "()")}"),
+      ("indexWhere", 1, s"inline def indexWhere(inline p: $E => scala.Boolean): scala.Int = ${loop("scala.Int", "var r: scala.Int = -1;", "r < 0", "if (p(elem)) { r = i } else ()", "r")}"),
       ("exists", 1, s"inline def exists(inline p: $E => scala.Boolean): scala.Boolean = this.indexWhere(p) >= 0"),
       ("forall", 1, s"inline def forall(inline p: $E => scala.Boolean): scala.Boolean = this.indexWhere((x: $E) => !p(x)) < 0"),
+      // the found element through `get`, a plain method: not another read of the array in an inline body
       ("find",
        1,
-       s"inline def find(inline p: $E => scala.Boolean): lowlevel.Nullable[$E] = { val i: scala.Int = this.indexWhere(p); if (i < 0) lowlevel.Nullable.empty[$E] else lowlevel.Nullable(this.items(i)) }"
+       s"inline def find(inline p: $E => scala.Boolean): lowlevel.Nullable[$E] = { val at: scala.Int = this.indexWhere(p); if (at < 0) lowlevel.Nullable.empty[$E] else lowlevel.Nullable(this.get(at)) }"
       ),
-      ("count",
-       1,
-       s"inline def count(inline p: $E => scala.Boolean): scala.Int = { var c: scala.Int = 0; var i: scala.Int = 0; while (i < this.size) { if (p(this.items(i))) { c += 1 } else () ; i += 1 }; c }"
-      ),
+      ("count", 1, s"inline def count(inline p: $E => scala.Boolean): scala.Int = ${loop("scala.Int", "var c: scala.Int = 0;", "true", "if (p(elem)) { c += 1 } else ()", "c")}"),
       ("$plus$eq", 1, s"@scala.annotation.targetName(\"plusEquals\") def +=(value: $E): scala.Unit = this.add(value)")
     )
     val removes =
@@ -191,8 +207,12 @@ object LlsEnrich:
       else if k.indexed then
         val mkOf  = (t: String) => s"scala.Predef.summon[lowlevel.MkArray[$t]]"
         val inner =
-          s"{ val ks = mkK.castArray(this.keys$$field); val vs = mkV.castArray(this.values$$field); var i: scala.Int = 0; val n: scala.Int = this.size; " +
-            s"while (i < n) { ${call(s"mkK.get(ks, i).asInstanceOf[$K]", s"mkV.get(vs, i).asInstanceOf[$V]")}; i += 1 } }"
+          // untyped locals, for the reason given at the array kind: generic code must not cast a primitive store
+          s"{ val ks: scala.Any = this.keys$$field; val vs: scala.Any = this.values$$field; var i: scala.Int = 0; val n: scala.Int = this.size; " +
+            s"while (i < n) { ${call(
+                s"mkK.get(mkK.castArray(ks.asInstanceOf[scala.Array[?]]), i).asInstanceOf[$K]",
+                s"mkV.get(mkV.castArray(vs.asInstanceOf[scala.Array[?]]), i).asInstanceOf[$V]"
+              )}; i += 1 } }"
         s"lowlevel.MkArray.withResolved[$K, scala.Unit](${mkOf(K)}) { [BK, MkK <: lowlevel.MkArray[BK]] => (mkK: MkK) => " +
           s"lowlevel.MkArray.withResolved[$V, scala.Unit](${mkOf(V)}) { [BV, MkV <: lowlevel.MkArray[BV]] => (mkV: MkV) => $inner } }"
       else if !k.objectTable then
@@ -201,10 +221,14 @@ object LlsEnrich:
       else
         // The arrays are read as `Array[AnyRef]` and each element narrowed: expanded where the key
         // type is known, a local typed `Array[K]` would cast the whole `Object[]` store to `K[]`.
-        val refs         = ".asInstanceOf[scala.Array[scala.AnyRef]]"
-        val orderedValue = if useValue then k.unwrap("this.get(key)") else "null"
+        val refs = ".asInstanceOf[scala.Array[scala.AnyRef]]"
+        // an ordered key's value is read from its table slot: the key is present, so `locateKey`
+        // answers its index. Not `get(key)` — that wraps the value, and the only unwrapping that keeps
+        // a stored null is one lls marks deprecated, which fails a caller compiling with fatal warnings
+        // once this body is expanded there (sge: 1 error)
+        val orderedValue = if useValue then s"vs(this.locateKey(key)).asInstanceOf[$V]" else "null"
         val ordered      =
-          s"{ val ord = o.orderedKeys; val ks = ord.items$refs; val n: scala.Int = ord.size; var i: scala.Int = 0; " +
+          s"{ val ord = o.orderedKeys; val ks = ord.items$refs; val vs = this.valueTable$refs; val n: scala.Int = ord.size; var i: scala.Int = 0; " +
             s"while (i < n) { val key: $K = ks(i).asInstanceOf[$K]; ${call("key", orderedValue)}; i += 1 } }"
         val table =
           s"{ val ks = this.keyTable$refs; val vs = this.valueTable$refs; val n: scala.Int = ks.length; var i: scala.Int = 0; " +
