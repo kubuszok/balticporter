@@ -1256,6 +1256,11 @@ object CollectionsTransform:
     */
   val JavaCollectionsFqn = s"${RuntimeArtifact.Package}.JavaCollections"
 
+  /** Shim members the runtime declares PARENLESS although java declares them with parens. The shims carry java's arity everywhere else, so this is the exception list, stated once here because the
+    * call rewrite has to spell a member the way the shim declares it or the emitted call does not apply.
+    */
+  val ShimParenless: Set[String] = Set("isEmpty")
+
   /** Targets with no `scala.collection.*` parent (standalone shims). Keyed by FQN, not package — three runtime targets DO extend scala collections.
     */
   val standaloneTargets: Set[String] =

@@ -365,6 +365,12 @@ private[transform] trait CollectionsCalls:
       // wildcard capture read coercion: `asInstanceOf[Object]` for unbounded `?` on a shim
       case _ if onShim && wildcardElement(recv.tpe) && capturedObjectRead(t) =>
         Some(Tree.Typed(t, TypeTree(t.tpe, t.origin), t.tpe, t.origin))
+      // the shims carry java's arity except for the members in `ShimParenless`, and a call that
+      // binds to a member this program does NOT declare is answered by the shim — so it is spelled
+      // the way the shim declares it. A call binding to an OWNED declaration keeps java's parens:
+      // that declaration's own emitted arity decides, not the parent it inherits from.
+      case (n, Nil, _) if onShim && CollectionsTransform.ShimParenless(n) && !summon[Program].owns(m) =>
+        Some(Tree.Select(recv, m, t.tpe, t.origin))
       case _ if onShim => None
       // JDK bulk defaults (`containsAll`/`addAll`/`removeAll`/`retainAll`) via VirtualJdkDefaults
       case (n, List(c), Kind.Seq | Kind.Set)
