@@ -1,12 +1,11 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastType, RastValue, Rast}
+import balticporter.frontend.ts.{ Rast, RastFile, RastNode, RastType, RastValue }
 
 /** Dedicated RAST-to-Scala emitter for 10 Mermaid diagram modules.
   *
-  * Covers: er, requirement, c4, gantt, git, state, xychart, flowchart, class_, sequence.
-  * Each diagram has 5 methods: emitXxxDb, emitXxxDiagram, emitXxxParser, emitXxxRenderer, emitXxxStyles.
-  * The emitted Scala matches the ssg-mermaid hand-port conventions.
+  * Covers: er, requirement, c4, gantt, git, state, xychart, flowchart, class_, sequence. Each diagram has 5 methods: emitXxxDb, emitXxxDiagram, emitXxxParser, emitXxxRenderer, emitXxxStyles. The
+  * emitted Scala matches the ssg-mermaid hand-port conventions.
   */
 object MermaidDiagramEmitters2 {
 
@@ -164,13 +163,19 @@ object MermaidDiagramEmitters2 {
     sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
     sb.append("    val mainGroup = svg.append(\"g\")\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", 400).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"er-title\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", 400).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"er-title\", true).text(db.title)\n"
+    )
     sb.append("    }\n\n")
     sb.append("    var yOff = 50\n")
     sb.append("    for ((name, entity) <- db.entities) {\n")
     sb.append("      val g = mainGroup.append(\"g\").classed(\"entityBox\", true)\n")
-    sb.append("      g.append(\"rect\").attr(\"x\", 20).attr(\"y\", yOff).attr(\"width\", 200).attr(\"height\", 40 + entity.attributes.size * 20)\n")
-    sb.append("      g.append(\"text\").attr(\"x\", 120).attr(\"y\", yOff + 25).attr(\"text-anchor\", \"middle\").classed(\"entityLabel\", true).text(name)\n")
+    sb.append(
+      "      g.append(\"rect\").attr(\"x\", 20).attr(\"y\", yOff).attr(\"width\", 200).attr(\"height\", 40 + entity.attributes.size * 20)\n"
+    )
+    sb.append(
+      "      g.append(\"text\").attr(\"x\", 120).attr(\"y\", yOff + 25).attr(\"text-anchor\", \"middle\").classed(\"entityLabel\", true).text(name)\n"
+    )
     sb.append("      yOff += 60 + entity.attributes.size * 20\n")
     sb.append("    }\n\n")
     sb.append("    for (rel <- db.relationships) {\n")
@@ -196,7 +201,9 @@ object MermaidDiagramEmitters2 {
     sb.append("       |.attributeBackgroundColorEven { fill: $${vars.altBackground}; }\n")
     sb.append("       |.relationshipLine { stroke: $${vars.lineColor}; stroke-width: 1; }\n")
     sb.append("       |.relationshipLabel { fill: $${vars.nodeTextColor}; font-family: $${vars.fontFamily}; font-size: 12px; }\n")
-    sb.append("       |.er-title { fill: $${vars.titleColor}; font-family: $${vars.fontFamily}; font-size: 18px; font-weight: bold; }\n")
+    sb.append(
+      "       |.er-title { fill: $${vars.titleColor}; font-family: $${vars.fontFamily}; font-size: 18px; font-weight: bold; }\n"
+    )
     sb.append("       |\"\"\".stripMargin\n")
     sb.append("}\n")
     sb.toString
@@ -395,9 +402,13 @@ object MermaidDiagramEmitters2 {
     sb.append("  val relationships: mutable.ArrayBuffer[C4Relationship] = mutable.ArrayBuffer.empty\n")
     sb.append("  val boundaries:    mutable.ArrayBuffer[C4Boundary]     = mutable.ArrayBuffer.empty\n\n")
     sb.append("  private var currentBoundary: String = \"global\"\n\n")
-    sb.append("  def addEntity(alias: String, label: String, entityType: String, description: String = \"\", technology: String = \"\"): Unit =\n")
+    sb.append(
+      "  def addEntity(alias: String, label: String, entityType: String, description: String = \"\", technology: String = \"\"): Unit =\n"
+    )
     sb.append("    entities += C4Entity(alias, label, entityType, description, technology, parentBoundary = currentBoundary)\n\n")
-    sb.append("  def addRelationship(from: String, to: String, label: String, technology: String = \"\", description: String = \"\", relType: String = \"Rel\"): Unit =\n")
+    sb.append(
+      "  def addRelationship(from: String, to: String, label: String, technology: String = \"\", description: String = \"\", relType: String = \"Rel\"): Unit =\n"
+    )
     sb.append("    relationships += C4Relationship(from, to, label, technology, description, relType)\n\n")
     sb.append("  def addBoundary(alias: String, label: String, boundaryType: String = \"system\"): Unit = {\n")
     sb.append("    boundaries += C4Boundary(alias, label, boundaryType, parentBoundary = currentBoundary)\n")
@@ -631,7 +642,9 @@ object MermaidDiagramEmitters2 {
     sb.append("    }\n")
     sb.append("    mainGroup.append(\"line\").classed(\"today\", true)\n")
     sb.append("    for (task <- db.tasks) {\n")
-    sb.append("      val cls = if (task.crit) \"critTask\" else if (task.active) \"activeTask\" else if (task.milestone) \"milestone\" else \"task\"\n")
+    sb.append(
+      "      val cls = if (task.crit) \"critTask\" else if (task.active) \"activeTask\" else if (task.milestone) \"milestone\" else \"task\"\n"
+    )
     sb.append("      val g = mainGroup.append(\"g\").classed(cls, true)\n")
     sb.append("      g.append(\"rect\")\n")
     sb.append("      g.append(\"text\").classed(\"taskText\", true).text(task.name)\n")
@@ -840,7 +853,9 @@ object MermaidDiagramEmitters2 {
     sb.append("  var accTitle:       String = \"\"\n")
     sb.append("  var accDescription: String = \"\"\n\n")
     sb.append("  def addState(id: String, label: String = \"\", nodeType: String = \"default\"): Unit =\n")
-    sb.append("    states.getOrElseUpdate(id, StateNode(id = id, label = if (label.nonEmpty) label else id, nodeType = nodeType))\n\n")
+    sb.append(
+      "    states.getOrElseUpdate(id, StateNode(id = id, label = if (label.nonEmpty) label else id, nodeType = nodeType))\n\n"
+    )
     sb.append("  def addTransition(from: String, to: String, label: String = \"\"): Unit = {\n")
     sb.append("    addState(from); addState(to)\n")
     sb.append("    transitions += StateTransition(from = from, to = to, label = label)\n")

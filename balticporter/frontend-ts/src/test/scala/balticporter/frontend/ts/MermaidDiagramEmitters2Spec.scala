@@ -331,7 +331,7 @@ class MermaidDiagramEmitters2Spec extends munit.FunSuite:
     assert(scala.contains("final case class FlowEdge"), "should emit FlowEdge")
     assert(scala.contains("final case class FlowSubgraph"), "should emit FlowSubgraph")
     assert(scala.contains("final class FlowchartDb"), "should emit FlowchartDb class")
-    assert(scala.contains("direction: String = \"TD\""), "should default direction to TD")
+    assert(scala.contains("direction:      String = \"TD\""), "should default direction to TD")
 
   test("emitFlowchartDiagram emits FlowchartDiagram facade"):
     val scala = dedicated.MermaidDiagramEmitters2.emitFlowchartDiagram(dummyRast)
