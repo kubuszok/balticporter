@@ -147,3 +147,13 @@ extension methods on ONE of a related pair, never by extending `scala.collection
 a semantic the target LACKS, so `balticporter/runtime/package.scala` refuses to ship a support type
 for it — where the target language already has the abstraction, only a base module's own hand-written
 code may bridge it, not a shared runtime type.
+
+**Where a shim member is NOT at java's arity, the call rewrite follows the SHIM and the exception is
+listed** (`CollectionsTransform.ShimParenless`; `JavaCollection.isEmpty` is parenless because a port
+of a collections library forces that spelling on its own types). The blanket "leave a shim receiver
+alone" refusal emitted `c.isEmpty()` against a parenless declaration at every retyped
+`java.util.Collection` parameter — 4 typer errors on one port and 2 more on another, both of them
+baselined at 0 because the runtime moved after the baselines were promoted, and the consumer build
+was deleting the parens from the generated text with a regular expression. The drop fires only where
+the call binds to a member the program does NOT declare: a class of its own implementing the java
+interface keeps java's parens, because its own emitted arity decides and not the parent it inherits.
