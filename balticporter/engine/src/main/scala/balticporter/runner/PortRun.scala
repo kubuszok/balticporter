@@ -755,7 +755,8 @@ final case class PortRun(
         )
     }
     if declaredTrees.nonEmpty then
-      val wroteRes = balticporter.tir.PortResources.write(plannedRes, SbtGen.managedResources(portRoot, sourceSet.configName))
+      val resourceDest = SbtGen.managedResources(portRoot, sourceSet.configName)
+      val wroteRes     = balticporter.tir.PortResources.write(plannedRes, resourceDest)
       written += wroteRes.size
       // Match resource paths against string literals in this module's units (not text search).
       val literals = checkedUnits.foldLeft(Set.empty[String]) { (acc, u) =>
@@ -773,7 +774,7 @@ final case class PortRun(
         s"RESOURCES: ${plannedRes.size} file(s) copied VERBATIM into this port's resource tree, " +
           "at the upstream classpath paths the emitted code names"
       )
-      println(balticporter.tir.PortResources.summary(plannedRes))
+      println(balticporter.tir.PortResources.summary(plannedRes, resourceDest))
 
     // Support types from RuntimePlan and supportSources.
     written += plan.writeSources(emitDir)

@@ -134,6 +134,36 @@ class PortResourcesSpec extends munit.FunSuite:
     assertEquals(fs.head.check, PortResources.Name)
   }
 
+  // -------------------------------------------------------------------------------------------
+  // the hand-off: a consuming build has to find these files, and the run has to say where they are
+  // -------------------------------------------------------------------------------------------
+
+  tmp.test("the files a consuming build wires are the ones the run wrote, under the port's own resource root") { dir =>
+    // A consumer that collects only the emitted `.scala` compiles green and throws at the first
+    // lookup, so the resource half needs an entry point of its own rather than a walk each build
+    // writes for itself.
+    resource(dir, "p/q/skin.json", "{}")
+    resource(dir, "p/q/skin.png", "img")
+    val portRoot = dir.resolve("port")
+    assertEquals(balticporter.sbtgen.SbtGen.resourceFiles(portRoot, "main"), Nil)
+    val out = balticporter.sbtgen.SbtGen.managedResources(portRoot, "main")
+    PortResources.write(PortResources.plan(List(ResourceTree(dir, List("p/q/skin.json", "p/q/skin.png")))), out)
+    assertEquals(
+      balticporter.sbtgen.SbtGen.resourceFiles(portRoot, "main"),
+      List(out.resolve("p/q/skin.json"), out.resolve("p/q/skin.png"))
+    )
+  }
+
+  tmp.test("the run's summary names the DESTINATION, and that a directory test at project load answers false") { dir =>
+    resource(dir, "p/q/x.txt", "x")
+    val out = dir.resolve("out")
+    val s   = PortResources.summary(PortResources.plan(List(ResourceTree(dir, List("p/q/x.txt")))), out)
+    assert(s.contains(CheckReport.relativise(out.toString)), s)
+    assert(s.contains("classpath"), s)
+    assert(s.contains("FALSE on every fresh checkout"), s)
+    assertEquals(PortResources.summary(Nil, out), "  none")
+  }
+
   tmp.test("candidates over a root that is not a directory is empty rather than a crash") { dir =>
     val fs = PortResources.candidates(List(ResourceTree(dir.resolve("nope"), Nil)), Nil)
     assertEquals(fs, Nil)

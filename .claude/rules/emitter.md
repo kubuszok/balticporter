@@ -166,6 +166,19 @@ member's note heads the owner's body), `NotInTree` (a dropped TYPE's note is pre
 injected file). A note moves member digests; `SubstitutionCheck.dangling` reported 3 phantoms until
 it stripped notes.
 
+## §4.57 — the resource half of the deliverable
+
+- A port ships TWO outputs: the emitted Scala and `src_managed/<set>/resources`. A consuming build
+  that collects only the sources compiles green and throws at the first lookup — flexmark's
+  `Html5Entities` reads its entity table in a static initialiser, so nine ssg suites failed with
+  `Could not initialize class …Html5Entities$` while the port shipped the file correctly. The
+  directory is wired through a resource GENERATOR that runs after the port
+  (`SbtGen.resourceFiles`), never a directory test evaluated while the build LOADS: on a fresh
+  checkout the port has not run, the test reads false, and the fallback is silently empty.
+- A classpath lookup is a STRING LITERAL, so a renaming port ships the resource at the UPSTREAM
+  path while a hand port moved it into its own namespace; both trees can sit on one classpath with
+  the file reachable at neither name the code uses.
+
 ## §4.58 — trivia
 
 - `SpoonTir.triviaOf` slices by source position; a `VirtualFile` has no buffer, so the convenience

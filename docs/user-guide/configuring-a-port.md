@@ -188,6 +188,14 @@ manifest {
   resources = [ { root = "upstream/src/main/resources", files = ["mylib/data.json"] } ]
   ```
 
+  They land in `<port>/src_managed/main/resources`, and a build that takes the emitted Scala without
+  that directory compiles green and throws at the first lookup — often from a static initialiser, so
+  the message is `Could not initialize class <Owner>$` and names nothing about a resource. In a
+  consuming build, wire it as a task that generates first and then lists the files
+  (`SbtGen.resourceFiles(portRoot, "main")`), plus `Compile / managedResourceDirectories +=` that
+  directory so each file keeps its package path. Never a directory test inside a setting: settings
+  are evaluated while the build loads, before the port has ever run.
+
 - **`dependencies`** declares artifacts the emitted code needs on its classpath:
 
   ```hocon

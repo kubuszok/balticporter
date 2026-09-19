@@ -59,6 +59,11 @@ object SbtGen:
   def managedResources(root: Path, config: String): Path =
     managedRoot(root).resolve(config).resolve("resources")
 
+  /** The classpath resources this port ships, for a consuming build's `resourceGenerators` task — the second output beside the emitted Scala, and the one a build that collects only sources drops.
+    */
+  def resourceFiles(root: Path, config: String): List[Path] =
+    balticporter.tir.PortResources.shipped(managedResources(root, config))
+
   /** Emit the skeleton with runtime delivery derived from the phases that ran. Does NOT write vendored sources -- `PortRun` handles that into the correct source set; a caller with no `PortRun` writes
     * them via `plan.writeSources(dir)`.
     * @return

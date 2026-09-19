@@ -125,6 +125,15 @@ object PortResources:
 
     empties ++ unshipped ++ rows
 
+  /** Every file a run has shipped under a port's resource root, sorted. A consuming build's resource generator returns this; empty before the port has run.
+    */
+  def shipped(resourceRoot: Path): List[Path] =
+    if !Files.isDirectory(resourceRoot) then Nil
+    else
+      val walk = Files.walk(resourceRoot)
+      try walk.iterator().asScala.filter(Files.isRegularFile(_)).toList.sortBy(_.toString)
+      finally walk.close()
+
   /** Copy the planned resources under `resourceRoot`, verbatim, returning what was written. Not gated on the artifact layer (licence deliverable). Destination is `src_managed/`.
     */
   def write(rs: List[Res], resourceRoot: Path): List[Path] =
@@ -135,7 +144,9 @@ object PortResources:
       dst
     }
 
-  def summary(rs: List[Res]): String =
+  /** What was copied, and WHERE — the destination is half the deliverable: a build that collects the emitted Scala and not this directory compiles green and fails at the first lookup.
+    */
+  def summary(rs: List[Res], destination: Path): String =
     if rs.isEmpty then "  none"
     else
       rs.groupBy(_.root.toString)
@@ -144,4 +155,8 @@ object PortResources:
         .map { (root, files) =>
           s"  ${CheckReport.relativise(root)} -> ${files.size} file(s), verbatim"
         }
-        .mkString("\n")
+        .mkString("\n") +
+        s"\n  into ${CheckReport.relativise(destination.toString)} — the consuming build must put THIS " +
+        "directory on the classpath, through a resource generator that runs after the port. A build that " +
+        "tests whether the directory exists while it loads reads FALSE on every fresh checkout, and the " +
+        "lookup then fails at first use with no compile error to say so."
