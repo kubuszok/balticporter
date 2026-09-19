@@ -45,6 +45,7 @@ fi
 
 failed=0
 summary=""
+published=""
 for name in "${consumers[@]}"; do
   src="$root/../$name"
   if [ ! -d "$src/.git" ] && [ ! -f "$src/.git" ]; then
@@ -82,10 +83,29 @@ for name in "${consumers[@]}"; do
   perl -pi -e "s/[0-9a-f]{40}-SNAPSHOT/$version/g" "$pins"
   printf '\nresolvers += Resolver.defaultLocal\n' >> "$pins"
 
+  # A consumer checked earlier in this run was published locally: build against THAT, as its next
+  # release would be consumed. (An inline member's body is compiled into the caller, so a consumer
+  # can break on a library it only depends on — a published jar of the old engine hides that.)
+  versions="$tree/project/Versions.scala"
+  if [ -f "$versions" ]; then
+    for dep in $published; do
+      dep_name="${dep%%=*}"; dep_version="${dep#*=}"
+      DEP="$dep_name" VER="$dep_version" perl -pi -e 's/(val\s+\Q$ENV{DEP}\E\s*=\s*)"[^"]*"/$1"$ENV{VER}"/' "$versions"
+    done
+  fi
+
   echo "== $name: generatePort ; $tasks   (log: $log)"
   (cd "$tree" && JAVA_HOME="$consumer_jdk" PATH="$consumer_jdk/bin:$PATH" sbt --client "generatePort ; $tasks") \
     >> "$log" 2>&1
   code=$?
+  if [ "$code" -eq 0 ] && [ "$name" != "${consumers[${#consumers[@]} - 1]}" ]; then
+    # publish what was just built, for the consumers after this one (JVM artifact at level jvm)
+    if [ "$level" = "full" ]; then publish="publishLocal"; else publish="$name/publishLocal"; fi
+    (cd "$tree" && JAVA_HOME="$consumer_jdk" PATH="$consumer_jdk/bin:$PATH" sbt --client "$publish ; show $name/version") \
+      > "$work/$name-publish.log" 2>&1
+    built="$(sed 's/\x1b\[[0-9;]*m//g' "$work/$name-publish.log" | /usr/bin/grep -E '^\[info\] [0-9][^ ]*$' | tail -1 | awk '{print $2}')"
+    [ -n "$built" ] && published="$published $name=$built"
+  fi
   (cd "$tree" && JAVA_HOME="$consumer_jdk" PATH="$consumer_jdk/bin:$PATH" sbt --client shutdown) > /dev/null 2>&1
 
   errors="$(/usr/bin/grep -c '^\[error\]' "$log")"
