@@ -731,107 +731,41 @@ object KaTeXEmitter:
         case _ => ()
     result.toList
 
-  /** Extract all function-like declarations from a RAST file (for body mapping). */
-  private def extractAllFunctions(file: RastFile): List[TopLevelFunction] =
-    val result = mutable.ListBuffer.empty[TopLevelFunction]
-
-    def walk(node: RastNode): Unit =
-      node.kind match
-        case "FunctionDeclaration" =>
-          val name = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("")
-          if name.nonEmpty then
-            val params = node.children.filter(_.kind == "Parameter").flatMap(_.children.find(_.kind == "Identifier").flatMap(_.text))
-            result += TopLevelFunction(name, params, "Block")
-
-        case "VariableStatement" =>
-          for
-            vdl <- node.children.find(_.kind == "VariableDeclarationList")
-            vd <- vdl.children.filter(_.kind == "VariableDeclaration")
-          do
-            val name = vd.children.headOption.flatMap(_.text).getOrElse("")
-            val rhs  = vd.children.find(c => c.kind == "ArrowFunction" || c.kind == "FunctionExpression")
-            rhs.foreach { fn =>
-              val params = fn.children.filter(_.kind == "Parameter").flatMap(_.children.find(_.kind == "Identifier").flatMap(_.text))
-              result += TopLevelFunction(name, params, "Block")
-            }
-
-        case "MethodDeclaration" =>
-          val name = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("")
-          if name.nonEmpty then
-            val params = node.children.filter(_.kind == "Parameter").flatMap(_.children.find(_.kind == "Identifier").flatMap(_.text))
-            result += TopLevelFunction(name, params, "Block")
-
-        case _ => ()
-      node.children.foreach(walk)
-
-    file.nodes.foreach(walk)
-    result.toList
-
-  /** Build a name→body-exists map from extracted functions. */
-  private def buildBodyMap(fns: List[TopLevelFunction]): Map[String, Boolean] =
-    fns.map(f => camelCase(f.name) -> true).toMap
-
-  /** Build a map from method name to a list of (translated RAST body, refusal count).
-    *
-    * Extracts all functions/methods from the RAST, translates each body using DefmethodBodyTranslator (which handles general TS→Scala patterns), and builds the lookup map. Multiple RAST functions
-    * with the same name (e.g., `toMarkup` on different classes) are stored in occurrence order.
-    */
+  /** One translated body per function or method that HAS a body, by Scala name, in source order — the n-th `toMarkup` of the file is the n-th entry, translated with its own parameters. */
   private def buildTranslatedBodyMap(rastFile: RastFile): ParityDerive.Bodies =
     val result = mutable.Map.empty[String, mutable.ListBuffer[ParityDerive.TranslatedBody]]
-    val allFns = extractAllFunctions(rastFile)
 
-    for fn <- allFns do
-      val scalaName = camelCase(fn.name)
-      val bodyNode  = findFunctionBody(rastFile, fn.name, allOccurrences = true)
-      for body <- bodyNode do
-        val entry      = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, body)
-        val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-        result.getOrElseUpdate(scalaName, mutable.ListBuffer.empty) += ParityDerive.TranslatedBody(translated.scalaBody, translated.refusalReasons)
+    for (name, params, body) <- functionBodies(rastFile) do
+      val entry      = TerserEmitter.DefmethodEntry("_free_", name, params, body)
+      val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+      result.getOrElseUpdate(camelCase(name), mutable.ListBuffer.empty) += ParityDerive.TranslatedBody(translated.scalaBody, translated.refusalReasons)
 
     ParityDerive.Bodies(result.map { case (k, v) => k -> v.toList }.toMap)
 
-  /** Find all Block body nodes for a named function in the RAST.
-    *
-    * When `allOccurrences` is true, returns all matching bodies (for functions with the same name in different classes, e.g., `toMarkup` on Span and MathNode). When false, returns only the first
-    * match.
-    */
-  private def findFunctionBody(file: RastFile, name: String, allOccurrences: Boolean = false): List[RastNode] =
-    val results = mutable.ListBuffer.empty[RastNode]
+  /** Every function, function-valued variable and method with a body, as (name, parameter names, body block); an arrow function's expression body is wrapped in a returning block. */
+  private def functionBodies(file: RastFile): List[(String, List[String], RastNode)] =
+    val results = mutable.ListBuffer.empty[(String, List[String], RastNode)]
+
+    def paramsOf(fn: RastNode): List[String] =
+      fn.children.filter(_.kind == "Parameter").flatMap(_.children.find(_.kind == "Identifier").flatMap(_.text))
 
     def walk(node: RastNode): Unit =
-      if !allOccurrences && results.nonEmpty then return
       node.kind match
-        case "FunctionDeclaration" =>
-          val fnName = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("")
-          if fnName == name then node.children.find(_.kind == "Block").foreach(results += _)
+        case "FunctionDeclaration" | "MethodDeclaration" =>
+          val name = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("")
+          if name.nonEmpty then node.children.find(_.kind == "Block").foreach(body => results += ((name, paramsOf(node), body)))
 
         case "VariableStatement" =>
           for
             vdl <- node.children.find(_.kind == "VariableDeclarationList")
             vd <- vdl.children.filter(_.kind == "VariableDeclaration")
+            fn <- vd.children.find(c => c.kind == "ArrowFunction" || c.kind == "FunctionExpression")
           do
-            val varName = vd.children.headOption.flatMap(_.text).getOrElse("")
-            if varName == name then
-              val rhs = vd.children.find(c => c.kind == "ArrowFunction" || c.kind == "FunctionExpression")
-              rhs.foreach { fn =>
-                val body = fn.children.find(_.kind == "Block").orElse {
-                  val exprBody = fn.children.find(c => c.kind != "Parameter")
-                  exprBody.map(e =>
-                    RastNode("Block",
-                             0,
-                             (0, 0),
-                             children = List(
-                               RastNode("ReturnStatement", 0, (0, 0), children = List(e))
-                             )
-                    )
-                  )
-                }
-                body.foreach(results += _)
-              }
-
-        case "MethodDeclaration" =>
-          val mName = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("")
-          if mName == name then node.children.find(_.kind == "Block").foreach(results += _)
+            val name = vd.children.headOption.flatMap(_.text).getOrElse("")
+            val body = fn.children.find(_.kind == "Block").orElse {
+              fn.children.find(c => c.kind != "Parameter").map(e => RastNode("Block", 0, (0, 0), children = List(RastNode("ReturnStatement", 0, (0, 0), children = List(e)))))
+            }
+            body.foreach(b => results += ((name, paramsOf(fn), b)))
 
         case _ => ()
       node.children.foreach(walk)

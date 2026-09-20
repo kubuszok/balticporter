@@ -439,8 +439,7 @@ object DartSassEmitter:
 
     for fn <- allFns do
       val scalaName = dartToCamelCase(fn.name)
-      val bodyNode  = findFunctionBody(rastFile, fn.name)
-      bodyNode.foreach { body =>
+      fn.body.foreach { body =>
         // Normalize Dart node kinds to TS equivalents before translation
         val normalizedBody = DefmethodBodyTranslator.normalizeNodeTree(body)
         val entry          = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, normalizedBody)
@@ -473,10 +472,12 @@ object DartSassEmitter:
 
     ParityDerive.Bodies(result.map { case (k, v) => k -> v.toList }.toMap)
 
+  /** `body` is this declaration's OWN body, so two methods of one name in a file are never given each other's. */
   final case class ExtractedFunction(
     name:     String,
     params:   List[String],
-    bodyKind: String
+    bodyKind: String,
+    body:     Option[RastNode] = None
   )
 
   def extractAllFunctions(file: RastFile): List[ExtractedFunction] =
@@ -506,7 +507,7 @@ object DartSassEmitter:
               )
               .getOrElse(Nil)
             val hasBody = searchIn.exists(c => c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
-            if hasBody then result += ExtractedFunction(name, params, "Block")
+            if hasBody then result += ExtractedFunction(name, params, "Block", extractBodyFromChildren(searchIn))
 
         case "ConstructorDeclaration" =>
           val name       = nameFromSymbol(node)
@@ -523,7 +524,7 @@ object DartSassEmitter:
                 )
               )
               .getOrElse(Nil)
-            result += ExtractedFunction(actualName, params, "Block")
+            result += ExtractedFunction(actualName, params, "Block", extractBodyFromChildren(node.children))
 
         case "TopLevelVariableDeclaration" =>
           // TopLevelVariableDeclarationImpl > VariableDeclarationListImpl > VariableDeclarationImpl
@@ -546,7 +547,7 @@ object DartSassEmitter:
                   )
                   .getOrElse(Nil)
                 val hasBody = fnChildren.exists(c => c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
-                if hasBody then result += ExtractedFunction(varName, params, "Block")
+                if hasBody then result += ExtractedFunction(varName, params, "Block", extractBodyFromChildren(fnChildren))
               }
 
         case _ => ()

@@ -6,7 +6,12 @@ import java.nio.file.{ Files, Path }
 class NonJavaBodiesSpec extends munit.FunSuite:
 
   private def function(name: String, statements: RastNode*): RastNode =
-    RastNode("FunctionDeclaration", 0, (0, 0), children = List(RastNode("Identifier", 0, (0, 0), text = Some(name)), RastNode("Block", 0, (0, 0), children = statements.toList)))
+    RastNode(
+      "FunctionDeclaration",
+      0,
+      (0, 0),
+      children = List(RastNode("Identifier", 0, (0, 0), text = Some(name)), RastNode("Block", 0, (0, 0), children = statements.toList))
+    )
 
   private def returning(expression: RastNode): RastNode = RastNode("ReturnStatement", 0, (0, 0), children = List(expression))
   private def number(n:             Double):   RastNode = RastNode("NumericLiteral", 0, (0, 0), value = Some(RastValue.Num(n)))
@@ -93,7 +98,10 @@ class NonJavaBodiesSpec extends munit.FunSuite:
     Files.writeString(reference.resolve("demo/Shapes.scala"), shapesReference)
     Files.writeString(reference.resolve("demo/Missing.scala"), "package demo\n\nobject Missing {\n\n  def missing(): Int = 0\n}\n")
     Files.writeString(reference.resolve("demo/Broken.scala"), "package demo\n\nobject Broken {\n\n  def broken(): Int = 0\n}\n")
-    Files.writeString(reference.resolve("other/Unfed.scala"), "package other\n\nobject Unfed {\n\n  def area(): Int = 0\n\n  def lonely(): Int = 0\n}\n")
+    Files.writeString(
+      reference.resolve("other/Unfed.scala"),
+      "package other\n\nobject Unfed {\n\n  def area(): Int = 0\n\n  def lonely(): Int = 0\n}\n"
+    )
     Files.write(rast.resolve("src/shapes.rast.json"), writeToArray(shapesRast)(using Rast.fileCodec))
     Files.writeString(rast.resolve("src/broken.rast.json"), "{ not a syntax tree")
     (root, reference, rast)
@@ -101,7 +109,7 @@ class NonJavaBodiesSpec extends munit.FunSuite:
   private def run(): (Path, NonJavaBodies.Run) =
     val (root, reference, rast) = fixture()
     NonJavaBodies.build(library, reference, rast) match
-      case built: NonJavaBodies.Built     => (root, built.derive(root.resolve("out"), root.resolve("report")))
+      case built:   NonJavaBodies.Built   => (root, built.derive(root.resolve("out"), root.resolve("report")))
       case refused: NonJavaBodies.Refused => fail(refused.message)
 
   test("an unregistered library is refused with the registered ones listed"):
@@ -109,7 +117,10 @@ class NonJavaBodiesSpec extends munit.FunSuite:
     NonJavaBodies.forLibrary("no-such-library", reference, rast) match
       case refused: NonJavaBodies.Refused =>
         assertEquals(refused.known, List("dart-sass", "katex", "mermaid", "terser"))
-        assert(refused.message.contains("no-such-library") && refused.message.contains("dart-sass, katex, mermaid, terser"), refused.message)
+        assert(
+          refused.message.contains("no-such-library") && refused.message.contains("dart-sass, katex, mermaid, terser"),
+          refused.message
+        )
       case other => fail(s"expected a refusal, got $other")
 
   test("a registered library with no syntax-tree directory is refused"):
@@ -142,7 +153,10 @@ class NonJavaBodiesSpec extends munit.FunSuite:
     assert(emitted.contains("def area(x: Int): Int =\n    10\n"), emitted)
     assert(emitted.contains("def area(x: Int, y: Int): Int =\n    20\n"), emitted)
     assert(emitted.contains("x * y * z"), "the third overload has no third body and keeps the reference")
-    assert(emitted.contains("    1\n") && emitted.contains("    2\n") && emitted.contains("\"Shapes\""), "refused and unoffered members keep the reference")
+    assert(
+      emitted.contains("    1\n") && emitted.contains("    2\n") && emitted.contains("\"Shapes\""),
+      "refused and unoffered members keep the reference"
+    )
     assert(!emitted.contains("???"), "a body the translator left a hole in is not emitted")
 
   test("the summary's numbers add up to the table's rows"):

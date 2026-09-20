@@ -62,9 +62,9 @@ object NonJavaBodies:
         if row.why != ParityDerive.Why.NoTranslatedBody then row
         else
           entry match
-            case Some(FileBodies(_, _, Some(refusal)))         => row.copy(why = ParityDerive.Why.translatorRefusal(refusal))
-            case None if translatedSomewhere(row.member)       => row.copy(why = ParityDerive.Why.Unclassified)
-            case _                                             => row
+            case Some(FileBodies(_, _, Some(refusal)))   => row.copy(why = ParityDerive.Why.translatorRefusal(refusal))
+            case None if translatedSomewhere(row.member) => row.copy(why = ParityDerive.Why.Unclassified)
+            case _                                       => row
       }
       (result.emittedSource, rows)
 
@@ -137,7 +137,11 @@ object NonJavaBodies:
           }
           // Two modules naming one reference file feed it in table order.
           val files = perFile.groupMap(_._1)(_._2).map { case (file, parts) =>
-            file -> FileBodies(parts.map(_.bodies).reduce(_ ++ _), parts.flatMap(_.rast), parts.flatMap(_.refusal).headOption.filter(_ => parts.forall(_.refusal.isDefined)))
+            file -> FileBodies(
+              parts.map(_.bodies).reduce(_ ++ _),
+              parts.flatMap(_.rast),
+              parts.flatMap(_.refusal).headOption.filter(_ => parts.forall(_.refusal.isDefined))
+            )
           }
           Built(library.name, library.policy, referenceDir, files)
 

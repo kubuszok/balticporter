@@ -52,8 +52,8 @@ object ReferenceSkeleton:
 
     result.toList
 
-  /** Every concrete `def` outside the ranges of `offered` — a modifier or an indentation the reader does not match. A `def` inside an offered method's range is a local and is not listed; an
-    * abstract `def` has no body and is not listed either.
+  /** Every concrete `def` outside the ranges of `offered` — a modifier or an indentation the reader does not match. A `def` inside an offered method's range is a local and is not listed; an abstract
+    * `def` has no body and is not listed either.
     */
   def unofferedMembers(lines: List[String], offered: List[ParsedMethod]): List[UnofferedMember] =
     val covered = offered.flatMap(m => m.signatureLine to m.bodyEndLine).toSet
