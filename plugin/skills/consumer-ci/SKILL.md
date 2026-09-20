@@ -65,6 +65,14 @@ covenant header shows up as `missing-header`: delete the copy (six were), never 
 "N fatal finding(s)" downgraded to a warning by the generator are pre-existing dropped-type
 references the hand tree replaces; new fatal kinds are yours.
 
+**Every generator input is a fixed object, never a branch name.** sge's generator read the
+hand-written reference tree from `master`; the pull request was green because `master` still held
+that tree, and the merge itself removed it — master's first CI run failed to compile with
+hundreds of type mismatches naming no cause. A reference tree is pinned by commit hash in the
+generator source (so it is part of the generated tree's cache key), and **a pull request's green run
+proves nothing about the push run on the default branch when an input is read from that branch —
+after a merge, read the default branch's own run.**
+
 ## 5. The covenant gate
 
 `re-scale enforce verify --all` / `enforce shortcuts --covenanted` behind
