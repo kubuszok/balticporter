@@ -453,6 +453,15 @@ final class TypeRedirectTransform(
   override def transformApply(t: Tree.Apply)(using Program): Term =
     if memberTwins.contains(t.method) then t.copy(method = memberTwins(t.method)) else t
 
+  /** A class literal names the type in its CONSTANT, which is where the printer reads it from, so `transformType` alone left `classOf[Old]` in the argument of a call whose SIGNATURE had already moved
+    * (`convertValue(v, classOf[com.fasterxml.jackson.databind.JsonNode])` at a parameter of the replacement's own type). A REDIRECT may move it where a retyping may not: the declaration really is the
+    * target type now, so the runtime class the literal names really did change.
+    */
+  override def transformTerm(t: Term)(using Program): Term = t match
+    case l @ Tree.Literal(Constant.ClassOfC(TypeRepr.TypeRef(p, s)), _, _) if mapping.contains(s) =>
+      l.copy(const = Constant.ClassOfC(TypeRepr.TypeRef(p, mapping(s))))
+    case other => other
+
 object TypeRedirectTransform:
 
   /** One declared member rename, parsed and bound.

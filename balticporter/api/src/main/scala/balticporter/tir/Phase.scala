@@ -456,7 +456,11 @@ object StandardTraversal:
       case x: Tree.IncDec       => x.copy(target = mapTerm(ph, x.target), tpe = mapType(ph, x.tpe))
       case x: Tree.DoWhile      => x.copy(body = mapTerm(ph, x.body), cond = mapTerm(ph, x.cond), tpe = mapType(ph, x.tpe))
       case x: Tree.Synchronized => x.copy(lock = mapTerm(ph, x.lock), body = mapTerm(ph, x.body), tpe = mapType(ph, x.tpe))
-      case x: Tree.Literal      => x.copy(tpe = mapType(ph, x.tpe))
+      // A class literal's own type lives in its CONSTANT, and it is NOT mapped here: `classOf[T]`
+      // asks about a RUNTIME CLASS, so a retyping phase moving it would claim the object really
+      // changed class. A phase that moves the DECLARATION — a redirect — rewrites the constant
+      // itself, through `transformTerm`.
+      case x: Tree.Literal => x.copy(tpe = mapType(ph, x.tpe))
       // …and INTO its holes. A hole is an ordinary term spliced into ready-made Scala, so every
       // later phase — the package rename above all, which runs last — must reach it exactly
       // as it reaches any other operand. Skipped here it would be the one term in the program no

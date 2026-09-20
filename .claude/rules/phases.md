@@ -194,6 +194,20 @@ sees the kind); the screen is *would a reader act differently*.
 
 ## More measured rules
 
+- **A CLASS LITERAL carries its type in the CONSTANT, and only a phase that moves the DECLARATION
+  may rewrite it.** `classOf[T]` asks about a RUNTIME CLASS, so it is a reified occurrence like
+  `instanceof` and a downcast: `Phase.mapType` deliberately leaves it alone, and a RETYPING phase
+  that rewrote it would claim the object changed class — routing it through `mapType` turned
+  `convertValue(v, classOf[java.util.List])` into `classOf[mutable.Buffer]` and the wrap around the
+  result stopped type-checking (2 errors on a port that had 0). A REDIRECT may move it, because the
+  declaration really is the target type now: `TypeRedirectTransform.transformTerm`. Without that,
+  a redirect leaves `classOf[Old]` in the ARGUMENT of a call whose signature it already moved, and
+  the old name survives on the compile classpath with every count flat.
+- **A policy key naming a TYPE names it as the PHASE SEES it.** For a phase that runs before a
+  `type-redirect`, that is the name the FRONTEND resolved — the original. Re-pointing liqp's
+  `reifiedCarriers`/`reflectiveSinks` at the replacement mapper matched nothing and the run said so
+  (`never matched`, one `policy` finding), which is the binder working; the keys keep jackson's names
+  and the reason they state moves one step instead.
 - **A constructor's body is not a body `method-body` can reach**, and the seam that replaces what it
   builds is a REDIRECT of the type it builds. Scala promotes a java constructor into the class body,
   where the locals become members, so `MethodBodyTransform` refuses `<init>` outright (the funnel owns
