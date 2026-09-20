@@ -187,3 +187,60 @@ hold steady, only a record of *why*.
 
 Keeping a baseline under version control alongside the change that produced it is what turns "did
 this get better or worse" into something you can answer by reading a diff instead of remembering.
+
+## `bodies.tsv` — a TypeScript, JavaScript or Dart library ported beside a hand-written reference
+
+A library that is not Java is ported differently: its hand-written reference Scala is the skeleton,
+and a method body translated from the library's exported syntax trees replaces the reference body
+wherever one exists and nothing refuses it. One call builds the translated bodies, and one call on
+its result writes the output and the table:
+
+```scala
+import balticporter.frontend.ts.NonJavaBodies
+
+NonJavaBodies.forLibrary("katex", referenceDir, rastDir) match
+  case built: NonJavaBodies.Built =>
+    val run = built.derive(outDir, reportDir) // every .scala under referenceDir -> the same path under outDir
+    log.info(run.summary.line)                // translated 156/398 (39.2%); reference: no-translated-body=162, ...
+    run.written
+  case refused: NonJavaBodies.Refused =>
+    sys.error(refused.message)                // names the registered libraries
+```
+
+`referenceDir` is the root of the hand-written Scala (package directories included or not — the
+files are found either way), `rastDir` the root of that library's exported syntax trees. The
+registered names are `dart-sass`, `katex`, `mermaid` and `terser`; any other name is refused, and
+so is a directory that does not exist. `built.policy` is the library's policy (the text patterns
+that cannot compile in the port, the reference spellings of upstream names), and
+`built.bodiesFor("ssg/katex/Options.scala")` the translated bodies of one file, one entry per
+OCCURRENCE of a name — the second `toMarkup` in the reference file takes the second translated
+`toMarkup`, never the first again. `built.deriveFile(relativePath, source)` derives one file
+without touching the disk.
+
+`reportDir/bodies.tsv` has one row per method of the reference, in file then line order, with paths
+relative to `referenceDir`:
+
+```
+file                      member      occurrence  source      why
+ssg/katex/Namespace.scala beginGroup  0           translated
+ssg/katex/Namespace.scala endGroup    0           reference   translator-refusal:DeleteExpression
+```
+
+(The file is tab-separated; the columns are aligned here for reading.)
+
+`occurrence` counts the same-named methods of that file from 0; it is `-` for a method the reader
+of the reference file cannot replace (anything but a plain or `private` `def` indented two spaces:
+an `override def`, a method of a nested class). `why` is empty for a translated body and otherwise
+one of:
+
+| `why` | the reference body was kept because |
+|---|---|
+| `no-translated-body` | nothing of that name was translated for this file |
+| `occurrence-out-of-range` | the name was translated fewer times than the reference declares it |
+| `uncompilable-pattern:<pattern>` | the translated text contains a pattern the library's policy lists as not compilable in the port |
+| `translator-refusal:<reason>` | the translator left a hole in the body (`<reason>` is its own, several joined by `+`), or the file's syntax tree is `missing-rast` / `unreadable-rast`, or the signature has no `=` to cut at (`unreadable-signature`) |
+| `unclassified` | a translated body of that name EXISTS and no rule above turned it away — the method is one the reader cannot replace, or no table row connects this file to the syntax tree the body came from |
+
+`unclassified` is the bucket to work on first: it is translated code that is not being used for a
+reason nobody decided. `bodies-summary.txt` beside the table is the one line `run.summary.line`
+returns; its counts add up to the table's rows.

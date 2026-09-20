@@ -112,10 +112,20 @@ file — one of sge's or ssg's already-ported modules — as the structural skel
 method replaces the reference body with the RAST-derived translation wherever a matching method
 exists and the translated body does not hit one of the library's declared `uncompilablePatterns`.
 Where no RAST-derived body qualifies, the reference body is kept. Every method's outcome is
-recorded as a `BodyEntry` naming its source (`"rast"` or `"reference"`) and, for a kept reference
-body, why it was kept. Each dedicated emitter supplies only its own body map and pattern list;
-`ParityDerive` owns the interleaving algorithm and the provenance recording, so that logic exists
-once rather than once per library.
+recorded as a `BodyEntry` naming its source (`"translated"` or `"reference"`) and, for a kept
+reference body, why it was kept. Each dedicated emitter supplies only its own translated bodies
+(`ParityDerive.Bodies`: one list per member name, one entry per OCCURRENCE, each carrying the
+translator's refusal reasons) and its `ParityDerive.Policy`; `ParityDerive` owns the interleaving
+algorithm and the provenance recording, and `ReferenceSkeleton` the reading of the reference file
+into replaceable methods, so that logic exists once rather than once per library.
+
+`NonJavaBodies.forLibrary(library, referenceDir, rastDir)` is the one entry point a consumer build
+calls. A library is a registered VALUE (`NonJavaBodies.Library`: name, policy, RAST reader, and the
+table of which RAST files feed which reference file), supplied by its dedicated emitter; the result
+derives a whole reference tree and writes `bodies.tsv` (`BodiesReport`), described for users in
+[Reading the report](../../user-guide/reading-the-report.md). Every registered policy sets
+`keepReferenceOnRefusal`: a body the translator left a hole in (`???`) compiles and then throws, so
+the reference body is kept and the row says `translator-refusal:<reason>`.
 
 Two small mechanisms read `ParityDerive`'s output:
 
