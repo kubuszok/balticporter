@@ -838,14 +838,12 @@ lazy val `port-ssg-liquid` = (projectMatrix in file("ported/ssg-liquid"))
   .settings(
     name := "balticporter-port-ssg-liquid",
     libraryDependencies ++= Seq(
-      // NO antlr4-runtime, and no generated-parser class directory below: the port replaces the
-      // ANTLR runtime and the generated lexer/parser with hand-written Scala, and the ONLY proof
-      // of that is this classpath. A reference the replacement missed is a compile error here.
-      "com.fasterxml.jackson.core"      % "jackson-core"              % "2.15.0",
-      "com.fasterxml.jackson.core"      % "jackson-databind"          % "2.13.4.2",
-      "com.fasterxml.jackson.core"      % "jackson-annotations"       % "2.15.0",
-      "com.fasterxml.jackson.datatype"  % "jackson-datatype-jsr310"   % "2.15.0",
-      // …and no strftime4j: the date filter's strftime pattern is evaluated by hand-written Scala.
+      // EVERY JVM-ONLY COORDINATE liqp's `pom.xml` declares IS GONE, and this classpath is the only
+      // proof: antlr4-runtime and the generated-parser class directory, strftime4j, and the four
+      // jackson artifacts. The port replaces each with hand-written Scala, so a reference any
+      // replacement missed is a compile error here rather than a link error on Scala.js or Native.
+      // What is left is one cross-platform library and the test frameworks.
+      //
       // multiarch-serviceloader — declared by the port's manifest (`LiqpPolicy.dependencies`),
       // derived from `run-latest/dependencies.tsv` in the scala-cli lanes via `declared_dep_flags`.
       // The emitted Scala names `multiarch.serviceloader.ServiceProviders` outright. The snapshot
