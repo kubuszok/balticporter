@@ -201,7 +201,7 @@ import balticporter.frontend.ts.NonJavaBodies
 NonJavaBodies.forLibrary("katex", referenceDir, rastDir) match
   case built: NonJavaBodies.Built =>
     val run = built.derive(outDir, reportDir) // every .scala under referenceDir -> the same path under outDir
-    log.info(run.summary.line)                // translated 156/398 (39.2%); reference: no-translated-body=162, ...
+    log.info(run.summary.line)                // translated 154/398 (38.7%); reference: no-translated-body=162, ...
     run.written
   case refused: NonJavaBodies.Refused =>
     sys.error(refused.message)                // names the registered libraries
