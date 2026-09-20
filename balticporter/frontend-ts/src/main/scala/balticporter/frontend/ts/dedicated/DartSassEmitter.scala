@@ -3,7 +3,7 @@ package balticporter.corpus.sass
 import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 import balticporter.corpus.terser.TerserEmitter
 
-import balticporter.frontend.ts.{ ParityDerive, RastFile, RastNode, RastValue }
+import balticporter.frontend.ts.{ NonJavaBodies, ParityDerive, RastFile, RastNode, RastValue }
 import java.nio.file.{ Files, Path }
 import scala.collection.mutable
 
@@ -279,53 +279,42 @@ object DartSassEmitter:
   private def containsDartUncompilablePatterns(body: String): Boolean =
     dartUncompilablePatterns.exists(body.contains)
 
+  /** The library's own spelling differences are applied while the bodies are built (one upstream name can feed several occurrence lists), so the policy carries no aliases. */
+  private[balticporter] val parityPolicy: ParityDerive.Policy =
+    ParityDerive.Policy(uncompilablePatterns = dartUncompilablePatterns, keepReferenceOnRefusal = true)
+
+  /** dart-sass as a registered library: a reference file that consolidates several upstream files takes their bodies in table order, the main file first. */
+  private[balticporter] def parityLibrary: NonJavaBodies.Library =
+    NonJavaBodies.Library(
+      name = "dart-sass",
+      policy = parityPolicy,
+      readRast = path => readDartRast(Files.readString(path)),
+      modules = _ =>
+        Right(
+          AllModules.map { m =>
+            NonJavaBodies.Module(m.referenceSubPath, s"${m.dartPath}.rast.json", m.subclassDartPaths.map(p => s"$p.rast.json"), bodiesOf)
+          }
+        )
+    )
+
+  private def bodiesOf(rasts: List[RastFile]): ParityDerive.Bodies =
+    rasts.map(buildTranslatedBodyMap).foldLeft(ParityDerive.Bodies.empty)(_ ++ _)
+
   def emitWithParity(
     rastFile:      RastFile,
     referencePath: Path
   ): (String, ParityEmitSummary) =
-    val referenceSource = new String(Files.readAllBytes(referencePath))
-    val rastBodies      = buildTranslatedBodyMap(rastFile)
-    val policy          = ParityDerive.Policy(uncompilablePatterns = dartUncompilablePatterns)
-    val result          = ParityDerive.derive(referenceSource, rastBodies, policy)
-    val moduleName      = referencePath.getFileName.toString.stripSuffix(".scala")
+    emitWithParityMultiFile(rastFile, Nil, referencePath)
 
-    val summary = ParityEmitSummary(
-      moduleName = moduleName,
-      totalMethods = result.totalMethods,
-      matchedFromRast = result.rastCount,
-      keptFromReference = result.referenceCount,
-      refusalCount = result.totalRefusals,
-      matchDetails = result.bodies.map(e => (e.methodName, e.source))
-    )
-
-    (result.emittedSource, summary)
-
-  /** Emit with parity using multiple RAST files (main + subclasses).
-    *
-    * For modules like Expression.scala where the reference consolidates 20+ Dart subclass files into one Scala file, this aggregates bodies from all subclass RASTs into a single body map for
-    * matching.
-    */
+  /** Emit with parity using multiple RAST files (main + subclasses), for a reference file that consolidates several upstream files into one. */
   def emitWithParityMultiFile(
     mainRast:      RastFile,
     subclassRasts: List[RastFile],
     referencePath: Path
   ): (String, ParityEmitSummary) =
-    if subclassRasts.isEmpty then return emitWithParity(mainRast, referencePath)
-
     val referenceSource = new String(Files.readAllBytes(referencePath))
-
-    val allBodies = mutable.Map.empty[String, mutable.ListBuffer[(String, Int)]]
-    def addBodies(rast: RastFile): Unit =
-      val bodies = buildTranslatedBodyMap(rast)
-      for (name, entries) <- bodies do allBodies.getOrElseUpdate(name, mutable.ListBuffer.empty) ++= entries
-
-    addBodies(mainRast)
-    for sub <- subclassRasts do addBodies(sub)
-
-    val rastBodies = allBodies.map { case (k, v) => k -> v.toList }.toMap
-    val policy     = ParityDerive.Policy(uncompilablePatterns = dartUncompilablePatterns)
-    val result     = ParityDerive.derive(referenceSource, rastBodies, policy)
-    val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
+    val result          = ParityDerive.derive(referenceSource, bodiesOf(mainRast :: subclassRasts), parityPolicy)
+    val moduleName      = referencePath.getFileName.toString.stripSuffix(".scala")
 
     val summary = ParityEmitSummary(
       moduleName = moduleName,
@@ -444,8 +433,8 @@ object DartSassEmitter:
   // Body translation
   // --------------------------------------------------------------------------
 
-  private def buildTranslatedBodyMap(rastFile: RastFile): Map[String, List[(String, Int)]] =
-    val result = mutable.Map.empty[String, mutable.ListBuffer[(String, Int)]]
+  private def buildTranslatedBodyMap(rastFile: RastFile): ParityDerive.Bodies =
+    val result = mutable.Map.empty[String, mutable.ListBuffer[ParityDerive.TranslatedBody]]
     val allFns = extractAllFunctions(rastFile)
 
     for fn <- allFns do
@@ -456,7 +445,7 @@ object DartSassEmitter:
         val normalizedBody = DefmethodBodyTranslator.normalizeNodeTree(body)
         val entry          = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, normalizedBody)
         val translated     = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-        val bodyPair       = (translated.scalaBody, translated.refusalCount)
+        val bodyPair       = ParityDerive.TranslatedBody(translated.scalaBody, translated.refusalReasons)
         result.getOrElseUpdate(scalaName, mutable.ListBuffer.empty) += bodyPair
         // Also register under the Dart name with underscore prefix for private methods
         if fn.name.startsWith("_") then
@@ -482,7 +471,7 @@ object DartSassEmitter:
       if name != scalaName then result.getOrElseUpdate(name, mutable.ListBuffer.empty) += bodyPair
     }
 
-    result.map { case (k, v) => k -> v.toList }.toMap
+    ParityDerive.Bodies(result.map { case (k, v) => k -> v.toList }.toMap)
 
   final case class ExtractedFunction(
     name:     String,
@@ -778,8 +767,8 @@ object DartSassEmitter:
     *
     * For factory-pattern vars like `final _ceil = _singleArgumentMathFunc("ceil", ...)`, the initializer expression is extracted and translated as a one-line body.
     */
-  private def extractTopLevelVarInitializers(file: RastFile): List[(String, (String, Int))] =
-    val result    = mutable.ListBuffer.empty[(String, (String, Int))]
+  private def extractTopLevelVarInitializers(file: RastFile): List[(String, ParityDerive.TranslatedBody)] =
+    val result    = mutable.ListBuffer.empty[(String, ParityDerive.TranslatedBody)]
     val symbolMap = file.symbols
 
     def nameFromSymbol(node: RastNode): String =
@@ -814,7 +803,7 @@ object DartSassEmitter:
                 )
                 val entry      = TerserEmitter.DefmethodEntry("_free_", varName, Nil, syntheticBody)
                 val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-                result += ((varName, (translated.scalaBody, translated.refusalCount)))
+                result += ((varName, ParityDerive.TranslatedBody(translated.scalaBody, translated.refusalReasons)))
               }
 
     result.toList

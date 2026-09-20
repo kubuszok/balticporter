@@ -48,17 +48,17 @@ class ParityDeriveSpec extends munit.FunSuite:
     assertEquals(bracedEntry.source, "reference")
     assert(bracedEntry.why.contains("uncompilable-pattern:badPattern("))
 
-  test("derive: no-rast-symbol recorded"):
-    val result = ParityDerive.derive(syntheticReference, Map.empty)
+  test("derive: a member with no translated body is recorded as such"):
+    val result = ParityDerive.derive(syntheticReference, Map.empty[String, List[(String, Int)]])
     assertEquals(result.rastCount, 0)
     assertEquals(result.referenceCount, 5)
-    assert(result.bodies.forall(_.why == "no-rast-symbol"))
+    assert(result.bodies.forall(_.why == "no-translated-body"))
 
   test("derive: private methods allowed by default"):
     val rastBodies = Map("priv" -> List(("    n * 100\n", 0)))
     val result     = ParityDerive.derive(syntheticReference, rastBodies)
     val privEntry  = result.bodies.find(_.methodName == "priv").get
-    assertEquals(privEntry.source, "rast")
+    assertEquals(privEntry.source, "translated")
 
   test("derive: private methods blocked by policy"):
     val rastBodies = Map("priv" -> List(("    n * 100\n", 0)))
@@ -75,17 +75,20 @@ class ParityDeriveSpec extends munit.FunSuite:
     assert(result.emittedSource.contains("x + 999"))
     assertEquals(result.rastCount, 1)
 
-  test("formatBodiesTsv: correct format"):
-    val entries = List(
-      ParityDerive.BodyEntry("foo", "rast", "", 0),
-      ParityDerive.BodyEntry("bar", "reference", "no-rast-symbol", 0),
-      ParityDerive.BodyEntry("baz", "reference", "uncompilable-pattern:badFunc(", 0)
-    )
-    val tsv = ParityDerive.formatBodiesTsv(entries)
-    assert(tsv.startsWith("method_name\tsource\twhy\trefusal_count\n"))
-    assert(tsv.contains("foo\trast\t\t0"))
-    assert(tsv.contains("bar\treference\tno-rast-symbol\t0"))
-    assert(tsv.contains("baz\treference\tuncompilable-pattern:badFunc(\t0"))
+  test("derive: a body the translator left a hole in is used unless the policy keeps the reference"):
+    val bodies = ParityDerive.Bodies(Map("braced" -> List(ParityDerive.TranslatedBody("    ??? /* AwaitExpression */\n", List("AwaitExpression")))))
+    val used   = ParityDerive.derive(syntheticReference, bodies, ParityDerive.Policy())
+    assertEquals(used.bodies.find(_.methodName == "braced").get.source, "translated")
+    val kept  = ParityDerive.derive(syntheticReference, bodies, ParityDerive.Policy(keepReferenceOnRefusal = true))
+    val entry = kept.bodies.find(_.methodName == "braced").get
+    assertEquals((entry.source, entry.why), ("reference", "translator-refusal:AwaitExpression"))
+    assert(kept.emittedSource.contains("x + 1"))
+
+  test("derive: an alias is tried after the member's own name"):
+    val bodies = ParityDerive.Bodies(Map("upstreamName" -> List(ParityDerive.TranslatedBody("    x + 7\n"))))
+    val result = ParityDerive.derive(syntheticReference, bodies, ParityDerive.Policy(aliases = Map("braced" -> List("upstreamName"))))
+    assert(result.emittedSource.contains("x + 7"))
+    assertEquals(ParityDerive.derive(syntheticReference, bodies, ParityDerive.Policy()).rastCount, 0)
 
   test("derive: sequential consumption for duplicate method names"):
     val reference =

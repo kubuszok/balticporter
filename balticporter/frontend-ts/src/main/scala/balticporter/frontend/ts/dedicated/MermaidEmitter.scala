@@ -3,7 +3,7 @@ package balticporter.corpus.mermaid
 import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 import balticporter.corpus.terser.TerserEmitter
 
-import balticporter.frontend.ts.{ ParityDerive, Rast, RastFile, RastNode, RastType, RastValue }
+import balticporter.frontend.ts.{ NonJavaBodies, ParityDerive, Rast, RastFile, RastNode, RastType, RastValue }
 import scala.collection.mutable
 
 /** Dedicated RAST-to-Scala emitter for Mermaid diagram modules.
@@ -3931,10 +3931,7 @@ object MermaidEmitter {
     referencePath: java.nio.file.Path
   ): (String, StylesParitySummary) =
     val referenceSource = new String(java.nio.file.Files.readAllBytes(referencePath))
-    val rastBodies      = buildStylesBodyMap(rastFile)
-    val mermaidPatterns = List("document.", "window.", "d3.", "selection.", "transition.")
-    val policy          = ParityDerive.Policy(uncompilablePatterns = mermaidPatterns)
-    val result          = ParityDerive.derive(referenceSource, rastBodies, policy)
+    val result          = ParityDerive.derive(referenceSource, buildStylesBodyMap(rastFile), parityPolicy)
     val diagramType     = referencePath.getFileName.toString.stripSuffix("Styles.scala").toLowerCase
 
     val summary = StylesParitySummary(
@@ -3945,16 +3942,29 @@ object MermaidEmitter {
     )
     (result.emittedSource, summary)
 
-  /** Build a body map from a styles RAST file.
-    *
-    * Includes Mermaid-specific name aliases: `getStyles` → `generate`, `fade` → `fade`, etc.
-    */
-  private def buildStylesBodyMap(rastFile: RastFile): Map[String, (String, Int)] =
-    val result = scala.collection.mutable.Map.empty[String, (String, Int)]
-    // Mermaid styles name aliases: upstream TS → reference Scala
-    val nameAliases = Map(
-      "getStyles" -> "generate"
+  /** The reference port names a diagram's `getStyles` function `generate`. */
+  private[balticporter] val parityPolicy: ParityDerive.Policy =
+    ParityDerive.Policy(
+      uncompilablePatterns = List("document.", "window.", "d3.", "selection.", "transition."),
+      aliases = Map("generate" -> List("getStyles")),
+      keepReferenceOnRefusal = true
     )
+
+  /** Mermaid as a registered library: the per-diagram styles modules, the only ones with translated bodies so far. */
+  private[balticporter] def parityLibrary: NonJavaBodies.Library =
+    NonJavaBodies.Library(
+      name = "mermaid",
+      policy = parityPolicy,
+      readRast = Rast.readFile(_: java.nio.file.Path),
+      modules = _ =>
+        Right(
+          AllStyles.map(m => NonJavaBodies.Module(m.referenceSubPath, m.rastResource.stripPrefix("/rast/mermaid/"), Nil, rasts => buildStylesBodyMap(rasts.head)))
+        )
+    )
+
+  /** One translated body per top-level function of a styles file; a later function of the same name replaces an earlier one. */
+  private def buildStylesBodyMap(rastFile: RastFile): ParityDerive.Bodies =
+    val result = scala.collection.mutable.Map.empty[String, ParityDerive.TranslatedBody]
     for node <- rastFile.nodes do
       node.kind match
         case "VariableStatement" | "FunctionDeclaration" =>
@@ -3964,15 +3974,10 @@ object MermaidEmitter {
             bodyNode.foreach { body =>
               val entry      = TerserEmitter.DefmethodEntry("_free_", name, Nil, body)
               val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-              val scalaName  = toCamelCase(name)
-              result(scalaName) = (translated.scalaBody, translated.refusalCount)
-              // Register under alias if one exists
-              nameAliases.get(name).foreach { alias =>
-                result(alias) = (translated.scalaBody, translated.refusalCount)
-              }
+              result(toCamelCase(name)) = ParityDerive.TranslatedBody(translated.scalaBody, translated.refusalReasons)
             }
         case _ => ()
-    result.toMap
+    ParityDerive.Bodies(result.map { case (k, v) => k -> List(v) }.toMap)
 
   private def findFunctionName(node: RastNode): String =
     node.children

@@ -16,11 +16,11 @@ object BodyVerdicts:
   def autoClassify(bodies: List[ParityDerive.BodyEntry]): List[Verdict] =
     bodies.filter(_.source == "reference").map { b =>
       val (status, category) = b.why match
-        case s if s.startsWith("uncompilable-pattern:") => ("justified", "uncompilable-pattern")
-        case "no-rast-symbol"                           => ("structural", "structural-mismatch")
-        case s if s.startsWith("translator-refusal:")   => ("justified", "translator-limitation")
-        case ""                                         => ("unjustified", "unclassified")
-        case other                                      => ("unjustified", other)
+        case s if s.startsWith("uncompilable-pattern:")                                => ("justified", "uncompilable-pattern")
+        case ParityDerive.Why.NoTranslatedBody | ParityDerive.Why.OccurrenceOutOfRange => ("structural", "structural-mismatch")
+        case s if s.startsWith("translator-refusal:")                                  => ("justified", "translator-limitation")
+        case ""                                                                        => ("unjustified", "unclassified")
+        case other                                                                     => ("unjustified", other)
       Verdict(b.methodName, status, b.why, category)
     }
 

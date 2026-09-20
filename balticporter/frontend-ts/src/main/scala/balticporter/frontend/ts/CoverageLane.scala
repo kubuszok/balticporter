@@ -16,7 +16,7 @@ object CoverageLane:
   )
 
   def analyze(bodies: List[ParityDerive.BodyEntry], moduleName: String): CoverageReport =
-    val rast     = bodies.count(_.source == "rast")
+    val rast     = bodies.count(_.source == ParityDerive.Source.Translated)
     val ref      = bodies.count(_.source == "reference")
     val total    = bodies.size
     val pct      = if total > 0 then rast * 100.0 / total else 0.0
@@ -51,7 +51,7 @@ object CoverageLane:
     baseline: List[ParityDerive.BodyEntry],
     current:  List[ParityDerive.BodyEntry]
   ): List[String] =
-    val baselineRast = baseline.filter(_.source == "rast").map(_.methodName).toSet
+    val baselineRast = baseline.filter(_.source == ParityDerive.Source.Translated).map(_.methodName).toSet
     val currentRef   = current.filter(_.source == "reference").map(_.methodName).toSet
     (baselineRast & currentRef).toList.sorted
 

@@ -3,7 +3,7 @@ package balticporter.corpus.katex
 import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 import balticporter.corpus.terser.TerserEmitter
 
-import balticporter.frontend.ts.{ ParityDerive, RastFile, RastNode, RastValue }
+import balticporter.frontend.ts.{ NonJavaBodies, ParityDerive, Rast, RastFile, RastNode, RastValue }
 import java.nio.file.{ Files, Path }
 import scala.collection.mutable
 
@@ -306,19 +306,28 @@ object KaTeXEmitter:
   private def containsKatexUncompilablePatterns(body: String): Boolean =
     katexUncompilablePatterns.exists(body.contains)
 
-  /** Emit a KaTeX module using parity-derive: the reference file's structure with RAST-translated bodies where a match exists and compiles.
-    *
-    * Uses the TerserCompressEmitter's findMethodBoundaries and body replacement infrastructure. RAST bodies are translated using DefmethodBodyTranslator (which handles general TS→Scala patterns).
-    */
+  private[balticporter] val parityPolicy: ParityDerive.Policy =
+    ParityDerive.Policy(uncompilablePatterns = katexUncompilablePatterns, keepReferenceOnRefusal = true)
+
+  /** KaTeX as a registered library: every module with a reference counterpart, one syntax-tree file each. */
+  private[balticporter] def parityLibrary: NonJavaBodies.Library =
+    NonJavaBodies.Library(
+      name = "katex",
+      policy = parityPolicy,
+      readRast = Rast.readFile(_: Path),
+      modules = _ =>
+        Right(
+          AllModules.map(m => NonJavaBodies.Module(m.referenceSubPath, m.rastResource.stripPrefix("/rast/katex/"), Nil, rasts => buildTranslatedBodyMap(rasts.head)))
+        )
+    )
+
+  /** Emit a KaTeX module: the reference file's structure with a translated body wherever one exists and the library's policy does not refuse it. */
   def emitWithParity(
     rastFile:      RastFile,
     referencePath: Path
   ): (String, ParityEmitSummary) =
     val referenceSource = new String(Files.readAllBytes(referencePath))
-    val rastBodiesMut   = buildTranslatedBodyMap(rastFile)
-    val rastBodies      = rastBodiesMut.map { case (k, v) => k -> v.toList }.toMap
-    val policy          = ParityDerive.Policy(uncompilablePatterns = katexUncompilablePatterns)
-    val result          = ParityDerive.derive(referenceSource, rastBodies, policy)
+    val result          = ParityDerive.derive(referenceSource, buildTranslatedBodyMap(rastFile), parityPolicy)
     val moduleName      = referencePath.getFileName.toString.stripSuffix(".scala")
 
     val summary = ParityEmitSummary(
@@ -767,8 +776,8 @@ object KaTeXEmitter:
     * Extracts all functions/methods from the RAST, translates each body using DefmethodBodyTranslator (which handles general TS→Scala patterns), and builds the lookup map. Multiple RAST functions
     * with the same name (e.g., `toMarkup` on different classes) are stored in occurrence order.
     */
-  private def buildTranslatedBodyMap(rastFile: RastFile): mutable.Map[String, mutable.ListBuffer[(String, Int)]] =
-    val result = mutable.Map.empty[String, mutable.ListBuffer[(String, Int)]]
+  private def buildTranslatedBodyMap(rastFile: RastFile): ParityDerive.Bodies =
+    val result = mutable.Map.empty[String, mutable.ListBuffer[ParityDerive.TranslatedBody]]
     val allFns = extractAllFunctions(rastFile)
 
     for fn <- allFns do
@@ -777,9 +786,9 @@ object KaTeXEmitter:
       for body <- bodyNode do
         val entry      = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, body)
         val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-        result.getOrElseUpdate(scalaName, mutable.ListBuffer.empty) += ((translated.scalaBody, translated.refusalCount))
+        result.getOrElseUpdate(scalaName, mutable.ListBuffer.empty) += ParityDerive.TranslatedBody(translated.scalaBody, translated.refusalReasons)
 
-    result
+    ParityDerive.Bodies(result.map { case (k, v) => k -> v.toList }.toMap)
 
   /** Find all Block body nodes for a named function in the RAST.
     *

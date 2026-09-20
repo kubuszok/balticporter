@@ -8,12 +8,12 @@ class CoverageLaneSpec extends munit.FunSuite:
     else parts.head + parts.tail.map(_.capitalize).mkString
 
   private val sampleBodies = List(
-    ParityDerive.BodyEntry("methodA", "rast", "", 0),
-    ParityDerive.BodyEntry("methodB", "rast", "", 0),
-    ParityDerive.BodyEntry("methodC", "reference", "no-rast-symbol", 0),
+    ParityDerive.BodyEntry("methodA", "translated", "", 0),
+    ParityDerive.BodyEntry("methodB", "translated", "", 0),
+    ParityDerive.BodyEntry("methodC", "reference", "no-translated-body", 0),
     ParityDerive.BodyEntry("methodD", "reference", "uncompilable-pattern:stringTemplate(", 0),
     ParityDerive.BodyEntry("methodE", "reference", "", 0),
-    ParityDerive.BodyEntry("methodF", "rast", "", 2)
+    ParityDerive.BodyEntry("methodF", "translated", "", 2)
   )
 
   test("analyze: correct counts"):
@@ -26,7 +26,7 @@ class CoverageLaneSpec extends munit.FunSuite:
 
   test("analyze: byReason breakdown"):
     val report = CoverageLane.analyze(sampleBodies, "TestModule")
-    assertEquals(report.byReason("no-rast-symbol"), 1)
+    assertEquals(report.byReason("no-translated-body"), 1)
     assertEquals(report.byReason("uncompilable-pattern:stringTemplate("), 1)
     assertEquals(report.byReason("unclassified"), 1)
 
@@ -48,14 +48,14 @@ class CoverageLaneSpec extends munit.FunSuite:
 
   test("checkRegressions: detects rast→reference flip"):
     val baseline = List(
-      ParityDerive.BodyEntry("methodA", "rast", "", 0),
-      ParityDerive.BodyEntry("methodB", "rast", "", 0),
-      ParityDerive.BodyEntry("methodC", "reference", "no-rast-symbol", 0)
+      ParityDerive.BodyEntry("methodA", "translated", "", 0),
+      ParityDerive.BodyEntry("methodB", "translated", "", 0),
+      ParityDerive.BodyEntry("methodC", "reference", "no-translated-body", 0)
     )
     val current = List(
-      ParityDerive.BodyEntry("methodA", "rast", "", 0),
+      ParityDerive.BodyEntry("methodA", "translated", "", 0),
       ParityDerive.BodyEntry("methodB", "reference", "uncompilable-pattern:x", 0),
-      ParityDerive.BodyEntry("methodC", "reference", "no-rast-symbol", 0)
+      ParityDerive.BodyEntry("methodC", "reference", "no-translated-body", 0)
     )
     val regressions = CoverageLane.checkRegressions(baseline, current)
     assertEquals(regressions, List("methodB"))
@@ -71,7 +71,7 @@ class CoverageLaneSpec extends munit.FunSuite:
     val parsed = CoverageLane.parseBodiesTsv(tsv)
     assertEquals(parsed.size, sampleBodies.size)
     assertEquals(parsed.head.methodName, "methodA")
-    assertEquals(parsed.head.source, "rast")
+    assertEquals(parsed.head.source, "translated")
 
   // -----------------------------------------------------------------------
   // BodyVerdicts

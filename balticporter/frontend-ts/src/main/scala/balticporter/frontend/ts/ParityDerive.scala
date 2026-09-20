@@ -2,55 +2,84 @@ package balticporter.frontend.ts
 
 import scala.collection.mutable
 
-/** Unified parity-derive mechanism: the reference file's structure with RAST-translated method bodies interleaved where a match exists and the translated body passes a per-library
-  * uncompilable-pattern filter.
+/** The reference file is the skeleton; a translated body replaces a reference body where one exists for that member and nothing refuses it.
   *
-  * Replaces the four independent implementations in TerserCompressEmitter, KaTeXEmitter, DartSassEmitter, and MermaidEmitter. Each emitter keeps its library-specific body map construction and pattern
-  * list; ParityDerive owns only the interleaving algorithm and the provenance recording.
+  * A library supplies its translated bodies and its policy; the interleaving and the per-member record of where each body came from live here, once.
   */
 object ParityDerive:
 
-  /** Per-library policy controlling how bodies are matched and filtered. */
+  /** Where an emitted body came from. */
+  object Source:
+    val Translated = "translated"
+    val Reference  = "reference"
+
+  /** Why a reference body was kept. `unclassified` is the one that explains nothing: a translated body of that name existed and no rule here refused it. */
+  object Why:
+    val NoTranslatedBody     = "no-translated-body"
+    val OccurrenceOutOfRange = "occurrence-out-of-range"
+    val Unclassified         = "unclassified"
+    val Private              = "private"
+    def uncompilablePattern(pattern: String): String = s"uncompilable-pattern:$pattern"
+    def translatorRefusal(reason:    String): String = s"translator-refusal:$reason"
+
+  /** One translated body and every reason the translator gave for leaving part of it untranslated. */
+  final case class TranslatedBody(text: String, refusals: List[String] = Nil)
+
+  /** Translated bodies by reference member name, one entry per OCCURRENCE in source order: the n-th member of that name in the reference file takes the n-th body. */
+  final case class Bodies(byName: Map[String, List[TranslatedBody]]):
+    def ++(other: Bodies): Bodies =
+      Bodies(
+        (byName.keySet ++ other.byName.keySet).iterator.map(k => k -> (byName.getOrElse(k, Nil) ++ other.byName.getOrElse(k, Nil))).toMap
+      )
+    def names:   Set[String] = byName.keySet
+    def isEmpty: Boolean     = byName.isEmpty
+
+  object Bodies:
+    val empty: Bodies = Bodies(Map.empty)
+
+    /** From the older shape that carries a refusal COUNT only; the reasons are not recoverable and are recorded as such. */
+    def fromCounts(bodies: Map[String, List[(String, Int)]]): Bodies =
+      Bodies(bodies.map { case (k, v) => k -> v.map((text, n) => TranslatedBody(text, List.fill(n)("reason-not-recorded"))) })
+
+  /** Per-library policy. `aliases` maps a reference member name to the translated names also tried for it, after its own; every default leaves the derive unchanged. `keepReferenceOnRefusal` keeps the
+    * reference body wherever the translator left a hole, instead of emitting the hole.
+    */
   final case class Policy(
-    uncompilablePatterns: List[String] = Nil,
-    allowPrivate:         Boolean = true
+    uncompilablePatterns:   List[String] = Nil,
+    allowPrivate:           Boolean = true,
+    aliases:                Map[String, List[String]] = Map.empty,
+    keepReferenceOnRefusal: Boolean = false
   )
 
-  /** Provenance record for one method in a parity-derived module. */
+  /** Where one member's emitted body came from. `offered` is false for a member the skeleton reader cannot replace; such a member has no occurrence index (-1). */
   final case class BodyEntry(
     methodName:       String,
     source:           String,
     why:              String,
-    rastRefusalCount: Int = 0
+    rastRefusalCount: Int = 0,
+    occurrence:       Int = 0,
+    line:             Int = 0,
+    offered:          Boolean = true
   )
 
-  /** Result of a parity-derive run over one reference file. */
+  /** One reference file derived. The counts cover the OFFERED members only; `unoffered` lists the rest, all of them reference bodies. */
   final case class ParityResult(
     emittedSource:  String,
     bodies:         List[BodyEntry],
     totalMethods:   Int,
     rastCount:      Int,
     referenceCount: Int,
-    totalRefusals:  Int
+    totalRefusals:  Int,
+    unoffered:      List[BodyEntry] = Nil
   )
 
-  /** Run parity-derive: interleave RAST bodies into a reference source.
-    *
-    * @param referenceSource
-    *   the complete Scala source of the reference file
-    * @param rastBodies
-    *   map from method name to list of (translated body, refusal count); a list because the same method name may appear multiple times in the reference (e.g., inner class methods); bodies are
-    *   consumed sequentially per name.
-    * @param policy
-    *   per-library filtering rules
-    */
-  def derive(
-    referenceSource: String,
-    rastBodies:      Map[String, List[(String, Int)]],
-    policy:          Policy = Policy()
-  ): ParityResult =
+  /** Interleave `translated` into `referenceSource` under `policy`. */
+  def derive(referenceSource: String, translated: Bodies, policy: Policy): ParityResult =
     val lines   = referenceSource.split("\n", -1).toList
-    val methods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(lines)
+    val methods = ReferenceSkeleton.findMethodBoundaries(lines)
+
+    def candidates(name: String): List[TranslatedBody] =
+      translated.byName.getOrElse(name, Nil) ++ policy.aliases.getOrElse(name, Nil).flatMap(translated.byName.getOrElse(_, Nil))
 
     val sb            = new StringBuilder
     val bodyEntries   = mutable.ListBuffer.empty[BodyEntry]
@@ -67,82 +96,75 @@ object ParityDerive:
         val idx = consumed(method.name)
         consumed(method.name) = idx + 1
 
-        val candidate = rastBodies.get(method.name).flatMap(_.lift(idx))
+        val sigEndLineIdx = ReferenceSkeleton.findSignatureEnd(lines, method.signatureLine)
+        val eqIdx         = ReferenceSkeleton.findEqualsInSignature(lines(sigEndLineIdx))
+        val named         = candidates(method.name)
 
-        val (usable, why) =
-          if !policy.allowPrivate && method.isPrivate then (None, "private")
+        val decision: Either[String, TranslatedBody] =
+          if !policy.allowPrivate && method.isPrivate then Left(Why.Private)
+          else if named.isEmpty then Left(Why.NoTranslatedBody)
           else
-            candidate match
-              case None =>
-                (None, "no-rast-symbol")
-              case Some((body, _)) if containsPattern(body, policy.uncompilablePatterns) =>
-                val pattern = policy.uncompilablePatterns.find(body.contains).getOrElse("unknown")
-                (None, s"uncompilable-pattern:$pattern")
-              case some =>
-                (some, "")
+            named.lift(idx) match
+              case None       => Left(Why.OccurrenceOutOfRange)
+              case Some(body) =>
+                policy.uncompilablePatterns.find(body.text.contains) match
+                  case Some(pattern)                                                   => Left(Why.uncompilablePattern(pattern))
+                  case None if policy.keepReferenceOnRefusal && body.refusals.nonEmpty =>
+                    Left(Why.translatorRefusal(body.refusals.distinct.sorted.mkString("+")))
+                  case None if eqIdx < 0 => Left(Why.translatorRefusal("unreadable-signature"))
+                  case None              => Right(body)
 
-        usable match
-          case Some((translatedBody, refusals)) =>
-            val sigEndLineIdx = balticporter.corpus.terser.TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
+        decision match
+          case Right(body) =>
             for i <- method.signatureLine to sigEndLineIdx do
               val line = lines(i)
-              if i == sigEndLineIdx then
-                val eqIdx = balticporter.corpus.terser.TerserCompressEmitter.findEqualsInSignature(line)
-                if eqIdx >= 0 then
-                  sb.append(line.substring(0, eqIdx + 1))
-                  sb.append("\n")
-                else
-                  sb.append(line)
-                  sb.append("\n")
-              else
-                sb.append(line)
-                sb.append("\n")
+              sb.append(if i == sigEndLineIdx then line.substring(0, eqIdx + 1) else line)
+              sb.append("\n")
+            sb.append(body.text)
+            bodyEntries += BodyEntry(method.name, Source.Translated, "", body.refusals.size, idx, method.signatureLine)
+            totalRefusals += body.refusals.size
 
-            sb.append(translatedBody)
-            lineIdx = method.bodyEndLine + 1
-            bodyEntries += BodyEntry(method.name, "rast", "", refusals)
-            totalRefusals += refusals
-
-          case _ =>
+          case Left(why) =>
             for i <- method.signatureLine to method.bodyEndLine do
               sb.append(lines(i))
               sb.append("\n")
-            lineIdx = method.bodyEndLine + 1
-            bodyEntries += BodyEntry(method.name, "reference", why)
+            bodyEntries += BodyEntry(method.name, Source.Reference, why, 0, idx, method.signatureLine)
 
+        lineIdx = method.bodyEndLine + 1
         methodIdx += 1
       else
         sb.append(lines(lineIdx))
         sb.append("\n")
         lineIdx += 1
 
-    val rast = bodyEntries.count(_.source == "rast")
-    val ref  = bodyEntries.count(_.source == "reference")
+    // A member the reader never offers keeps its reference body; where a translated body of its name exists, nothing here explains that.
+    val unoffered = ReferenceSkeleton.unofferedMembers(lines, methods).map { m =>
+      val why = if candidates(m.name).nonEmpty then Why.Unclassified else Why.NoTranslatedBody
+      BodyEntry(m.name, Source.Reference, why, 0, -1, m.line, offered = false)
+    }
 
     ParityResult(
       emittedSource = sb.toString,
       bodies = bodyEntries.toList,
       totalMethods = methods.size,
-      rastCount = rast,
-      referenceCount = ref,
-      totalRefusals = totalRefusals
+      rastCount = bodyEntries.count(_.source == Source.Translated),
+      referenceCount = bodyEntries.count(_.source == Source.Reference),
+      totalRefusals = totalRefusals,
+      unoffered = unoffered
     )
 
-  /** Convenience overload for emitters that use a single-body map (Terser, Mermaid styles). */
+  /** The older input shape, one occurrence list per name with a refusal count in place of the reasons. */
+  def derive(
+    referenceSource: String,
+    rastBodies:      Map[String, List[(String, Int)]],
+    policy:          Policy = Policy()
+  )(using DummyImplicit): ParityResult =
+    derive(referenceSource, Bodies.fromCounts(rastBodies), policy)
+
+  /** The older input shape with ONE body per name; a second member of that name is out of range. */
   def derive(
     referenceSource: String,
     rastBodies:      Map[String, (String, Int)],
     policy:          Policy
-  )(using ev: DummyImplicit): ParityResult =
-    val listBodies = rastBodies.map { case (k, v) => k -> List(v) }
-    derive(referenceSource, listBodies, policy)
-
-  /** Format body entries as a TSV string (for bodies.tsv output). */
-  def formatBodiesTsv(bodies: List[BodyEntry]): String =
-    val sb = new StringBuilder
-    sb.append("method_name\tsource\twhy\trefusal_count\n")
-    for entry <- bodies do sb.append(s"${entry.methodName}\t${entry.source}\t${entry.why}\t${entry.rastRefusalCount}\n")
-    sb.toString
-
-  private def containsPattern(body: String, patterns: List[String]): Boolean =
-    patterns.exists(body.contains)
+  )(using DummyImplicit, DummyImplicit): ParityResult =
+    derive(referenceSource, Bodies.fromCounts(rastBodies.map { case (k, v) => k -> List(v) }), policy)

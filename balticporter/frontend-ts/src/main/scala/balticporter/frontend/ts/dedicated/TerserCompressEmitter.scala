@@ -2,7 +2,7 @@ package balticporter.corpus.terser
 
 import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
-import balticporter.frontend.ts.{ ParityDerive, RastFile, RastNode, RastValue }
+import balticporter.frontend.ts.{ NonJavaBodies, ParityDerive, RastFile, RastNode, RastValue, ReferenceSkeleton }
 import java.nio.file.{ Files, Path }
 import scala.collection.mutable
 
@@ -831,13 +831,8 @@ object TerserCompressEmitter:
   )
 
   /** A parsed method from the reference file. */
-  final case class ParsedMethod(
-    name:          String,
-    signatureLine: Int,
-    bodyStartLine: Int,
-    bodyEndLine:   Int,
-    isPrivate:     Boolean
-  )
+  type ParsedMethod = ReferenceSkeleton.ParsedMethod
+  val ParsedMethod: ReferenceSkeleton.ParsedMethod.type = ReferenceSkeleton.ParsedMethod
 
   /** Emit a compress module using parity-derive: the reference file's structure (package, imports, object name, method signatures, types) with RAST-translated bodies where a match is found.
     *
@@ -859,9 +854,7 @@ object TerserCompressEmitter:
     isDeFmethod:   Boolean = false
   ): (String, ParityEmitSummary) =
     val referenceSource = new String(Files.readAllBytes(referencePath))
-    val rastBodies      = buildRastBodyMap(rastFile, hierarchy, isDeFmethod)
-    val policy          = ParityDerive.Policy(uncompilablePatterns = uncompilablePatterns)
-    val result          = ParityDerive.derive(referenceSource, rastBodies, policy)
+    val result          = ParityDerive.derive(referenceSource, buildRastBodyMap(rastFile, hierarchy, isDeFmethod), parityPolicy)
 
     val lines      = referenceSource.split("\n", -1).toList
     val objectName = lines.find(_.matches("^(object|class)\\s+.*\\{.*$")).flatMap("""^(object|class)\s+(\w+)""".r.findFirstMatchIn(_).map(_.group(2))).getOrElse("Unknown")
@@ -887,8 +880,11 @@ object TerserCompressEmitter:
     rastFile:    RastFile,
     hierarchy:   List[TerserEmitter.DefnodeClass],
     isDeFmethod: Boolean
-  ): Map[String, (String, Int)] =
-    val result = mutable.Map.empty[String, (String, Int)]
+  ): ParityDerive.Bodies =
+    val result = mutable.Map.empty[String, ParityDerive.TranslatedBody]
+
+    def bodyOf(t: DefmethodBodyTranslator.TranslationResult): ParityDerive.TranslatedBody =
+      ParityDerive.TranslatedBody(t.scalaBody, t.refusalReasons)
 
     if isDeFmethod then
       val entries = extractAllDefmethods(rastFile)
@@ -903,39 +899,61 @@ object TerserCompressEmitter:
           // Singleton: translate normally
           val entry      = family.head
           val translated = DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
-          result(camelName) = (translated.scalaBody, translated.refusalCount)
+          result(camelName) = bodyOf(translated)
         else
           // Multi-class family: assemble a `node match { ... }` body
-          val matchBody = assembleMatchBody(family, hierarchy, camelName)
-          result(camelName) = matchBody
+          result(camelName) = assembleMatchBody(family, hierarchy, camelName)
 
-        // Also store under methodName+ClassName alias for hand-ports that
+        // Also store under methodName+ClassName for hand-ports that
         // inlined DEFMETHOD dispatch: AST_Block.optimize → optimizeBlock
         for entry <- family do
           if entry.className.startsWith("AST_") then
             val classShort = entry.className.drop(4) // "AST_Block" → "Block"
             val aliasName  = camelName + classShort
             val translated = DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ", thisBinding = "n", nodeParamName = Some("n"))
-            result(aliasName) = (translated.scalaBody, translated.refusalCount)
+            result(aliasName) = bodyOf(translated)
             val lowerAlias = camelName + classShort.head.toUpper + classShort.tail
-            if lowerAlias != aliasName then result(lowerAlias) = (translated.scalaBody, translated.refusalCount)
-
-    // Register compound-word aliases for common camelCase mismatches
-    val compoundWordAliases = Map(
-      "isBigint" -> "isBigInt",
-      "isNumberOrBigint" -> "isNumberOrBigInt",
-      "is32bitInteger" -> "is32BitInteger"
-    )
-    for (from, to) <- compoundWordAliases do result.get(from).foreach(body => result(to) = body)
+            if lowerAlias != aliasName then result(lowerAlias) = bodyOf(translated)
 
     val freeFns = TerserEmitter.extractFreeFunctions(rastFile)
     for fn <- freeFns do
       val camelName  = snakeToCamel(fn.name)
       val fnEntry    = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
       val translated = DefmethodBodyTranslator.translateBody(fnEntry, hierarchy, "    ")
-      result(camelName) = (translated.scalaBody, translated.refusalCount)
+      result(camelName) = bodyOf(translated)
 
-    result.toMap
+    ParityDerive.Bodies(result.map { case (k, v) => k -> List(v) }.toMap)
+
+  /** Reference spellings of compound words that the snake-case conversion capitalises differently. */
+  private val compoundWordAliases: Map[String, List[String]] = Map(
+    "isBigInt" -> List("isBigint"),
+    "isNumberOrBigInt" -> List("isNumberOrBigint"),
+    "is32BitInteger" -> List("is32bitInteger")
+  )
+
+  private[balticporter] val parityPolicy: ParityDerive.Policy =
+    ParityDerive.Policy(uncompilablePatterns = uncompilablePatterns, aliases = compoundWordAliases, keepReferenceOnRefusal = true)
+
+  /** Terser as a registered library: the compress modules under `compress/` and the other modules, all translated against the class hierarchy read from `lib/ast`. */
+  private[balticporter] def parityLibrary: NonJavaBodies.Library =
+    def relative(resource: String): String = resource.stripPrefix("/rast/terser/")
+    NonJavaBodies.Library(
+      name = "terser",
+      policy = parityPolicy,
+      readRast = balticporter.frontend.ts.Rast.readFile(_: Path),
+      modules = load =>
+        load("lib/ast.rast.json").left.map(reason => s"the class hierarchy could not be read from lib/ast.rast.json ($reason)").map { ast =>
+          val hierarchy = TerserEmitter.extractHierarchy(ast)
+          val compress  = AllModules.map { m =>
+            val reference = "compress/" + ReferenceTypeOracle.emitterToReferenceObject.getOrElse(m.objectName, m.objectName) + ".scala"
+            NonJavaBodies.Module(reference, relative(m.rastResource), Nil, rasts => buildRastBodyMap(rasts.head, hierarchy, m.isDeFmethod))
+          }
+          val others = AllNonCompressModules.map { m =>
+            NonJavaBodies.Module(m.referenceSubPath, relative(m.rastResource), Nil, rasts => buildRastBodyMap(rasts.head, hierarchy, m.isDeFmethod))
+          }
+          compress ++ others
+        }
+    )
 
   /** Assemble a `node match { case n: AstX => body; ... }` from a multi-class DEFMETHOD family.
     *
@@ -946,9 +964,9 @@ object TerserCompressEmitter:
     family:     List[TerserEmitter.DefmethodEntry],
     hierarchy:  List[TerserEmitter.DefnodeClass],
     methodName: String
-  ): (String, Int) =
-    val sb            = new StringBuilder
-    var totalRefusals = 0
+  ): ParityDerive.TranslatedBody =
+    val sb       = new StringBuilder
+    val refusals = mutable.ListBuffer.empty[String]
 
     sb.append("    node match {\n")
 
@@ -965,7 +983,7 @@ object TerserCompressEmitter:
     for entry <- sorted do
       val scalaClass = astVarToScalaName(entry.className)
       val translated = DefmethodBodyTranslator.translateBody(entry, hierarchy, "        ", thisBinding = "n", nodeParamName = Some("n"))
-      totalRefusals += translated.refusalCount
+      refusals ++= translated.refusalReasons
 
       // If the body is a single expression, emit it inline
       val bodyText = translated.scalaBody.trim
@@ -979,7 +997,7 @@ object TerserCompressEmitter:
     sb.append(s"      case _ => $defaultValue\n")
     sb.append("    }\n")
 
-    (sb.toString, totalRefusals)
+    ParityDerive.TranslatedBody(sb.toString, refusals.toList)
 
   /** Determine the default value for the catch-all arm of an assembled match. */
   private def defaultForMethod(methodName: String): String =
@@ -1001,180 +1019,21 @@ object TerserCompressEmitter:
     * bodyEndLine is the last line of the body (inclusive).
     */
   def findMethodBoundaries(lines: List[String]): List[ParsedMethod] =
-    val result     = mutable.ListBuffer.empty[ParsedMethod]
-    val defPattern = """^\s{2}(private\s+)?def\s+(`?\w+`?)""".r
-    var i          = 0
-
-    while i < lines.size do
-      defPattern.findFirstMatchIn(lines(i)) match
-        case Some(m) =>
-          val isPrivate = m.group(1) != null
-          val name      = m.group(2).stripPrefix("`").stripSuffix("`")
-
-          // Find the end of the signature (the line containing `=`)
-          val sigEndLine = findSignatureEnd(lines, i)
-
-          // Find the end of the method body
-          val bodyEndLine = findBodyEnd(lines, sigEndLine)
-
-          // Body starts on the line after the signature end, or on the same
-          // line if the `=` has code after it
-          val bodyStartLine =
-            val sigLine = lines(sigEndLine)
-            val eqIdx   = findEqualsInSignature(sigLine)
-            val afterEq = if eqIdx >= 0 then sigLine.substring(eqIdx + 1).trim else ""
-            if afterEq.nonEmpty && afterEq != "{" then sigEndLine
-            else sigEndLine + 1
-
-          result += ParsedMethod(name, i, bodyStartLine, bodyEndLine, isPrivate)
-          i = bodyEndLine + 1
-
-        case None =>
-          i += 1
-
-    result.toList
+    ReferenceSkeleton.findMethodBoundaries(lines)
 
   /** Find the line where the method signature ends (the line containing `=`).
     *
     * Handles multi-line signatures by tracking parenthesis depth.
     */
   def findSignatureEnd(lines: List[String], startLine: Int): Int =
-    var depth = 0
-    var i     = startLine
-    while i < lines.size do
-      val line = lines(i)
-      for ch <- line do
-        ch match
-          case '(' | '[' => depth += 1
-          case ')' | ']' => depth -= 1
-          case _         => ()
-      // The signature ends on the line where parens are balanced and we find `=`
-      if depth <= 0 && findEqualsInSignature(line) >= 0 then return i
-      i += 1
-    // Fallback: return start line
-    startLine
+    ReferenceSkeleton.findSignatureEnd(lines, startLine)
 
   /** Find the position of the `=` that ends a method signature.
     *
     * Scans from right to left for a standalone `=` preceded by whitespace. Rejects `==`, `!=`, `<=`, `>=`, and `=>`. Handles both `def f(): T = {` (at end) and `def f(): T = expr` (in middle).
     */
   def findEqualsInSignature(line: String): Int =
-    var i = line.length - 1
-    while i >= 1 do
-      if line(i) == '=' then
-        val prev = line(i - 1)
-        val next = if i + 1 < line.length then line(i + 1) else ' '
-        // Must be preceded by whitespace; not part of ==, !=, <=, >=, or =>
-        if (prev == ' ' || prev == '\t') && next != '>' && next != '=' then return i
-      i -= 1
-    -1
-
-  /** Find the last line of a method body, given the line where the signature ends (containing `=`).
-    *
-    * For braced bodies, counts braces to find the matching close. For non-braced bodies, finds the end by indentation.
-    */
-  private def findBodyEnd(lines: List[String], sigEndLine: Int): Int =
-    val sigLine = lines(sigEndLine)
-    val eqIdx   = findEqualsInSignature(sigLine)
-    val afterEq = if eqIdx >= 0 then sigLine.substring(eqIdx + 1).trim else ""
-
-    // Check if this is a braced body
-    if afterEq == "{" || afterEq.startsWith("{") then
-      // Count braces starting from after the `=`
-      findMatchingBrace(lines, sigEndLine, eqIdx + 1)
-    else if afterEq.nonEmpty then
-      // Body on the same line as `=` — use indentation; the first branch
-      // already caught `afterEq` starting with `{`.
-      findExpressionEnd(lines, sigEndLine)
-    else
-      // Body starts on next line — only treat as brace-delimited when the
-      // next line is literally `{` (the method body itself is one block).
-      // Lines like `if (...) {`, `boundary[T] {`, `value match {` are
-      // expression bodies whose internal braces do not delimit the method;
-      // use indentation for those.
-      if sigEndLine + 1 < lines.size then
-        val nextLine = lines(sigEndLine + 1).trim
-        if nextLine == "{" then findMatchingBrace(lines, sigEndLine + 1, 0)
-        else findExpressionEnd(lines, sigEndLine + 1)
-      else sigEndLine
-
-  /** Find the matching closing brace, starting from a given position in the file.
-    */
-  private def findMatchingBrace(lines: List[String], startLine: Int, startCol: Int): Int =
-    var depth           = 0
-    var i               = startLine
-    var foundFirstBrace = false
-    while i < lines.size do
-      val line   = lines(i)
-      val startJ = if i == startLine then startCol else 0
-      var j      = startJ
-      while j < line.length do
-        val ch = line(j)
-        // Skip string literals (simplistic: assume no multi-line strings in method bodies)
-        if ch == '"' then
-          j += 1
-          while j < line.length && line(j) != '"' do
-            if line(j) == '\\' then j += 1
-            j += 1
-        else if ch == '\'' then
-          j += 1
-          while j < line.length && line(j) != '\'' do
-            if line(j) == '\\' then j += 1
-            j += 1
-        else if ch == '{' then
-          depth += 1
-          foundFirstBrace = true
-        else if ch == '}' then
-          depth -= 1
-          if foundFirstBrace && depth == 0 then return i
-        j += 1
-      i += 1
-    // Fallback
-    if startLine < lines.size - 1 then lines.size - 1 else startLine
-
-  /** Find the end of a non-braced expression body.
-    *
-    * The expression continues as long as subsequent lines are indented more than the base indentation level (2 spaces for top-level methods). An empty line does not end the expression if the next
-    * non-empty line is still indented.
-    */
-  private def findExpressionEnd(lines: List[String], startLine: Int): Int =
-    val baseIndent      = 2 // top-level methods in an object
-    var lastContentLine = startLine
-    var i               = startLine + 1
-
-    while i < lines.size do
-      val line = lines(i)
-      if line.trim.isEmpty then
-        // Empty line - check if the next non-empty line continues the expression
-        var nextNonEmpty = i + 1
-        while nextNonEmpty < lines.size && lines(nextNonEmpty).trim.isEmpty do nextNonEmpty += 1
-        if nextNonEmpty < lines.size then
-          val nextLine   = lines(nextNonEmpty)
-          val nextIndent = nextLine.takeWhile(_ == ' ').length
-          if nextIndent > baseIndent && !nextLine.trim.startsWith("def ") &&
-            !nextLine.trim.startsWith("private def ") &&
-            !nextLine.trim.startsWith("//") &&
-            !nextLine.trim.startsWith("/*") &&
-            !nextLine.trim.startsWith("val ") &&
-            !nextLine.trim.startsWith("var ") &&
-            !nextLine.trim.startsWith("class ") &&
-            !nextLine.trim.startsWith("object ") &&
-            nextLine.trim != "}"
-          then
-            i = nextNonEmpty
-            // continue
-          else return lastContentLine
-        else return lastContentLine
-      else
-        val indent = line.takeWhile(_ == ' ').length
-        if indent <= baseIndent then
-          // We've reached a line at the base level or less - method body ended
-          return lastContentLine
-        else
-          lastContentLine = i
-          i += 1
-
-    lastContentLine
+    ReferenceSkeleton.findEqualsInSignature(line)
 
   /** Emit all compress modules using parity-derive.
     *
