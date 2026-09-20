@@ -32,6 +32,17 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
 - **`inject`**: the DROP binds every module that sees the type; the INJECTION is a build artefact
   exactly one module ships, or a dependent emits a second definition of the same FQN. Every "is this
   replaced?" check holds a module to its OWN drops.
+- **A replacement whose ANSWER differs per platform is a `platformDirs` row, not a wider refusal.**
+  Keep ONE call site in the shared `inject` row and let each row ship a small object at the same FQN:
+  liqp's bean read (jackson's `Inspectable`/EAGER path) is java's own answer on the JVM and an
+  `UnsupportedOperationException` on the two rows that cannot ask an object what members it has —
+  33 declared failures to 0, with the refusal still there for the rows that own it. Two rows may name
+  the same directory when their answer is the same. The `.conf` key takes ROW names (`jvm`, `js`,
+  `native` — `PortManifest.PlatformRows`, spelled as the build spells a row DIRECTORY) and not target
+  names, because a row nobody compiles is a tree nothing reads; an unknown key is refused at load.
+  A type named in the SHARED row must exist on every platform — `java.util.Calendar` is not in the
+  Scala.js javalib, and naming it there costs a `portability(injected)` row for a case the port's own
+  service provider already answers.
 - **Emission identity is (`portRoot`, `sourceSet`)**; `PortRun` opens with an unconditional
   `wipe(emitDir)`, so a second run at the same pair DELETES the first. N maven modules under one
   package root are ONE port with a glob list. A batch is a SCOPE edit (one glob, one denominator

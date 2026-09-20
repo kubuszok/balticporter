@@ -117,12 +117,23 @@ class JsonMapper {
             value match {
               // What java's `@JsonSerialize(using = LiquidSerializer.class)` on LiquidSupport did:
               // the interface's own `toLiquid()` answers, never its fields.
-              case ls: ssg.liquid.parser.LiquidSupport => normalise(ls.toLiquid())
+              // A DATE is a scalar to liquid, not an object with properties: `LValue.isTemporal`
+              // and `asTemporal` read both shapes natively, and jackson had a serializer for each
+              // rather than reflecting over them. AFTER the registered serializers above, which is
+              // what marks one of these for restoring after an eager conversion — and that is also
+              // where a `java.util.Calendar` is answered, by the provider that claims it, because
+              // naming the type here would put a class the Scala.js javalib does not have into the
+              // row every platform compiles.
+              case _:  java.time.temporal.TemporalAccessor | _: java.util.Date => value
+              case ls: ssg.liquid.parser.LiquidSupport                         => normalise(ls.toLiquid())
               case m:  JMap[?, ?]                      => normaliseMap(m)
               case c:  java.util.Collection[?]         => normaliseIterator(c.iterator())
               case a:  Array[?]                        => normaliseIterator(java.util.Arrays.asList(a*).iterator())
               case cs: CharSequence                    => cs.toString
-              case other                               => refuseBean(other)
+              // ONE call site for the one operation whose ANSWER differs per platform: the JVM row
+              // reads the object's properties, as java did, and the other two rows raise. Both live
+              // in `ssg.liquid.json.Beans`, one file per row.
+              case other => normaliseMap(Beans.toMap(other))
             }
         }
     }
@@ -153,14 +164,4 @@ class JsonMapper {
     gen.result
   }
 
-  /** Reading an arbitrary object's own fields is the one thing jackson did here that has no
-    * cross-platform meaning, so it is refused where it would have happened rather than answered
-    * with an empty map — an empty map is a template that silently renders nothing.
-    */
-  private def refuseBean(value: Object): Nothing =
-    throw new UnsupportedOperationException(
-      "cannot convert " + value.getClass.getName + " to a liquid data map: this port reads no object's FIELDS. " +
-        "Java did it with jackson's bean reflection, which neither Scala.js nor Scala Native has. " +
-        "Pass a java.util.Map, or implement ssg.liquid.parser.LiquidSupport and answer with toLiquid()."
-    )
 }

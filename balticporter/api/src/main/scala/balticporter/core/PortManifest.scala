@@ -48,8 +48,9 @@ final case class PortManifest(
   resolutions: Map[String, String] = Map.empty,
   /** ready-made Scala this module ships. NOT inherited — see the class doc. */
   inject: List[Path] = Nil,
-  /** ready-made Scala per platform row — `jvm`/`js`/`native` (sbt-projectmatrix's names) → roots copied to `src_managed/<row>/scala`, which only that row compiles; `inject` is the shared row. A hand
-    * port's `scalajvm`/`scaladesktop`/`scalajs`/`scalanative` layers land here. Not inherited (a build artefact, like `inject`).
+  /** ready-made Scala per platform row — a name from [[PortManifest.PlatformRows]] → roots copied to `src_managed/<row>/scala`, which only that row compiles; `inject` is the shared row. A hand port's
+    * `scalajvm`/`scaladesktop`/`scalajs`/`scalanative` layers land here, and so does a replacement whose ANSWER differs per platform — a JVM arm beside a refusal the other two rows carry. Not
+    * inherited (a build artefact, like `inject`).
     */
   platformDirs: Map[String, List[Path]] = Map.empty,
   /** Upstream `META-INF/services/<interface FQN>` files this module ships — the SPI half of the deliverable no phase can carry. Missing it means `ServiceLoader.load` finds zero providers, silently,
@@ -285,6 +286,15 @@ final case class PortManifest(
     policyChain.exists(_.injectedFqns.contains(at))
 
 object PortManifest:
+
+  /** The platform row names [[PortManifest.platformDirs]] accepts, one per [[balticporter.catalog.Platform]], spelled the way the generated build spells a row DIRECTORY (sbt-projectmatrix's
+    * `VirtualAxis.PlatformAxis.directorySuffix`). A row a build does not compile is a directory nothing reads, so an unknown name is refused at load rather than silently ignored.
+    */
+  val PlatformRows: Map[String, balticporter.catalog.Platform] = Map(
+    "jvm" -> balticporter.catalog.Platform.Jvm,
+    "js" -> balticporter.catalog.Platform.ScalaJs,
+    "native" -> balticporter.catalog.Platform.ScalaNative
+  )
 
   /** `.` separates packages/top-level type, `$` precedes a nested type, `#` a member — the same three boundaries `PackageRenameTransform` cuts at. Forwards to [[balticporter.tir.RuleScope]], the one
     * implementation, so a rule this easy to get wrong has exactly one body.

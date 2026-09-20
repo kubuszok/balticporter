@@ -198,6 +198,8 @@ object PortConfig:
       // Per-location remedy selection; validated at load against known remedies.
       resolutions = readResolutions(m, surface, registry),
       inject = m.strings("inject").getOrElse(Nil).map(resolvePath(dir, _)),
+      // Ready-made Scala for ONE platform row. Not inherited; absent or `{}` = no-op.
+      platformDirs = readPlatformDirs(dir, m),
       // SPI descriptors copied with both namespaces renamed. Not inherited; missing = fatal.
       serviceProviders = m.strings("serviceProviders").getOrElse(Nil).map(resolvePath(dir, _)),
       // Classpath resources copied verbatim. Not inherited; missing = fatal.
@@ -281,6 +283,24 @@ object PortConfig:
     "native" -> Platform.ScalaNative,
     "scala-native" -> Platform.ScalaNative
   )
+
+  /** Parse `platformDirs { <row> = [paths…] }`.
+    *
+    * The keys are ROW names ([[PortManifest.PlatformRows]]) and not target names, because a row is a directory the generated build compiles: an alias no build spells would produce a tree nothing
+    * reads, so an unknown key is a `ConfigError` rather than a silent skip. Absent, or `{}`, is the no-op empty map.
+    */
+  private def readPlatformDirs(dir: Anchor, m: ConfigView): Map[String, List[Path]] =
+    m.child("platformDirs") match
+      case scala.None     => Map.empty
+      case Some(rowsView) =>
+        rowsView.keys.map { row =>
+          if !PortManifest.PlatformRows.contains(row) then
+            throw ConfigError(
+              rowsView.at(row),
+              s"'$row' is not a platform row; one of ${PortManifest.PlatformRows.keys.toList.sorted.mkString(", ")}"
+            )
+          row -> rowsView.strings(row).getOrElse(Nil).map(resolvePath(dir, _))
+        }.toMap
 
   /** Parse platform names from a `.conf`. */
   def readTargets(m: ConfigView)(names: List[String]): Set[Platform] =

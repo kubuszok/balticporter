@@ -592,6 +592,90 @@ class PortConfigSpec extends munit.FunSuite:
     assertEquals(m.substitutions.inject, Nil)
   }
 
+  // platform rows: ready-made Scala exactly one row compiles, for a replacement whose ANSWER
+  // differs per platform
+
+  test("`platformDirs` resolves each row's paths like every other path, and only that row's") {
+    val f = fixture(
+      """label = "demo"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest {
+        |  name = "demo"
+        |  inject = ["java"]
+        |  platformDirs { jvm = ["rows/jvm"], js = ["rows/js", "rows/shared-js"], native = ["rows/native"] }
+        |}
+        |""".stripMargin
+    )
+    val m = PortConfig.load(f).manifest.get
+    assertEquals(m.platformDirs.keySet, Set("jvm", "js", "native"))
+    assertEquals(m.platformDirs("jvm"), List(f.getParent.resolve("rows/jvm").normalize))
+    assertEquals(m.platformDirs("js"), List(f.getParent.resolve("rows/js").normalize, f.getParent.resolve("rows/shared-js").normalize))
+    // the shared row is `inject` and is untouched by any of this
+    assertEquals(m.inject, List(f.getParent.resolve("java").normalize))
+  }
+
+  test("a `platformDirs` row nobody compiles is refused by name, with the rows that exist") {
+    val f = fixture(
+      """label = "demo"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest { name = "demo", platformDirs { scalajvm = ["rows/jvm"] } }
+        |""".stripMargin
+    )
+    val e = intercept[balticporter.tir.ConfigError](PortConfig.load(f))
+    assert(clue(e.getMessage).contains("scalajvm"))
+    assert(clue(e.getMessage).contains("js, jvm, native"))
+  }
+
+  test("an absent or empty `platformDirs` is the no-op empty map") {
+    val absent = PortConfig
+      .load(
+        fixture(
+          """label = "demo"
+            |input  { sourceRoot = "java" }
+            |output { portRoot = "out", sourceSet = "main" }
+            |manifest { name = "demo" }
+            |""".stripMargin
+        )
+      )
+      .manifest
+      .get
+    assertEquals(absent.platformDirs, Map.empty[String, List[Path]])
+    val empty = PortConfig
+      .load(
+        fixture(
+          """label = "demo"
+            |input  { sourceRoot = "java" }
+            |output { portRoot = "out", sourceSet = "main" }
+            |manifest { name = "demo", platformDirs {} }
+            |""".stripMargin
+        )
+      )
+      .manifest
+      .get
+    assertEquals(empty.platformDirs, Map.empty[String, List[Path]])
+  }
+
+  test("`platformDirs` is NOT inherited — a row's file is shipped by exactly one module") {
+    val base =
+      """label = "base"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest { name = "base", platformDirs { jvm = ["rows/jvm"] } }
+        |""".stripMargin
+    val f = fixture(
+      """label = "dependent"
+        |base  = "base.conf"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest { name = "dep" }
+        |""".stripMargin,
+      Map("base.conf" -> base)
+    )
+    assertEquals(PortConfig.load(f).manifest.get.platformDirs, Map.empty[String, List[Path]])
+  }
+
   test("a base cycle is refused by name") {
     val f = fixture(
       """label = "a"

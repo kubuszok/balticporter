@@ -180,7 +180,26 @@ manifest {
 - **`platformDirs`** is the per-platform-row form of `inject` — `jvm` / `js` / `native` (the row names
   `sbt-projectmatrix` uses) → directories copied to `src_managed/<row>/scala`, compiled only by that
   row. Use it for a hand port's platform-specific layer (a JVM-only desktop backend, a Native-only
-  buffer implementation).
+  buffer implementation), and for the case where one operation's **answer** differs per platform:
+
+  ```hocon
+  platformDirs {
+    jvm    = ["overrides/mylib-jvm"]        # the platform can answer, so it answers
+    js     = ["overrides/mylib-no-reflect"] # two rows, one refusal, one directory
+    native = ["overrides/mylib-no-reflect"]
+  }
+  ```
+
+  Keep **one call site** in the shared `inject` row and let it call a small object each row ships
+  under the same fully-qualified name — the shared code then reads the same on every platform and
+  only the answer moves. A row that cannot answer raises by name rather than returning something
+  empty — an empty answer is a program that silently does nothing.
+
+  The keys are **row names, not target names**: a row is a directory some build compiles, so `jvm`,
+  `js` and `native` are the three accepted, and anything else (`scalajvm`, `scala-js`) is refused at
+  load with the list of the ones that exist. Two rows may name the same directory. Absent, or `{}`,
+  is the no-op. Like `inject`, it is a **build artefact and is not inherited** — a dependent that
+  inherited it would emit the same fully-qualified name twice.
 - **`resources`** copies classpath resources verbatim, at the upstream paths the emitted code already
   names:
 
