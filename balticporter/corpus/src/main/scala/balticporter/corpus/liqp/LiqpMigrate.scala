@@ -118,8 +118,9 @@ object LiqpClasspath:
     val key     = s"${ClasspathCache.key(Coordinates)} || $rewritePolicy || ${generatedDigest(gen)}"
     if ClasspathCache.fresh(out, key) && hasParserClasses(classes) then out
     else
-      val jars = fetch(Coordinates)
-      compileParser(work, upstream, corpus, jars, classes)
+      val sources = requiredInputs(upstream, corpus)
+      val jars    = fetch(Coordinates)
+      compileParser(work, upstream, sources, stubSourcesIn(corpus), jars, classes)
       ClasspathCache.write(out, (jars :+ classes.toString).mkString(File.pathSeparator), key)
 
   /** D-liqp-1b as a fingerprint — every value the rewrite is driven by, in order. Not passed as [[ClasspathCache.key]]'s `extraArgs`, which means "arguments `cs` was invoked with": this is not a
@@ -186,9 +187,10 @@ object LiqpClasspath:
     m.appendTail(sb)
     (sb.toString, n)
 
-  /** javac the ANTLR output into `classes`, D-liqp-1b's rewrite first -- ONE output directory, read by the frontend, scalac and the test run.
+  /** The generated parser's sources, after checking BOTH inputs the caller supplies — asked before anything is resolved, so a wrong path is refused by path on a machine that cannot resolve jars at
+    * all.
     */
-  private def compileParser(work: Path, upstream: Path, corpus: Path, jars: List[String], classes: Path): Unit =
+  private def requiredInputs(upstream: Path, corpus: Path): List[Path] =
     val gen     = generatedSourcesIn(upstream)
     val sources =
       if !Files.isDirectory(gen) then Nil
@@ -213,6 +215,10 @@ object LiqpClasspath:
 
     val stub = stubSourcesIn(corpus)
     if !Files.isDirectory(stub) then throw new IllegalStateException(s"[liqp] D-liqp-1b's javac stub is not at $stub — javac cannot resolve $EmittedPackage")
+    sources
+
+  private def compileParser(work: Path, upstream: Path, sources: List[Path], stub: Path, jars: List[String], classes: Path): Unit =
+    val gen = generatedSourcesIn(upstream)
 
     // the rewritten copy, rebuilt from scratch: a stale file here is a parser compiled from a
     // policy that is no longer this port's. Under `work` like everything else this writes.
