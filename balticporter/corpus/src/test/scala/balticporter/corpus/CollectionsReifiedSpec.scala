@@ -82,6 +82,36 @@ class CollectionsReifiedSpec extends PortSuite:
     assert(!out.contains("o.isInstanceOf[scala.Tuple2"), "two equal pairs compared false behind the bare tuple test")
   }
 
+  test("the same java type KEPT as a parent and MOVED inside another parent's arguments is counted") {
+    val (ph, program, out) = ported(
+      """package demo;
+        |import java.util.*;
+        |final class Pair<K, V> implements Map.Entry<K, V>, Comparable<Map.Entry<K, V>> {
+        |  private final K k; private final V v;
+        |  Pair(K k, V v) { this.k = k; this.v = v; }
+        |  public K getKey() { return k; }
+        |  public V getValue() { return v; }
+        |  public V setValue(V x) { throw new UnsupportedOperationException(); }
+        |  @SuppressWarnings("unchecked")
+        |  public int compareTo(Map.Entry<K, V> o) {
+        |    return ((Comparable<Object>) getKey()).compareTo(o.getKey());
+        |  }
+        |}
+        |""".stripMargin
+    )
+    // the parent itself stays java's, which is the decision this one rides on
+    assert(clue(out).contains("extends java.util.Map.Entry[K, V]"))
+    val found = ph.boundary(program).filter(_.issue == CollectionBoundaryCheck.Issue.RetainedParentArgument)
+    assertEquals(clue(found).size, 1)
+    assert(found.head.detail.contains("parent (type argument)"))
+    // there is nothing to see in the emitted text: scalac builds the erasure bridge that casts a
+    // Pair to the tuple it is not, and the first call from outside throws at a green compile
+    assert(
+      CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.RetainedParentArgument).contains("ClassCastException"),
+      "the classification has to say what goes wrong, because no slot and no error does"
+    )
+  }
+
   test("the SHIM targets are reified positions too — Collection, Iterable, Iterator") {
     val (_, _, out) = ported(
       """package demo;

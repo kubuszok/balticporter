@@ -85,6 +85,11 @@ object CollectionBoundaryCheck extends RemedySource:
       */
     case UnbridgedMember
 
+    /** the SAME class keeps a java parent ([[InexpressibleParent]]) and carries the target of that very mapping inside ANOTHER parent's type arguments, so its two parents disagree about what it is.
+      * Nothing fails to compile: scalac builds an erasure bridge for the member implementing the second parent, and the bridge casts to the target the class is not.
+      */
+    case RetainedParentArgument
+
     /** an `instanceof` or a downcast at a type this phase retyped, whose TARGET no live view can be — a REIFIED occurrence, asking about a runtime object the retyping did not move, so it is the one
       * seam with no slot and no compile error behind it.
       */
@@ -165,6 +170,18 @@ object CollectionBoundaryCheck extends RemedySource:
           "any SLOT here — the class is simply missing a member scalac demands, which `RefChecks` " +
           "does not report until the port reaches 0 typer errors, so this count is " +
           "the only instrument that sees it before then."
+      case RetainedParentArgument =>
+        "engine (true of every Java program), COUNTED and deliberately NOT resolved: this class keeps a java parent " +
+          "because the mapping's target cannot BE a parent, and the SAME java type reaches another " +
+          "of its parents as a TYPE ARGUMENT, where the mapping did move it. The two parents then " +
+          "disagree about what this class is: it really implements java's type, and it claims to be " +
+          "comparable to (or consumable as) the target. There is no compile error and no slot to " +
+          "look at — scalac builds the erasure BRIDGE for the member implementing the second parent " +
+          "and the bridge casts the argument to the target, so the first call from outside the class " +
+          "throws ClassCastException at a green compile. Closing it needs the class EXEMPTED from " +
+          "this mapping wherever the retained type appears in its own declaration — parent argument, " +
+          "the implementing member's formals, and the body reads that follow from them — which is a " +
+          "scope decided BEFORE the retyping, not a repair after it."
       case ReifiedOccurrence =>
         "engine (true of every Java program), and REFUSED on purpose: this is an `instanceof` or a downcast at a type the " +
           "mapping covers — a REIFIED occurrence, which asks about a RUNTIME OBJECT while the " +

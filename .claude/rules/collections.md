@@ -8,6 +8,19 @@ paths:
 
 # Collections retyping and retargeting — the obligations of a retyping phase
 
+- **A parent KEPT as java's and the same java type MOVED inside another parent's ARGUMENTS is one
+  class contradicting itself**, and nothing fails to compile: scalac builds the erasure bridge for
+  the member implementing the second parent, and the bridge casts to the target the class is not, so
+  the first call from outside throws `ClassCastException` at a green compile. liqp's
+  `Sort$ComparableMapEntry implements Map.Entry<K,V>, Comparable<Map.Entry<K,V>>` is the measured one
+  — the entry parent is retained, the `Comparable` argument became `Tuple2`, `compareTo(Tuple2)`
+  erases, and the sort throws. COUNTED as `RetainedParentArgument` (liqp `collection-boundary`
+  17 -> 18); the fix is to EXEMPT the class from this mapping wherever the retained type appears in
+  its own declaration — parent argument, the implementing member's formals, and the body reads that
+  follow — which is a scope decided BEFORE the retyping, not a repair after it. Do NOT look for the
+  failure at the minted enhanced-for cast (`entry$e.asInstanceOf[Tuple2]`): that one is over
+  `entrySetView`, which only ever yields tuples, and can never throw.
+
 Detail for `CLAUDE.md` §1(b)'s `CollectionsTransform` row and the seam paragraphs. The general
 obligations (scope, `SurfacePolicy`, counting, `accountedBy`) are `.claude/rules/phases.md`.
 

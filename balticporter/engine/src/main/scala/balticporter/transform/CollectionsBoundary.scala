@@ -105,15 +105,32 @@ private[transform] trait CollectionsBoundary:
         case t:  Term     => t.tpe
       // members this class's retained parents declare that their targets cannot carry.
       val unimplementable = collection.mutable.Set.empty[CollectionsTransform.MemberSig]
-      val parents         =
+      // the java types this class KEEPS as parents — read off the originals, so the second pass
+      // below can ask whether any of them also reached another parent's type arguments.
+      val retainedHeads = orig.parents.iterator.flatMap(p => headSym(tpeOf(p))).filter(uninheritableSyms.contains).toSet
+      val parents       =
         // lengths agree by construction; a mismatch means the traversal changed shape, so the
         // mapped list is the honest answer rather than a zip that silently truncates (see spine).
         if orig.parents.sizeIs != mapped.parents.size then mapped.parents
         else
           orig.parents.zip(mapped.parents).map { (o, m) =>
             headSym(tpeOf(o)).filter(uninheritableSyms.contains) match
-              case scala.None => m
-              case Some(_)    =>
+              case scala.None =>
+                // This parent is emitted at the target; but if one of the types this class KEEPS
+                // as a parent is inside its type arguments, the class's two parents now disagree
+                // about what it is, and scalac's erasure bridge for the member implementing this
+                // one will cast to a type the class is not.
+                if mentionsRetained(tpeOf(o), retainedHeads) then
+                  seam(
+                    "parent (type argument)",
+                    TirPrinter.tpe(tpeOf(m), TirPrinter.Style.canonical),
+                    TirPrinter.tpe(tpeOf(o), TirPrinter.Style.canonical),
+                    orig.origin,
+                    orig.symbol,
+                    CollectionBoundaryCheck.Issue.RetainedParentArgument
+                  )
+                m
+              case Some(_) =>
                 val kept   = TirPrinter.tpe(tpeOf(o), TirPrinter.Style.canonical)
                 val target = TirPrinter.tpe(tpeOf(m), TirPrinter.Style.canonical)
                 headSym(tpeOf(m)).flatMap(summon[Program].symbolOf).map(_.fullName).flatMap(CollectionsTransform.UnsupportedOnTarget.get).foreach(unimplementable ++= _)
@@ -150,6 +167,25 @@ private[transform] trait CollectionsBoundary:
         case (_, m) => m
       }
       mapped.copy(parents = parents, body = body)
+
+  /** Does this parent's type name, in its ARGUMENTS, one of the java types this class keeps as a parent? Walked with `StandardTraversal.mapType` rather than a private recursion, and asked of the
+    * arguments only — the head is the retained parent itself and is not the question.
+    */
+  private[transform] def mentionsRetained(t: TypeRepr, retained: Set[SymId])(using Program): Boolean =
+    if retained.isEmpty then false
+    else
+      var found = false
+      val scan  = new Phase:
+        def name = "retained-parent-argument-scan"
+        override def transformType(x: TypeRepr)(using Program): TypeRepr =
+          x match
+            case TypeRepr.TypeRef(_, s) if retained.contains(s) => found = true
+            case _                                              => ()
+          x
+      t match
+        case TypeRepr.AppliedType(_, as) => as.foreach(StandardTraversal.mapType(scan, _))
+        case _                           => ()
+      found
 
   /** Is this the interface's member, or a method that merely shares its name? Tested by the retained parent's own signature (e.g. `Map.Entry` declares exactly `setValue(V)`), never the bare name — a
     * class may declare `setValue(int, int)` beside it, which java resolves separately. See [[CollectionsTransform.MemberSig]] for `arity`.
