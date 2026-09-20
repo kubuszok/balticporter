@@ -25,15 +25,22 @@ object LiqpTestClasspath:
   /** the one test-scope coordinate `pom.xml` declares. hamcrest-core 1.3 is its transitive. */
   val TestCoordinates: List[String] = List("junit:junit:4.13.1")
 
-  def cache(repoRoot: Path): Path = repoRoot.resolve("out/liqp-test-classpath.txt")
+  /** the file the liqp test configuration reads as `@work/liqp-test-classpath.txt`. */
+  val FileName = "liqp-test-classpath.txt"
+
+  def cache(repoRoot: Path): Path = repoRoot.resolve("out").resolve(FileName)
 
   /** Guarantee the test classpath file exists and AGREES with the main one, building it if not: a cached test line from before a `LiqpClasspath.ensure` rebuild (e.g. after `out/` was cleaned) would
     * otherwise name jars and a parser directory no longer current, so the test line is DERIVED from the main one on every run.
     */
   def ensure(repoRoot: Path): Path =
+    ensureIn(repoRoot.resolve("out"), LiqpPort.upstream, repoRoot.resolve("balticporter/corpus"))
+
+  /** The same, with each of its three inputs named — see `LiqpClasspath.ensureIn`. Everything written lands under `work`. */
+  def ensureIn(work: Path, upstream: Path, corpus: Path): Path =
     val mainEntries =
-      Files.readString(LiqpClasspath.ensure(repoRoot)).trim.split(File.pathSeparator).filter(_.nonEmpty).toList
-    val out      = cache(repoRoot)
+      Files.readString(LiqpClasspath.ensureIn(work, upstream, corpus)).trim.split(File.pathSeparator).filter(_.nonEmpty).toList
+    val out      = work.resolve(FileName)
     val key      = ClasspathCache.key(TestCoordinates)
     val existing = if Files.exists(out) then Files.readString(out).trim else ""
     val carried  = existing.split(File.pathSeparator).filter(_.nonEmpty).toList
