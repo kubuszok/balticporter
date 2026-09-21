@@ -267,7 +267,7 @@ final class MethodBodyFactory extends TransformFactory:
   def fromConfig(config: ConfigView): Phase =
     new MethodBodyTransform(config.stringMap("bodies").getOrElse(Map.empty), config.string("group").getOrElse(""))
 
-/** `{ transform = "add-members", members { "owner.Fqn" = [ { name, arity, source, why? } ] } }`
+/** `{ transform = "add-members", members = [ { owner = "owner.Fqn", specs = [ { name, arity, source, why? } ] } ] }`
   *
   * Each spec has `name`, `arity`, `source` (verbatim Scala), optional `why`. Owner is upstream FQN.
   */
