@@ -79,6 +79,15 @@ input {
   unresolvable reference does not fail parsing; it resolves *wrongly*, as an unqualified call on the
   enclosing class, and the port then emits nonsense and reports success. `classpath` lists jars
   directly when you already have the paths and no file to read them from.
+- **`classpathCoordinates`** lets the run produce that file itself: list the maven coordinates the
+  library's build declares and the engine resolves them (through `cs`, which must be on the `PATH`)
+  into `classpathFile`, which is then required. The file is reused while it still records exactly
+  these coordinates and every jar it names exists, so a build needs no code of its own for this:
+
+  ```
+  classpathCoordinates = ["org.jetbrains:annotations:24.0.1", "junit:junit:4.13.2"]
+  classpathFile        = "@work/mylib-test-classpath.txt"
+  ```
 - **`resolutionRoots`** are parsed and resolved against, but never emitted. This is how a dependent
   module sees its base's types — against the base's own Java, never against the Scala the base port
   emitted (see [Multi-module ports](multi-module-ports.md)). A run whose resolution roots lie outside

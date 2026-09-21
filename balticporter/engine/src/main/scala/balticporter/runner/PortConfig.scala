@@ -336,7 +336,22 @@ object PortConfig:
   /** Frontend classpath from `classpath` entries and/or `classpathFile` (path-separator-joined). A declared file that is missing is fatal (an unresolved classpath causes silent misresolution).
     */
   private def classpath(input: ConfigView, dir: Anchor): List[Path] =
-    val listed   = input.strings("classpath").getOrElse(Nil).map(resolvePath(dir, _))
+    val listed = input.strings("classpath").getOrElse(Nil).map(resolvePath(dir, _))
+    // `classpathCoordinates`: maven coordinates the run resolves ITSELF (through coursier) into `classpathFile`,
+    // reused while the file still records these coordinates and every jar it names exists.
+    input.strings("classpathCoordinates").filter(_.nonEmpty).foreach { coordinates =>
+      val file = input
+        .string("classpathFile")
+        .getOrElse(
+          throw ConfigError(
+            input.at("classpathCoordinates"),
+            "`classpathCoordinates` needs `classpathFile`: the file the resolved classpath is kept in"
+          )
+        )
+      val out = resolvePath(dir, file)
+      Option(out.getParent).foreach(Files.createDirectories(_))
+      ClasspathCache.ensure(out, out.getFileName.toString, coordinates)
+    }
     val fromFile = input.string("classpathFile").toList.flatMap { s =>
       val f = resolvePath(dir, s)
       if !Files.isRegularFile(f) then

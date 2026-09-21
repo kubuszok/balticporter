@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.runner
 
 import java.nio.file.{ Files, Path }
 

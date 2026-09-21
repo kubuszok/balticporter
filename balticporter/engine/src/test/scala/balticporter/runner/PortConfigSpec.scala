@@ -203,6 +203,28 @@ class PortConfigSpec extends munit.FunSuite:
     assert(clue(e.getMessage).contains("converts nothing"))
   }
 
+  test("classpathCoordinates without a classpathFile is refused: the resolved classpath has to be kept somewhere") {
+    val conf = fixture(
+      Minimal.replace("input  { sourceRoot = \"java\" }", "input  { sourceRoot = \"java\", classpathCoordinates = [\"g:a:1\"] }")
+    )
+    val e = intercept[balticporter.tir.ConfigError](PortConfig.load(conf))
+    assert(clue(e.getMessage).contains("classpathFile"))
+  }
+
+  test("classpathCoordinates reuses a classpathFile that still records these coordinates and whose jars exist") {
+    val conf = fixture(
+      Minimal.replace(
+        "input  { sourceRoot = \"java\" }",
+        "input  { sourceRoot = \"java\", classpathCoordinates = [\"g:a:1\"], classpathFile = \"cp/demo.txt\" }"
+      )
+    )
+    val jar = Files.createFile(conf.getParent.resolve("a-1.jar"))
+    val out = Files.createDirectories(conf.getParent.resolve("cp")).resolve("demo.txt")
+    ClasspathCache.write(out, jar.toString, ClasspathCache.key(List("g:a:1")))
+    val run = PortConfig.load(conf)
+    assertEquals(run.frontend.classpath.map(_.getFileName.toString), List("a-1.jar"))
+  }
+
   test("a conf with no roots and no overrides loads exactly as before") {
     val run = PortConfig.load(fixture(Minimal), roots = Map.empty)
     assertEquals(run.frontend.sourceRoot.getFileName.toString, "java")
