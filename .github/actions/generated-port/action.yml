@@ -27,13 +27,13 @@ inputs:
     description: command that runs the generation
     default: sbt generatePort
   pin-file:
-    description: build file that pins the balticporter-corpus artifact
+    description: build file that pins the Baltic Porter engine artifact
     default: project/plugins.sbt
   generator:
     description: the generator source; a change to it invalidates the tree
     default: project/BalticPorterGen.scala
   key-extra:
-    description: further input the tree depends on, already reduced to a short string (e.g. the tree hash of a reference directory)
+    description: further input the tree depends on, already reduced to a short string — the build's own port files above all (e.g. `hashFiles('my-port/**')`), since a change to them must regenerate
     default: ""
 
 outputs:
@@ -60,7 +60,8 @@ runs:
           echo "key=$GIVEN_KEY" >> "$GITHUB_OUTPUT"
           exit 0
         fi
-        pin=$(grep -oE 'balticporter-corpus" % "[^"]+' "$PIN_FILE" | head -1 | sed 's/.*"//')
+        # the engine artifact a build depends on is `balticporter-engine`; `balticporter-corpus` is the older name
+        pin=$(grep -oE 'balticporter-(engine|corpus)" % "[^"]+' "$PIN_FILE" | head -1 | sed 's/.*"//')
         upstream=$(git ls-tree HEAD "$SUBMODULE" | awk '{print $3}')
         generator=$(git hash-object "$GENERATOR")
         jdk=$(java -XshowSettings:properties -version 2>&1 | awk '/java.specification.version/ {print $3}')
