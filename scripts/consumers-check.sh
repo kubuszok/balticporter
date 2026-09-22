@@ -102,8 +102,14 @@ for name in "${consumers[@]}"; do
     >> "$log" 2>&1
   code=$?
   if [ "$code" -eq 0 ] && [ "$name" != "${consumers[${#consumers[@]} - 1]}" ]; then
-    # publish what was just built, for the consumers after this one (JVM artifact at level jvm)
-    if [ "$level" = "full" ]; then publish="publishLocal"; else publish="$name/publishLocal"; fi
+    # publish what was just built, for the consumers after this one (JVM artifacts at level jvm).
+    # A consumer's port policy is published as `<name>-port`, pinned at the engine of THIS run: a
+    # dependent's build resolves it at the library's version, and the released one would drag the
+    # library's own, older engine pin into that build (an eviction error on two engine hashes).
+    if [ "$level" = "full" ]; then publish="publishLocal"; else
+      publish="$name/publishLocal"
+      /usr/bin/grep -q "lazy val \`$name-port\`" "$tree/build.sbt" && publish="$publish ; $name-port/publishLocal"
+    fi
     (cd "$tree" && JAVA_HOME="$consumer_jdk" PATH="$consumer_jdk/bin:$PATH" sbt --client "$publish ; show $name/version") \
       > "$work/$name-publish.log" 2>&1
     built="$(sed 's/\x1b\[[0-9;]*m//g' "$work/$name-publish.log" | /usr/bin/grep -E '^\[info\] [0-9][^ ]*$' | tail -1 | awk '{print $2}')"
