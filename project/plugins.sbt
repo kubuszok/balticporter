@@ -6,5 +6,3 @@ addSbtPlugin("com.kubuszok"     % "sbt-kubuszok"         % "0.2.3")
 // runtime built by a different Scala.js or Scala Native version is one its linker may reject.
 addSbtPlugin("org.scala-js"    % "sbt-scalajs"      % "1.22.0")
 addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.5.12")
-// multiarch-scala's resource embedder: sge's Scala.js row serves its resources from a generated object
-addSbtPlugin("com.kubuszok"     % "sbt-multiarch-scala" % "0.4.0")

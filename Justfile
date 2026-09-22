@@ -17,8 +17,6 @@
 #   just visui-diff-measure          the REFERENCE hand port's own suite over the emitted sge.visui
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
-#   just lls-measure                 lls — the twelve libGDX sources lls ported, then lls's own suite
-#   just lls-diff-measure            lls's OWN suite, adapted by a NAME/SHIM table, against ported/lls
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
 #   just liqp-measure                liqp + its own 105-file suite (emitted and censused; RUN when it compiles)
 #   just md-measure                  flexmark-java core + the eleven util modules (no test set in scope)
@@ -75,67 +73,6 @@
 #    at the first failure rather than measuring a stale emit.
 
 # ---------------------------------------------------------------------------------------------
-# demo-run — sge's pong RUNS on the ported stack: DesktopMain forked from the demo-check project
-# with the frame budget the ADJUSTED launcher reads (-Dsge.demo.frames); the run passes when the
-# process exits 0 after printing DEMO-RUN-FRAMES N. Any exception or non-zero exit fails it.
-# Report: port-report/DemoRun (tests.tsv one row, counts.tsv frames/exit/first exception).
-# ---------------------------------------------------------------------------------------------
-[doc("launch sge's demos on the ported stack for FRAMES frames each (default 120), fail on any exception (DEMO=pong|all|<name>)")]
-demo-run:
-    #!/usr/bin/env bash
-    cd "{{root}}"
-    ROOT="$(pwd)"
-    export CORE_PROJECT="{{core_project}}"
-    . scripts/_lib.sh
-    REPORT="$ROOT/port-report/DemoRun"
-    mkdir -p "$MEASURE_TMP" "$REPORT/run-latest"
-    FRAMES="${FRAMES:-120}"
-    ALL="pong space-shooter hex-tactics tile-world viewer-3d particle-show shader-lab net-chat game-screens curve-playground asset-showcase viewport-gallery"
-    main_of() { case "$1" in
-      pong) echo demos.pong.DesktopMain ;; space-shooter) echo demos.spaceshooter.DesktopMain ;; hex-tactics) echo demos.hextactics.DesktopMain ;;
-      tile-world) echo demos.tileworld.DesktopMain ;; viewer-3d) echo demos.viewer3d.DesktopMain ;; particle-show) echo demos.particles.DesktopMain ;;
-      shader-lab) echo demos.shaders.DesktopMain ;; net-chat) echo demos.netchat.DesktopMain ;; game-screens) echo demos.gamescreens.DesktopMain ;;
-      curve-playground) echo demos.curves.DesktopMain ;; asset-showcase) echo demos.assets.DesktopMain ;; viewport-gallery) echo demos.viewports.DesktopMain ;;
-      *) if [ -n "${DEMO_MAIN:-}" ]; then echo "$DEMO_MAIN"; else echo "unknown demo $1 (set DEMO_MAIN=<main class>)" >&2; exit 2; fi ;; esac; }
-    case "${DEMO:-pong}" in all) DEMOS="$ALL" ;; *) DEMOS="${DEMO:-pong}" ;; esac
-    printf '#suite\ttest\tstatus\n' > "$REPORT/run-latest/tests.tsv"
-    printf 'demo\tframes\texit\tfirst-exception\n' > "$REPORT/run-latest/counts.tsv"
-    FAILS=0
-    for DEMO in $DEMOS; do
-      MAIN=$(main_of "$DEMO") || exit 2
-      echo "-- demo-run: $DEMO ($MAIN) for $FRAMES frames against ported/sge-l0 (JVM, forked) --"
-      printf '%s\n' "$FRAMES" > "$ROOT/.balticporter/demo-frames"   # read by demo-check's run task (build.sbt)
-      sbt_test "demo-checkJVM/runMain $MAIN" "$MEASURE_TMP"/demorun-$DEMO.txt
-      ST=$?
-      rm -f "$ROOT/.balticporter/demo-frames"
-      cp "$MEASURE_TMP"/demorun-$DEMO.txt "$MEASURE_TMP"/demorun.txt
-      FR=$(grep -o "DEMO-RUN-FRAMES [0-9]*" "$MEASURE_TMP"/demorun-$DEMO.txt | tail -1 | awk '{print $2}')
-      # the FORKED process's first exception; the sbt client's own reconnect chatter is not one
-      EXC=$(grep -v "ipcsocket\|starting a new server\|sbt-serverconnection\|nonzero exit code returned from runner" "$MEASURE_TMP"/demorun-$DEMO.txt | grep -m1 -E "Exception|UnsatisfiedLinkError|Error: " | sed 's/\t/ /g' | cut -c1-200)
-      if [ "$ST" = 0 ] && [ -n "$FR" ]; then OUT=pass; else OUT=fail; FAILS=$((FAILS+1)); fi
-      printf '%s\t%s\t%s\n' "demos.$DEMO" "DesktopMain" "$OUT" >> "$REPORT/run-latest/tests.tsv"
-      printf '%s\t%s\t%s\t%s\n' "$DEMO" "${FR:-0}" "$ST" "${EXC:--}" >> "$REPORT/run-latest/counts.tsv"
-      echo "demo-run: $DEMO frames=${FR:-0} exit=$ST outcome=$OUT"
-      [ -n "$EXC" ] && echo "   first exception: $EXC"
-      [ "$OUT" = pass ] || grep -E "^\[error\]|Exception|at sge\.|at demos\." "$MEASURE_TMP"/demorun-$DEMO.txt | grep -v "sbt-serverconnection\|ipcsocket\|at sbt\." | head -12
-    done
-    echo "-- demo-run summary --"; cut -f1-3 "$REPORT/run-latest/counts.tsv" | column -t
-    # gate: a demo the baseline records as passing must pass; a new demo failing is reported, not yet a regression
-    REG=0
-    if [ -f "$REPORT/baseline/tests.tsv" ]; then
-      while IFS=$'\t' read -r suite test st; do
-        [ "$st" = pass ] || continue
-        now=$(awk -F'\t' -v s="$suite" '$1==s{print $3}' "$REPORT/run-latest/tests.tsv")
-        if [ -n "$now" ] && [ "$now" != pass ]; then echo "!! demo-run REGRESSED: $suite passed in the baseline and did not now"; REG=1; fi
-      done < <(grep -v '^#' "$REPORT/baseline/tests.tsv")
-    fi
-    [ "$REG" = 0 ] || exit 1
-    [ "$FAILS" = 0 ] || { echo "!! demo-run: $FAILS demo(s) did not render — outputs under $MEASURE_TMP/demorun-<demo>.txt"; exit 1; }
-    echo "demo-run GREEN: every demo run rendered $FRAMES frames on the ported stack"
-    echo "   promote with: just baseline-accept DemoRun"
-
-
-# ---------------------------------------------------------------------------------------------
 # Policy: sbt project identifiers, emitted-port directories, upstream trees, compile dependencies.
 # A module rename is a change HERE and nowhere else.
 # ---------------------------------------------------------------------------------------------
@@ -146,8 +83,6 @@ core_project  := "engine"                # holds balticporter.tir.CorrelateMain
 
 # ported modules (their emitted Scala lives in <module>/src_managed/{main,test}/scala)
 gdx_module    := "ported/sge"
-gdx_steps     := env_var_or_default("GDX_STEPS", "")   # ladder steps to apply on top of the landed set ("none" = bare)
-gdx_l0_module := "ported/sge-l0"             # step L0 of the libGDX ladder: universal translation only
 ashley_module := "ported/sge-ecs"
 sg_module     := "ported/sge-graphs"
 anim8_module  := "ported/sge-anim8"
@@ -175,26 +110,9 @@ md_module     := "ported/ssg-md"
 # trees are disjoint by package (`ssg.md.*` against `ssg.md.ext.*`) and are compiled together on
 # every lane below, which is what makes them one module in the consumer's build.
 md_ext_module := "ported/ssg-md-ext"
-# lls's port root. Its upstream is `{{gdx_src}}/src` — the same vendored libGDX tree `gdx_module`
-# converts, restricted to the twelve sources lls carries `Ported from` headers for
-# (`LlsMigrate.Files` is the authority).
-lls_rungs     := env_var_or_default("LLS_RUNGS", "renames,arity,nullable,ordering,enrich,witness")   # decision steps on lls; override for an experiment
-lls_module    := "ported/lls"
-
-# The lls CHECKOUT: the HAND-WRITTEN half `port-lls` compiles beside the emitted twelve, and the
-# MUnit suite that is this port's only behavioural evidence. Read in place, never copied, never
-# edited — the lane re-derives both populations rather than asserting them (§13.28).
-lls_hand      := "../lls/lls/src/main/scala"
-lls_tests     := "../lls/lls/src/test/scala"
-# The DIFFERENTIAL lane's three paths: the adapted tree (a BUILD PRODUCT, §5.5), and the two
-# POLICY tables beside the port — the enumerated NAME/SHIM rows and the incompatible files.
-lls_diff_tree := "ported/lls/src_managed/diff/scala"
-lls_diff_shims := "ported/lls/diff-shims.tsv"
-lls_diff_skip := "ported/lls/diff-incompatible.tsv"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
-sge_ref       := env_var_or_default("SGE_REF", "../sge")   # the sge checkout the derive step reads the HAND PORT from; a master worktree once ../sge is on a generated branch
 ashley_src    := "../sge/original-src/ashley"
 sg_src        := "../sge/original-src/simple-graphs"
 anim8_src     := "../sge/original-src/anim8-gdx"
@@ -353,10 +271,6 @@ sbt_migrate := "sbt --client"
 sge_strict_flags  := "-deprecation -feature -language:implicitConversions -no-indent -Werror -Wimplausible-patterns -Wrecurse-with-default -Wenum-comment-discard -Wunused:imports,privates,locals,patvars,nowarn"
 sge_relaxed_flags := "-deprecation -feature -language:implicitConversions -no-indent -Werror -Wimplausible-patterns -Wrecurse-with-default -Wenum-comment-discard"
 ssg_flags         := "-deprecation -feature -no-indent -Werror -Wimplausible-patterns -Wrecurse-with-default -Wenum-comment-discard -Wunused:imports,privates,locals,patvars,nowarn"
-# - `lls_flags`: lls/build.sbt's `commonSettings` scalacOptions, with `-Wconf:cat=deprecation:info`
-#   dropped — that is a DEMOTION, and a reference compile that demotes measures less than the
-#   reference build does. Used by `port-lls-ref`.
-lls_flags         := "-deprecation -feature -no-indent -Werror -Wimplausible-patterns -Wrecurse-with-default -Wenum-comment-discard -Wunused:imports,privates,locals,patvars,nowarn"
 
 # per-lane compile/test dependencies, verbatim scala-cli flags (word-split on purpose)
 gdx_deps      := "--dependency org.junit.jupiter:junit-jupiter:5.10.2 --dependency junit:junit:4.13.2 --dependency org.scalameta::munit:1.0.2 --dependency com.kubuszok::lls:0.3.0"
@@ -580,57 +494,6 @@ _default:
     @{{just_executable()}} --list --unsorted
 
 # ---------------------------------------------------------------------------------------------
-# libGDX core, rung L0 — the UNIVERSAL translation alone (no drop/inject/surface policy) ON THE LLS
-# BASE, emitted to `ported/sge-l0`; a DEPENDENT of `ported/lls`, so it runs AFTER `lls-measure`
-# (it reads lls's published port map). JVM compile + correlation only.
-# ---------------------------------------------------------------------------------------------
-[doc("libGDX core rung L0 — universal translation only: emit, checks, compile, correlate")]
-gdx-l0-measure:
-    #!/usr/bin/env bash
-    cd "{{root}}"
-    ROOT="$(pwd)"
-    export CORE_PROJECT="{{core_project}}"
-    . scripts/_lib.sh
-    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gdx_src}}"
-    REPORT="$ROOT/port-report/LibgdxL0Migrate"
-    # a zinc clean BEFORE the migrator (it deletes src_managed): the base's tree moves under this
-    # port, and an incremental compile once read six stale sites as 0 errors
-    _sbt_run "port-sge-l0JVM/clean" >/dev/null 2>&1
-    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0Migrate --steps={{gdx_steps}} --reference=$ROOT/{{sge_ref}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
-    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
-      echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||Exception in thread|^\s+at balticporter\." <<<"$MIGRATE_OUT" | head -20
-      exit 1
-    fi
-    echo "-- migration (ALL checks, untruncated, as the migration printed them) --"
-    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$MIGRATE_OUT"
-    echo
-    echo "-- checks: persisted, untruncated, diffed against the baseline --"
-    show_check_report "$REPORT"
-    upstream_guard "$REPORT"
-    findings_baseline_guard "$REPORT"
-    port_map_guard "$REPORT"
-    echo
-    break_residue {{gdx_l0_module}}/src_managed/main/scala
-    jdk_guard "$REPORT"
-    echo "-- compile (sbt port-sge-l0JVM/compile) --"
-    sbt_compile "port-sge-l0JVM/compile" "$MEASURE_TMP"/gdxl0measure.txt
-    ERRORS=$SBT_ERRORS
-    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxl0measure.txt
-    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gdxl0measure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gdxl0measure.txt))"
-    error_baseline_guard "$ERRORS" "$REPORT"
-    # the JS and Native rows: BP_FULL=1 compiles them, baselined as expected-errors.{js,native}
-    full_compiles "port-sge-l0JS/compile" "port-sge-l0Native/compile" "" "$REPORT"
-    # the residue as one table (the suite lane's families): read this, not the raw blocks
-    classify_errors "$MEASURE_TMP"/gdxl0measure.txt "$ROOT/ported/sge-suite-check/families.tsv" "$REPORT/run-latest"
-    echo "-- by family --"; cat "$REPORT/run-latest/families.tsv"
-    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxl0measure.txt | sort | uniq -c | sort -rn | head
-    echo
-    echo "-- correlation: every error located to its member and its Java origin --"
-    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/gdxl0measure.txt --srcmap "$REPORT/run-latest/srcmap.tsv"
-    headline "$ERRORS" "$REPORT"
-
-# ---------------------------------------------------------------------------------------------
 # libGDX core — emit, checks, break residue, compile, correlate.
 #
 # scala-cli is the consistent gate; sbt incremental lies. This is the command CLAUDE.md §5 tells
@@ -802,113 +665,6 @@ gdx-test-measure:
       echo "-- correlation: test failures located to members and Java origins --"
       correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/gdxtestrun.txt \
         --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
-        --srcmap "test=$REPORT/run-latest/srcmap.tsv"
-      # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
-      # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
-      test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
-    else
-      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
-    fi
-
-
-    headline "$ERRORS" "$REPORT"
-
-# ---------------------------------------------------------------------------------------------
-# Ashley (main + its JUnit suite), compiled BOTH together with the ported libGDX core.
-#
-# Ashley is a DEPENDENT port (RuntimeMode.Dependency): the collection shims are vendored by
-# sge, and port-sge-ecsJVM `dependsOn` port-sgeJVM in build.sbt. Compiling sge-ecs
-# alone measures nothing — every one of its 21 files resolves against libGDX.
-# ---------------------------------------------------------------------------------------------
-[doc("libGDX's own suite on the LADDER port (sge-l0 + lls): convert, compile, RUN — the step gate")]
-gdx-l0-test-measure:
-    #!/usr/bin/env bash
-    cd "{{root}}"
-    ROOT="$(pwd)"
-    export CORE_PROJECT="{{core_project}}"
-    . scripts/_lib.sh
-
-    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gdx_src}}"
-    REPORT="$ROOT/port-report/LibgdxL0TestMigrate"
-
-    # ABORT if the migration did not run — the same stale-output defect fixed in `gdx-measure`: piping
-    # into grep discards the exit status, so an engine that fails to COMPILE measures the PREVIOUS emit
-    # and reports it as a result.
-    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0TestMigrate --steps={{gdx_steps}} --reference=$ROOT/{{sge_ref}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
-    if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
-      echo "!! TEST MIGRATION DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+|Exception in thread|^\s+at balticporter\.|^  [A-Z][A-Za-z]+: " <<<"$MIGRATE_OUT" | head -20
-      exit 1
-    fi
-
-    echo "-- migration (every line it printed) --"
-    sed -n '/building model over/,/wrote [0-9]* Scala test files/p' <<<"$MIGRATE_OUT"
-
-    echo
-    echo "-- checks: persisted, untruncated, diffed against the baseline --"
-    show_check_report "$REPORT"
-    upstream_guard "$REPORT"
-    findings_baseline_guard "$REPORT"
-    port_map_guard "$REPORT"
-
-    echo
-    echo "-- test discovery --"
-    # Count what each FRAMEWORK would actually discover. A ported suite is MUnit (`test("name") {…}`)
-    # and the residue is still JUnit (`@Test`), so counting only annotations under-reports by every
-    # converted suite — the check must sum both or it lies in the safe-looking direction.
-    JAVA_TESTS=$(java_test_count {{gdx_src}}/test)
-    JUNIT_LEFT=$(junit_residue {{gdx_l0_module}}/src_managed/test/scala)
-    MUNIT_TESTS=$(munit_emitted {{gdx_l0_module}}/src_managed/test/scala)
-    SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
-    echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
-    # …and the LOSS IS BASELINED (scripts/_lib.sh). Printed and not gated, this was a digit inside a
-    # line an operator reads past; the verdict is deferred to `headline` so the compile still runs.
-    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$REPORT"
-
-    echo
-    break_residue {{gdx_l0_module}}/src_managed/test/scala
-
-    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
-    # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat.
-    jdk_guard "$REPORT"
-    # `{{gdx_l0_module}}/src/test/scala` is the HAND-WRITTEN half of this port's test source set, and it
-    # is on the line for the same reason `ported/sge-screens/src` and `ported/sge-vfx/src` are on theirs: an
-    # emitted suite the globals policy marks `selfSupplied` gets `private given sge.Sge =
-    # sge.SgeTestFixture.testSge()`, and the fixture is a `src/` file a human may write where the
-    # generated one is not. Leaving it off compiles the
-    # emitted suite against a fixture that is not there — one error, and it is the port's own.
-    # sbt's port-sgeJVM project has src_managed/{main,test}/scala via sourceGenerators and
-    # src/test/scala as an unmanaged source directory. Dependencies are in build.sbt.
-    echo "-- compile (sbt port-sge-l0JVM/Test/compile) --"
-    sbt_compile "port-sge-l0JVM/Test/compile" "$MEASURE_TMP"/gdxl0testmeasure.txt
-    ERRORS=$SBT_ERRORS
-    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxl0testmeasure.txt
-    echo "TOTAL ERRORS: $ERRORS"
-    error_baseline_guard "$ERRORS" "$REPORT"
-    # JVM only at this step: the JS/Native gates come with the steps that unblock them.
-    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxl0testmeasure.txt | sort | uniq -c | sort -rn | head
-
-    # -------------------------------------------------------------------------------------------
-    # RUN them. Compiling a test suite measures nothing about behaviour, and CLAUDE.md §4.4 lists ten
-    # Java forms that translate to VALID Scala meaning something else — reference `==`, `x++` as a
-    # value, `break`/`continue`, `switch` fall-out, a dropped `super(args)`, `@Before`. Not one of them
-    # moves the error count above. Running the suite is the only gate that sees them.
-    # -------------------------------------------------------------------------------------------
-    if [ "$ERRORS" = "0" ]; then
-      echo
-      echo "-- run (sbt port-sgeJVM/test) --"
-      sbt_test "port-sge-l0JVM/testOnly *" "$MEASURE_TMP"/gdxl0testrun.txt
-      reconcile_outcomes "$MEASURE_TMP"/gdxl0testrun.txt "$MUNIT_TESTS"; RECONCILED=$?
-
-      # Anchor every failure on the first stack frame that lands in PORTED code and resolve it, through
-      # both ports' source maps, to a member and a Java origin — then diff the pass/fail sets against
-      # the baseline. A newly-failing test whose member also changed digest is the highest-value signal
-      # this engine can produce, and it is the only lane that catches a §4.4 regression.
-      echo
-      echo "-- correlation: test failures located to members and Java origins --"
-      correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/gdxl0testrun.txt \
-        --srcmap "$ROOT/port-report/LibgdxL0Migrate/run-latest/srcmap.tsv" \
         --srcmap "test=$REPORT/run-latest/srcmap.tsv"
       # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
       # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
@@ -1996,242 +1752,6 @@ noise4j-measure:
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
 
-    headline "$ERRORS" "$REPORT"
-
-# ---------------------------------------------------------------------------------------------
-# lls — `noise4j-measure`'s shape (standalone base, no upstream suite) plus one stage noise4j
-# cannot have: a DIFFERENTIAL suite that is already Scala.
-#
-# THE UPSTREAM HAS NO JUNIT FOR THESE TWELVE. libGDX's own `tests/` tree is an LWJGL demo
-# application, so `java_test_count` over the source root is the honest zero and the lane re-derives
-# it rather than omitting the block (`noise4j-measure`'s rule). The behavioural evidence is
-# lls's OWN MUnit suite (`{{lls_tests}}`), compiled against the emitted twelve as `port-llsJVM`'s
-# test scope — hand-written Scala, so nothing about it is translated and nothing about it is
-# counted as a ported test (CLAUDE.md §3).
-#
-# TWO COMPILE NUMBERS, NOT ONE. `expected-errors` is the port's own (`port-llsJVM/compile`);
-# `lls-suite-compile-errors` is the suite's (`port-llsJVM/Test/compile`, baselined as
-# `expected-errors.suite`). They are separate because they answer different questions — the first
-# is what the engine emitted, the second is how far lls's API and the emitted API are apart — and
-# because sbt's `Test/compile` depends on `Compile/compile`: while the port itself has errors the
-# suite compile reaches no test file at all and counts MAIN sources a second time, deeper (100 and
-# 149 on the first run). The lane prints that rather than letting the number read as the suite's.
-# ---------------------------------------------------------------------------------------------
-[doc("lls — emit, checks, compile, correlate, then lls's OWN MUnit suite against the emitted twelve")]
-lls-measure:
-    #!/usr/bin/env bash
-    cd "{{root}}"
-    ROOT="$(pwd)"
-    export CORE_PROJECT="{{core_project}}"
-    . scripts/_lib.sh
-
-    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
-    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
-    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gdx_src}}"
-    REPORT="$ROOT/port-report/LlsMigrate"
-
-    # ABORT if the migration itself did not run, or the lane measures the PREVIOUS emit and reports a
-    # stale number as a result.
-    # At a triple-digit floor the error count depends on zinc's state (clean 100, warm after a
-    # failed compile 149, 2026-09-05). `clean` also deletes src_managed (§5.5), so it runs BEFORE
-    # the migrator regenerates it, never between the migrator and the compile.
-    _sbt_run "port-llsJVM/clean" >/dev/null 2>&1
-    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.lls.LlsMigrate --rungs={{lls_rungs}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
-    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
-      echo "!! LlsMigrate DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
-      exit 1
-    fi
-    echo "-- LlsMigrate (ALL checks, untruncated, as the migration printed them) --"
-    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$MIGRATE_OUT"
-
-    echo
-    echo "-- checks: persisted, untruncated, diffed against the baseline --"
-    show_check_report "$REPORT"
-    upstream_guard "$REPORT"
-    findings_baseline_guard "$REPORT"
-    port_map_guard "$REPORT"
-
-    echo
-    echo "-- test discovery --"
-    # ASSERTED, not omitted: the twelve sources come out of libGDX's `gdx/src`, which holds no
-    # `@Test` at all. If one ever appears there, this lane says so rather than continuing to report
-    # a port whose only evidence is somebody else's suite.
-    JAVA_TESTS=$(java_test_count {{gdx_src}}/src)
-    echo "@Test in the upstream source root: $JAVA_TESTS   emitted test files: 0 (this port has no test source set)"
-    [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS $JAVA_TESTS @Test — this port emits no tests, so none of them runs"
-    # …and the DIFFERENTIAL population, RE-DERIVED from the lls checkout on every run. A hand port
-    # that gains or loses a file or a `test(…)` makes any census taken against it stale, and nothing
-    # else in this repository could say so (`ai-diff-measure`'s rule).
-    HAND_FILES=$(find {{lls_hand}} -name '*.scala' | wc -l | tr -d ' ')
-    SUITE_FILES=$(find {{lls_tests}} -name '*.scala' | wc -l | tr -d ' ')
-    SUITE_TESTS=$(munit_emitted {{lls_tests}})
-    echo "lls hand port ({{lls_hand}}): $HAND_FILES file(s) — 12 this port EMITS, the rest compiled beside them"
-    echo "lls suite ({{lls_tests}}): $SUITE_FILES file(s), $SUITE_TESTS test(…)"
-
-    echo
-    break_residue {{lls_module}}/src_managed/main/scala
-
-    # The JDK is an input to this measurement: the frontend read its class files on ONE JVM and
-    # the compile below runs on another.
-    jdk_guard "$REPORT"
-    echo "-- compile (sbt port-llsJVM/compile; zinc state cleaned before the migrator) --"
-    sbt_compile "port-llsJVM/compile" "$MEASURE_TMP"/llsmeasure.txt
-    ERRORS=$SBT_ERRORS
-    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/llsmeasure.txt
-    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/llsmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/llsmeasure.txt))"
-    error_baseline_guard "$ERRORS" "$REPORT"
-    full_compiles "port-llsJS/compile" "port-llsNative/compile" "port-lls-ref/compile" "$REPORT"
-    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/llsmeasure.txt | sort | uniq -c | sort -rn | head
-    echo "-- bare (uncoded) errors by message --"
-    grep -A1 '^-- Error:' "$MEASURE_TMP"/llsmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    echo
-    echo "-- correlation: every error located to its member and its Java origin --"
-    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/llsmeasure.txt \
-      --srcmap "$REPORT/run-latest/srcmap.tsv"
-
-    # --- the lls SUITE's own number ---------------------------------------------------------
-    echo
-    echo "-- lls suite compile (sbt port-llsJVM/Test/compile) --"
-    sbt_compile "port-llsJVM/Test/compile" "$MEASURE_TMP"/llssuite.txt
-    SUITE_ERRORS=$SBT_ERRORS
-    compile_guard "$SBT_STATUS" "$SUITE_ERRORS" "$MEASURE_TMP"/llssuite.txt
-    echo "lls-suite-compile-errors: $SUITE_ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/llssuite.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/llssuite.txt))"
-    if [ "$ERRORS" != "0" ]; then
-      echo "   (the port itself has $ERRORS error(s), and sbt's Test/compile depends on Compile/compile —"
-      echo "    this number does NOT describe the suite: it is a second, deeper pass over MAIN sources,"
-      echo "    and no test file was reached. Read it as the suite's only once the port compiles.)"
-    fi
-    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/llssuite.txt | sort | uniq -c | sort -rn | head
-    mkdir -p "$REPORT/run-latest"
-    echo "$SUITE_ERRORS" > "$REPORT/run-latest/errors-count.suite"
-    # Baselined in BOTH directions like every other number (CLAUDE.md §5); promoted by
-    # `just baseline-accept lls` as `expected-errors.suite`. NOT a `headline` gate: while the port
-    # is red this number is the port's own, and gating it twice would say nothing new.
-    if [ -f "$REPORT/baseline/expected-errors.suite" ]; then
-      SUITE_EXPECTED=$(tr -dc '0-9' < "$REPORT/baseline/expected-errors.suite")
-      if [ "$SUITE_ERRORS" = "$SUITE_EXPECTED" ]; then
-        echo "  suite errors vs baseline: $SUITE_ERRORS = $SUITE_EXPECTED  (unchanged)"
-      elif [ "$SUITE_ERRORS" -gt "$SUITE_EXPECTED" ]; then
-        echo "!! SUITE ERRORS ROSE — $SUITE_EXPECTED -> $SUITE_ERRORS."
-      else
-        echo "!! SUITE ERRORS FELL — $SUITE_EXPECTED -> $SUITE_ERRORS. Acknowledge: just baseline-accept LlsMigrate"
-      fi
-    else
-      echo "!! NO SUITE ERROR BASELINE — $REPORT/baseline/expected-errors.suite does not exist."
-      echo "   Seed it from this run's honest state: just baseline-accept LlsMigrate"
-    fi
-
-    if [ "$SUITE_ERRORS" = "0" ]; then
-      echo
-      echo "-- run (lls's own suite against the emitted twelve) --"
-      sbt_test "port-llsJVM/testOnly *" "$MEASURE_TMP"/llssuiterun.txt
-      reconcile_outcomes "$MEASURE_TMP"/llssuiterun.txt "$SUITE_TESTS"; RECONCILED=$?
-      echo
-      echo "-- correlation: test failures located to members and Java origins --"
-      # ONE map and no `test=` one: the suite is HAND-WRITTEN, so it has no source map and cannot
-      # have one. A failure anchors on the LIBRARY member that threw, which is the question a
-      # differential suite asks (`ai-diff-measure`).
-      correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/llssuiterun.txt \
-        --srcmap "$REPORT/run-latest/srcmap.tsv"
-      test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
-    else
-      echo "(not running lls's suite: it does not compile — a test that cannot run is not a test that passed)"
-    fi
-
-    headline "$ERRORS" "$REPORT"
-
-# ---------------------------------------------------------------------------------------------
-# lls-diff — the DIFFERENTIAL gate, `textra-diff-measure`'s shape with one stage textra cannot
-# have: the reference suite is ADAPTED BY A TABLE rather than copied by hand.
-#
-# `lls-measure` already compiles lls's suite AS WRITTEN against the emitted port, and that number
-# (`expected-errors.suite`) answers "how far apart are the two APIs". It cannot answer "does the
-# emitted library BEHAVE like the hand port", because a suite that does not compile runs no test.
-# This lane answers the second question and keeps the first honest: it applies an ENUMERATED
-# NAME/SHIM table (`ported/lls/diff-shims.tsv`) to comment-masked COPIES under `src_managed/diff`
-# — the lls checkout is never edited — and DECLARES, per file with a reason, every test whose
-# assertion cannot survive the emitted shape (`ported/lls/diff-incompatible.tsv`).
-#
-# The two tables are the whole adaptation, and both are read out on every run: a shim row that
-# fires nowhere is printed, an incompatible row naming a file that is gone is FATAL. Nothing here
-# may make a failing assertion pass — that is the one edit a differential suite cannot afford.
-# ---------------------------------------------------------------------------------------------
-[doc("lls-diff — lls's OWN suite, adapted by an enumerated NAME/SHIM table, against the emitted port")]
-lls-diff-measure:
-    #!/usr/bin/env bash
-    cd "{{root}}"
-    ROOT="$(pwd)"
-    export CORE_PROJECT="{{core_project}}"
-    . scripts/_lib.sh
-
-    REPORT="$ROOT/port-report/LlsDifferential"
-    mkdir -p "$MEASURE_TMP" "$REPORT/run-latest"
-
-    # NO MIGRATION RUNS HERE: this lane's subject is the emitted code `lls-measure` produced and
-    # already checked, so there is no check report and re-printing its counts would be two
-    # readings of one artifact that can disagree (`textra-diff-measure`'s rule).
-    echo "-- census population: RE-DERIVED from the reference hand port, never asserted --"
-    REF_FILES=$(find {{lls_tests}} -name '*.scala' | wc -l | tr -d ' ')
-    REF_TESTS=$(munit_emitted {{lls_tests}})
-    echo "reference hand port ({{lls_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
-    if [ "$REF_FILES" != "18" ] || [ "$REF_TESTS" != "423" ]; then
-      echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 18 / 423."
-      echo "   the last census of this reference suite was taken against 18 / 423 and is now STALE: a file added"
-      echo "   there is a file nobody has classified, and one removed may be one this lane adapts."
-      echo "   Re-run the census before trusting the outcomes below."
-      exit 1
-    fi
-
-    echo
-    echo "-- adapt: the NAME/SHIM table on comment-masked copies (the lls checkout is never edited) --"
-    if ! shim_tree "$ROOT/{{lls_tests}}" "$ROOT/{{lls_diff_tree}}" "$ROOT/{{lls_diff_shims}}" "$ROOT/{{lls_diff_skip}}"; then
-      echo "!! the adaptation FAILED — refusing to compile a half-written tree"
-      exit 1
-    fi
-    echo "-- incompatible, with the reason each was declined --"
-    grep -vE '^\s*(#|$)' "{{lls_diff_skip}}" | sed 's/^/     /'
-
-    echo
-    # The JDK is an input to this measurement: the frontend read its class files on ONE JVM and the
-    # compile below runs on another. The port's own report carries the pin.
-    jdk_guard "$ROOT/port-report/LlsMigrate"
-    echo "-- compile (sbt port-lls-diff/Test/compile) --"
-    sbt_compile "port-lls-diff/Test/compile" "$MEASURE_TMP"/llsdiffmeasure.txt
-    ERRORS=$SBT_ERRORS
-    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/llsdiffmeasure.txt
-    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/llsdiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/llsdiffmeasure.txt))"
-    error_baseline_guard "$ERRORS" "$REPORT"
-    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/llsdiffmeasure.txt | sort | uniq -c | sort -rn | head
-    echo "-- errors by adapted file --"
-    grep -oE "diff/scala/[^:]*\.scala" "$MEASURE_TMP"/llsdiffmeasure.txt | sort | uniq -c | sort -rn | head -20
-
-    if [ "$ERRORS" != "0" ]; then
-      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
-      echo "SUMMARY  adapted $SHIM_FILES file(s)/$SHIM_TESTS test(…) | run 0 | incompatible $SHIM_SKIPPED_FILES file(s)/$SHIM_SKIPPED_TESTS test(…)"
-      headline "$ERRORS" "$REPORT"
-      exit 0
-    fi
-
-    echo
-    echo "-- run --"
-    sbt_test "port-lls-diff/testOnly *" "$MEASURE_TMP"/llsdiffrun.txt
-    reconcile_outcomes "$MEASURE_TMP"/llsdiffrun.txt "$SHIM_TESTS"; RECONCILED=$?
-
-    echo
-    echo "-- correlation: test failures located to members and Java origins --"
-    # ONE map and no `test=` one: the suite is the HAND PORT's, so it has no source map and cannot
-    # have one. A failure anchors on the LIBRARY member that threw, which is the question a
-    # differential suite asks.
-    correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/llsdiffrun.txt \
-      --srcmap "$ROOT/port-report/LlsMigrate/run-latest/srcmap.tsv"
-    test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
-
-    echo
-    PASSED=$(grep -c $'\tpass$' "$REPORT/run-latest/tests.tsv" 2>/dev/null); PASSED=${PASSED:-0}
-    FAILED=$(grep -c $'\tfail$' "$REPORT/run-latest/tests.tsv" 2>/dev/null); FAILED=${FAILED:-0}
-    echo "SUMMARY  adapted $SHIM_FILES file(s)/$SHIM_TESTS test(…) | pass $PASSED | fail $FAILED | incompatible $SHIM_SKIPPED_FILES file(s)/$SHIM_SKIPPED_TESTS test(…)"
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -4092,9 +3612,6 @@ sg-measure-full:
 [doc("noise4j — full")]
 noise4j-measure-full:
     BP_FULL=1 {{just_executable()}} noise4j-measure
-[doc("lls — full")]
-lls-measure-full:
-    BP_FULL=1 {{just_executable()}} lls-measure
 [doc("jbump — full")]
 jbump-measure-full:
     BP_FULL=1 {{just_executable()}} jbump-measure
@@ -4192,12 +3709,7 @@ measure-all:
     # JVM. Diff lanes (ai-diff, textra-diff, visui-diff) compile hand-port tests and do not carry
     # xplat/ref compiles — BP_FULL has no effect on them.
     export BP_FULL=1
-    # `lls-measure` is LAST and its only ordering constraint is ITSELF: it is a STANDALONE base with
-    # no resolution root outside its own source root, nothing it emits is read by another lane, and
-    # nothing another lane emits is read by it. Last is therefore the position that leaves the
-    # twenty-three established lanes' order — and their numbers — untouched by this port's arrival,
-    # which is `usl-measure`'s own reason for being appended rather than slotted in.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure visui-measure visui-diff-measure usl-measure usl-test-measure lls-measure lls-diff-measure; do
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure visui-measure visui-diff-measure usl-measure usl-test-measure; do
       echo
       echo "################################################################## just $lane (full)"
       if ! {{just_executable()}} "$lane"; then
@@ -5085,9 +4597,7 @@ baseline-accept PORT:
     fi
     # Cross-platform error baselines (CLAUDE.md §5, xplat compile gate): promoted as
     # expected-errors.js and expected-errors.native, written by xplat_compile on every run.
-    # `suite` joins them: `lls-measure` compiles lls's own MUnit suite against the emitted twelve
-    # and records that count apart from the port's own (`lls-suite-compile-errors`).
-    for plat_suffix in js native suite; do
+    for plat_suffix in js native; do
       if [ -f "$DIR/run-latest/errors-count.${plat_suffix}" ]; then
         cp "$DIR/run-latest/errors-count.${plat_suffix}" "$DIR/baseline/expected-errors.${plat_suffix}"
         echo "expected-errors.${plat_suffix}: $(cat "$DIR/baseline/expected-errors.${plat_suffix}")"
@@ -5724,63 +5234,6 @@ metals-status:
 [doc("call one Metals MCP tool from the shell: just metals-call list | just metals-call <tool> '<json args>'")]
 metals-call +ARGS:
     scripts/metals-call.sh {{ARGS}}
-
-# ---------------------------------------------------------------------------------------------
-# The goal's instrument: sge's demo game code compiled against the ladder port.
-# `DEMO_CHECK=pong,space-shooter just demo-check`. Compile only; the error list
-# IS the remaining API distance, by file and by kind.
-# ---------------------------------------------------------------------------------------------
-[doc("sge's demo game code against the ladder port — compile, count, classify (DEMO_CHECK=pong)")]
-demo-check:
-    #!/usr/bin/env bash
-    cd "{{root}}"
-    ROOT="$(pwd)"
-    export CORE_PROJECT="{{core_project}}"
-    . scripts/_lib.sh
-    REPORT="$ROOT/port-report/DemoCheck"
-    mkdir -p "$MEASURE_TMP" "$REPORT/run-latest"
-    echo "-- demos: ${DEMO_CHECK:-all twelve} (+ shared) against ported/sge-l0 --"
-    sbt_compile "demo-checkJVM/compile" "$MEASURE_TMP"/democheck.txt
-    ERRORS=$SBT_ERRORS
-    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/democheck.txt
-    echo "TOTAL ERRORS: $ERRORS"
-    error_baseline_guard "$ERRORS" "$REPORT"
-    # a DROP-IN style lane (hand-written code against the port): the count under the convention
-    # `baseline-accept` recognises, beside the plain one the guard above reads.
-    cp "$REPORT/run-latest/errors-count" "$REPORT/run-latest/errors-count.dropin.demos"
-    echo "-- by file --"
-    grep -E "^-- \[E[0-9]+\]" "$MEASURE_TMP"/democheck.txt | sed -E 's#.*/sge/demos/##; s/:[0-9]+:[0-9]+.*//' | sort | uniq -c | sort -rn | head -20
-    echo "-- by kind --"
-    grep -oE "^-- \[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/democheck.txt | sort | uniq -c | sort -rn | head
-    echo "-- first lines --"
-    grep -A3 -E "^-- \[E" "$MEASURE_TMP"/democheck.txt | grep -E "^\s*\|[A-Za-z]" | sed -E 's/^\s*\|//; s/`[^`]*`/X/g' | cut -c1-90 | sort | uniq -c | sort -rn | head -12
-    headline "$ERRORS" "$REPORT"
-
-# sge-suite-check — sge core's OWN test tree (sge/src/test/{scala,scalajvm}) compiled against
-# ported/sge-l0. Errors attributed to the plan's families through
-# ported/sge-suite-check/families.tsv; baselined like demo-check (a drop-in style count).
-[doc("sge core's own test suite against the ladder port — compile, count, attribute to families")]
-sge-suite-check:
-    #!/usr/bin/env bash
-    cd "{{root}}"
-    ROOT="$(pwd)"
-    export CORE_PROJECT="{{core_project}}"
-    . scripts/_lib.sh
-    REPORT="$ROOT/port-report/SgeSuiteCheck"
-    mkdir -p "$MEASURE_TMP" "$REPORT/run-latest"
-    echo "-- sge core's own suite (scala + scalajvm) against ported/sge-l0 --"
-    sbt_compile "sge-suite-checkJVM/compile" "$MEASURE_TMP"/sgesuite.txt
-    ERRORS=$SBT_ERRORS
-    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/sgesuite.txt
-    echo "TOTAL ERRORS: $ERRORS"
-    error_baseline_guard "$ERRORS" "$REPORT"
-    cp "$REPORT/run-latest/errors-count" "$REPORT/run-latest/errors-count.dropin.suite"
-    classify_errors "$MEASURE_TMP"/sgesuite.txt "$ROOT/ported/sge-suite-check/families.tsv" "$REPORT/run-latest"
-    echo "-- by family --"; cat "$REPORT/run-latest/families.tsv"
-    echo "-- files with errors: $(cut -f2 "$REPORT/run-latest/errors-by-family.tsv" | sort -u | wc -l | tr -d ' ') --"
-    echo "-- by file (top) --"
-    cut -f2 "$REPORT/run-latest/errors-by-family.tsv" | sed -E 's#.*/sge/src/test/##' | sort | uniq -c | sort -rn | head -15
-    headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
 # ts-export-mermaid / ts-export-terser — RAST export for the TS/JS frontend.

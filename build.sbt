@@ -491,14 +491,6 @@ val ssgFlags: Seq[String] = Seq(
   "-Werror", "-Wimplausible-patterns", "-Wrecurse-with-default",
   "-Wenum-comment-discard", "-Wunused:imports,privates,locals,patvars,nowarn",
 )
-// lls/build.sbt's `commonSettings` scalacOptions, with `-Wconf:cat=deprecation:info` dropped —
-// a DEMOTION, and a reference compile that demotes measures less than the reference build does.
-val llsFlags: Seq[String] = Seq(
-  "-deprecation", "-feature", "-no-indent",
-  "-Werror", "-Wimplausible-patterns", "-Wrecurse-with-default",
-  "-Wenum-comment-discard", "-Wunused:imports,privates,locals,patvars,nowarn",
-)
-
 // Shared settings for `port-*-ref` projects: the reference repo's own scalacOptions instead of
 // `-nowarn`. JVM-only plain projects sharing the port's source generators, so a compile under the
 // reference build's flags is `sbt --client port-sge-ref/compile`.
@@ -580,61 +572,6 @@ lazy val `port-sge-graphs` = (projectMatrix in file("ported/sge-graphs"))
   .jvmPlatform(scalaVersions = Seq(scalaV))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings)
   .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings)
-
-// ---------------------------------------------------------------------------------------------
-// port-sge-l0 — libGDX core, step L0 of the ladder (ported/sge-l0): the universal translation
-// alone, JVM only. Its compile count is the ladder's floor.
-// ---------------------------------------------------------------------------------------------
-lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
-  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .dependsOn(`port-lls`)
-  .settings(portSettings("sge-l0") *)
-  .settings(portSourceGenerators("sge-l0") *)
-  .settings(
-    name := "balticporter-port-sge-l0",
-    resolvers += "Central Portal Snapshots" at "https://central.sonatype.com/repository/maven-snapshots",
-    libraryDependencies ++= Seq(
-      // sge's JVM platform layer: Panama loader + the native providers (GLFW, miniaudio, ops; ANGLE).
-      // sge's typed JSON/UBJSON documents (Kindlings-derived codecs)
-      "com.kubuszok"          %% "kindlings-jsoniter-derivation" % "0.3.2",
-      "com.kubuszok"          %% "kindlings-jsoniter-json"       % "0.3.2",
-      "com.kubuszok"          %% "kindlings-ubjson-derivation"   % "0.3.2",
-      // sge's `FastShowPretty[Align]` (the align step injects sge's own `Align.scala`)
-      "com.kubuszok"          %% "kindlings-fast-show-pretty"    % "0.3.2",
-      // sge's logger (`sge.utils.LogPlatform`, injected verbatim)
-      "com.outr"              %% "scribe"                        % "3.19.0",
-      // sge's HTTP stack (`Net.httpClient`; net step) — sttp core on every row
-      "com.softwaremill.sttp.client4" %% "core"                  % "4.0.26",
-      "org.scalameta"         %% "munit"             % "1.2.0" % Test,
-      "junit"                  % "junit"             % "4.13.2" % Test,
-      "org.junit.jupiter"      % "junit-jupiter"     % "5.10.2" % Test,
-    ),
-    // The ladder ports carry a non-zero floor: a per-run nonce keeps their compile a real compile.
-    Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
-    Test / scalacOptions    += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
-  )
-  // the three rows sge publishes for (CLAUDE.md §1.5); each row's own layer is injected through
-  // `PortManifest.platformDirs` (src_managed/<row>/scala) and its dependencies stand on the row
-  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
-    libraryDependencies ++= Seq(
-      "com.badlogicgames.gdx"  % "gdx-jnigen-loader" % "2.5.2",
-      // sge's JVM platform layer: Panama loader + the native providers (GLFW, miniaudio, ops; ANGLE)
-      "com.kubuszok"          %% "multiarch-core"         % "0.4.0",
-      "com.kubuszok"          %% "multiarch-panama-api"   % "0.4.0",
-      "com.kubuszok"          %% "multiarch-panama-jdk"   % "0.4.0",
-      "com.kubuszok"           % "pnm-provider-sge-desktop" % "0.1.2-33-gcf10406-SNAPSHOT",
-      "com.kubuszok"           % "pnm-provider-sge-angle"   % "0.1.2-33-gcf10406-SNAPSHOT")))
-  .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings ++ Seq(
-    libraryDependencies ++= Seq(
-      "org.scala-js"  %% "scalajs-dom"         % "2.8.1",
-      // sge's browser row reads its resources through `multiarch.resources.PlatformResources`, served by
-      // the object the plugin generates (`BrowserApplication` references it once against DCE)
-      "com.kubuszok"  %% "multiarch-resources" % "0.4.0"))
-    ++ _root_.multiarch.sbt.MultiArchResourcesPlugin.embeddedResourcesSettings(objectName = "sge.platform.GeneratedEmbeddedResources"))
-  .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings ++ Seq(
-    libraryDependencies ++= Seq(
-      "com.kubuszok" % "sn-provider-sge"  % "0.1.2-33-gcf10406-SNAPSHOT",
-      "com.kubuszok" % "sn-provider-curl" % "0.4.0")))
 
 // ---------------------------------------------------------------------------------------------
 // port-sge-anim8 — anim8-gdx (ported/sge-anim8). Dependent on sge. sge_relaxed_flags.
@@ -918,47 +855,6 @@ lazy val `port-ssg-md-ext` = (projectMatrix in file("ported/ssg-md-ext"))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings)
 
 // ---------------------------------------------------------------------------------------------
-// port-lls — the twelve libGDX sources lls carries `Ported from` headers for (ported/lls).
-// Standalone, and deliberately WITHOUT `com.kubuszok %% lls`: this port replaces that artifact.
-//
-// lls's HAND-WRITTEN half (Nullable, MkArray, ArrayView, Eval, Resource) and its whole test tree
-// are read IN PLACE from the lls checkout — never copied (`CLAUDE.md` §5.5).
-// The excludeFilter names the twelve this port EMITS, so the two halves cannot both define a type
-// and a file lls hand-writes later arrives with no build edit. Test coordinates are lls's own.
-// ---------------------------------------------------------------------------------------------
-
-/** The twelve emitted file names — what `port-lls` must NOT also read from the lls checkout. */
-val llsEmittedFileNames: Set[String] = Set(
-  "DynamicArray.scala", "ObjectMap.scala", "ObjectSet.scala", "OrderedMap.scala",
-  "OrderedSet.scala", "ArrayMap.scala", "Sort.scala", "TimSort.scala",
-  "ComparableTimSort.scala", "Select.scala", "QuickSelect.scala", "MathUtils.scala",
-)
-
-lazy val `port-lls` = (projectMatrix in file("ported/lls"))
-  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .settings(portSettings("lls") *)
-  .settings(portSourceGenerators("lls") *)
-  .settings(
-    name := "balticporter-port-lls",
-    // The ladder ports carry a non-zero floor: a per-run nonce keeps their compile a real compile.
-    Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
-    libraryDependencies ++= Seq(
-      "org.scalameta"  %% "munit"            % "1.3.5"  % Test,
-      "org.scalameta"  %% "munit-scalacheck" % "1.3.0"  % Test,
-      "org.scalacheck" %% "scalacheck"       % "1.20.0" % Test,
-    ),
-    Compile / unmanagedSourceDirectories +=
-      (ThisBuild / baseDirectory).value / ".." / "lls" / "lls" / "src" / "main" / "scala",
-    Compile / unmanagedSources / excludeFilter :=
-      sbt.io.HiddenFileFilter || new sbt.io.SimpleFileFilter(f => llsEmittedFileNames(f.getName)),
-    Test / unmanagedSourceDirectories +=
-      (ThisBuild / baseDirectory).value / ".." / "lls" / "lls" / "src" / "test" / "scala",
-  )
-  .jvmPlatform(scalaVersions = Seq(scalaV))
-  .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings)
-  .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings)
-
-// ---------------------------------------------------------------------------------------------
 // DIFFERENTIAL LANE PROJECTS — test-only projects that compile the HAND-WRITTEN adapted suite
 // against the port's emitted main classpath, WITHOUT including the port's emitted test sources
 // (`src_managed/test/scala`). The three differential lanes (`ai-diff-measure`,
@@ -984,32 +880,6 @@ lazy val `port-sge-ai-diff` = (project in file(".ports/sge-ai-diff"))
       "com.kubuszok"  %% "lls"   % "0.3.0",
       "org.scalameta" %% "munit" % "1.2.0" % Test,
       "junit"          % "junit"  % "4.12"  % Test,
-    ),
-  )
-
-// port-lls-diff — lls's differential gate. Test sources are a BUILD PRODUCT: `lls-diff-measure`
-// writes the adapted, comment-masked copies of the lls checkout's suite into
-// ported/lls/src_managed/diff/scala (CLAUDE.md §5.5 — the checkout is never edited).
-lazy val `port-lls-diff` = (project in file(".ports/lls-diff"))
-  .dependsOn(`port-lls`.jvm(scalaV))
-  .settings(
-    name := "balticporter-port-lls-diff",
-    publish / skip := true,
-    scalacOptions := Seq("-nowarn"),
-    // sbt prints at most `maxErrors` diagnostics and this lane COUNTS diagnostics (§5):
-    // capped at 100 the residue would read as a floor it never reached.
-    maxErrors := 100000,
-    Test / unmanagedSourceDirectories := Seq(
-      (ThisBuild / baseDirectory).value / "ported" / "lls" / "src_managed" / "diff" / "scala"
-    ),
-    // munit 1.2.0, the version EVERY other lane pins — and not lls's own 1.3.5. munit 1.3's sbt
-    // reporter prints no per-test marker for a PASS, and the outcome parser every lane shares
-    // reads those markers (`CLAUDE.md` §5.1): on 1.3.5 this suite reported 189 passes as 186
-    // OUTCOMES LOST. The runner's output format is part of the measurement.
-    libraryDependencies ++= Seq(
-      "org.scalameta"  %% "munit"            % "1.2.0"  % Test,
-      "org.scalameta"  %% "munit-scalacheck" % "1.2.0"  % Test,
-      "org.scalacheck" %% "scalacheck"       % "1.20.0" % Test,
     ),
   )
 
@@ -1295,15 +1165,6 @@ lazy val `port-ssg-md-ext-ref` = (project in file(".ports/ssg-md-ext-ref"))
     ),
   )
 
-// The EMITTED tree alone, under lls's own flags: lls's hand-written half is deliberately absent
-// here, so `.ref` counts diagnostics this port produced and none it merely compiles beside.
-lazy val `port-lls-ref` = (project in file(".ports/lls-ref"))
-  .settings(refPortSettings("lls") *)
-  .settings(
-    name := "balticporter-port-lls-ref",
-    scalacOptions := llsFlags,
-  )
-
 // ---------------------------------------------------------------------------------------------
 // `ports` — an aggregate of EVERY ported module, NOT part of `root`. `sbt ports/compile`
 // reaches them all; `sbt compile` stays the engine's. The aggregate is over projectRefs so
@@ -1313,9 +1174,6 @@ lazy val ports = project
   .in(file(".ports"))
   .aggregate(
     `port-sge`.projectRefs *
-  )
-  .aggregate(
-    `port-sge-l0`.projectRefs *
   )
   .aggregate(
     `port-sge-ecs`.projectRefs *
@@ -1362,16 +1220,12 @@ lazy val ports = project
   .aggregate(
     `port-ssg-md-ext`.projectRefs *
   )
-  .aggregate(
-    `port-lls`.projectRefs *
-  )
-  .aggregate(`port-sge-ai-diff`, `port-sge-textra-diff`, `port-sge-visui-diff`, `port-lls-diff`)
+  .aggregate(`port-sge-ai-diff`, `port-sge-textra-diff`, `port-sge-visui-diff`)
   .aggregate(
     `port-sge-ref`, `port-sge-ecs-ref`, `port-sge-graphs-ref`, `port-sge-anim8-ref`,
     `port-sge-noise-ref`, `port-sge-jbump-ref`, `port-sge-gltf-ref`, `port-sge-screens-ref`,
     `port-sge-vfx-ref`, `port-sge-ai-ref`, `port-sge-textra-ref`, `port-sge-visui-ref`,
     `port-sge-visui-usl-ref`, `port-ssg-liquid-ref`, `port-ssg-md-ref`, `port-ssg-md-ext-ref`,
-    `port-lls-ref`,
   )
   .settings(
     name := "balticporter-ports",
@@ -1388,111 +1242,6 @@ lazy val root = project
     name := "balticporter",
     publish / skip := true,
   )
-
-// The goal's instrument: sge's demo game code — the
-// platform-agnostic `src/main/scala` of a demo plus `demos/shared` — compiled against the ladder
-// port. Compile only, JVM only; the launchers (`scaladesktop`, `scalajs`, `scala-android`) are the
-// backends' step. `DEMO_CHECK` narrows the demos (default: all twelve).
-val DemoCheckAll = "pong,space-shooter,hex-tactics,tile-world,viewer-3d,particle-show,shader-lab,net-chat,game-screens,curve-playground,asset-showcase,viewport-gallery"
-lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
-  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  // tile-world imports `sge.noise.*`: the (standalone) noise4j port rides on the classpath as-is
-  .dependsOn(`port-sge-l0`, `port-sge-noise`)
-  .settings(SgeDemoAssetGenerator.settings *)
-  .settings(
-    name := "balticporter-demo-check",
-    publish / skip := true,
-    maxErrors := 100000,
-    Compile / unmanagedSourceDirectories ++= {
-      val demos = (ThisBuild / baseDirectory).value / ".." / "sge" / "demos"
-      val picked = sys.env.getOrElse("DEMO_CHECK", DemoCheckAll).split(',').map(_.trim).filter(_.nonEmpty).toSeq
-      ("shared" +: picked).flatMap(d => Seq(demos / d / "src" / "main" / "scala", demos / d / "src" / "main" / "scaladesktop")) :+
-        (ThisBuild / baseDirectory).value / "ported" / "demo-check" / "adjusted"
-    },
-    // `just demo-run`: sge's DesktopMain forked on the ported stack — Panama
-    // needs native access, GLFW needs the first thread on macOS; the frame budget arrives as -Dsge.demo.frames.
-    Compile / run / fork := true,
-    Compile / run / javaOptions ++= Seq("--enable-native-access=ALL-UNNAMED") ++
-      (if (sys.props("os.name").toLowerCase.contains("mac")) Seq("-XstartOnFirstThread") else Seq.empty) ++ {
-        // the lane's frame budget: a marker file, read when the run task executes (an env var never
-        // reaches a warm server, and `set` cannot name a projectMatrix row by its sbt id)
-        val marker = (ThisBuild / baseDirectory).value / ".balticporter" / "demo-frames"
-        if (marker.exists) Seq("-Dsge.demo.frames=" + IO.read(marker).trim) else Seq.empty
-      },
-    Compile / run / connectInput := false,
-    // the demos' assets: asset-showcase ships g3dj/g3db models as resources and sge GENERATES its
-    // textures and sounds (project/SgeDemoAssetGenerator.scala, copied from sge's demo build)
-    Compile / unmanagedResourceDirectories ++= {
-      val demos = (ThisBuild / baseDirectory).value / ".." / "sge" / "demos"
-      Seq(demos / "asset-showcase" / "src" / "main" / "resources")
-    },
-    Compile / unmanagedResources := (Compile / unmanagedResources).value.filterNot(_.getName == "AndroidManifest.xml"),
-    // an ADJUSTED copy under ported/demo-check/adjusted replaces sge's file of the same name
-    // (ported/demo-check/ADJUSTMENTS.tsv enumerates the differences; sge itself is never edited).
-    Compile / unmanagedSources := {
-      val all      = (Compile / unmanagedSources).value
-      // keyed by the path under the LAST `demos/` segment (`demos/pong/DesktopMain.scala`), never by
-      // the bare file name — twelve demos each have a `DesktopMain.scala`
-      def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/demos/"); if (i < 0) p else p.substring(i + 1) }
-      val adjusted = all.filter(_.getPath.contains("/ported/demo-check/adjusted/")).map(key).toSet
-      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/demo-check/adjusted/"))
-    },
-    Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
-  )
-  .jvmPlatform(scalaVersions = Seq(scalaV))
-
-// sge-suite-check — sge core's OWN test tree compiled against the ladder port:
-// the drop-in gate for the JVM row. sge is never edited; an adjusted copy under
-// ported/sge-suite-check/adjusted replaces sge's file of the same relative path (ADJUSTMENTS.tsv).
-lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
-  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .dependsOn(`port-sge-l0`)
-  .settings(
-    name := "balticporter-sge-suite-check",
-    publish / skip := true,
-    maxErrors := 100000,
-    Compile / scalacOptions += s"-Xmacro-settings:suiteNonce=${System.nanoTime}",
-    libraryDependencies ++= Seq(
-      "org.scalameta" %% "munit"            % "1.3.6",
-      "org.scalameta" %% "munit-scalacheck" % "1.3.1"),
-    testFrameworks += new TestFramework("munit.Framework"),
-    Compile / unmanagedSourceDirectories ++= {
-      val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
-      val base = (ThisBuild / baseDirectory).value / "ported" / "sge-suite-check"
-      val platform = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match
-        case Seq("js")     => "js"
-        case Seq("native") => "native"
-        case _             => "jvm"
-      if (platform == "jvm") Seq(t / "scala", t / "scalajvm", base / "adjusted")
-      else Seq(base / "shared") ++ (if (platform != "native") Seq(base / "shared-no-native") else Seq.empty)
-    },
-    Compile / unmanagedResources := (Compile / unmanagedResources).value.filterNot(_.getName == "AndroidManifest.xml"),
-    Compile / unmanagedSources := {
-      val all = (Compile / unmanagedSources).value
-      def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/"); if (i < 0) p else p.substring(i + 1) }
-      val adjusted = all.filter(_.getPath.contains("/ported/sge-suite-check/adjusted/")).map(key).toSet
-      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/sge-suite-check/adjusted/"))
-    },
-    // the suite's test bodies are Compile sources (the gate is the COMPILE); Test scope duplicates
-    // them so `sbt test` also runs the munit suites
-    Test / unmanagedSourceDirectories ++= (Compile / unmanagedSourceDirectories).value,
-    Test / unmanagedSources := {
-      val all = (Test / unmanagedSources).value
-      def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/"); if (i < 0) p else p.substring(i + 1) }
-      val adjusted = all.filter(_.getPath.contains("/ported/sge-suite-check/adjusted/")).map(key).toSet
-      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/sge-suite-check/adjusted/"))
-    },
-    Test / unmanagedResources ++= {
-      val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
-      ((t / "resources") ** "*").get()
-    },
-  )
-  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
-    Test / fork := true,
-    Test / javaOptions += "--enable-native-access=ALL-UNNAMED",
-  ))
-  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
-  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
 
 // sge-noise-suite-check — noise extension's OWN test tree compiled against the noise port.
 lazy val `sge-noise-suite-check` = (projectMatrix in file("ported/sge-noise-suite-check"))
@@ -1753,32 +1502,4 @@ lazy val `sge-visui-suite-check` = (projectMatrix in file("ported/sge-visui-suit
         val p = visuiEmit / f; if (p.exists()) Seq(p) else Nil
       }
     }.taskValue,
-  ))
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Demo — Pong game on desktop (JVM) and browser (JS)
-// ──────────────────────────────────────────────────────────────────────────────
-lazy val demo = (projectMatrix in file("ported/demo"))
-  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .dependsOn(`port-sge-l0`)
-  .settings(
-    name := "balticporter-demo",
-    publish / skip := true,
-    scalacOptions ++= Seq("-nowarn"),
-    Compile / unmanagedSourceDirectories ++= {
-      val base = (ThisBuild / baseDirectory).value / "ported" / "demo" / "src" / "main"
-      val platform = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match {
-        case Seq("js")     => "scalajs"
-        case Seq("native") => "scalanative"
-        case _             => "scaladesktop"
-      }
-      Seq(base / platform)
-    },
-  )
-  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
-    Compile / mainClass := Some("demos.pong.DesktopMain"),
-    fork := true,
-  ))
-  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(
-    Compile / mainClass := Some("demos.pong.BrowserMain"),
   ))
