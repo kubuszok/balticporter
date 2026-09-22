@@ -10,17 +10,20 @@
 # the exit code is the number of consumers that failed.
 #
 #   jvm   (default)  ci-jvm-3
-#   full             ci-jvm-3 ; test-js-3 ; test-native-3
+#   full             verifyLocal — the consumer's own pre-push gate: its tests on every platform
+#
+# The consumers are checked in dependency order (lls is a library of sge and ssg), each against
+# the one published just before it.
 set -u
 
 level="${1:-jvm}"
 [ $# -gt 0 ] && shift
 case "$level" in
   jvm) tasks="ci-jvm-3" ;;
-  full) tasks="ci-jvm-3 ; test-js-3 ; test-native-3" ;;
+  full) tasks="verifyLocal" ;;
   *) echo "usage: $0 [jvm|full] [consumer ...]" >&2; exit 64 ;;
 esac
-if [ $# -gt 0 ]; then consumers=("$@"); else consumers=(lls sge); fi
+if [ $# -gt 0 ]; then consumers=("$@"); else consumers=(lls sge ssg); fi
 
 root="$(cd "$(dirname "$0")/.." && pwd -P)"
 work="$root/.balticporter/consumers-check"
@@ -38,7 +41,7 @@ version="$hash-SNAPSHOT"
 echo "== publishing the engine as $version"
 (cd "$root" && JAVA_HOME="$engine_jdk" PATH="$engine_jdk/bin:$PATH" sbt --client "reload; publishLocal") \
   > "$work/engine-publish.log" 2>&1
-if [ $? -ne 0 ] || ! ls "$HOME/.ivy2/local/com.kubuszok/balticporter-corpus_3/$version" > /dev/null 2>&1; then
+if [ $? -ne 0 ] || ! ls "$HOME/.ivy2/local/com.kubuszok/balticporter-engine_3/$version" > /dev/null 2>&1; then
   echo "consumers-check: publishLocal failed or did not produce $version - see $work/engine-publish.log" >&2
   exit 66
 fi
