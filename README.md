@@ -48,7 +48,7 @@ commit: `<40-character commit hash>-SNAPSHOT`.
 
 ```scala
 resolvers += "Central Portal Snapshots" at "https://central.sonatype.com/repository/maven-snapshots"
-libraryDependencies += "com.kubuszok" %% "balticporter-corpus" % "<commit>-SNAPSHOT"
+libraryDependencies += "com.kubuszok" %% "balticporter-engine" % "<commit>-SNAPSHOT"
 ```
 
 Describe the port in a `.conf` file (paths resolve against the file itself):
@@ -93,7 +93,7 @@ holds what the run decided, what it refused and what it could not resolve. Wire 
 | `balticporter-engine` | translation phases, checks, the Scala emitter, the run and its reports |
 | `balticporter-runtime` | the small support library generated code may depend on (JVM, Scala.js, Scala Native) |
 | `balticporter-testkit` | helpers for testing a translation rule against inline Java |
-| `balticporter-corpus` | the port configurations of the libraries ported so far, with the hand-written files they inject |
+| `balticporter-corpus` | the porting programs this repository measures the engine against (libGDX's extensions, liqp, flexmark), with the files they inject; a consumer's own port lives in its own repository (sge's `sge-port/`, lls's `lls-port/`) and depends on the engine alone |
 | `balticporter-frontend-ts`, `balticporter-frontend-dart` | experimental non-Java frontends |
 
 ## Working on a port with Claude Code

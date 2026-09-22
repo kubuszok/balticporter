@@ -124,7 +124,8 @@ Do not try to redirect this; the layout is the contract.
 build setting, never a copy: `Compile / unmanagedSourceDirectories += <checkout>/src/main/scala`
 with `unmanagedSources / excludeFilter` naming the files this port EMITS, and its suite as
 `Test / unmanagedSourceDirectories`. Copying makes `git status` unable to tell a decision from an
-artefact (§5.5), and the two halves would define the same type twice — measured on `port-lls`.
+artefact (§5.5), and the two halves would define the same type twice — measured on lls's port, where
+the emitted twelve compile beside the hand-written rest of the module.
 
 **Name the port for its DESTINATION, not for the upstream library** (`CLAUDE.md` §2.1): the
 directory, the top-level `label` and `manifest.name` all take the id of the module the emitted
@@ -297,8 +298,8 @@ about the BASE's build and is ignored here.
 What it cannot see, so do not trust it further: a parameterised phase's CONFIGURATION unless that
 phase implements `SurfacePolicy`; nested-type drops; anything about the base's emitted output.
 
-**When the base is itself a CORPUS PORT of the same upstream tree** (one java package split across
-two emitted namespaces — `ported/lls` beneath `ported/sge`), decide the base's SOURCE SET before you
+**When the base is itself a PORT of the same upstream tree** (one java package split across two
+emitted namespaces — lls's twelve utilities beneath sge's core), decide the base's SOURCE SET before you
 write a line of its policy, and decide it against the REFERENCE port's own ownership. The dependent
 EXCLUDES the base's files from its own globs and makes the shared tree its own resolution root, so
 `PortRun.partitionUnits` emits only what it declares. You never reach that: the run stops at

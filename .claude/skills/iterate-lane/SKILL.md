@@ -5,14 +5,15 @@ description: Iterate on a red step of a port — one lane per cycle, the run's o
 
 # Iterating on a red lane
 
-A full chain (base lanes, suite check, test lane, twelve demos) costs 30–40 minutes and answers
-nothing new while the port is red. A cycle is ONE lane plus three tables. sbt 2 caches a compile by
-input hash, so a regeneration that emits identical text costs the migrator alone (~80 s warm).
+A full chain (base lanes, dependent lanes, test lanes) costs 30–40 minutes and answers nothing new
+while the port is red. A cycle is ONE lane plus three tables. sbt 2 caches a compile by input hash,
+so a regeneration that emits identical text costs the migrator alone (~80 s warm).
 
-1. Run the one lane the change is aimed at (`just gdx-l0-measure`, `just lls-measure`, …), with
-   `SGE_REF=../sge-master` exported: the Justfile's default reference is `../sge`, which is on the
-   generated branch with its hand port deleted, and the derive step then seeds from a gutted tree
-   (L0 `5 -> 499` errors, all opaque-slot mismatches, with the engine itself unchanged).
+1. Run the one lane the change is aimed at (`just gdx-measure`, `just liqp-measure`, …). The
+   upstream and reference paths are Justfile variables: check that the reference checkout still
+   holds the hand port before reading a number, because a derive step seeded from a checkout whose
+   hand port is deleted reports a gutted tree as the port's own residue (one derive-only port went
+   `5 -> 499` errors, all opaque-slot mismatches, with the engine itself unchanged).
 2. Read, in this order, before touching anything:
    `. scripts/_lib.sh; iteration_summary port-report/<Report> <phase> <phase>`
    - **errors by member** — `run-latest/errors.tsv`, MEMBER column: a family per member, never the
@@ -30,5 +31,5 @@ input hash, so a regeneration that emits identical text costs the migrator alone
    port is regenerated. Discovering the layers one per regeneration cost five publish/regenerate
    round-trips (`Comparable`→`Ordered`), about an hour, for a redirect one spec would
    have walked in minutes.
-6. Land only from a green lane: `measure-all`, the suite check, the demos, `baseline-accept` from
-   that run, docs in the same commit.
+6. Land only from a green lane: `measure-all`, `baseline-accept` from that run, docs in the same
+   commit.
