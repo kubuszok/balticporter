@@ -68,11 +68,11 @@ the abstraction, `runtime/` refuses it, and only a BASE can ship a support type.
 
 ### Enforcing it
 
-No file under `balticporter/{api,engine,frontend-spoon,runtime}/` may name a ported library or one
-of its DEPENDENCIES **in code**, test sources included; doc comments are wanted and must drive nothing:
+No file under `balticporter/` may name a ported library or one of its DEPENDENCIES **in code**,
+test sources included; doc comments are wanted and must drive nothing:
 
 ```
-grep -rn --include='*.scala' -E "badlogic|libgdx|liqp|liquid\.parser|earlygrey|simplegraphs|dongbat|jbump|czyzby|noise4j|tommyettinger|anim8|textratypist|regexodus|kotcrab|visui|crashinvaders|eskalon|mgsx|vladsch|flexmark|nibor|fasterxml|antlr|strftime" balticporter/api balticporter/engine balticporter/frontend-spoon balticporter/runtime | grep -vE ":\s*(\*|//|/\*)"
+grep -rn --include='*.scala' -E "badlogic|libgdx|liqp|liquid\.parser|earlygrey|simplegraphs|dongbat|jbump|czyzby|noise4j|tommyettinger|anim8|textratypist|regexodus|kotcrab|visui|crashinvaders|eskalon|mgsx|vladsch|flexmark|nibor|fasterxml|antlr|strftime" balticporter/ | grep -vE ":\s*(\*|//|/\*)"
 ```
 
 ---
@@ -93,7 +93,7 @@ the two ports compile alone and not together. The shared surface is a VALUE — 
 - Emission identity is (`portRoot`, `sourceSet`): N upstream modules in one destination are ONE port
   with a glob list; a third tree gets its own disjoint root. A synthesised unit is written only by
   the module owning its declarations (`RunScope`). A base's green numbers say nothing about its
-  dependents: `just measure-all`.
+  dependents: measure all modules in the consumer.
 - `surface` composes only through the phase's `MergeablePolicy` (`surfaceFold`, at the base's
   position, on `policyChain`); undeclared is fatal `SurfaceDivergence`; a refusal is a finding; place
   a dependent's early phase by an EMPTY base instance, never `runsBefore`.
@@ -115,16 +115,12 @@ the two ports compile alone and not together. The shared surface is a VALUE — 
 
 details: `.claude/rules/dependents.md`
 
-## 2. Adding a library to the corpus
+## 2. Libraries are ported in the consumer that owns them
 
-`balticporter/corpus/` (`balticporter.corpus.<lib>`): **make it compile; test-compile, port and RUN
-its tests (§3); the Auditor (§4) runs by user request.** details: `.claude/rules/dependents.md`
-
-## 2.1 A port is named for its DESTINATION, never for its upstream
-
-`ported/<reference module id>/` (`sge`, `sge-ecs`, `ssg-liquid`). **The port's `label` and
-`PortManifest.name` take the same value.** NOT reached: `port-report/<main class>/` (measurement
-identity — never rename), `packageRenames`, the upstream tree name.
+Each library is ported in the consumer repository that owns the policy (lls, sge, ssg). The engine
+publishes a generic framework; per-library policy, override files, port trees, baselines and measure
+lanes belong to the consumer. The engine's regression check against all consumers is
+`just consumers-check`. A port is named for its DESTINATION, never for its upstream.
 
 ---
 
@@ -159,7 +155,7 @@ against the dependency version the run supplies. **What the hand port emitted is
 implies for a MECHANICAL port is a hypothesis measured before it is policy**. **The default
 contract is JAVA'S BEHAVIOUR**: behaviour/omission — java wins; API spelling — EXACT hand-port
 parity, marked `unjustified` where `divergence-investigator` finds no recorded decision
-(`ported/<module>/divergence-verdicts.tsv`). details: `.claude/rules/dependents.md`
+(the consumer's `divergence-verdicts.tsv`). details: `.claude/rules/dependents.md`
 
 ## 3.6 Where a discovery goes
 
@@ -188,8 +184,7 @@ an opinion.
 Shipped to consumers in the plugin (`plugin/skills/`, with the blocking guard hook): `sbt2-client`
 (before ANY sbt invocation), `generated-code`, `consumer-ci` (before pushing to a consumer branch),
 `root-cause-port` (before any workaround), `cross-platform-port`, `ci-caching`, `configure-port`,
-`customize-port`, `read-port-issues`. Engine development (`.claude/skills/`): `iterate-lane`,
-`port-first-attempt`, `port-status`, `add-corpus-library`, `debug-port`.
+`customize-port`, `read-port-issues`. Engine development (`.claude/skills/`): `debug-port`.
 
 ## 3.7 A RESEARCH FILE IS NOT A DELIVERABLE
 
@@ -333,43 +328,30 @@ FILE, `sbt --client` never sees env vars; precedence `run.properties` < `debug.p
 | `balticporter.traceNode=<Kind>` | `TirTrace.mint` prints constructing frames for a node kind |
 | `balticporter.baseReports=<p1:p2>` | FALLBACK ONLY — belongs to the PORT (`PortManifest.baseReports`) |
 
-**Reach it through `just`** (`debug-flags`, `debug-set`/`debug-clear`, `debug-emit`, `correlate`,
-`members-unchanged`). **Clear a flag when done.** `reportPathRoot` comes from the PORT, not the
-operator. details: `.claude/rules/emitter.md`
+**Reach it through `just`** (`debug-flags`, `debug-set`/`debug-clear`, `debug-emit`, `correlate`).
+**Clear a flag when done.** `reportPathRoot` comes from the PORT, not the operator.
+details: `.claude/rules/emitter.md`
 
 ## 5. Measurement discipline
 
-- **Reproduce every number with the measure lanes, serially**: `just` with no recipe lists them;
-  mechanism is `scripts/_lib.sh`, policy the `Justfile` variables; `just measure-all` runs all
-  (`BP_FULL=1`). **Never add `set -e` to a lane.**
-- Each lane diffs every registered check against the baseline; `PortRun.RequiredChecks` is asserted
-  against what recorded — a number reaching stdout and not `findings.tsv` fails the run.
-- A resolution DRAINS a lane visibly (`<lane> N->M, remediation(resolved) 0->(N-M)`, `sum(drained)`);
-  ONE POLICY, ONE SPELLING; an accept answers a QUESTION, never a DEFECT.
-- **Baselined in BOTH directions, written by the run, promoted by `just baseline-accept`, never
-  hand-edited**: `expected-errors` (+ `.js`, `.native`, `.ref`), `expected-lost`, `findings.tsv`,
-  `port-map.tsv`, the drop-in lane. **Fewer errors fails as loudly as more.**
-- **The JDK is an input to the measurement** (`jdk_guard`); read `overrides nothing` as a JDK
-  mismatch first; never move `jdk_version` to fix one.
-- **So is the JAVA TREE**: `counts.tsv`'s `upstream` row, `upstream_guard` ahead of every diff.
+Per-library measure lanes, baselines and port reports live in each consumer repository. The engine
+verifies itself against the consumers with `just consumers-check`, which publishes the engine
+locally and runs each consumer's own tests. **Change one thing, then measure.**
+
+- Each consumer's run diffs every registered check against its baseline; `PortRun.RequiredChecks` is
+  asserted against what was recorded.
+- **The JDK is an input to the measurement**: the frontend and the compiler must run on the same
+  recorded JDK.
 - **Widening a guard is measured on the ports it was not aimed at**; a narrowing is not exempt.
-  **Change one thing, then measure.** A DRY RUN of one phase is not a pipeline measurement. Record
-  regressions under "Do NOT retry"; `before->after` in the commit subject.
 
 details: `.claude/rules/measurement.md`
 
 ### 5.1 A diagnostic over emitted code is ATTRIBUTABLE — never read it by hand
 
 `srcmap.tsv` + `members.tsv` come from the emitter's own recording; `CorrelateRun` joins compiler
-and test output through them. **Never open an emitted file to find which member an error is in** —
-`errors.tsv` says. `members.tsv` vs its baseline is the blast radius BEFORE any compile; accept a
-baseline only from a CURRENT run. The test lane is the only one that sees §4.4: parse every
-TERMINAL MARKER and gate on each; run engine specs with `testOnly *` AFTER `measure-all`.
-`decisions.tsv` records WHY per DECLARATION, scoped to this module. **An artifact write is
-gated on the artifact LAYER**, never a flag. Deliberate failures are DERIVED (`dropped-types.tsv`).
-**A red step is iterated on ONE lane**: `errors.tsv` by member, the phase's decision count and
-`members-changed.tsv` are read BEFORE a second compile; the full chain and the demos are for
-LANDING (skill `iterate-lane`).
+and test output through them. **Never open an emitted file to find which member an error is in** --
+`errors.tsv` says. `decisions.tsv` records WHY per DECLARATION, scoped to the module. **An artifact
+write is gated on the artifact LAYER**, never a flag.
 details: `.claude/rules/measurement.md`
 
 ## 5.4 Compare paths through `toRealPath`, on BOTH sides — always
@@ -383,9 +365,9 @@ does not exist. details: `.claude/rules/measurement.md`
 Every port writes its generated Scala to `<port>/src_managed/{main,test}/scala`, gitignored and
 deleted by `sbt clean`; `src/` holds only the hand-written shims and overrides the engine cannot
 derive. `SbtGen.managedMain` / `managedTest` give the paths and `SbtGen.emit` writes the
-`.gitignore`, `sourceGenerators` and `cleanFiles` settings — never hardcode an output path in a
-corpus migrator. Emitted code is invalidated by every engine change; committed beside `src/`, a
-`git status` can no longer tell a DECISION from an ARTEFACT, which is what §5 depends on seeing.
+`.gitignore`, `sourceGenerators` and `cleanFiles` settings. Emitted code is invalidated by every
+engine change; committed beside `src/`, a `git status` can no longer tell a DECISION from an
+ARTEFACT, which is what §5 depends on seeing.
 
 ## 6. Scala 3 output constraints
 

@@ -5,8 +5,8 @@ not a parsed source tree — see [the intermediate representation](intermediate-
 That boundary is what lets a second and third source language exist beside the Java/Spoon frontend
 without touching anything downstream of it: `frontend-ts` reads TypeScript and, through the same
 mechanism, untyped JavaScript; `frontend-dart` reads Dart. Both are experimental. Neither is used
-by a corpus port today — no `ported/` module and no `balticporter.corpus.*` package migrates a
-TypeScript or Dart library yet. Everything described here is exercised by `frontend-ts`'s and
+by any consumer port today — no consumer repository migrates a TypeScript or Dart library yet.
+Everything described here is exercised by `frontend-ts`'s and
 `frontend-dart`'s own test suites against fixture files checked into `src/test/resources`, as a
 proving ground for the mechanism before any library goes through it as a real port.
 

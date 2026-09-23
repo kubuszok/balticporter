@@ -2,37 +2,15 @@
 paths:
   - "Justfile"
   - "scripts/**"
-  - "port-report/**"
   - "build.sbt"
 ---
 
-# Measurement — lanes, baselines, correlation, paths
+# Measurement — baselines, correlation, paths
 
 Detail for `CLAUDE.md` §5, §5.1 and §5.4.
 
-## Lanes
-
-| recipe | lane |
-|---|---|
-| `just gdx-measure` / `gdx-test-measure` | libGDX core — emit, checks, break residue, compile, correlate / its suite, then RUN |
-| `just ashley-measure`, `anim8-measure`, `gltf-measure`, `screens-measure`, `vfx-measure`, `ai-measure`, `textra-measure`, `visui-measure` | dependent ports compiled WITH libGDX core |
-| `just ai-test-measure` | gdx-ai's JUnit suite, compiled WITH libGDX core and gdx-ai |
-| `just ai-diff-measure`, `textra-diff-measure`, `visui-diff-measure` | DIFFERENTIAL gates — the hand port's own suite against the emitted port (no xplat compiles) |
-| `just sg-measure`, `noise4j-measure`, `jbump-measure` | simple-graphs + suite; noise4j (no upstream tests); jbump (ships NO suite, re-derives that zero) |
-| `just usl-measure` / `usl-test-measure` | USL, its own port root / its 7-`@Test` suite |
-| `just liqp-measure` | liqp + its 105-file suite — RUN when it compiles |
-| `just md-measure` / `md-test-measure` / `md-ext-measure` | flexmark core + eleven util modules / the 730-`@Test` suite / extensions as ONE dependent port |
-| `just measure-all` | every lane with `BP_FULL=1`, SERIALLY |
-| `just <lane>-measure-full` | adds JS, Native and ref-flags compiles |
-| `just decision-counts`, `members-unchanged`, `baseline-{list,show,diff,accept}`, `upstream-pin`, `deps-lint`, `catalog-coverage` | sizes, blast radius, baselines, vendored pins (mismatch FATAL), coordinates vs manifest, corpus-wide catalog rows |
-| `just injections-lint` | every injected/vendored shim (`corpus/*-overrides/`, `ported/*/src/`, `runtime/src/main/`) parses under `-no-indent` (parser-only, per file) |
-| `just ecs-dropin`, `ecs-divergence`, `dropin-all` | sge-ecs drop-in and divergence census (NOT in `measure-all`; red until parity) |
-
-Re-derive both sides (`grep -E '^[a-z0-9-]+-measure[a-z0-9-]*:' Justfile`) rather than trusting a
-count. Shared mechanism (`java_test_count`, `reconcile_outcomes`, `break_residue`, `compile_guard`,
-`show_check_report`, `correlate`, `headline`) is `scripts/_lib.sh`; policy is a variable at the top
-of the `Justfile`. **Never `set -e` in a lane**: `grep -c` exits 1 on zero, and zero errors is the
-success case. Long runs go through `launchctl submit` (the harness kills the tree at call end).
+Per-library measure lanes, baselines and port reports live in each consumer repository (lls, sge,
+ssg). The engine verifies itself against the consumers with `just consumers-check`.
 
 ## Required checks
 
