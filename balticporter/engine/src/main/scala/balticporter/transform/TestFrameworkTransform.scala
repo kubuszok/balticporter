@@ -574,9 +574,19 @@ final class TestFrameworkTransform(
               }
               .getOrElse("{index}")
             // determine injection mode: constructor with params or @Parameter fields
+            // for constructor injection, the FIELDS are the injection targets (not the constructor params)
+            // — the constructor body assigns this.field = param, and the test method reads this.field
             val ctor = cd.body.collectFirst {
               case d: Tree.DefDef if p.symbolOf(d.symbol).exists(_.name == "<init>") && d.paramss.flatten.nonEmpty =>
-                d.paramss.flatten.flatMap(v => p.symbolOf(v.symbol).map(s => (v.symbol, v.tpt.tpe)))
+                // find the fields assigned in the constructor body in assignment order
+                val assignedFields = ctorStatements(d).collect {
+                  case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), _, _, _, _)                                                                      => f
+                  case Tree.Assign(Tree.Ident(f, _, _), _, _, _, _) if cd.body.exists { case v: Tree.ValDef if v.symbol == f => true; case _ => false } => f
+                }
+                val fieldTypes = assignedFields.flatMap(f => p.symbolOf(f).map(s => (f, s.info)))
+                // fall back to instance fields in declaration order when the constructor body is opaque
+                if fieldTypes.nonEmpty then fieldTypes
+                else cd.body.collect { case v: Tree.ValDef if instanceField(v) => (v.symbol, v.tpt.tpe) }
             }
             val paramFields = cd.body.collect {
               case v: Tree.ValDef if hasParamAnn(v.symbol) => (v.symbol, v.tpt.tpe)

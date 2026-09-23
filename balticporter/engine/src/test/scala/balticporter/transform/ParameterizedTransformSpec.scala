@@ -4,8 +4,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, Pipeline, Reason }
 
-/** `TestFrameworkTransform` handling of JUnit 4 `@RunWith(Parameterized.class)` — constructor injection, field injection, non-array data, and name patterns. Each fixture is a neutral name (no
-  * library named in code).
+/** `TestFrameworkTransform` handling of JUnit 4 `@RunWith(Parameterized.class)` — constructor injection, field injection, non-array data, and name patterns. Each fixture is a neutral name (no library
+  * named in code).
   */
 class ParameterizedTransformSpec extends munit.FunSuite:
 
@@ -70,7 +70,7 @@ class ParameterizedTransformSpec extends munit.FunSuite:
   }
 
   test("constructor injection: no @RunWith finding since it is handled") {
-    val (_, ph) = emit(ctorSrc)
+    val (_, ph)    = emit(ctorSrc)
     val constructs = ph.findings.map(_.construct)
     assert(!clue(constructs).contains("org.junit.runner.RunWith"))
     assert(!constructs.contains("org.junit.runners.Parameterized.Parameters"))
@@ -78,7 +78,7 @@ class ParameterizedTransformSpec extends munit.FunSuite:
 
   test("constructor injection: decisions record the parameterized runner") {
     val (_, _, log) = emitTraced(ctorSrc)
-    val ds = log.of(Decision.Kind.RetypedSignature)
+    val ds          = log.of(Decision.Kind.RetypedSignature)
     assert(clue(ds).nonEmpty)
     assert(ds.forall(_.reason == Reason.Universal("test-framework/parameterized")))
     assert(ds.exists(_.detail.get("runner").contains("Parameterized")))
@@ -125,7 +125,7 @@ class ParameterizedTransformSpec extends munit.FunSuite:
   }
 
   test("field injection: @Parameter and @RunWith are not in the refusal lane") {
-    val (_, ph) = emit(fieldSrc)
+    val (_, ph)    = emit(fieldSrc)
     val constructs = ph.findings.map(_.construct)
     assert(!clue(constructs).contains("org.junit.runner.RunWith"))
     // Spoon may spell the nested annotation with $ or . — neither form should appear
@@ -134,7 +134,7 @@ class ParameterizedTransformSpec extends munit.FunSuite:
 
   test("field injection: decisions record field injection mode") {
     val (_, _, log) = emitTraced(fieldSrc)
-    val ds = log.of(Decision.Kind.RetypedSignature)
+    val ds          = log.of(Decision.Kind.RetypedSignature)
     assert(ds.exists(_.detail.get("injection").contains("field")))
   }
 
