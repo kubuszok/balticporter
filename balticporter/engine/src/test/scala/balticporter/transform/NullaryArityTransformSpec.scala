@@ -506,7 +506,9 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assert(defn.exists(_.paramss.nonEmpty), "the method must keep its empty parameter clause")
   }
 
-  test("a declaration in a unit this run does not EMIT keeps its arity — refused as NotEmitted") {
+  test(
+    "a declaration in a unit this run does not EMIT keeps its arity — refused as NotEmitted, but call sites in emitted units are rewritten"
+  ) {
     val base = """package com.base;
                  |public class Box { public int width () { return 1; } }
                  |""".stripMargin
@@ -526,7 +528,9 @@ class NullaryArityTransformSpec extends munit.FunSuite:
       idioms
     )
     val out = new TirEmitter(after).emit
-    assert(out.contains("b.width()"), out)
+    // the call site in the dependent unit loses parens (the base converted this method)
+    assert(!out.contains("b.width()"), s"call site in dependent unit should lose parens:\n$out")
+    assert(out.contains("b.width"), s"call site should be parenless:\n$out")
     assert(out.contains("def size: scala.Int"), out)
     val guards = idioms.all.collect { case c if c.kind == IdiomKind.NullaryArity => c.verdict }.collect { case IdiomVerdict.Refused(g, _) => g }
     assert(guards.contains("NotEmitted"), guards.toString)
@@ -545,4 +549,166 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assert(r.out.contains("def hasContents: scala.Boolean"), r.out)
     assert(r.out.contains("def hasOther(): scala.Boolean"), r.out)
     assert(refusedFor(r, "Clip#hasOther").nonEmpty)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // DIAGNOSTIC: cross-class call-site rewriting through inheritance
+  // -------------------------------------------------------------------------------------------
+
+  test("a call through a SUBTYPE receiver in another class is rewritten") {
+    val r = ran(
+      """
+      class Base {
+        private int n;
+        public int size() { return n; }
+      }
+      class Sub extends Base {}
+      class Use {
+        int go(Sub s) { return s.size(); }
+      }
+      """,
+      new NullaryArityTransform(everywhere)
+    )
+    val out = r.out
+    assert(out.contains("def size:"), s"declaration should lose parens, got:\n$out")
+    assert(!out.contains("s.size()"), s"call through subtype should lose parens, got:\n$out")
+    assert(out.contains("s.size"), s"call through subtype should be parenless, got:\n$out")
+  }
+
+  test("a call in a lambda body is rewritten") {
+    val r = ran(
+      """
+      class Layer {
+        private float opacity;
+        public float opacity() { return opacity; }
+      }
+      class Use {
+        Runnable go(Layer l) { return () -> { float x = l.opacity(); }; }
+      }
+      """,
+      new NullaryArityTransform(RuleScope.Only(Set("Layer")))
+    )
+    val out = r.out
+    assert(!out.contains("l.opacity()"), s"call in lambda should lose parens, got:\n$out")
+  }
+
+  test("a call via inherited member from a separate source file is rewritten") {
+    val src1 = """package com.a;
+                 |public class Container {
+                 |  private int count;
+                 |  public int count() { return count; }
+                 |}
+                 |""".stripMargin
+    val src2 = """package com.b;
+                 |public class Sub extends com.a.Container {}
+                 |""".stripMargin
+    val src3 = """package com.c;
+                 |public class Client {
+                 |  int go(com.a.Container c) { return c.count(); }
+                 |  int goSub(com.b.Sub s) { return s.count(); }
+                 |}
+                 |""".stripMargin
+    val before     = SpoonTir.fromSources(List("Container.java" -> src1, "Sub.java" -> src2, "Client.java" -> src3))
+    val phase      = new NullaryArityTransform(everywhere)
+    val idioms     = new IdiomLog
+    val (after, _) = Pipeline.runTraced(
+      before,
+      List(phase),
+      new PolicyBinder(before, before.members),
+      balticporter.catalog.CatalogLog.discarding,
+      RewriteLog(),
+      idioms
+    )
+    val out = new TirEmitter(after).emit
+    assert(!out.contains("c.count()"), s"call through declaring type should lose parens:\n$out")
+    assert(!out.contains("s.count()"), s"call through subtype should lose parens:\n$out")
+    assert(out.contains("c.count"), s"call through declaring type should be parenless:\n$out")
+    assert(out.contains("s.count"), s"call through subtype should be parenless:\n$out")
+  }
+
+  test("a call in a dependent unit to a base method loses parens even when the base is NotEmitted") {
+    val base = """package com.base;
+                 |public class Container {
+                 |  private int count;
+                 |  public int count() { return count; }
+                 |}
+                 |""".stripMargin
+    val dep = """package com.dep;
+                |public class Client {
+                |  int go(com.base.Container c) { return c.count(); }
+                |}
+                |""".stripMargin
+    val before = SpoonTir.fromSources(List("Container.java" -> base, "Client.java" -> dep))
+    // simulate a dependent run: Container is in the program but NOT emitted (base's unit)
+    val baseUnits  = before.units.map(_.symbol).filter(u => before.symbolOf(u).exists(_.fullName == "com.base.Container")).toSet
+    val phase      = new NullaryArityTransform(everywhere)
+    val idioms     = new IdiomLog
+    val (after, _) = Pipeline.runTraced(
+      before,
+      List(phase),
+      new PolicyBinder(before, before.members, RunScope.of(emitted = before.units.map(_.symbol).toSet -- baseUnits, own = Map.empty)),
+      balticporter.catalog.CatalogLog.discarding,
+      RewriteLog(),
+      idioms
+    )
+    val out = new TirEmitter(after).emit
+    // the DECLARATION should keep parens (it's not emitted by this run)
+    // but the CALL SITE in the dependent unit should have its parens dropped
+    assert(!out.contains("c.count()"), s"call site in dependent should lose parens even when declaration is NotEmitted:\n$out")
+  }
+
+  test("a call through a generic return type is rewritten") {
+    val r = ran(
+      """
+      class Container<T> {
+        private T[] items;
+        public T first() { return items[0]; }
+      }
+      class Use {
+        String go(Container<String> c) { return c.first(); }
+        Object goRaw(Container c) { return c.first(); }
+      }
+      """,
+      new NullaryArityTransform(everywhere)
+    )
+    val out = r.out
+    assert(!out.contains("c.first()"), s"call to generic first() should lose parens:\n$out")
+  }
+
+  test("a call with explicit type args on the callee is rewritten") {
+    val r = ran(
+      """
+      class Maker {
+        @SuppressWarnings("unchecked")
+        public <T> T make() { return (T) new Object(); }
+      }
+      class Use {
+        String go(Maker m) { return m.<String>make(); }
+      }
+      """,
+      new NullaryArityTransform(everywhere)
+    )
+    val out = r.out
+    // Here 'make' is nilary but has explicit type args — fun is likely TypeApply(Select(...))
+    // If the transform doesn't handle TypeApply fun, the parens survive
+    val hasMakeParens = out.contains(".make()") || out.contains(".make[")
+    assert(!out.contains("m.make()") || out.contains("m.make["), s"call with explicit type args:\n$out")
+  }
+
+  test("chained calls are rewritten") {
+    val r = ran(
+      """
+      class Box {
+        private Box inner;
+        public Box inner() { return inner; }
+      }
+      class Use {
+        Box go(Box b) { return b.inner().inner(); }
+      }
+      """,
+      new NullaryArityTransform(everywhere)
+    )
+    val out = r.out
+    assert(!out.contains("inner()"), s"chained calls should lose parens, got:\n$out")
+    assert(out.contains("b.inner.inner"), s"chained calls should be parenless, got:\n$out")
   }

@@ -96,11 +96,17 @@ final class NullaryArityTransform(
 
   // ---- the run --------------------------------------------------------------------------
 
-  /** The methods whose `()` this run stripped. */
+  /** The methods whose `()` this run stripped — plus base methods the base already converted, for call-site rewriting in dependent units.
+    */
   private var converted: Set[SymId] = Set.empty
+
+  /** Methods converted by this run that this run also EMITS — only these have their declarations modified. Base methods are in `converted` for call-site rewriting but not in `emittedConverted`.
+    */
+  private var emittedConverted: Set[SymId] = Set.empty
 
   override def run(program: Program): Program =
     converted = Set.empty
+    emittedConverted = Set.empty
     if scope == RuleScope.Only(Set.empty) && !derive then return program
 
     val graph = OverrideGraph.build(program)
@@ -111,6 +117,10 @@ final class NullaryArityTransform(
     // is the set whose `()` this phase either drops or must say why it kept. Each branch below
     // ends in `refuse` or in `candidates`, so nothing leaves this loop silently.
     val candidates = collection.mutable.ListBuffer.empty[SymId]
+
+    // base methods that qualify: their declarations are not emitted by this run, but call sites
+    // in emitted units must still be rewritten.
+    val baseCandidates = collection.mutable.ListBuffer.empty[SymId]
 
     program.symbols.all.foreach { s =>
       val ownerFqn = program.symbolOf(s.owner).map(_.fullName).getOrElse("")
@@ -125,6 +135,8 @@ final class NullaryArityTransform(
                 "not the one the call sites it cannot see were written against"
             )
           // a declaration in a unit this run does not EMIT — the base's; its arity is published
+          // and read literally, so the declaration is not modified. But call sites in THIS run's
+          // units must still be rewritten: recorded as a base candidate, not as a refusal.
           else if !runScope.emitsSymbol(program, s.id) then
             refuse(
               program,
@@ -133,6 +145,15 @@ final class NullaryArityTransform(
               "this run emits no declaration for it (a base's unit): its arity is the base's " +
                 "published fact, read literally, and not this module's to move"
             )
+            // still a candidate for call-site rewriting if it passes the other guards
+            if !substitutedOwners.contains(ownerFqn) && PolicyBinder.isExecutable(s.info)
+              && !(derive && derivedKeep(s.id))
+              && (scope.includes(program, s) || forcedAll(s.id, s.fullName))
+            then
+              val closure = graph.closureOf(s.id)
+              if !closure.isAnchored && (isGetterLike(program, d) || forcedAll(s.id, s.fullName))
+                && !hasOverloadedSibling(program, s)
+              then baseCandidates += s.id
           // owners the base SUBSTITUTED — the injected shim's members were never renamed
           else if substitutedOwners.contains(ownerFqn) then
             refuse(
@@ -261,16 +282,33 @@ final class NullaryArityTransform(
           }
     }
 
-    converted = allConverted.toSet
+    // ---- 2b. base candidates: the base already converted these; include them for call-site
+    // rewriting so dependent units see the parenless arity at every call site. Their declarations
+    // are NOT modified (the base already emitted them). Grouped by component the same way.
+    val baseComponentMap = baseCandidates.map(c => c -> graph.closureOf(c).members).toMap
+    val baseConverted    = collection.mutable.Set.empty[SymId]
+
+    baseCandidates.foreach { c =>
+      if !baseConverted.contains(c) && !allConverted.contains(c) then
+        val comp      = baseComponentMap(c)
+        val allInComp = comp.forall { m =>
+          candidates.contains(m) || baseCandidates.contains(m) || !program.owned(m)
+        }
+        if allInComp then comp.filter(program.owned).foreach(baseConverted += _)
+    }
+
+    emittedConverted = allConverted.toSet
+    converted = allConverted.toSet ++ baseConverted.toSet
     if converted.isEmpty then return program
 
     // ---- 3. strip the empty parameter clause and rewrite call sites ----
     given Program = program
     program.rebuilt(units = program.units.map(u => StandardTraversal.mapClassDef(this, u)))
 
-  /** strip `()` from the declaration. */
+  /** strip `()` from the declaration — only for methods this run EMITS. Base methods are in `converted` for call-site rewriting but their declarations are the base's published fact.
+    */
   override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
-    if converted.contains(t.symbol) then t.copy(paramss = Nil) else t
+    if emittedConverted.contains(t.symbol) then t.copy(paramss = Nil) else t
 
   /** `o.x()` -> `o.x` for converted methods. */
   override def transformApply(t: Tree.Apply)(using Program): Term =
