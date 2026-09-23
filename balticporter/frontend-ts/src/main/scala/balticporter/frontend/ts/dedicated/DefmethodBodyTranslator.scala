@@ -698,6 +698,17 @@ object DefmethodBodyTranslator:
               case Some(param) => translateExprAt(arg, param.tpe)
               case None        => translateExpr(arg)
           }
+          // Refuse when a constructor argument's known type differs from the
+          // expected parameter type (e.g. passing Settings where Boolean is expected)
+          for (arg, i) <- rawArgs.zipWithIndex do
+            ctorParamTypes.lift(i).foreach { param =>
+              exprType(arg).foreach { argType =>
+                val expectedBase = param.tpe.takeWhile(c => c != '[' && c != ' ')
+                val argBase      = argType.takeWhile(c => c != '[' && c != ' ')
+                if expectedBase != argBase && expectedBase != "Any" && argBase != "Any" then
+                  refuse("constructor-arg-type-mismatch")
+              }
+            }
           cls match
             case "Array" =>
               if args.isEmpty then "scala.collection.mutable.ArrayBuffer.empty[Any]"
@@ -934,6 +945,9 @@ object DefmethodBodyTranslator:
           refuse("ArgumentsObject")
           "??? /* arguments */"
         case n if n.startsWith("AST_") => astVarToScalaName(n)
+        case n if n.startsWith("_") && !apiLookup.contains(n) && !entry.params.contains(n) =>
+          refuse("wrong-member-access")
+          snakeToCamel(n)
         case n => apiLookup.getOrElse(n, snakeToCamel(n))
       // When this identifier was tested for Nullable truthiness in an
       // enclosing && guard, it has been unwrapped and must be read as .get
