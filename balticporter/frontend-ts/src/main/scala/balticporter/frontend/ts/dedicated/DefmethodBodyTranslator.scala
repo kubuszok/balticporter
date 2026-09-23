@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastValue}
+import balticporter.frontend.ts.{RastFile, RastNode, RastValue, ReferenceSignatures}
 import scala.collection.mutable
 
 /** Translates DEFMETHOD and prototype-assignment function bodies from RAST
@@ -54,6 +54,12 @@ object DefmethodBodyTranslator:
   /** @param paramTypes maps each parameter name to its declared Scala type from the reference
     *   signature. Used to detect JS idioms that translate differently when the Scala type is
     *   `Nullable` (truthiness operators) or a typed class (object literal construction). */
+  /** @param calleeIndex resolves simple function names to their enclosing object from the
+    *   reference tree. When absent, unresolved callees are refused with `wrong-function-ref`. */
+  /** @param memberIndex validates property access on typed parameters against the reference
+    *   tree's declared members. When absent, access on specific class types is refused. */
+  /** @param ctorSchema constructor parameter lists from the reference tree, used to construct
+    *   typed objects from JS object literals instead of emitting `mutable.Map`. */
   def translateBody(
       entry: DefmethodEntry,
       hierarchy: List[DefnodeClass],
@@ -63,8 +69,11 @@ object DefmethodBodyTranslator:
       apiLookup: Map[String, String] = Map.empty,
       returnType: Option[String] = None,
       paramTypes: Map[String, String] = Map.empty,
+      calleeIndex: ReferenceSignatures.CalleeIndex = ReferenceSignatures.CalleeIndex.empty,
+      memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
+      ctorSchema: ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema)
     ctx.translateBlock(entry.bodyNode)
     TranslationResult(
       scalaBody = ctx.result(),
@@ -235,6 +244,9 @@ object DefmethodBodyTranslator:
       apiLookup: Map[String, String] = Map.empty,
       declaredReturnType: Option[String] = None,
       paramTypes: Map[String, String] = Map.empty,
+      calleeIndex: ReferenceSignatures.CalleeIndex = ReferenceSignatures.CalleeIndex.empty,
+      memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
+      ctorSchema: ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
@@ -888,13 +900,18 @@ object DefmethodBodyTranslator:
           val objExpr = translateExpr(obj)
           translatePropOnExpr(objExpr, prop)
       else
-        // When the object is a parameter with a known specific type, the
-        // translator cannot verify that the JS property name exists on the
-        // Scala type (JS names are camelCased but Scala APIs may use different
-        // names entirely). Refuse so the reference body is kept.
+        // When the object is a parameter with a known specific type, check the
+        // member index from the reference tree. If the type is known and the
+        // member is not declared on it, refuse with wrong-member-access.
         if obj.kind == "Identifier" && !knownSafeProperties.contains(prop) then
           exprType(obj).foreach { tpe =>
-            if isSpecificClassType(tpe) then refuse("wrong-member-access")
+            val baseType = tpe.takeWhile(c => c != '[' && c != ' ')
+            val scalaProp = snakeToCamel(prop)
+            if memberIndex.knowsType(baseType) then
+              if !memberIndex.hasMember(baseType, scalaProp) && !memberIndex.hasMember(baseType, prop) then
+                refuse("wrong-member-access")
+            else if isSpecificClassType(tpe) then
+              refuse("wrong-member-access")
           }
         val objExpr = translateExpr(obj)
         translatePropOnExpr(objExpr, prop)
@@ -1220,12 +1237,17 @@ object DefmethodBodyTranslator:
               val scalaArgs = args.map(translateExpr)
               val scalaName = translateIdentifier(name)
               // A function call whose callee is not a known global, not in
-              // apiLookup, and not a parameter may resolve to a different
-              // scope in Scala (a module-level function the reference placed
-              // on a companion object). Refuse so the reference body is kept.
+              // apiLookup, and not a parameter: try the callee index from
+              // the reference tree to qualify it. On ambiguity, refuse.
               if !apiLookup.contains(name) && !entry.params.contains(name) &&
                  !name.startsWith("AST_") && scalaName == snakeToCamel(name) then
-                refuse("wrong-function-ref")
+                calleeIndex.resolve(scalaName) match
+                  case Right(qualified) =>
+                    return s"$qualified(${scalaArgs.mkString(", ")})"
+                  case Left("callee-ambiguous") =>
+                    refuse("callee-ambiguous")
+                  case Left(_) =>
+                    refuse("wrong-function-ref")
               s"$scalaName(${scalaArgs.mkString(", ")})"
 
         case _ =>

@@ -50,6 +50,167 @@ object ReferenceSignatures:
     def fromEntries(entries: List[(String, MethodSig)]): TypeOracle =
       TypeOracle(entries.map { case (obj, sig) => (obj, sig.methodName) -> sig }.toMap)
 
+  /** Index of function/method names to their enclosing object, built from the reference tree. Used to qualify unresolved callee identifiers: `makeSpan(...)` becomes `BuildCommon.makeSpan(...)`.
+    */
+  final case class CalleeIndex(
+    byName: Map[String, List[String]]
+  ):
+    /** Resolve a simple function name to its fully qualified form. Returns Right(qualified) on a unique match, Left(reason) on ambiguity or absence.
+      */
+    def resolve(simpleName: String): Either[String, String] =
+      byName.get(simpleName) match
+        case None | Some(Nil)       => Left("callee-not-found")
+        case Some(enclosing :: Nil) => Right(s"$enclosing.$simpleName")
+        case Some(multiple)         => Left("callee-ambiguous")
+
+  object CalleeIndex:
+    val empty: CalleeIndex = CalleeIndex(Map.empty)
+
+  /** Index of class/object member names, built from the reference tree. Used to validate property access on typed parameters.
+    */
+  final case class MemberIndex(
+    byType: Map[String, Set[String]]
+  ):
+    /** True when the given type declares the given member name. */
+    def hasMember(typeName: String, memberName: String): Boolean =
+      byType.get(typeName).exists(_.contains(memberName))
+
+    /** True when the type is known (appears in the index). */
+    def knowsType(typeName: String): Boolean = byType.contains(typeName)
+
+  object MemberIndex:
+    val empty: MemberIndex = MemberIndex(Map.empty)
+
+  /** Constructor parameter schema for a class, parsed from the reference tree. Used to construct typed objects from JS object literals.
+    */
+  final case class CtorParam(name: String, tpe: String, hasDefault: Boolean)
+
+  final case class ConstructorSchema(
+    byType: Map[String, List[CtorParam]]
+  ):
+    def get(typeName: String): Option[List[CtorParam]] = byType.get(typeName)
+
+  object ConstructorSchema:
+    val empty: ConstructorSchema = ConstructorSchema(Map.empty)
+
+  /** Parse all reference Scala files under a directory and build the indices. */
+  def buildIndices(sources: List[(String, String)]): (CalleeIndex, MemberIndex, ConstructorSchema) =
+    val callees = mutable.Map.empty[String, mutable.ListBuffer[String]]
+    val members = mutable.Map.empty[String, mutable.Set[String]]
+    val ctors   = mutable.Map.empty[String, List[CtorParam]]
+
+    for (objectName, source) <- sources do
+      val logicalLines = joinMultiLineSignatures(source)
+      // Collect method names for callee index
+      val defNamePattern = """^\s{2}(?:private\s+|protected\s+)?def\s+(\w+)""".r
+      for line <- logicalLines do
+        defNamePattern.findFirstMatchIn(line).foreach { m =>
+          callees.getOrElseUpdate(m.group(1), mutable.ListBuffer.empty) += objectName
+        }
+
+      // Collect class constructors by joining multi-line declarations
+      val classLines = joinClassDeclarations(source)
+      for line <- classLines do
+        parseCaseClassLine(line).foreach { case (className, params) =>
+          ctors(className) = params
+          val memberSet = members.getOrElseUpdate(className, mutable.Set.empty)
+          params.foreach(p => memberSet += p.name)
+        }
+
+    (
+      CalleeIndex(callees.map { case (k, v) => k -> v.distinct.toList }.toMap),
+      MemberIndex(members.map { case (k, v) => k -> v.toSet }.toMap),
+      ConstructorSchema(ctors.toMap)
+    )
+
+  /** Join multi-line class declarations so constructors with wrapped parameters appear on a single logical line.
+    */
+  private def joinClassDeclarations(source: String): List[String] =
+    val result     = mutable.ListBuffer.empty[String]
+    val classStart = """^\s*(?:final\s+)?(?:case\s+)?class\s+""".r
+    var accum: StringBuilder = null
+    var depth = 0
+
+    for line <- source.linesIterator do
+      if accum != null then
+        accum.append(" ").append(line.trim)
+        for ch <- line do
+          ch match
+            case '(' => depth += 1
+            case ')' => depth -= 1
+            case _   => ()
+        if depth <= 0 then
+          result += accum.toString
+          accum = null
+          depth = 0
+      else if classStart.findFirstIn(line).isDefined then
+        var d = 0
+        for ch <- line do
+          ch match
+            case '(' => d += 1
+            case ')' => d -= 1
+            case _   => ()
+        if d <= 0 then result += line
+        else
+          accum = new StringBuilder(line)
+          depth = d
+      else result += line
+
+    if accum != null then result += accum.toString
+    result.toList
+
+  /** Parse a `final case class X(params)` or `class X(params)` line. */
+  private def parseCaseClassLine(line: String): Option[(String, List[CtorParam])] =
+    val pattern = """(?:final\s+)?(?:case\s+)?class\s+(\w+)(?:\[.*?\])?\s*\(""".r
+    pattern.findFirstMatchIn(line).flatMap { m =>
+      val name       = m.group(1)
+      val afterParen = line.substring(m.end)
+      // Extract the balanced content between the opening ( and its matching )
+      var depth = 1
+      var i     = 0
+      while i < afterParen.length && depth > 0 do
+        afterParen.charAt(i) match
+          case '(' => depth += 1
+          case ')' => depth -= 1
+          case _   => ()
+        i += 1
+      if depth == 0 then
+        val paramStr = afterParen.substring(0, i - 1)
+        val params   = parseCtorParams(paramStr)
+        if params.nonEmpty then Some((name, params)) else None
+      else None
+    }
+
+  private def parseCtorParams(paramStr: String): List[CtorParam] =
+    if paramStr.trim.isEmpty then return Nil
+    val params  = mutable.ListBuffer.empty[CtorParam]
+    val current = new StringBuilder
+    var depth   = 0
+
+    for ch <- paramStr do
+      ch match
+        case '(' | '[' | '{'   => depth += 1; current.append(ch)
+        case ')' | ']' | '}'   => depth -= 1; current.append(ch)
+        case ',' if depth == 0 =>
+          parseCtorOneParam(current.toString.trim).foreach(params += _)
+          current.clear()
+        case _ => current.append(ch)
+
+    if current.nonEmpty then parseCtorOneParam(current.toString.trim).foreach(params += _)
+    params.toList
+
+  private def parseCtorOneParam(param: String): Option[CtorParam] =
+    val trimmed = param.trim.stripPrefix("var ").stripPrefix("val ").trim
+    if trimmed.startsWith("using ") || trimmed.startsWith("implicit ") then return None
+    val colonIdx = trimmed.indexOf(':')
+    if colonIdx < 0 then return None
+    val name       = trimmed.substring(0, colonIdx).trim
+    val rest       = trimmed.substring(colonIdx + 1).trim
+    val hasDefault = rest.contains("=")
+    val tpe        = stripDefault(rest)
+    if name.nonEmpty && tpe.nonEmpty then Some(CtorParam(cleanParamName(name), tpe, hasDefault))
+    else None
+
   /** Parse a Scala source file and extract all method signatures from the top-level object.
     *
     * Handles single-line and multi-line signatures. A multi-line signature is recognized when a `def` line has unbalanced parentheses.

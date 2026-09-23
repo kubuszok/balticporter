@@ -32,13 +32,26 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     node("PropertyAccessExpression", obj, ident(prop))
 
   private def translate(
-    body:       RastNode,
-    apiLookup:  Map[String, String] = Map.empty,
-    returnType: Option[String] = None,
-    paramTypes: Map[String, String] = Map.empty
+    body:        RastNode,
+    apiLookup:   Map[String, String] = Map.empty,
+    returnType:  Option[String] = None,
+    paramTypes:  Map[String, String] = Map.empty,
+    calleeIndex: ReferenceSignatures.CalleeIndex = ReferenceSignatures.CalleeIndex.empty,
+    memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
+    ctorSchema:  ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty
   ): DefmethodBodyTranslator.TranslationResult =
     val entry = DefmethodEntry("_free_", "test", Nil, body)
-    DefmethodBodyTranslator.translateBody(entry, Nil, "    ", apiLookup = apiLookup, returnType = returnType, paramTypes = paramTypes)
+    DefmethodBodyTranslator.translateBody(
+      entry,
+      Nil,
+      "    ",
+      apiLookup = apiLookup,
+      returnType = returnType,
+      paramTypes = paramTypes,
+      calleeIndex = calleeIndex,
+      memberIndex = memberIndex,
+      ctorSchema = ctorSchema
+    )
 
   // ---- return lowering ----
 
@@ -435,15 +448,27 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = translate(body, returnType = Some("Map[String, Int]"))
     assert(!result.refusalReasons.contains("js-map-construction"), s"Map return type should not refuse: ${result.refusalReasons}")
 
-  // ---- wrong-member-access refusal ----
+  // ---- wrong-member-access ----
 
-  test("property access on a typed parameter refuses with wrong-member-access"):
+  test("property access on a typed parameter with no member index refuses"):
     val body   = block(ret(propAccess(ident("group"), "bodyNodes")))
     val result = translate(body, paramTypes = Map("group" -> "AnyParseNode"))
     assert(
       result.refusalReasons.contains("wrong-member-access"),
-      s"should refuse with wrong-member-access: ${result.refusalReasons}"
+      s"unknown member on specific type should refuse: ${result.refusalReasons}"
     )
+
+  test("property access against member index accepts known member"):
+    val body   = block(ret(propAccess(ident("group"), "nodeType")))
+    val idx    = ReferenceSignatures.MemberIndex(Map("AnyParseNode" -> Set("nodeType", "mode", "loc")))
+    val result = translate(body, paramTypes = Map("group" -> "AnyParseNode"), memberIndex = idx)
+    assert(!result.refusalReasons.contains("wrong-member-access"), s"known member should not refuse: ${result.refusalReasons}")
+
+  test("property access against member index refuses unknown member"):
+    val body   = block(ret(propAccess(ident("group"), "children")))
+    val idx    = ReferenceSignatures.MemberIndex(Map("AnyParseNode" -> Set("nodeType", "mode", "loc")))
+    val result = translate(body, paramTypes = Map("group" -> "AnyParseNode"), memberIndex = idx)
+    assert(result.refusalReasons.contains("wrong-member-access"), s"unknown member should refuse: ${result.refusalReasons}")
 
   test("property access on untyped parameter does not refuse"):
     val body   = block(ret(propAccess(ident("group"), "bodyNodes")))
@@ -455,7 +480,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = translate(body, paramTypes = Map("arr" -> "ArrayBuffer[Int]"))
     assert(!result.refusalReasons.contains("wrong-member-access"), s"safe property should not refuse: ${result.refusalReasons}")
 
-  // ---- wrong-function-ref refusal ----
+  // ---- wrong-function-ref ----
 
   test("unknown function call refuses with wrong-function-ref"):
     val body   = block(ret(node("CallExpression", ident("unknownHelper"), num(1))))
@@ -464,6 +489,19 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       result.refusalReasons.contains("wrong-function-ref"),
       s"should refuse with wrong-function-ref: ${result.refusalReasons}"
     )
+
+  test("callee index resolves a function to its enclosing object"):
+    val body   = block(ret(node("CallExpression", ident("makeSpan"), num(1))))
+    val idx    = ReferenceSignatures.CalleeIndex(Map("makeSpan" -> List("BuildCommon")))
+    val result = translate(body, calleeIndex = idx)
+    assert(result.scalaBody.contains("BuildCommon.makeSpan("), s"should qualify callee: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+
+  test("ambiguous callee refuses with callee-ambiguous"):
+    val body   = block(ret(node("CallExpression", ident("helper"), num(1))))
+    val idx    = ReferenceSignatures.CalleeIndex(Map("helper" -> List("ModuleA", "ModuleB")))
+    val result = translate(body, calleeIndex = idx)
+    assert(result.refusalReasons.contains("callee-ambiguous"), s"ambiguous callee should refuse: ${result.refusalReasons}")
 
   test("function call via apiLookup does not refuse"):
     val body   = block(ret(node("CallExpression", ident("makeSpan"), num(1))))
