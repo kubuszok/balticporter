@@ -220,6 +220,7 @@ object DefmethodBodyTranslator:
       thisBinding: String = "this",
       nodeParamName: Option[String] = None,
       apiLookup: Map[String, String] = Map.empty,
+      inBoundary: Boolean = false,
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
@@ -268,6 +269,9 @@ object DefmethodBodyTranslator:
           sb.append(s"$baseIndent$expr\n")
         return
 
+      // Detect early returns: any ReturnStatement that is not the last statement
+      val needsBoundary = !inBoundary && hasEarlyReturn(stmts)
+
       // Multi-statement body needs braces (the caller emits `def foo(): Any =\n`)
       val needsBraces = stmts.size > 1 || stmts.head.kind == "VariableStatement" ||
         stmts.head.kind == "FirstStatement" || stmts.head.kind == "IfStatement" ||
@@ -275,29 +279,36 @@ object DefmethodBodyTranslator:
         stmts.head.kind == "ForOfStatement" || stmts.head.kind == "WhileStatement" ||
         stmts.head.kind == "DoStatement" || stmts.head.kind == "SwitchStatement" ||
         stmts.head.kind == "TryStatement"
-      if needsBraces then sb.append(s"$baseIndent{\n")
+      if needsBoundary then
+        sb.append(s"${baseIndent}scala.util.boundary[Any] {\n")
+      else if needsBraces then
+        sb.append(s"$baseIndent{\n")
 
+      val useBoundary = needsBoundary || inBoundary
       for (stmt, idx) <- stmts.zipWithIndex do
         val isLast = idx == stmts.size - 1
-        val innerIndent = if needsBraces then baseIndent + "  " else baseIndent
-        translateStatement(stmt, innerIndent, isLast)
+        val innerIndent = if needsBoundary || needsBraces then baseIndent + "  " else baseIndent
+        translateStatementInner(stmt, innerIndent, isLast, useBoundary)
 
-      if needsBraces then sb.append(s"$baseIndent}\n")
+      if needsBoundary || needsBraces then sb.append(s"$baseIndent}\n")
 
     def translateStatement(node: RastNode, indent: String, isLast: Boolean): Unit =
+      translateStatementInner(node, indent, isLast, inBoundary)
+
+    private def translateStatementInner(node: RastNode, indent: String, isLast: Boolean, useBoundary: Boolean): Unit =
       node.kind match
         case "ReturnStatement" =>
           if node.children.isEmpty then
             if isLast then
               sb.append(s"${indent}null\n")
             else
-              sb.append(s"${indent}return null\n")
+              sb.append(s"${indent}scala.util.boundary.break(null)\n")
           else
             val expr = translateExpr(node.children.head)
             if isLast then
               sb.append(s"$indent$expr\n")
             else
-              sb.append(s"${indent}return $expr\n")
+              sb.append(s"${indent}scala.util.boundary.break($expr)\n")
 
         case "ExpressionStatement" =>
           val expr = node.children.headOption.map(translateExpr).getOrElse("()")
@@ -415,10 +426,12 @@ object DefmethodBodyTranslator:
           sb.append(s"$indent}\n")
 
         case "BreakStatement" =>
-          sb.append(s"$indent// break\n")
+          refuse("BreakStatement")
+          sb.append(s"$indent??? /* break */\n")
 
         case "ContinueStatement" =>
-          sb.append(s"$indent// continue\n")
+          refuse("ContinueStatement")
+          sb.append(s"$indent??? /* continue */\n")
 
         case "EmptyStatement" =>
           () // skip
@@ -565,26 +578,26 @@ object DefmethodBodyTranslator:
         case "ArrayLiteralExpression" =>
           val hasSpread = node.children.exists(_.kind == "SpreadElement")
           val allSpread = node.children.nonEmpty && node.children.forall(_.kind == "SpreadElement")
-          if node.children.isEmpty then "Array.empty[Any]"
+          if node.children.isEmpty then "scala.collection.mutable.ArrayBuffer.empty[Any]"
           else if allSpread && node.children.length == 1 then
             // [...arr] -> arr.toArray
             val inner = translateExpr(node.children.head.children.head)
             s"$inner.toArray"
           else if hasSpread then
-            // Mixed spread + non-spread: Array(a, b) ++ spread
+            // Mixed spread + non-spread
             val nonSpread = node.children.takeWhile(_.kind != "SpreadElement")
             val spreadPart = node.children.dropWhile(_.kind != "SpreadElement")
             val prefix = if nonSpread.nonEmpty then
-              s"Array(${nonSpread.map(translateExpr).mkString(", ")})"
-            else "Array.empty[Any]"
+              s"scala.collection.mutable.ArrayBuffer(${nonSpread.map(translateExpr).mkString(", ")})"
+            else "scala.collection.mutable.ArrayBuffer.empty[Any]"
             val suffix = spreadPart.map { c =>
               if c.kind == "SpreadElement" then translateExpr(c.children.head)
-              else s"Array(${translateExpr(c)})"
+              else s"scala.collection.mutable.ArrayBuffer(${translateExpr(c)})"
             }
             (prefix +: suffix).mkString(" ++ ")
           else
             val elems = node.children.map(translateExpr)
-            s"Array(${elems.mkString(", ")})"
+            s"scala.collection.mutable.ArrayBuffer(${elems.mkString(", ")})"
 
         case "ObjectLiteralExpression" =>
           translateObjectLiteral(node)
@@ -617,9 +630,19 @@ object DefmethodBodyTranslator:
           s"/* await */ $inner"
 
         case "DeleteExpression" =>
-          refuse("DeleteExpression")
-          val operand = node.children.headOption.map(translateExpr).getOrElse("???")
-          s"/* delete */ $operand"
+          node.children.headOption match
+            case Some(prop) if prop.kind == "PropertyAccessExpression" && prop.children.size >= 2 =>
+              val obj = translateExpr(prop.children.head)
+              val key = prop.children.last.text.getOrElse("")
+              s"""$obj.remove("${escapeString(key)}")"""
+            case Some(prop) if prop.kind == "ElementAccessExpression" && prop.children.size >= 2 =>
+              val obj = translateExpr(prop.children.head)
+              val key = translateExpr(prop.children(1))
+              s"$obj.remove($key)"
+            case _ =>
+              refuse("DeleteExpression")
+              val operand = node.children.headOption.map(translateExpr).getOrElse("???")
+              s"??? /* delete $operand */"
 
         case "CommaToken" =>
           // Sometimes a binary expression has CommaToken children
@@ -725,11 +748,13 @@ object DefmethodBodyTranslator:
           case _ => s"Number.$prop"
         )
 
-      // this.x -> translate known properties (using thisBinding for pattern-match context)
+      // this.x -> check apiLookup first, then translate known properties
       if obj.kind == "ThisKeyword" then
         prop match
           case "TYPE" => s"$thisBinding.nodeType"
-          case _ => s"$thisBinding.${snakeToCamel(prop)}"
+          case _ =>
+            val scalaProp = apiLookup.getOrElse(prop, snakeToCamel(prop))
+            s"$thisBinding.$scalaProp"
       // node.x where node is a typed node param — validate property access
       else if obj.kind == "Identifier" && nodeNames.contains(obj.text.getOrElse("")) then
         val objName = obj.text.getOrElse("")
@@ -1252,12 +1277,16 @@ object DefmethodBodyTranslator:
             // Multi-statement function body -- always brace-wrap
             val innerIndent = baseIndent + "    "
             val bodyLines = new StringBuilder
+            val needsInnerBoundary = hasEarlyReturn(block.children)
+            if needsInnerBoundary then bodyLines.append(s"${innerIndent}scala.util.boundary[Any] {\n")
+            val stmtIndent = if needsInnerBoundary then innerIndent + "  " else innerIndent
             for (stmt, idx) <- block.children.zipWithIndex do
               val isLast = idx == block.children.size - 1
-              val innerCtx = new BodyContext(entry, hierarchy, innerIndent)
-              innerCtx.translateStatement(stmt, innerIndent, isLast)
+              val innerCtx = new BodyContext(entry, hierarchy, stmtIndent, apiLookup = apiLookup, inBoundary = needsInnerBoundary)
+              innerCtx.translateStatement(stmt, stmtIndent, isLast)
               refusals ++= innerCtx.refusals
               bodyLines.append(innerCtx.result())
+            if needsInnerBoundary then bodyLines.append(s"$innerIndent}\n")
             val bodyStr = bodyLines.toString.stripTrailing()
             if paramStrs.isEmpty then s"(() => {\n$bodyStr\n$baseIndent  })"
             else s"((${paramStrs.mkString(", ")}) => {\n$bodyStr\n$baseIndent  })"
@@ -1273,7 +1302,7 @@ object DefmethodBodyTranslator:
         c.kind == "PropertyAssignment" || c.kind == "ShorthandPropertyAssignment" ||
         c.kind == "SpreadAssignment" || c.kind == "MethodDeclaration"
       )
-      if props.isEmpty then "Map.empty"
+      if props.isEmpty then "scala.collection.mutable.Map.empty[String, Any]"
       else
         val entries = props.map { p =>
           p.kind match
@@ -1293,7 +1322,7 @@ object DefmethodBodyTranslator:
               s"\"$name\" -> ??? /* method */"
             case _ => "??? /* unknown prop */"
         }
-        s"Map(${entries.mkString(", ")})"
+        s"scala.collection.mutable.Map(${entries.mkString(", ")})"
 
     private def translateTemplateExpr(node: RastNode): String =
       val parts = mutable.ListBuffer.empty[String]
@@ -1444,6 +1473,19 @@ object DefmethodBodyTranslator:
   // --------------------------------------------------------------------------
   // Shared helpers (visible to BodyContext and the object)
   // --------------------------------------------------------------------------
+
+  /** True when the statement list contains a ReturnStatement in a non-tail position, meaning
+    * the emitted body needs a `scala.util.boundary` wrapper. A return inside a nested function
+    * expression or arrow function is not counted because it belongs to the inner scope. */
+  private def hasEarlyReturn(stmts: List[RastNode]): Boolean =
+    def checkNonLast(nodes: List[RastNode]): Boolean =
+      nodes.init.exists(containsReturn)
+    def containsReturn(node: RastNode): Boolean =
+      node.kind match
+        case "ReturnStatement" => true
+        case "ArrowFunction" | "FunctionExpression" | "FunctionDeclaration" => false
+        case _ => node.children.exists(containsReturn)
+    stmts.size > 1 && checkNonLast(stmts)
 
   private def astVarToScalaName(varName: String): String =
     if varName.startsWith("AST_") then "Ast" + varName.drop(4)
