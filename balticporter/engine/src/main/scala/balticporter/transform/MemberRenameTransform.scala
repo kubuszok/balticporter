@@ -158,9 +158,40 @@ final class MemberRenameTransform(
             val key = "derive:" + program.symbolOf(id).map(_.fullName).getOrElse(id.raw)
             MemberRenamer.Request(id, to, Reason.Configured(name, key), key, key)
           }
-      val (renamed, refusals) =
-        if requests.isEmpty then (program, Nil)
-        else MemberRenamer.rename(program, graph, requests, MemberRenamer.OnCollision.Refuse, decisions)
+      // Separate emitted requests (this run emits the declaration) from base requests
+      // (a base already emitted it). MemberRenamer refuses base symbols (anchored in a
+      // base unit), so base renames are applied directly to the symbol table afterwards.
+      val (emittedRequests, baseRequests) = requests.partition(r => scope.emitsSymbol(program, r.member))
+      val (renamed, refusals)             =
+        if emittedRequests.isEmpty then (program, Nil)
+        else MemberRenamer.rename(program, graph, emittedRequests, MemberRenamer.OnCollision.Refuse, decisions)
+      // Base renames: the base already emitted these declarations under the new name.
+      // Rename the symbols in the dependent's program so that call sites in owned
+      // code render the emitted name, following the override graph so a call through
+      // a subclass receiver resolves to the same renamed member.
+      val afterBase =
+        if baseRequests.isEmpty then renamed
+        else
+          val baseRenameMap = collection.mutable.Map.empty[SymId, String]
+          baseRequests.foreach { r =>
+            val closure = graph.closureOf(r.member)
+            (closure.members + r.member).foreach { m =>
+              baseRenameMap(m) = r.newName
+            }
+          }
+          if baseRenameMap.isEmpty then renamed
+          else
+            val updatedSymbols = renamed.symbols.all.map { s =>
+              baseRenameMap.get(s.id) match
+                case Some(nn) =>
+                  // update both name and fullName so that downstream phases (NullaryArityTransform's
+                  // force set) see the renamed FQN — fullName carries the member name after the last separator
+                  val sep     = s.fullName.lastIndexOf('#')
+                  val newFull = if sep >= 0 then s.fullName.substring(0, sep + 1) + nn else s.fullName
+                  s.copy(name = nn, fullName = newFull)
+                case _ => s
+            }
+            renamed.rebuilt(symbols = SymbolTable(updatedSymbols))
       refusals.map(_.request.key).distinct.foreach { k =>
         val why = refusals.find(_.request.key == k).map(_.why).getOrElse("refused")
         runFindings :+= PolicyFinding(
@@ -177,8 +208,8 @@ final class MemberRenameTransform(
       val symbolicEntries = applied.filter(e => MemberRenamer.isSymbolic(e.newName))
       val symbolicNames   = symbolicEntries.flatMap(e => e.hits.map(h => h -> program.symbolOf(h).map(_.name).getOrElse(""))).toMap
       val names           = symbolicNames ++ derivedTargetNames
-      if names.isEmpty then renamed
-      else MemberRenameTransform.addTargetNameAnnotations(renamed, names)
+      if names.isEmpty then afterBase
+      else MemberRenameTransform.addTargetNameAnnotations(afterBase, names)
 
 object MemberRenameTransform:
 

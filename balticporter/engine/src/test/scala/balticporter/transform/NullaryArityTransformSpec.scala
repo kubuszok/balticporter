@@ -712,3 +712,97 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assert(!out.contains("inner()"), s"chained calls should lose parens, got:\n$out")
     assert(out.contains("b.inner.inner"), s"chained calls should be parenless, got:\n$out")
   }
+
+  test("a call in a dependent unit to a forced base method without an owned override loses parens") {
+    val base = """package com.base;
+                 |public class Container {
+                 |  private Object[] items;
+                 |  private int size;
+                 |  public boolean isEmpty() { return size == 0; }
+                 |  public Object first() { return items[0]; }
+                 |}
+                 |""".stripMargin
+    val dep = """package com.dep;
+                |public class Client {
+                |  boolean check(com.base.Container c) { return c.isEmpty(); }
+                |  Object grab(com.base.Container c) { return c.first(); }
+                |}
+                |""".stripMargin
+    val before     = SpoonTir.fromSources(List("Container.java" -> base, "Client.java" -> dep))
+    val baseUnits  = before.units.map(_.symbol).filter(u => before.symbolOf(u).exists(_.fullName == "com.base.Container")).toSet
+    val phase      = new NullaryArityTransform(everywhere, force = Set("com.base.Container#isEmpty", "com.base.Container#first"))
+    val idioms     = new IdiomLog
+    val (after, _) = Pipeline.runTraced(
+      before,
+      List(phase),
+      new PolicyBinder(before, before.members, RunScope.of(emitted = before.units.map(_.symbol).toSet -- baseUnits, own = Map.empty)),
+      balticporter.catalog.CatalogLog.discarding,
+      RewriteLog(),
+      idioms
+    )
+    val out = new TirEmitter(after).emit
+    assert(!out.contains("c.isEmpty()"), s"isEmpty should lose parens even without an owned override:\n$out")
+    assert(!out.contains("c.first()"), s"first should lose parens even without an owned override:\n$out")
+  }
+
+  test("the same base member called from two separate dependent units loses parens in both") {
+    val base = """package com.base;
+                 |public class Container {
+                 |  private int count;
+                 |  public int count() { return count; }
+                 |}
+                 |""".stripMargin
+    val dep1 = """package com.dep;
+                 |public class A {
+                 |  int go(com.base.Container c) { return c.count(); }
+                 |}
+                 |""".stripMargin
+    val dep2 = """package com.dep;
+                 |public class B {
+                 |  int go(com.base.Container c) { return c.count(); }
+                 |}
+                 |""".stripMargin
+    val before     = SpoonTir.fromSources(List("Container.java" -> base, "A.java" -> dep1, "B.java" -> dep2))
+    val baseUnits  = before.units.map(_.symbol).filter(u => before.symbolOf(u).exists(_.fullName == "com.base.Container")).toSet
+    val phase      = new NullaryArityTransform(everywhere)
+    val idioms     = new IdiomLog
+    val (after, _) = Pipeline.runTraced(
+      before,
+      List(phase),
+      new PolicyBinder(before, before.members, RunScope.of(emitted = before.units.map(_.symbol).toSet -- baseUnits, own = Map.empty)),
+      balticporter.catalog.CatalogLog.discarding,
+      RewriteLog(),
+      idioms
+    )
+    val out = new TirEmitter(after).emit
+    assert(!out.contains("c.count()"), s"both dependent units should lose parens:\n$out")
+  }
+
+  test("a base member whose body fails the getter guard still loses parens when forced") {
+    val base = """package com.base;
+                 |public class Container {
+                 |  private int size;
+                 |  public boolean isEmpty() { return size == 0; }
+                 |}
+                 |""".stripMargin
+    val dep = """package com.dep;
+                |public class Client {
+                |  boolean check(com.base.Container c) { return c.isEmpty(); }
+                |}
+                |""".stripMargin
+    val before     = SpoonTir.fromSources(List("Container.java" -> base, "Client.java" -> dep))
+    val baseUnits  = before.units.map(_.symbol).filter(u => before.symbolOf(u).exists(_.fullName == "com.base.Container")).toSet
+    val phase      = new NullaryArityTransform(everywhere, force = Set("com.base.Container#isEmpty"))
+    val idioms     = new IdiomLog
+    val (after, _) = Pipeline.runTraced(
+      before,
+      List(phase),
+      new PolicyBinder(before, before.members, RunScope.of(emitted = before.units.map(_.symbol).toSet -- baseUnits, own = Map.empty)),
+      balticporter.catalog.CatalogLog.discarding,
+      RewriteLog(),
+      idioms
+    )
+    val out = new TirEmitter(after).emit
+    assert(!out.contains("c.isEmpty()"), s"forced base member should lose parens even with side-effecting body:\n$out")
+    assert(out.contains("c.isEmpty"), s"isEmpty should be parenless:\n$out")
+  }

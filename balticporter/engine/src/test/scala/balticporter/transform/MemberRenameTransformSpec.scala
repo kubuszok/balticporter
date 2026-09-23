@@ -480,3 +480,71 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assertEquals(out.linesIterator.count(_.contains("porter: renamed-member")), 2, out)
     assert(phase.policyReport.findings.isEmpty, phase.policyReport.findings.mkString("\n"))
   }
+
+  // ---- base renames in dependent units --------------------------------------------------------
+
+  test("a call site in a dependent unit to a base-renamed member uses the new name") {
+    val base = """package com.base;
+                 |public class Container {
+                 |  private Object[] items;
+                 |  public Object first() { return items[0]; }
+                 |}
+                 |""".stripMargin
+    val dep = """package com.dep;
+                |public class Client {
+                |  Object go(com.base.Container c) { return c.first(); }
+                |}
+                |""".stripMargin
+    val before       = SpoonTir.fromSources(List("Container.java" -> base, "Client.java" -> dep))
+    val baseUnits    = before.units.map(_.symbol).filter(u => before.symbolOf(u).exists(_.fullName == "com.base.Container")).toSet
+    val phase        = new MemberRenameTransform(Map("com.base.Container#first" -> "head"))
+    val idioms       = new IdiomLog
+    val (after, log) = Pipeline.runTraced(
+      before,
+      List(phase),
+      new PolicyBinder(before, before.members, RunScope.of(emitted = before.units.map(_.symbol).toSet -- baseUnits, own = Map.empty)),
+      balticporter.catalog.CatalogLog.discarding,
+      RewriteLog(),
+      idioms
+    )
+    val out = new TirEmitter(after, notes = log).emit
+    assert(!code(out).contains("c.first()"), s"call site in dependent should use new name:\n$out")
+    assert(code(out).contains("c.head()"), s"call site should be renamed to head:\n$out")
+  }
+
+  test("a base rename through a subclass receiver in a dependent unit uses the new name") {
+    val base = """package com.base;
+                 |public class Container {
+                 |  private Object[] items;
+                 |  public Object first() { return items[0]; }
+                 |}
+                 |""".stripMargin
+    val dep = """package com.dep;
+                |public class Sub extends com.base.Container {
+                |  public Object first() { return super.first(); }
+                |}
+                |""".stripMargin
+    val caller = """package com.dep;
+                   |public class Caller {
+                   |  Object go(Sub s) { return s.first(); }
+                   |  Object goBase(com.base.Container c) { return c.first(); }
+                   |}
+                   |""".stripMargin
+    val before       = SpoonTir.fromSources(List("Container.java" -> base, "Sub.java" -> dep, "Caller.java" -> caller))
+    val baseUnits    = before.units.map(_.symbol).filter(u => before.symbolOf(u).exists(_.fullName == "com.base.Container")).toSet
+    val phase        = new MemberRenameTransform(Map("com.base.Container#first" -> "head"))
+    val idioms       = new IdiomLog
+    val (after, log) = Pipeline.runTraced(
+      before,
+      List(phase),
+      new PolicyBinder(before, before.members, RunScope.of(emitted = before.units.map(_.symbol).toSet -- baseUnits, own = Map.empty)),
+      balticporter.catalog.CatalogLog.discarding,
+      RewriteLog(),
+      idioms
+    )
+    val out = new TirEmitter(after, notes = log).emit
+    assert(!code(out).contains("s.first()"), s"call through subclass should use new name:\n$out")
+    assert(!code(out).contains("c.first()"), s"call through base should use new name:\n$out")
+    assert(code(out).contains("s.head()"), s"subclass call should be head:\n$out")
+    assert(code(out).contains("c.head()"), s"base call should be head:\n$out")
+  }

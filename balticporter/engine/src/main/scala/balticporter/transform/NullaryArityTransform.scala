@@ -100,12 +100,18 @@ final class NullaryArityTransform(
     */
   private var converted: Set[SymId] = Set.empty
 
+  /** Converted members keyed by fullName — a call site in a dependent unit may reference the same java member under a different SymId than the one the baseCandidates loop found. The resolved
+    * declaration's identity (owner fullName + name, cut at the fullName separator) is stable across SymIds, so `transformApply` matches both.
+    */
+  private var convertedFqns: Set[String] = Set.empty
+
   /** Methods converted by this run that this run also EMITS — only these have their declarations modified. Base methods are in `converted` for call-site rewriting but not in `emittedConverted`.
     */
   private var emittedConverted: Set[SymId] = Set.empty
 
   override def run(program: Program): Program =
     converted = Set.empty
+    convertedFqns = Set.empty
     emittedConverted = Set.empty
     if scope == RuleScope.Only(Set.empty) && !derive then return program
 
@@ -145,13 +151,16 @@ final class NullaryArityTransform(
               "this run emits no declaration for it (a base's unit): its arity is the base's " +
                 "published fact, read literally, and not this module's to move"
             )
-            // still a candidate for call-site rewriting if it passes the other guards
+            // still a candidate for call-site rewriting if it passes the other guards.
+            // For a forced base member the body guard (isGetterLike) is not consulted: the base's
+            // port map already decided, and re-deciding from the body is what §1.5 forbids.
             if !substitutedOwners.contains(ownerFqn) && PolicyBinder.isExecutable(s.info)
               && !(derive && derivedKeep(s.id))
               && (scope.includes(program, s) || forcedAll(s.id, s.fullName))
             then
               val closure = graph.closureOf(s.id)
-              if !closure.isAnchored && (isGetterLike(program, d) || forcedAll(s.id, s.fullName))
+              if !closure.isAnchored
+                && (isGetterLike(program, d) || forcedAll(s.id, s.fullName))
                 && !hasOverloadedSibling(program, s)
               then baseCandidates += s.id
           // owners the base SUBSTITUTED — the injected shim's members were never renamed
@@ -294,12 +303,25 @@ final class NullaryArityTransform(
         val allInComp = comp.forall { m =>
           candidates.contains(m) || baseCandidates.contains(m) || !program.owned(m)
         }
-        if allInComp then comp.filter(program.owned).foreach(baseConverted += _)
+        if allInComp then
+          // the base candidate itself must be in converted so that call sites in the dependent's
+          // own code that reference it (by SymId) are rewritten — even when the dependent declares
+          // no override of that member. Owned overrides are included as before.
+          baseConverted += c
+          comp.filter(m => m != c && program.owned(m)).foreach(baseConverted += _)
     }
 
     emittedConverted = allConverted.toSet
     converted = allConverted.toSet ++ baseConverted.toSet
-    if converted.isEmpty then return program
+    // convertedFqns includes (a) the fullNames of all converted symbols and (b) the configured
+    // force set entries, which name base members the base already converted — a dependent's call
+    // site may reference a base member by an EXTERNAL SymId (interned lazily from the class file,
+    // not from the program's own source), so it never appears in program.symbols.all and the
+    // baseCandidates loop cannot find it. The force set is the authority for those. derivedForce
+    // is NOT included: it names members the derive mechanism identified for owned types, which go
+    // through the regular candidate path and its body guards.
+    convertedFqns = converted.flatMap(id => program.symbolOf(id).map(_.fullName)) ++ force
+    if converted.isEmpty && convertedFqns.isEmpty then return program
 
     // ---- 3. strip the empty parameter clause and rewrite call sites ----
     given Program = program
@@ -310,9 +332,12 @@ final class NullaryArityTransform(
   override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
     if emittedConverted.contains(t.symbol) then t.copy(paramss = Nil) else t
 
-  /** `o.x()` -> `o.x` for converted methods. */
-  override def transformApply(t: Tree.Apply)(using Program): Term =
-    if converted.contains(t.method) && t.args.isEmpty then
+  /** `o.x()` -> `o.x` for converted methods — keyed on both SymId (exact) and fullName (identity match for a base member whose SymId differs across dependent units).
+    */
+  override def transformApply(t: Tree.Apply)(using p: Program): Term =
+    val isConverted = converted.contains(t.method) ||
+      (convertedFqns.nonEmpty && p.symbolOf(t.method).exists(s => convertedFqns.contains(s.fullName)))
+    if isConverted && t.args.isEmpty then
       t.fun match
         case _: Tree.Ident => Tree.Ident(t.method, t.tpe, t.origin)
         case Tree.Select(q, _, _, _) => Tree.Select(q, t.method, t.tpe, t.origin)
