@@ -1456,6 +1456,18 @@ object Differences:
       Universal,
       "TirEmitterMembers.valDef's JS-C53 consult; TirEmitterMembers.mods' isFinal branch, which carries java's FINAL modifier onto the emitted val",
       Rendered("ValDef")
+    ),
+    Difference(
+      cId(54),
+      "a private nested class's default constructor is private in java bytecode but public in scalac bytecode",
+      "JLS 8.8.9 — javac emits a private constructor for a private nested class; reflective access throws NoSuchMethodException or IllegalAccessException",
+      "SLS — scalac enforces nested-class privacy at compile time only and emits the constructor public; reflective instantiation succeeds silently",
+      Silent,
+      Refused("no faithful translation short of emitting a private constructor with a public factory"),
+      Predicted,
+      Universal,
+      "ReflectionVisibilityCheck — counted at every reflective instantiation site whose target is resolvable and private, or whose target is dynamic",
+      Cited("reflection-visibility")
     )
   )
 

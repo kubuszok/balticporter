@@ -148,6 +148,11 @@ object Decision:
       */
     case ThreadConfinedStatic
 
+    /** a reflective instantiation site whose target type's constructor is private in java bytecode but public in scalac's bytecode, so reflective access that java refuses succeeds silently in the
+      * port. Counted at the call and reported as a `reflection-visibility` finding.
+      */
+    case CountedReflectionRisk
+
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
   /** The DECLARATIONS a per-SITE rewrite reached, each with the earliest origin inside it. Recorded once per declaration (not per occurrence) since a site-level rewrite is already visible in the diff

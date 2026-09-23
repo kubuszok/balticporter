@@ -42,7 +42,7 @@ registers. Why the families are split:
   refusal population that was once a `println` and a prose row); `service-providers` and `resources`
   from the manifest; one `api-parity(<family>)` per `ApiParityCheck.Families`
   entry when `parity` is declared. `porter-notes`, `break-catch`, `try-resource`, `switch-null`,
-  `heap-pollution`, `cast-conversion`, `overload-risk`, `markers` record on every run.
+  `heap-pollution`, `cast-conversion`, `overload-risk`, `reflection-visibility`, `markers` record on every run.
 
 ## Remediation
 

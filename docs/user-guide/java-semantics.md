@@ -47,6 +47,7 @@ for every library. Where a rule has a catalogue id (`JS-…`), that id appears i
 | overloads that differ only by Java's resolution phase — `f(int)` beside `f(Object)`, fixed arity beside varargs, generic beside non-generic | Java resolves in three phases and an earlier phase wins outright (JLS 15.12.2); Scala resolves in one. Both compilers accept the call and bind different members | no faithful translation short of a resolver: every such call is **counted** and reported (`JS-C22`, `JS-C23`) |
 | a rename onto a standard-library member with different mutability — `Bits.xor(bits)` | Java's mutates; `BitSet.xor` returns a new set | the in-place operator |
 | an inclusive range bound passed to an exclusive API | a silent off-by-one | the bound translated, Java's own refusals restated |
+| reflective instantiation of a private nested class (`Class.newInstance()`, `getConstructor()`, `getDeclaredConstructor().newInstance()`, `MethodHandles.Lookup.findConstructor()`) | javac emits a private constructor (JLS 8.8.9); scalac emits it public — the call succeeds silently where java throws. A JVM-reflection contract java's own tests assert | no faithful translation: every reflective instantiation site is **counted** as `reflection-visibility(private-target\|unknown-target)` (`JS-C54`); a consumer records a test-drop decision for each hit |
 
 ## Collections a third party reifies
 

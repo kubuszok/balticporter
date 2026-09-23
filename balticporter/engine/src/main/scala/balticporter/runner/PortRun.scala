@@ -39,6 +39,7 @@ import balticporter.tir.{
   PorterNote,
   Program,
   Reason,
+  ReflectionVisibilityCheck,
   Remediator,
   RemedySource,
   RemedyVocabulary,
@@ -989,6 +990,24 @@ final case class PortRun(
     say(s"OVERLOAD RISK (calls whose candidate set spans a java resolution phase): ${overloadRisk.findings.size}")
     overloadRisk.findings.map(_.issue).distinct.foreach(i => say(OverloadRiskCheck.Issue.classification(i)))
     println(OverloadRiskCheck.summary(overloadRisk))
+
+    // ---- reflection visibility: constructor privacy divergence ----
+    val reflVis = ReflectionVisibilityCheck.check(program, checkedUnits)
+    CheckReport.record(ReflectionVisibilityCheck.Name, reflVis.map(_.report))
+    say(s"REFLECTION VISIBILITY (private-nested-class constructor public in scalac bytecode): ${reflVis.size}")
+    reflVis.map(_.issue).distinct.foreach(i => say(ReflectionVisibilityCheck.Issue.classification(i)))
+    println(ReflectionVisibilityCheck.summary(reflVis))
+    // cite the catalog row for every declaration containing a finding
+    reflVis.foreach { f =>
+      translated.catalog.cite(balticporter.catalog.JS.C(54), f.owner)
+    }
+    // record decisions for porter notes
+    reflVis.foreach { f =>
+      val subjectSym = program.symbols.all.find(_.fullName == f.owner)
+      subjectSym.foreach { sym =>
+        translated.decisions.record(ReflectionVisibilityCheck.decision(f, sym.id, f.owner))
+      }
+    }
 
     // ---- class-init trigger check ----
     val classInits = ClassInitTriggerCheck.check(program, checkedUnits, translated.emitter.forcedClassInits, translated.emitter.emittedShapes.types.get)
@@ -2250,6 +2269,7 @@ object PortRun:
     DependencyCheck.Name,
     DependencyCheck.Declared,
     RewriteCallSitesCheck.Name,
+    ReflectionVisibilityCheck.Name,
     UnusedHandled,
     UnusedRefused
     // Collection/nullability/opaque/test-framework lanes are conditionally required (see requiredChecks).
