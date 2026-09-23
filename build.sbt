@@ -313,8 +313,9 @@ lazy val `frontend-ts` = project
       val outDir      = (Compile / resourceManaged).value / "balticporter" / "frontend" / "ts" / "exporter"
       val marker      = outDir / ".built-marker"
       val pkgJson     = exporterDir / "package.json"
-      val srcFile     = exporterDir / "src" / "export.ts"
-      val expected    = s"${pkgJson.hashCode}:${srcFile.hashCode}:${srcFile.lastModified}"
+      // keyed on the CONTENTS of package.json, the lock file and every source, never on paths
+      val inputs      = (pkgJson +: (exporterDir / "package-lock.json") +: (exporterDir / "src").listFiles.toList.sortBy(_.getName))
+      val expected    = inputs.filter(_.isFile).map(f => s"${f.getName}=${IO.read(f).hashCode}").mkString(";")
       val cached      = marker.exists && IO.read(marker).trim == expected
       if (!cached) {
         val log = streams.value.log

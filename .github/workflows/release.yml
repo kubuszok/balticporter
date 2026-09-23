@@ -39,6 +39,10 @@ jobs:
         with:
           jvm: ${{ env.JVM_VERSION }}
           apps: sbt
+      # the frontend-ts jar carries the TypeScript exporter bundle, built with npm at packaging time
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Publish all projects
         run: sbt ci-release
         env:
