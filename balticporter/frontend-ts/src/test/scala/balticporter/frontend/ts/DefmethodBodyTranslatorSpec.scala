@@ -1,6 +1,6 @@
 package balticporter.frontend.ts
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry }
 
 class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
@@ -38,7 +38,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
   // ---- return lowering ----
 
   test("tail return is the expression value, no boundary"):
-    val body = block(ret(num(42)))
+    val body   = block(ret(num(42)))
     val result = translate(body)
     assert(!result.scalaBody.contains("return"), s"tail return should not contain 'return': ${result.scalaBody}")
     assert(!result.scalaBody.contains("boundary"), s"single return should not need boundary: ${result.scalaBody}")
@@ -46,14 +46,12 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("early return wraps body in boundary and emits break"):
     val body = block(
-      node("IfStatement",
-        binOp("EqualsEqualsEqualsToken", ident("x"), num(0)),
-        block(ret(num(-1))),
-      ),
+      node("IfStatement", binOp("EqualsEqualsEqualsToken", ident("x"), num(0)), block(ret(num(-1)))),
       ret(num(1))
     )
     val result = translate(body)
-    assert(result.scalaBody.contains("scala.util.boundary[Any]"), s"early return needs boundary: ${result.scalaBody}")
+    assert(result.scalaBody.contains("scala.util.boundary {"), s"early return needs boundary: ${result.scalaBody}")
+    assert(!result.scalaBody.contains("boundary[Any]"), s"no type argument on boundary: ${result.scalaBody}")
     assert(result.scalaBody.contains("scala.util.boundary.break(-1)"), s"non-last return needs break: ${result.scalaBody}")
     assert(!result.scalaBody.contains("return "), s"no raw 'return' keyword: ${result.scalaBody}")
     // The last return should be just the value (tail position)
@@ -61,38 +59,39 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("void early return emits break(null)"):
     val body = block(
-      node("IfStatement",
-        binOp("EqualsEqualsEqualsToken", ident("x"), num(0)),
-        block(retVoid),
-      ),
+      node("IfStatement", binOp("EqualsEqualsEqualsToken", ident("x"), num(0)), block(retVoid)),
       node("ExpressionStatement", ident("doSomething"))
     )
     val result = translate(body)
-    assert(result.scalaBody.contains("scala.util.boundary.break(null)"), s"void early return needs break(null): ${result.scalaBody}")
+    assert(
+      result.scalaBody.contains("scala.util.boundary.break(null)"),
+      s"void early return needs break(null): ${result.scalaBody}"
+    )
 
   test("return inside a lambda does not use the outer boundary"):
     val body = block(
-      node("ExpressionStatement",
-        node("ArrowFunction",
-          RastNode("Parameter", 0, (0, 0), children = List(ident("x"))),
-          block(ret(ident("x")))
-        )
+      node(
+        "ExpressionStatement",
+        node("ArrowFunction", RastNode("Parameter", 0, (0, 0), children = List(ident("x"))), block(ret(ident("x"))))
       ),
       ret(num(1))
     )
     val result = translate(body)
     // The outer body should not have a boundary because the return is inside a lambda
-    assert(!result.scalaBody.contains("scala.util.boundary[Any]"), s"lambda return should not trigger outer boundary: ${result.scalaBody}")
+    assert(
+      !result.scalaBody.contains("scala.util.boundary {"),
+      s"lambda return should not trigger outer boundary: ${result.scalaBody}"
+    )
 
   // ---- this. property access ----
 
   test("this.prop goes through apiLookup"):
-    val body = block(ret(propAccess(thisKw, "my_field")))
+    val body       = block(ret(propAccess(thisKw, "my_field")))
     val withLookup = translate(body, apiLookup = Map("my_field" -> "myMappedField"))
     assert(withLookup.scalaBody.contains("this.myMappedField"), s"apiLookup should map this.prop: ${withLookup.scalaBody}")
 
   test("this.prop uses snakeToCamel when no apiLookup entry"):
-    val body = block(ret(propAccess(thisKw, "some_name")))
+    val body   = block(ret(propAccess(thisKw, "some_name")))
     val result = translate(body)
     assert(result.scalaBody.contains("this.someName"), s"should camelCase: ${result.scalaBody}")
 
@@ -100,11 +99,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("delete obj.prop emits remove"):
     val body = block(
-      node("ExpressionStatement",
-        node("DeleteExpression",
-          propAccess(ident("myMap"), "key")
-        )
-      ),
+      node("ExpressionStatement", node("DeleteExpression", propAccess(ident("myMap"), "key"))),
       ret(num(0))
     )
     val result = translate(body)
@@ -113,11 +108,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("delete obj[expr] emits remove"):
     val body = block(
-      node("ExpressionStatement",
-        node("DeleteExpression",
-          node("ElementAccessExpression", ident("myMap"), ident("k"))
-        )
-      ),
+      node("ExpressionStatement", node("DeleteExpression", node("ElementAccessExpression", ident("myMap"), ident("k")))),
       ret(num(0))
     )
     val result = translate(body)
@@ -126,7 +117,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
   // ---- empty object literal ----
 
   test("empty object literal emits qualified mutable Map"):
-    val body = block(ret(node("ObjectLiteralExpression")))
+    val body   = block(ret(node("ObjectLiteralExpression")))
     val result = translate(body)
     assert(result.scalaBody.contains("scala.collection.mutable.Map.empty"), s"empty {} should be qualified: ${result.scalaBody}")
     assert(!result.scalaBody.startsWith("    Map.empty"), s"should not start with bare Map.empty: ${result.scalaBody}")
@@ -134,15 +125,21 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
   // ---- array literal ----
 
   test("array literal emits ArrayBuffer"):
-    val body = block(ret(node("ArrayLiteralExpression", num(1), num(2))))
+    val body   = block(ret(node("ArrayLiteralExpression", num(1), num(2))))
     val result = translate(body)
-    assert(result.scalaBody.contains("scala.collection.mutable.ArrayBuffer("), s"array literal should use ArrayBuffer: ${result.scalaBody}")
+    assert(
+      result.scalaBody.contains("scala.collection.mutable.ArrayBuffer("),
+      s"array literal should use ArrayBuffer: ${result.scalaBody}"
+    )
     assert(!result.scalaBody.contains("Array("), s"should not use bare Array(: ${result.scalaBody}")
 
   test("empty array literal emits empty ArrayBuffer"):
-    val body = block(ret(RastNode("ArrayLiteralExpression", 0, (0, 0))))
+    val body   = block(ret(RastNode("ArrayLiteralExpression", 0, (0, 0))))
     val result = translate(body)
-    assert(result.scalaBody.contains("scala.collection.mutable.ArrayBuffer.empty[Any]"), s"empty array should use ArrayBuffer: ${result.scalaBody}")
+    assert(
+      result.scalaBody.contains("scala.collection.mutable.ArrayBuffer.empty[Any]"),
+      s"empty array should use ArrayBuffer: ${result.scalaBody}"
+    )
 
   // ---- refusal tracking ----
 
@@ -152,19 +149,96 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ret(num(0))
     )
     val result = translate(body)
-    assert(result.refusalReasons.exists(_.contains("LabeledStatement")), s"should refuse with kind name: ${result.refusalReasons}")
+    assert(
+      result.refusalReasons.exists(_.contains("LabeledStatement")),
+      s"should refuse with kind name: ${result.refusalReasons}"
+    )
 
   test("unhandled expression kind is refused with its name"):
-    val body = block(ret(RastNode("TaggedTemplateExpression", 0, (0, 0))))
+    val body   = block(ret(RastNode("TaggedTemplateExpression", 0, (0, 0))))
     val result = translate(body)
-    assert(result.refusalReasons.exists(_.contains("TaggedTemplateExpression")), s"should refuse with kind name: ${result.refusalReasons}")
+    assert(
+      result.refusalReasons.exists(_.contains("TaggedTemplateExpression")),
+      s"should refuse with kind name: ${result.refusalReasons}"
+    )
 
-  test("break and continue are refused"):
-    val body = block(
-      RastNode("BreakStatement", 0, (0, 0)),
-      RastNode("ContinueStatement", 0, (0, 0)),
+  test("labelled break and continue are refused"):
+    val labelledBreak    = RastNode("BreakStatement", 0, (0, 0), children = List(ident("outer")))
+    val labelledContinue = RastNode("ContinueStatement", 0, (0, 0), children = List(ident("outer")))
+    val body             = block(
+      labelledBreak,
+      labelledContinue,
       ret(num(0))
     )
     val result = translate(body)
-    assert(result.refusalReasons.contains("BreakStatement"), s"break should be refused: ${result.refusalReasons}")
-    assert(result.refusalReasons.contains("ContinueStatement"), s"continue should be refused: ${result.refusalReasons}")
+    assert(
+      result.refusalReasons.exists(_.contains("LabelledBreak")),
+      s"labelled break should be refused: ${result.refusalReasons}"
+    )
+    assert(
+      result.refusalReasons.exists(_.contains("LabelledContinue")),
+      s"labelled continue should be refused: ${result.refusalReasons}"
+    )
+
+  // ---- break inside a loop ----
+
+  test("break inside a while loop wraps the loop in boundary"):
+    val body = block(
+      node(
+        "WhileStatement",
+        ident("cond"),
+        block(
+          node("IfStatement", ident("done"), block(RastNode("BreakStatement", 0, (0, 0)))),
+          node("ExpressionStatement", ident("work"))
+        )
+      ),
+      ret(num(0))
+    )
+    val result = translate(body)
+    assert(result.scalaBody.contains("scala.util.boundary {"), s"break needs boundary around loop: ${result.scalaBody}")
+    assert(result.scalaBody.contains("while (cond)"), s"should contain while: ${result.scalaBody}")
+    assert(result.scalaBody.contains("scala.util.boundary.break(())"), s"break emits break(()): ${result.scalaBody}")
+    assert(result.isComplete, s"unlabelled break should not refuse: ${result.refusalReasons}")
+
+  // ---- continue inside a loop ----
+
+  test("continue inside a while loop wraps the body in boundary"):
+    val body = block(
+      node(
+        "WhileStatement",
+        ident("cond"),
+        block(
+          node("IfStatement", ident("skip"), block(RastNode("ContinueStatement", 0, (0, 0)))),
+          node("ExpressionStatement", ident("work"))
+        )
+      ),
+      ret(num(0))
+    )
+    val result = translate(body)
+    assert(
+      result.scalaBody.contains("while (cond) scala.util.boundary {"),
+      s"continue needs boundary around body: ${result.scalaBody}"
+    )
+    assert(result.scalaBody.contains("scala.util.boundary.break(())"), s"continue emits break(()): ${result.scalaBody}")
+    assert(result.isComplete, s"unlabelled continue should not refuse: ${result.refusalReasons}")
+
+  // ---- break inside for-in/of ----
+
+  test("break inside for-of loop wraps the loop in boundary"):
+    val body = block(
+      node(
+        "ForOfStatement",
+        node("VariableDeclarationList", node("VariableDeclaration", ident("item"))),
+        ident("items"),
+        block(
+          node("IfStatement", ident("done"), block(RastNode("BreakStatement", 0, (0, 0)))),
+          node("ExpressionStatement", ident("process"))
+        )
+      ),
+      ret(num(0))
+    )
+    val result = translate(body)
+    assert(result.scalaBody.contains("scala.util.boundary {"), s"break in for-of needs boundary: ${result.scalaBody}")
+    assert(result.scalaBody.contains("for (item <- items)"), s"should contain for: ${result.scalaBody}")
+    assert(result.scalaBody.contains("scala.util.boundary.break(())"), s"break emits break(()): ${result.scalaBody}")
+    assert(result.isComplete, s"unlabelled break should not refuse: ${result.refusalReasons}")
