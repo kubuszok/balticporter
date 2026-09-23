@@ -527,7 +527,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val objLit = node("ObjectLiteralExpression", node("PropertyAssignment", ident("body"), arr))
     val body   = block(ret(objLit))
     val result = translate(body, returnType = Some("NodeStyling"), ctorSchema = schema)
-    assert(result.scalaBody.contains("ArrayBuffer[Int]"), s"should carry element type: ${result.scalaBody}")
+    assert(result.scalaBody.contains("Array[Int]"), s"should carry element type matching expected: ${result.scalaBody}")
 
   test("empty-using is refused not emitted when boundary label is missing"):
     // A return inside a try-catch where hasEarlyReturn missed it

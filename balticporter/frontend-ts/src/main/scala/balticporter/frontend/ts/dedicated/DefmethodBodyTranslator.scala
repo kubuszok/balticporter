@@ -383,10 +383,12 @@ object DefmethodBodyTranslator:
           val elemType = extractElementType(expectedType)
           if elemType.isDefined then
             val et = elemType.get
-            if node.children.isEmpty then s"scala.collection.mutable.ArrayBuffer.empty[$et]"
+            val useArray = expectedType.startsWith("Array[")
+            val coll = if useArray then "Array" else "scala.collection.mutable.ArrayBuffer"
+            if node.children.isEmpty then s"$coll.empty[$et]"
             else
               val elems = node.children.map(c => translateExprAt(c, et))
-              s"scala.collection.mutable.ArrayBuffer[$et](${elems.mkString(", ")})"
+              s"$coll[$et](${elems.mkString(", ")})"
           else translateExpr(node)
         case "NullKeyword" | "UndefinedKeyword" =>
           if isNullableType(expectedType) then "Nullable.Null"
@@ -507,6 +509,9 @@ object DefmethodBodyTranslator:
               val init = initNode.map(translateExpr).getOrElse("null")
               // Track local variable types from initialisers whose type is known
               initNode.flatMap(exprType).foreach(t => localTypes(scalaName) = t)
+              // A variable whose initialiser is empty or whitespace produces
+              // Unit in value position when read later
+              if init.trim.isEmpty then refuse("unit-in-value-position")
               sb.append(s"$indent$keyword $scalaName = $init\n")
 
         case "IfStatement" =>
@@ -685,7 +690,14 @@ object DefmethodBodyTranslator:
         case "NewExpression" =>
           val children = node.children
           val cls = translateExpr(children.head)
-          val args = children.drop(1).map(translateExpr)
+          val rawArgs = children.drop(1)
+          // Apply expected-type propagation to constructor arguments via ctor schema
+          val ctorParamTypes = ctorSchema.get(cls).getOrElse(Nil)
+          val args = rawArgs.zipWithIndex.map { case (arg, i) =>
+            ctorParamTypes.lift(i) match
+              case Some(param) => translateExprAt(arg, param.tpe)
+              case None        => translateExpr(arg)
+          }
           cls match
             case "Array" =>
               if args.isEmpty then "scala.collection.mutable.ArrayBuffer.empty[Any]"
