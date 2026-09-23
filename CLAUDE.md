@@ -72,7 +72,7 @@ No file under `balticporter/` may name a ported library or one of its DEPENDENCI
 test sources included; doc comments are wanted and must drive nothing:
 
 ```
-grep -rn --include='*.scala' -E "badlogic|libgdx|liqp|liquid\.parser|earlygrey|simplegraphs|dongbat|jbump|czyzby|noise4j|tommyettinger|anim8|textratypist|regexodus|kotcrab|visui|crashinvaders|eskalon|mgsx|vladsch|flexmark|nibor|fasterxml|antlr|strftime" balticporter/ | grep -vE ":\s*(\*|//|/\*)"
+grep -rn --include='*.scala' -E "badlogic|libgdx|liqp|liquid\.parser|earlygrey|simplegraphs|dongbat|jbump|czyzby|noise4j|tommyettinger|anim8|textratypist|regexodus|kotcrab|visui|crashinvaders|eskalon|mgsx|vladsch|flexmark|nibor|fasterxml|antlr|strftime|katex|terser|dart-sass|mermaid|roughjs|hachure" balticporter/ | grep -vE ":\s*(\*|//|/\*)"
 ```
 
 ---

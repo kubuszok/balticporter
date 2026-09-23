@@ -8,17 +8,16 @@ enum PortType:
   case NonJava(language: String)
 
 object PortType:
-  /** Detect port type from the .conf file name or content.
+  /** Detect port type from the .conf file content.
     *
-    * Convention: a conf whose name contains a known non-Java library
-    * is a non-Java port; everything else is Java.
+    * Reads the `input.frontend` value: a non-Java frontend means a non-Java port; everything else
+    * defaults to Java. The consumer controls this through the configuration, not the file name.
     */
   def detect(conf: File): PortType =
-    val name = conf.getName.toLowerCase
-    if name.contains("terser") || name.contains("katex") || name.contains("mermaid") ||
-       name.contains("roughjs") || name.contains("graphs") then
+    val content = scala.io.Source.fromFile(conf).mkString.toLowerCase
+    if content.contains("frontend = \"typescript\"") || content.contains("frontend = \"javascript\"") then
       PortType.NonJava("typescript")
-    else if name.contains("sass") || name.contains("dart") then
+    else if content.contains("frontend = \"dart\"") then
       PortType.NonJava("dart")
     else
       PortType.Java

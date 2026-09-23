@@ -78,45 +78,6 @@ class TsMinterSpec extends munit.FunSuite:
     val program = mintAndReport("points-on-curve", files)
     assert(program.units.nonEmpty)
 
-  test("hachure-fill → Program"):
-    val files   = List(loadRast("/rast/hachure-fill/src/hachure.rast.json"))
-    val program = mintAndReport("hachure-fill", files)
-    assert(program.units.nonEmpty)
-
-  test("rough.js core (17 files) → Program"):
-    val dir       = "/rast/roughjs/src/"
-    val fileNames = List(
-      "core.rast.json",
-      "math.rast.json",
-      "geometry.rast.json",
-      "generator.rast.json",
-      "renderer.rast.json",
-      "canvas.rast.json",
-      "svg.rast.json",
-      "rough.rast.json",
-      "fillers/filler-interface.rast.json",
-      "fillers/filler.rast.json",
-      "fillers/hachure-filler.rast.json",
-      "fillers/hatch-filler.rast.json",
-      "fillers/zigzag-filler.rast.json",
-      "fillers/zigzag-line-filler.rast.json",
-      "fillers/dashed-filler.rast.json",
-      "fillers/dot-filler.rast.json",
-      "fillers/scan-line-hachure.rast.json"
-    )
-    val files   = fileNames.map(f => loadRast(dir + f))
-    val program = mintAndReport("rough.js", files)
-    assert(program.units.size >= 17, s"expected >= 17 units for 17 files, got ${program.units.size}")
-
-  test("KaTeX subset (3 files) → Program"):
-    val files = List(
-      "/rast/katex/src/ParseError.rast.json",
-      "/rast/katex/src/types.rast.json",
-      "/rast/katex/src/Namespace.rast.json"
-    ).map(loadRast)
-    val program = mintAndReport("katex-subset", files)
-    assert(program.units.nonEmpty, "KaTeX should produce units")
-
   test("path-data-parser → emitted Scala source"):
     val files = List(
       "/rast/path-data-parser/src/parser.rast.json",
@@ -124,15 +85,8 @@ class TsMinterSpec extends munit.FunSuite:
       "/rast/path-data-parser/src/normalize.rast.json"
     ).map(loadRast)
 
-    val jsNumHelper = """  private def jsNum(v: Double): String = {
-    if (v.isNaN) { "NaN" }
-    else if (v.isPosInfinity) { "Infinity" }
-    else if (v.isNegInfinity) { "-Infinity" }
-    else if (v == Math.rint(v) && Math.abs(v) < 1e21) { new java.math.BigDecimal(v).toBigInteger.toString }
-    else { java.lang.Double.toString(v) }
-  }"""
-    val config      = TsToScalaEmitter.EmitConfig(
-      packageName = "ssg.graphs.commons.rough.pathdata",
+    val config = TsToScalaEmitter.EmitConfig(
+      packageName = "demo.pathdata",
       imports = List("scala.collection.mutable.ArrayBuffer"),
       braceStyle = true,
       errorClassName = "PathDataParseError",
@@ -179,7 +133,7 @@ class TsMinterSpec extends munit.FunSuite:
     ).map(loadRast)
 
     val config = TsToScalaEmitter.EmitConfig(
-      packageName = "ssg.graphs.commons.rough.curve",
+      packageName = "demo.curve",
       imports = List("scala.collection.mutable.ArrayBuffer"),
       braceStyle = true,
       skipIndex = false,
@@ -191,13 +145,13 @@ class TsMinterSpec extends munit.FunSuite:
       ),
       postProcess = Map(
         "PointsOnCurve" -> List(
-          ("\\(Double, Double\\)", "Point"), // tuple type → Point
+          ("\\(Double, Double\\)", "Point"),
           ("\\._1", ".x"),
-          ("\\._2", ".y"), // tuple accessors → field names
+          ("\\._2", ".y"),
           ("newPoints\\.isDefined \\|\\| Vector\\.empty", "newPoints.getOrElse(ArrayBuffer.empty[Point])"),
           ("val t: Int = 0\\.5", "val t: Double = 0.5"),
           ("Option\\[Vector\\[Point\\]\\]", "Option[ArrayBuffer[Point]]"),
-          ("Some\\(outPoints\\)", "Some(outPoints)"), // keep as-is, ArrayBuffer is fine
+          ("Some\\(outPoints\\)", "Some(outPoints)"),
           ("var i: Double = 0", "var i: Int = 0"),
           ("var offset: Double = 0", "var offset: Int = 0"),
           ("val d: Double = 0", "val d: Int = 0"),
@@ -206,13 +160,13 @@ class TsMinterSpec extends munit.FunSuite:
           ("start: Double", "start: Int"),
           ("`end`: Double", "`end`: Int"),
           ("numSegments: Double", "numSegments: Int"),
-          ("distanceTolerance: Double", "distanceTolerance: Double"), // keep as Double
+          ("distanceTolerance: Double", "distanceTolerance: Double"),
           ("distance\\.isDefined && \\(distance > 0\\)", "distance.exists(_ > 0)"),
           ("Some\\(newPoints\\)", "Some(newPoints.to(ArrayBuffer))"),
           ("simplifyPoints\\(points, 0, \\(points\\.length - 1\\)", "simplifyPoints(points, 0, points.length - 1"),
           ("\\(points\\.length - 1\\)\\.toInt", "points.length - 1"),
           ("newPoints\\.length, distance\\)", "newPoints.length, distance.get)"),
-          ("\\} \\{ i \\+= 1; i \\}", "  i += 1\n      }"), // for-loop update inside while body
+          ("\\} \\{ i \\+= 1; i \\}", "  i += 1\n      }"),
           ("\\} \\{ offset \\+= 3; offset \\}", "  offset += 3\n      }")
         ),
         "CurveToBezier" -> List(
@@ -220,7 +174,7 @@ class TsMinterSpec extends munit.FunSuite:
           ("\\._1", ".x"),
           ("\\._2", ".y"),
           ("var i: Double = 0", "var i: Int = 0"),
-          ("\\} \\{ i \\+= 1; i \\}", "  i += 1\n      }") // for-loop update inside while body
+          ("\\} \\{ i \\+= 1; i \\}", "  i += 1\n      }")
         )
       )
     )
@@ -230,91 +184,3 @@ class TsMinterSpec extends munit.FunSuite:
       println(source)
       println()
     assert(emitted.nonEmpty, "should emit at least one file")
-
-  test("hachure-fill → emitted Scala source"):
-    val files = List(loadRast("/rast/hachure-fill/src/hachure.rast.json"))
-
-    val config = TsToScalaEmitter.EmitConfig(
-      packageName = "ssg.graphs.commons.rough.fillers",
-      imports = List(
-        "scala.collection.mutable.ArrayBuffer",
-        "scala.util.boundary",
-        "scala.util.boundary.break"
-      ),
-      braceStyle = true,
-      tupleTypeOverrides = Map("Point" -> "Point", "Line" -> "Line"),
-      tupleFieldOverrides = Map(
-        "Point" -> Map(0 -> "x", 1 -> "y"),
-        "Line" -> Map(0 -> "p1", 1 -> "p2")
-      ),
-      mutableTupleTypes = Set("Point"),
-      typeAliasDefinitions = Map(
-        "Point" -> "final case class Point(var x: Double, var y: Double)",
-        "Line" -> "final case class Line(p1: Point, p2: Point)",
-        "EdgeEntry" -> "final case class EdgeEntry(ymin: Double, ymax: Double, var x: Double, islope: Double)",
-        "ActiveEdgeEntry" -> "final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)"
-      ),
-      extraDeclarations = Map(
-        "hachure" -> """final case class Point(var x: Double, var y: Double)
-final case class Line(p1: Point, p2: Point)
-final case class EdgeEntry(ymin: Double, ymax: Double, var x: Double, islope: Double)
-final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)"""
-      )
-    )
-    val emitted = TsToScalaEmitter.emit(files, config)
-
-    for ((name, source) <- emitted)
-      println(s"=== $name.scala ===")
-      println(source)
-      println()
-
-    assert(emitted.contains("hachure"), "should emit hachure")
-
-  test("hachure-fill → dedicated emitter"):
-    val rast  = loadRast("/rast/hachure-fill/src/hachure.rast.json")
-    val scala = balticporter.corpus.roughjs.HachureFillEmitter.emit(rast)
-    println("=== HachureFill-dedicated.scala ===")
-    println(scala)
-    assert(scala.contains("object HachureFill"), "should emit HachureFill object")
-    assert(scala.contains("case class Point"), "should emit Point case class")
-    assert(scala.contains("def hachureLines"), "should emit hachureLines method")
-
-  test("points-on-curve → dedicated emitter"):
-    val indexRast = loadRast("/rast/points-on-curve/src/index.rast.json")
-    val ctbRast   = loadRast("/rast/points-on-curve/src/curve-to-bezier.rast.json")
-    val emitted   = balticporter.corpus.roughjs.PointsOnCurveEmitter.emit(indexRast, ctbRast)
-    for ((name, source) <- emitted)
-      println(s"=== $name-dedicated.scala ===")
-      println(source)
-    assert(emitted.contains("PointsOnCurve"), "should emit PointsOnCurve")
-    assert(emitted.contains("CurveToBezier"), "should emit CurveToBezier")
-
-  test("points-on-path → dedicated emitter"):
-    val rast    = loadRast("/rast/points-on-path/src/index.rast.json")
-    val emitted = balticporter.corpus.roughjs.PointsOnPathEmitter.emit(rast)
-    for ((name, source) <- emitted)
-      println(s"=== $name-dedicated.scala ===")
-      println(source)
-    assert(emitted.contains("PointsOnPath"), "should emit PointsOnPath")
-
-  test("roughjs fillers → emitted Scala source (dedicated)"):
-    val rastBase = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("src/test/resources/rast/roughjs/src/fillers")
-    val emitted  = balticporter.corpus.roughjs.RoughFillersEmitter.emit(rastBase)
-    for ((name, source) <- emitted.toList.sortBy(_._1))
-      println(s"=== $name.scala ===")
-      println(source)
-      println()
-    assert(emitted.size == 9, s"expected 9 filler files, got ${emitted.size}")
-
-  test("roughjs engine (renderer + generator) → emitted Scala source"):
-    val rendererRast  = loadRast("/rast/roughjs/src/renderer.rast.json")
-    val generatorRast = loadRast("/rast/roughjs/src/generator.rast.json")
-    val emitted       = balticporter.corpus.roughjs.RoughEngineEmitter.emit(rendererRast, generatorRast)
-    // Write full emitted files for inspection
-    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-rough")
-    java.nio.file.Files.createDirectories(outDir)
-    for ((name, source) <- emitted)
-      java.nio.file.Files.writeString(outDir.resolve(s"$name.scala"), source)
-      println(s"[emit] $name.scala: ${source.linesIterator.size} lines → $outDir/$name.scala")
-    assert(emitted.contains("RoughRenderer"), "should emit RoughRenderer")
-    assert(emitted.contains("RoughGenerator"), "should emit RoughGenerator")

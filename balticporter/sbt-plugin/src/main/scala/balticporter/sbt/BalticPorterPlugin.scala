@@ -24,7 +24,7 @@ object BalticPorterPlugin extends AutoPlugin {
       "Path to the Baltic Porter .conf file for this module")
 
     val balticporterUpstream = settingKey[File](
-      "Path to the upstream source directory (e.g. original-src/terser)")
+      "Path to the upstream source directory for a non-Java port")
 
     val balticporterReference = settingKey[Option[File]](
       "Path to the reference/ directory for parity-derive (None = no parity)")

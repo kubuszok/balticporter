@@ -6,7 +6,8 @@ import scala.jdk.CollectionConverters.*
 
 /** The one entry point from a library's exported syntax trees and its hand-written reference Scala to translated method bodies, and to the table saying where each emitted body came from.
   *
-  * A library is a registered value: its policy, its reader, and which syntax-tree files feed which reference file. An unregistered name is refused with the registered ones listed.
+  * A library is a value the consumer supplies: its policy, its reader, and which syntax-tree files feed which reference file. The mechanism that applies bodies, records bodies.tsv and refuses is
+  * here.
   */
 object NonJavaBodies:
 
@@ -34,9 +35,9 @@ object NonJavaBodies:
 
   sealed trait Result
 
-  /** Nothing was built; `message` names the registered libraries. */
-  final case class Refused(library: String, reason: String, known: List[String]) extends Result:
-    def message: String = s"no translated bodies for '$library': $reason (registered: ${known.mkString(", ")})"
+  /** Nothing was built; `message` says why. */
+  final case class Refused(library: String, reason: String) extends Result:
+    def message: String = s"no translated bodies for '$library': $reason"
 
   /** Bodies per reference file, keyed by the file's path relative to `referenceDir` with `/` separators; a file with no entry has no module feeding it. */
   final case class Built(
@@ -86,25 +87,10 @@ object NonJavaBodies:
   /** What one derive run wrote. */
   final case class Run(written: List[Path], rows: List[BodiesReport.Row], summary: BodiesReport.Summary)
 
-  private lazy val registry: List[Library] = List(
-    balticporter.corpus.katex.KaTeXEmitter.parityLibrary,
-    balticporter.corpus.terser.TerserCompressEmitter.parityLibrary,
-    balticporter.corpus.sass.DartSassEmitter.parityLibrary,
-    balticporter.corpus.mermaid.MermaidEmitter.parityLibrary
-  )
-
-  def knownLibraries: List[String] = registry.map(_.name).sorted
-
-  /** Translated bodies for the registered `library`: `referenceDir` is the root of its hand-written Scala (any package directories included), `rastDir` the root of its exported syntax trees. */
-  def forLibrary(library: String, referenceDir: Path, rastDir: Path): Result =
-    registry.find(_.name == library) match
-      case None      => Refused(library, "no such library is registered", knownLibraries)
-      case Some(lib) => build(lib, referenceDir, rastDir)
-
-  /** The same, for a library value that is not in the registry. */
+  /** Translated bodies for the given `library` value: `referenceDir` is the root of its hand-written Scala (any package directories included), `rastDir` the root of its exported syntax trees. */
   def build(library: Library, referenceDir: Path, rastDir: Path): Result =
-    if !Files.isDirectory(referenceDir) then Refused(library.name, s"the reference directory does not exist: $referenceDir", knownLibraries)
-    else if !Files.isDirectory(rastDir) then Refused(library.name, s"the syntax-tree directory does not exist: $rastDir", knownLibraries)
+    if !Files.isDirectory(referenceDir) then Refused(library.name, s"the reference directory does not exist: $referenceDir")
+    else if !Files.isDirectory(rastDir) then Refused(library.name, s"the syntax-tree directory does not exist: $rastDir")
     else
       val cache = scala.collection.mutable.Map.empty[String, Either[String, RastFile]]
       val load: Loader = relative =>
@@ -120,7 +106,7 @@ object NonJavaBodies:
         )
 
       library.modules(load) match
-        case Left(reason)   => Refused(library.name, reason, knownLibraries)
+        case Left(reason)   => Refused(library.name, reason)
         case Right(modules) =>
           val references = scalaFilesUnder(referenceDir)
           val anchor     = anchorOf(references, modules.map(_.referenceSubPath))

@@ -112,20 +112,9 @@ class NonJavaBodiesSpec extends munit.FunSuite:
       case built:   NonJavaBodies.Built   => (root, built.derive(root.resolve("out"), root.resolve("report")))
       case refused: NonJavaBodies.Refused => fail(refused.message)
 
-  test("an unregistered library is refused with the registered ones listed"):
-    val (_, reference, rast) = fixture()
-    NonJavaBodies.forLibrary("no-such-library", reference, rast) match
-      case refused: NonJavaBodies.Refused =>
-        assertEquals(refused.known, List("dart-sass", "katex", "mermaid", "terser"))
-        assert(
-          refused.message.contains("no-such-library") && refused.message.contains("dart-sass, katex, mermaid, terser"),
-          refused.message
-        )
-      case other => fail(s"expected a refusal, got $other")
-
-  test("a registered library with no syntax-tree directory is refused"):
+  test("a library with no syntax-tree directory is refused"):
     val (root, reference, _) = fixture()
-    assert(NonJavaBodies.forLibrary("katex", reference, root.resolve("absent")).isInstanceOf[NonJavaBodies.Refused])
+    assert(NonJavaBodies.build(library, reference, root.resolve("absent")).isInstanceOf[NonJavaBodies.Refused])
 
   test("bodies.tsv names every member's source and why a reference body was kept"):
     val (root, _) = run()

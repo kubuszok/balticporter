@@ -42,14 +42,16 @@ object DefmethodBodyTranslator:
     * @param thisBinding if set, `this.x` becomes `$thisBinding.x` (e.g., "n" in pattern-match arms)
     * @param nodeParamName when set, property accesses on this identifier are validated
     *   against the DEFNODE hierarchy for the entry's className */
+  /** @param apiLookup JS identifier to Scala equivalent, supplied by the consumer's builder (the engine ships no library-specific table). */
   def translateBody(
       entry: DefmethodEntry,
       hierarchy: List[DefnodeClass],
       indent: String = "    ",
       thisBinding: String = "this",
       nodeParamName: Option[String] = None,
+      apiLookup: Map[String, String] = Map.empty,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup)
     ctx.translateBlock(entry.bodyNode)
     TranslationResult(
       scalaBody = ctx.result(),
@@ -217,6 +219,7 @@ object DefmethodBodyTranslator:
       baseIndent: String,
       thisBinding: String = "this",
       nodeParamName: Option[String] = None,
+      apiLookup: Map[String, String] = Map.empty,
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
@@ -692,7 +695,7 @@ object DefmethodBodyTranslator:
           refuse("ArgumentsObject")
           "??? /* arguments */"
         case n if n.startsWith("AST_") => astVarToScalaName(n)
-        case n => combinedApiLookup.getOrElse(n, snakeToCamel(n))
+        case n => apiLookup.getOrElse(n, snakeToCamel(n))
 
     private def translatePropertyAccess(node: RastNode): String =
       val children = node.children
@@ -1470,79 +1473,6 @@ object DefmethodBodyTranslator:
       .replace("\n", "\\n")
       .replace("\r", "\\r")
       .replace("\t", "\\t")
-
-  /** Terser-specific API name mapping: JS identifier → Scala equivalent. */
-  private val terserApiLookup: Map[String, String] = Map(
-    "make_void_0"    -> "makeVoid0",
-    "has_flag"       -> "CompressorFlags.hasFlag",
-    "set_flag"       -> "CompressorFlags.setFlag",
-    "clear_flag"     -> "CompressorFlags.clearFlag",
-    "walk_abort"     -> "TreeWalker.WalkAbort",
-    "WALK_ABORT"     -> "TreeWalker.WalkAbort",
-    "LIST_OVERHEAD"  -> "AstSize.ListOverhead",
-    "MAP"            -> "mapNodes",
-    "MAP_SKIP"       -> "MapSkip",
-    "SQUEEZED"       -> "CompressorFlags.SQUEEZED",
-    "OPTIMIZED"      -> "CompressorFlags.OPTIMIZED",
-    "TOP"            -> "CompressorFlags.TOP",
-  )
-
-  /** KaTeX-specific API name mapping: JS identifier → Scala equivalent. */
-  private val katexApiLookup: Map[String, String] = Map(
-    "assertNodeType"       -> "ParseNode.assertNodeType",
-    "assertSymbolNodeType" -> "ParseNode.assertSymbolNodeType",
-    "checkNodeType"        -> "ParseNode.checkNodeType",
-    "normalizeArgument"    -> "normalizeArgument",
-    "ordargument"          -> "ordArgument",
-    "makeOrd"              -> "BuildCommon.makeOrd",
-    "makeSpan"             -> "BuildCommon.makeSpan",
-    "makeVList"            -> "BuildCommon.makeVList",
-    "makeFragment"         -> "BuildCommon.makeFragment",
-    "makeSymbol"           -> "BuildCommon.makeSymbol",
-    "staticSvg"            -> "BuildCommon.staticSvg",
-    "svgData"              -> "BuildCommon.svgData",
-    "mathsym"              -> "BuildCommon.mathsym",
-    "makeLineBreak"        -> "BuildCommon.makeLineBreak",
-    "makeEm"               -> "Units.makeEm",
-    "calculateSize"        -> "Units.calculateSize",
-    "isCharacterBox"       -> "Utils.isCharacterBox",
-    "escape"               -> "Utils.escape",
-    "getVariant"           -> "getVariant",
-    "htmlBuilder"          -> "htmlBuilder",
-    "mathmlBuilder"        -> "mathmlBuilder",
-    "buildExpression"      -> "BuildHTML.buildExpression",
-    "buildGroup"           -> "BuildHTML.buildGroup",
-    "buildMathML"          -> "BuildMathML.buildMathML",
-    "buildExpressionRow"   -> "BuildMathML.buildExpressionRow",
-    "stretchySvg"          -> "Stretchy.stretchySvg",
-    "stretchyMathML"       -> "Stretchy.stretchyMathML",
-    "MathNode"             -> "MathNode",
-    "SymbolNode"           -> "SymbolNode",
-    "SpaceNode"            -> "SpaceNode",
-  )
-
-  /** Dart-sass-specific API name mapping. */
-  private val dartApiLookup: Map[String, String] = Map(
-    "assertString"         -> "assertString",
-    "assertNumber"         -> "assertNumber",
-    "assertColor"          -> "assertColor",
-    "assertMap"            -> "assertMap",
-    "assertFunction"       -> "assertFunction",
-    "assertCalculation"    -> "assertCalculation",
-    "asList"               -> "asList",
-    "asPlain"              -> "asPlain",
-    "sassIndexToListIndex" -> "sassIndexToListIndex",
-    "sassIndexToStringIndex" -> "sassIndexToStringIndex",
-    "withListContents"     -> "withListContents",
-    "changeSeparator"      -> "changeSeparator",
-    "sassTrue"             -> "SassBoolean.sassTrue",
-    "sassFalse"            -> "SassBoolean.sassFalse",
-    "sassNull"             -> "SassNull.sassNull",
-  )
-
-  /** Combined API lookup: terser + katex + dart. */
-  private val combinedApiLookup: Map[String, String] =
-    terserApiLookup ++ katexApiLookup ++ dartApiLookup
 
   /** Dart RAST node kind → TS RAST node kind mapping.
     * Normalizes Dart analyzer AST kinds to the TS kinds the body translator handles. */
