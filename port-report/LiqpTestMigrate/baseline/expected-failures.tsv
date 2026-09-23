@@ -1,8 +1,0 @@
-# A row may carry `frame=<ported class>` as a trailing TAB-separated field — the `unit` the
-# correlator anchors the failure at, copied from `run-latest/test-failures.tsv`. Keyed on (suite,
-# test) alone a row absorbs a NEW failure with a DIFFERENT cause in the same test, silently, and
-# the sentence below would then be about something that is not happening; anchored, the claim stops
-# holding the moment the failure moves and the failure counts UNEXPECTED. The column is optional
-# for the files that predate it; a new row should carry one.
-#suite	test	reason	[frame=<ported class>]
-ssg.liquid.filters.SortTest	testSortMap	maintainer decision 2026-09-21: Sort$ComparableMapEntry implements BOTH java.util.Map.Entry (kept as java's, because Tuple2 cannot be a parent) and Comparable<Map.Entry>, whose ARGUMENT the mapping did move — so scalac builds the erasure bridge compareTo(Object) = compareTo(o.asInstanceOf[Tuple2]) and sortNatural hands it another ComparableMapEntry. The mechanism is the counted RetainedParentArgument seam on this class; the fix is to EXEMPT it from this mapping wherever the retained type appears in its own declaration, which is a scope decided before the retyping. NOT the reified-cast refusal an earlier note named: the minted cast at Sort.scala's entry loop is over entrySetView, which only ever yields tuples	frame=ssg.liquid.nodes.FilterNode
