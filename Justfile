@@ -15,7 +15,7 @@
 #   just debug-selfcheck               proves the debug recipes do what they say
 #   just comment-lint [RANGE]          comment blocks over 5 lines, narrative words in added comments
 #   just metals-start / -stop / -status / -call
-#   just ts-export-mermaid / ts-export-terser / ts-gen-terser-dts
+#   just ts-export TSCONFIG OUT       export a TypeScript project's syntax trees with the frontend's exporter
 
 # sbt projects
 core_project  := "engine"
@@ -228,51 +228,15 @@ metals-call +ARGS:
     scripts/metals-call.sh {{ARGS}}
 
 # ---------------------------------------------------------------------------------------------
-# TS/JS RAST exporters
+# TypeScript/JavaScript syntax-tree export — the generic exporter; which project is exported is
+# the consumer's business (a JavaScript project passes a tsconfig with `allowJs`)
 # ---------------------------------------------------------------------------------------------
-[doc("export mermaid RAST from ../ssg/original-src/mermaid via the TS exporter")]
-ts-export-mermaid:
+[doc("export a TypeScript project's syntax trees: just ts-export path/to/tsconfig.json out-dir")]
+ts-export TSCONFIG OUT:
     #!/usr/bin/env bash
     cd "{{root}}"
-    ROOT="$(pwd)"
-    EXPORTER="$ROOT/balticporter/frontend-ts/exporter"
-    MERMAID_SRC="$(cd ../ssg/original-src/mermaid/packages/mermaid && pwd)"
-    RAST_OUT="$ROOT/balticporter/frontend-ts/src/test/resources/rast/mermaid"
-    echo "-- ts-export-mermaid: $MERMAID_SRC -> $RAST_OUT --"
+    EXPORTER="$(pwd)/balticporter/frontend-ts/exporter"
+    echo "-- ts-export: {{TSCONFIG}} -> {{OUT}} --"
     node "$EXPORTER/dist/export.js" \
-      --project "$MERMAID_SRC/tsconfig.json" \
-      --out "$RAST_OUT"
-
-[doc("generate ast.d.ts for Terser from the DEFNODE hierarchy in the existing RAST")]
-ts-gen-terser-dts:
-    #!/usr/bin/env bash
-    cd "{{root}}"
-    ROOT="$(pwd)"
-    RAST="$ROOT/balticporter/frontend-ts/src/test/resources/rast/terser/lib/ast.rast.json"
-    TERSER_SRC="$(cd ../ssg/original-src/terser && pwd)"
-    OUT="$TERSER_SRC/lib/ast.d.ts"
-    if [ ! -f "$RAST" ]; then
-      echo "!! $RAST not found — bootstrap with an initial ts-export-terser (without .d.ts)"
-      exit 1
-    fi
-    echo "-- ts-gen-terser-dts: $RAST -> $OUT --"
-    sbt --batch "frontend-ts/runMain balticporter.frontend.ts.dedicated.GenAstDts $RAST $OUT"
-
-[doc("export terser RAST from ../ssg/original-src/terser via the TS exporter (allowJs + ast.d.ts)")]
-ts-export-terser:
-    #!/usr/bin/env bash
-    cd "{{root}}"
-    ROOT="$(pwd)"
-    EXPORTER="$ROOT/balticporter/frontend-ts/exporter"
-    TERSER_SRC="$(cd ../ssg/original-src/terser && pwd)"
-    RAST_OUT="$ROOT/balticporter/frontend-ts/src/test/resources/rast/terser"
-    if [ ! -f "$TERSER_SRC/lib/ast.d.ts" ]; then
-      echo "!! $TERSER_SRC/lib/ast.d.ts missing — run 'just ts-gen-terser-dts' first"
-      exit 1
-    fi
-    TSCONFIG="$TERSER_SRC/.bp-tsconfig.json"
-    printf '%s\n' '{"compilerOptions":{"target":"ES2022","module":"nodenext","allowJs":true,"checkJs":false,"strict":false,"noEmit":true,"skipLibCheck":true,"esModuleInterop":true,"resolveJsonModule":true},"include":["lib/**/*.js","tools/domprops.js"]}' > "$TSCONFIG"
-    echo "-- ts-export-terser: $TERSER_SRC -> $RAST_OUT --"
-    node "$EXPORTER/dist/export.js" \
-      --project "$TSCONFIG" \
-      --out "$RAST_OUT"
+      --project "{{TSCONFIG}}" \
+      --out "{{OUT}}"
