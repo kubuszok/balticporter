@@ -389,6 +389,8 @@ ARTEFACT, which is what §5 depends on seeing.
 - Name the sections and files to read (`CLAUDE.md §4.56`, `.claude/rules/emitter.md`) — never "read fully".
 - Give the numbers (baseline before, expected after), the OWNED files, the verification recipe
   (`just <lane>-measure`, `members-unchanged`), and the environment rules (worktree, `sbt --client` with the lane's server dir,
-  no `pkill`, launchd for long runs).
+  no `pkill`, launchd for long runs). **The last step of every brief is `sbt --client shutdown` in
+  each directory the agent started a server in**: idle worktree servers outlive their agents and
+  exhausted the machine's RAM.
 - One subject per wave; one commit per riser; `before->after` in the subject.
 - No subagents unless the brief says so.
