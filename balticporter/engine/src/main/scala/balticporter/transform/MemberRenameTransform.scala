@@ -158,10 +158,11 @@ final class MemberRenameTransform(
             val key = "derive:" + program.symbolOf(id).map(_.fullName).getOrElse(id.raw)
             MemberRenamer.Request(id, to, Reason.Configured(name, key), key, key)
           }
-      // Separate emitted requests (this run emits the declaration) from base requests
-      // (a base already emitted it). MemberRenamer refuses base symbols (anchored in a
-      // base unit), so base renames are applied directly to the symbol table afterwards.
-      val (emittedRequests, baseRequests) = requests.partition(r => scope.emitsSymbol(program, r.member))
+      // A request for a member a BASE module declares (owned by the program, not emitted by this run) is the base's own
+      // published rename: the base already emitted the declaration under the new name, so the dependent's symbol takes it
+      // directly. An unowned (class-file) member keeps going through MemberRenamer, which refuses it: its signature is a
+      // class-file fact no phase may move.
+      val (baseRequests, emittedRequests) = requests.partition(r => program.owned(r.member) && !scope.emitsSymbol(program, r.member))
       val (renamed, refusals)             =
         if emittedRequests.isEmpty then (program, Nil)
         else MemberRenamer.rename(program, graph, emittedRequests, MemberRenamer.OnCollision.Refuse, decisions)
