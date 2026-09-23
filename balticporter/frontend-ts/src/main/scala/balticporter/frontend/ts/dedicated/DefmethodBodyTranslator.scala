@@ -220,10 +220,20 @@ object DefmethodBodyTranslator:
       thisBinding: String = "this",
       nodeParamName: Option[String] = None,
       apiLookup: Map[String, String] = Map.empty,
-      inBoundary: Boolean = false,
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
+    private var labelSeq = 0
+    // The label name for the current early-return boundary (empty = no boundary)
+    private var returnLabel = ""
+    // The label name for the current loop's break boundary
+    private var breakLabel = ""
+    // The label name for the current loop's continue boundary
+    private var continueLabel = ""
+
+    private def freshLabel(prefix: String): String =
+      labelSeq += 1
+      s"$prefix$$$labelSeq"
 
     // Build lookup of class properties for `this.x` resolution
     private val byName: Map[String, DefnodeClass] =
@@ -270,7 +280,7 @@ object DefmethodBodyTranslator:
         return
 
       // Detect early returns: any ReturnStatement that is not the last statement
-      val needsBoundary = !inBoundary && hasEarlyReturn(stmts)
+      val needsBoundary = returnLabel.isEmpty && hasEarlyReturn(stmts)
 
       // Multi-statement body needs braces (the caller emits `def foo(): Any =\n`)
       val needsBraces = stmts.size > 1 || stmts.head.kind == "VariableStatement" ||
@@ -280,35 +290,33 @@ object DefmethodBodyTranslator:
         stmts.head.kind == "DoStatement" || stmts.head.kind == "SwitchStatement" ||
         stmts.head.kind == "TryStatement"
       if needsBoundary then
-        sb.append(s"${baseIndent}scala.util.boundary {\n")
+        val lbl = freshLabel("ret")
+        returnLabel = lbl
+        sb.append(s"${baseIndent}scala.util.boundary { ($lbl: scala.util.boundary.Label[Any]) ?=>\n")
       else if needsBraces then
         sb.append(s"$baseIndent{\n")
 
-      val useBoundary = needsBoundary || inBoundary
       for (stmt, idx) <- stmts.zipWithIndex do
         val isLast = idx == stmts.size - 1
         val innerIndent = if needsBoundary || needsBraces then baseIndent + "  " else baseIndent
-        translateStatementInner(stmt, innerIndent, isLast, useBoundary)
+        translateStatement(stmt, innerIndent, isLast)
 
       if needsBoundary || needsBraces then sb.append(s"$baseIndent}\n")
 
     def translateStatement(node: RastNode, indent: String, isLast: Boolean): Unit =
-      translateStatementInner(node, indent, isLast, inBoundary)
-
-    private def translateStatementInner(node: RastNode, indent: String, isLast: Boolean, useBoundary: Boolean): Unit =
       node.kind match
         case "ReturnStatement" =>
           if node.children.isEmpty then
             if isLast then
               sb.append(s"${indent}null\n")
             else
-              sb.append(s"${indent}scala.util.boundary.break(null)\n")
+              sb.append(s"${indent}scala.util.boundary.break(null)(using $returnLabel)\n")
           else
             val expr = translateExpr(node.children.head)
             if isLast then
               sb.append(s"$indent$expr\n")
             else
-              sb.append(s"${indent}scala.util.boundary.break($expr)\n")
+              sb.append(s"${indent}scala.util.boundary.break($expr)(using $returnLabel)\n")
 
         case "ExpressionStatement" =>
           val expr = node.children.headOption.map(translateExpr).getOrElse("()")
@@ -426,7 +434,7 @@ object DefmethodBodyTranslator:
             refuse(s"LabelledBreak:${label.get}")
             sb.append(s"$indent??? /* break ${label.get} */\n")
           else
-            sb.append(s"${indent}scala.util.boundary.break(())\n")
+            sb.append(s"${indent}scala.util.boundary.break(())(using $breakLabel)\n")
 
         case "ContinueStatement" =>
           val label = node.children.find(_.kind == "Identifier").flatMap(_.text)
@@ -434,7 +442,7 @@ object DefmethodBodyTranslator:
             refuse(s"LabelledContinue:${label.get}")
             sb.append(s"$indent??? /* continue ${label.get} */\n")
           else
-            sb.append(s"${indent}scala.util.boundary.break(())\n")
+            sb.append(s"${indent}scala.util.boundary.break(())(using $continueLabel)\n")
 
         case "EmptyStatement" =>
           () // skip
@@ -1277,20 +1285,12 @@ object DefmethodBodyTranslator:
             if paramStrs.isEmpty then s"(() => $expr)"
             else s"((${paramStrs.mkString(", ")}) => $expr)"
           else
-            // Multi-statement function body -- always brace-wrap
+            // Multi-statement function body -- use a fresh context for the lambda's own scope
             val innerIndent = baseIndent + "    "
-            val bodyLines = new StringBuilder
-            val needsInnerBoundary = hasEarlyReturn(block.children)
-            if needsInnerBoundary then bodyLines.append(s"${innerIndent}scala.util.boundary {\n")
-            val stmtIndent = if needsInnerBoundary then innerIndent + "  " else innerIndent
-            for (stmt, idx) <- block.children.zipWithIndex do
-              val isLast = idx == block.children.size - 1
-              val innerCtx = new BodyContext(entry, hierarchy, stmtIndent, apiLookup = apiLookup, inBoundary = needsInnerBoundary)
-              innerCtx.translateStatement(stmt, stmtIndent, isLast)
-              refusals ++= innerCtx.refusals
-              bodyLines.append(innerCtx.result())
-            if needsInnerBoundary then bodyLines.append(s"$innerIndent}\n")
-            val bodyStr = bodyLines.toString.stripTrailing()
+            val innerCtx = new BodyContext(entry, hierarchy, innerIndent, apiLookup = apiLookup)
+            innerCtx.translateBlock(block)
+            refusals ++= innerCtx.refusals
+            val bodyStr = innerCtx.result().stripTrailing()
             if paramStrs.isEmpty then s"(() => {\n$bodyStr\n$baseIndent  })"
             else s"((${paramStrs.mkString(", ")}) => {\n$bodyStr\n$baseIndent  })"
         case None =>
@@ -1343,32 +1343,36 @@ object DefmethodBodyTranslator:
             parts += s"$${${translateExpr(c)}}"
       s"s\"${parts.mkString}\""
 
-    /** Emit a while or do-while loop with boundary wrapping for break/continue.
-      * break: boundary around the LOOP. continue: boundary around the BODY. */
+    /** Emit a while or do-while loop with named boundary wrapping for break/continue. */
     private def emitLoop(indent: String, cond: String, bodyNode: RastNode, isDoWhile: Boolean): Unit =
       val hasBreak = containsBreak(bodyNode)
       val hasContinue = containsContinue(bodyNode)
-      if hasBreak then sb.append(s"${indent}scala.util.boundary {\n")
+      val savedBreak = breakLabel
+      val savedContinue = continueLabel
+      if hasBreak then
+        val brkLbl = freshLabel("brk")
+        breakLabel = brkLbl
+        sb.append(s"${indent}scala.util.boundary { ($brkLbl: scala.util.boundary.Label[scala.Unit]) ?=>\n")
       val loopIndent = if hasBreak then indent + "  " else indent
+      if hasContinue then
+        val cntLbl = freshLabel("cnt")
+        continueLabel = cntLbl
       if isDoWhile then
-        // Scala has no do-while with boundary, so lower to while(true) + condition check at end
         if hasContinue then
-          sb.append(s"${loopIndent}var ${"$"}doFirst = true\n")
-          sb.append(s"${loopIndent}while (${"$"}doFirst || $cond) {\n")
-          sb.append(s"$loopIndent  ${"$"}doFirst = false\n")
-          sb.append(s"$loopIndent  scala.util.boundary {\n")
-          translateStatementBody(bodyNode, loopIndent + "    ", false)
-          sb.append(s"$loopIndent  }\n")
+          sb.append(s"${loopIndent}var $$doFirst = true\n")
+          sb.append(s"${loopIndent}while ($$doFirst || $cond) scala.util.boundary { ($continueLabel: scala.util.boundary.Label[scala.Unit]) ?=>\n")
+          sb.append(s"$loopIndent  $$doFirst = false\n")
+          translateStatementBody(bodyNode, loopIndent + "  ", false)
           sb.append(s"$loopIndent}\n")
         else
-          sb.append(s"${loopIndent}var ${"$"}doFirst = true\n")
-          sb.append(s"${loopIndent}while (${"$"}doFirst || $cond) {\n")
-          sb.append(s"$loopIndent  ${"$"}doFirst = false\n")
+          sb.append(s"${loopIndent}var $$doFirst = true\n")
+          sb.append(s"${loopIndent}while ($$doFirst || $cond) {\n")
+          sb.append(s"$loopIndent  $$doFirst = false\n")
           translateStatementBody(bodyNode, loopIndent + "  ", false)
           sb.append(s"$loopIndent}\n")
       else
         if hasContinue then
-          sb.append(s"${loopIndent}while ($cond) scala.util.boundary {\n")
+          sb.append(s"${loopIndent}while ($cond) scala.util.boundary { ($continueLabel: scala.util.boundary.Label[scala.Unit]) ?=>\n")
           translateStatementBody(bodyNode, loopIndent + "  ", false)
           sb.append(s"$loopIndent}\n")
         else
@@ -1376,6 +1380,8 @@ object DefmethodBodyTranslator:
           translateStatementBody(bodyNode, loopIndent + "  ", false)
           sb.append(s"$loopIndent}\n")
       if hasBreak then sb.append(s"$indent}\n")
+      breakLabel = savedBreak
+      continueLabel = savedContinue
 
     private def translateForStatement(node: RastNode, indent: String): Unit =
       // ForStatement children: [init?, condition?, update?, body]
@@ -1394,6 +1400,8 @@ object DefmethodBodyTranslator:
       val bodyNode = body.getOrElse(RastNode("Block", 0, (0, 0)))
       val hasBreak = containsBreak(bodyNode)
       val hasContinue = containsContinue(bodyNode)
+      val savedBreak = breakLabel
+      val savedContinue = continueLabel
 
       sb.append(s"$indent{\n")
       init.foreach { i =>
@@ -1409,13 +1417,18 @@ object DefmethodBodyTranslator:
       }
       val condStr = cond.map(translateExpr).getOrElse("true")
       // For a C-style for loop, continue skips the rest of the body but update still runs.
-      // So the continue boundary wraps only the body, and the update is emitted after it.
+      // The continue boundary wraps only the body; the update is emitted after it.
       val loopIndent = indent + "  "
-      if hasBreak then sb.append(s"${loopIndent}scala.util.boundary {\n")
+      if hasBreak then
+        val brkLbl = freshLabel("brk")
+        breakLabel = brkLbl
+        sb.append(s"${loopIndent}scala.util.boundary { ($brkLbl: scala.util.boundary.Label[scala.Unit]) ?=>\n")
       val whileIndent = if hasBreak then loopIndent + "  " else loopIndent
       if hasContinue then
+        val cntLbl = freshLabel("cnt")
+        continueLabel = cntLbl
         sb.append(s"${whileIndent}while ($condStr) {\n")
-        sb.append(s"$whileIndent  scala.util.boundary {\n")
+        sb.append(s"$whileIndent  scala.util.boundary { ($cntLbl: scala.util.boundary.Label[scala.Unit]) ?=>\n")
         translateStatementBody(bodyNode, whileIndent + "    ", false)
         sb.append(s"$whileIndent  }\n")
         update.foreach(u => sb.append(s"$whileIndent  ${translateExpr(u)}\n"))
@@ -1426,6 +1439,8 @@ object DefmethodBodyTranslator:
         update.foreach(u => sb.append(s"$whileIndent  ${translateExpr(u)}\n"))
         sb.append(s"$whileIndent}\n")
       if hasBreak then sb.append(s"$loopIndent}\n")
+      breakLabel = savedBreak
+      continueLabel = savedContinue
       sb.append(s"$indent}\n")
 
     private def translateForInOfStatement(node: RastNode, indent: String): Unit =
@@ -1441,15 +1456,24 @@ object DefmethodBodyTranslator:
           .getOrElse(RastNode("Block", 0, (0, 0)))
         val hasBreak = containsBreak(bodyNode)
         val hasContinue = containsContinue(bodyNode)
-        if hasBreak then sb.append(s"${indent}scala.util.boundary {\n")
+        val savedBreak = breakLabel
+        val savedContinue = continueLabel
+        if hasBreak then
+          val brkLbl = freshLabel("brk")
+          breakLabel = brkLbl
+          sb.append(s"${indent}scala.util.boundary { ($brkLbl: scala.util.boundary.Label[scala.Unit]) ?=>\n")
         val forIndent = if hasBreak then indent + "  " else indent
         if hasContinue then
-          sb.append(s"${forIndent}for (${snakeToCamel(varName)} <- $iterExpr) scala.util.boundary {\n")
+          val cntLbl = freshLabel("cnt")
+          continueLabel = cntLbl
+          sb.append(s"${forIndent}for (${snakeToCamel(varName)} <- $iterExpr) scala.util.boundary { ($cntLbl: scala.util.boundary.Label[scala.Unit]) ?=>\n")
         else
           sb.append(s"${forIndent}for (${snakeToCamel(varName)} <- $iterExpr) {\n")
         translateStatementBody(bodyNode, forIndent + "  ", false)
         sb.append(s"$forIndent}\n")
         if hasBreak then sb.append(s"$indent}\n")
+        breakLabel = savedBreak
+        continueLabel = savedContinue
       else
         refuse("MalformedForInOf")
         sb.append(s"$indent??? /* for-in/of */\n")

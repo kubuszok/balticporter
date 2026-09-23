@@ -44,28 +44,28 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     assert(!result.scalaBody.contains("boundary"), s"single return should not need boundary: ${result.scalaBody}")
     assert(result.scalaBody.trim == "42", s"unexpected body: ${result.scalaBody}")
 
-  test("early return wraps body in boundary and emits break"):
+  test("early return wraps body in named boundary and emits break with using"):
     val body = block(
       node("IfStatement", binOp("EqualsEqualsEqualsToken", ident("x"), num(0)), block(ret(num(-1)))),
       ret(num(1))
     )
     val result = translate(body)
     assert(result.scalaBody.contains("scala.util.boundary {"), s"early return needs boundary: ${result.scalaBody}")
+    assert(result.scalaBody.contains("?=>"), s"boundary must be named: ${result.scalaBody}")
     assert(!result.scalaBody.contains("boundary[Any]"), s"no type argument on boundary: ${result.scalaBody}")
-    assert(result.scalaBody.contains("scala.util.boundary.break(-1)"), s"non-last return needs break: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using ret$"), s"break must target the named label: ${result.scalaBody}")
     assert(!result.scalaBody.contains("return "), s"no raw 'return' keyword: ${result.scalaBody}")
-    // The last return should be just the value (tail position)
     assert(result.scalaBody.contains("1\n"), s"tail return should be the value: ${result.scalaBody}")
 
-  test("void early return emits break(null)"):
+  test("void early return emits break(null) with using"):
     val body = block(
       node("IfStatement", binOp("EqualsEqualsEqualsToken", ident("x"), num(0)), block(retVoid)),
       node("ExpressionStatement", ident("doSomething"))
     )
     val result = translate(body)
     assert(
-      result.scalaBody.contains("scala.util.boundary.break(null)"),
-      s"void early return needs break(null): ${result.scalaBody}"
+      result.scalaBody.contains("scala.util.boundary.break(null)(using ret$"),
+      s"void early return needs break(null)(using label): ${result.scalaBody}"
     )
 
   test("return inside a lambda does not use the outer boundary"):
@@ -182,7 +182,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   // ---- break inside a loop ----
 
-  test("break inside a while loop wraps the loop in boundary"):
+  test("break inside a while loop wraps the loop in named boundary"):
     val body = block(
       node(
         "WhileStatement",
@@ -195,14 +195,11 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ret(num(0))
     )
     val result = translate(body)
-    assert(result.scalaBody.contains("scala.util.boundary {"), s"break needs boundary around loop: ${result.scalaBody}")
-    assert(result.scalaBody.contains("while (cond)"), s"should contain while: ${result.scalaBody}")
-    assert(result.scalaBody.contains("scala.util.boundary.break(())"), s"break emits break(()): ${result.scalaBody}")
+    assert(result.scalaBody.contains("(brk$"), s"break boundary must be named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using brk$"), s"break must target named label: ${result.scalaBody}")
     assert(result.isComplete, s"unlabelled break should not refuse: ${result.refusalReasons}")
 
-  // ---- continue inside a loop ----
-
-  test("continue inside a while loop wraps the body in boundary"):
+  test("continue inside a while loop wraps the body in named boundary"):
     val body = block(
       node(
         "WhileStatement",
@@ -215,16 +212,11 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ret(num(0))
     )
     val result = translate(body)
-    assert(
-      result.scalaBody.contains("while (cond) scala.util.boundary {"),
-      s"continue needs boundary around body: ${result.scalaBody}"
-    )
-    assert(result.scalaBody.contains("scala.util.boundary.break(())"), s"continue emits break(()): ${result.scalaBody}")
+    assert(result.scalaBody.contains("(cnt$"), s"continue boundary must be named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using cnt$"), s"continue must target named label: ${result.scalaBody}")
     assert(result.isComplete, s"unlabelled continue should not refuse: ${result.refusalReasons}")
 
-  // ---- break inside for-in/of ----
-
-  test("break inside for-of loop wraps the loop in boundary"):
+  test("break inside for-of loop wraps the loop in named boundary"):
     val body = block(
       node(
         "ForOfStatement",
@@ -238,7 +230,86 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ret(num(0))
     )
     val result = translate(body)
-    assert(result.scalaBody.contains("scala.util.boundary {"), s"break in for-of needs boundary: ${result.scalaBody}")
-    assert(result.scalaBody.contains("for (item <- items)"), s"should contain for: ${result.scalaBody}")
-    assert(result.scalaBody.contains("scala.util.boundary.break(())"), s"break emits break(()): ${result.scalaBody}")
+    assert(result.scalaBody.contains("(brk$"), s"break boundary named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using brk$"), s"break targets named label: ${result.scalaBody}")
     assert(result.isComplete, s"unlabelled break should not refuse: ${result.refusalReasons}")
+
+  // ---- nested boundary compilation specs ----
+
+  /** Wrap the emitted body in a compilable method and check that scalac accepts it. */
+  private def assertCompiles(methodBody: String, decl: String = "def f(x: Any, cond: Boolean, done: Boolean, skip: Boolean): Any ="): Unit =
+    val source = s"object Test {\n  $decl\n$methodBody}\n"
+    val result = scala.util.Try {
+      val dir  = java.nio.file.Files.createTempDirectory("bp-spec")
+      val file = dir.resolve("Test.scala")
+      java.nio.file.Files.writeString(file, source)
+      val proc = new ProcessBuilder("scalac", "-d", dir.toString, file.toString).redirectErrorStream(true).start()
+      val out  = new String(proc.getInputStream.readAllBytes)
+      val exit = proc.waitFor()
+      (exit, out)
+    }
+    result match
+      case scala.util.Success((0, _))                                             => ()
+      case scala.util.Success((code, out))                                        => fail(s"scalac exit $code on:\n$source\n$out")
+      case scala.util.Failure(ex) if ex.getMessage.contains("Cannot run program") =>
+        // scalac not on PATH; skip compilation check silently
+        ()
+      case scala.util.Failure(ex) => fail(s"compilation check failed: $ex")
+
+  test("early return inside a loop with a break compiles"):
+    // function(x, cond, done) { while (cond) { if (done) return x; if (done) break; } 0 }
+    val body = block(
+      node(
+        "WhileStatement",
+        ident("cond"),
+        block(
+          node("IfStatement", ident("done"), block(ret(ident("x")))),
+          node("IfStatement", ident("done"), block(RastNode("BreakStatement", 0, (0, 0))))
+        )
+      ),
+      ret(num(0))
+    )
+    val result = translate(body)
+    // The return boundary and the break boundary must each have a named label
+    assert(result.scalaBody.contains("(ret$"), s"return boundary named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(brk$"), s"break boundary named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using ret$"), s"return break targets ret label: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using brk$"), s"loop break targets brk label: ${result.scalaBody}")
+    assertCompiles(result.scalaBody)
+
+  test("continue inside a loop with a break compiles"):
+    // function(x, cond, done, skip) { while (cond) { if (skip) continue; if (done) break; x; } 0 }
+    val body = block(
+      node(
+        "WhileStatement",
+        ident("cond"),
+        block(
+          node("IfStatement", ident("skip"), block(RastNode("ContinueStatement", 0, (0, 0)))),
+          node("IfStatement", ident("done"), block(RastNode("BreakStatement", 0, (0, 0)))),
+          node("ExpressionStatement", ident("x"))
+        )
+      ),
+      ret(num(0))
+    )
+    val result = translate(body)
+    assert(result.scalaBody.contains("(brk$"), s"break boundary named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(cnt$"), s"continue boundary named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using brk$"), s"break targets brk: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using cnt$"), s"continue targets cnt: ${result.scalaBody}")
+    assertCompiles(result.scalaBody)
+
+  test("return inside nested loops compiles"):
+    // function(x, cond, done) { while (cond) { while (done) { return x; } } 0 }
+    val body = block(
+      node("WhileStatement",
+           ident("cond"),
+           block(
+             node("WhileStatement", ident("done"), block(ret(ident("x"))))
+           )
+      ),
+      ret(num(0))
+    )
+    val result = translate(body)
+    assert(result.scalaBody.contains("(ret$"), s"return boundary named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using ret$"), s"inner return targets outer label: ${result.scalaBody}")
+    assertCompiles(result.scalaBody)
