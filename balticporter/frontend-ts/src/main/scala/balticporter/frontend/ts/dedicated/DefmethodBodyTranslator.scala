@@ -276,23 +276,62 @@ object DefmethodBodyTranslator:
       val withParam = nodeParamName.map(base + _).getOrElse(base)
       withParam
 
-    /** True when the given expression node refers to a value whose declared Scala type is
-      * `Nullable[T]`. This is decidable when the expression is a simple identifier that names
-      * a parameter whose type is known from the reference signature. */
-    private def isNullableExpr(node: RastNode): Boolean =
-      node.kind == "Identifier" && node.text.exists { name =>
-        val scalaName = snakeToCamel(name)
-        paramTypes.get(scalaName).orElse(paramTypes.get(name)).exists(isNullableType)
-      }
+    // Local variable types, inferred from initialisers whose type is known
+    private val localTypes = mutable.Map.empty[String, String]
 
-    /** Look up the declared Scala type of an identifier expression. Returns None
-      * for identifiers not in the paramTypes map. */
+    /** Look up the declared Scala type of an expression. Checks parameters first,
+      * then local variables. For property accesses on Nullable identifiers,
+      * the result is the inner type after `.get`. */
     private def exprType(node: RastNode): Option[String] =
-      if node.kind != "Identifier" then None
-      else node.text.flatMap { name =>
-        val scalaName = snakeToCamel(name)
-        paramTypes.get(scalaName).orElse(paramTypes.get(name))
-      }
+      node.kind match
+        case "Identifier" =>
+          node.text.flatMap { name =>
+            val scalaName = snakeToCamel(name)
+            paramTypes.get(scalaName)
+              .orElse(paramTypes.get(name))
+              .orElse(localTypes.get(scalaName))
+              .orElse(localTypes.get(name))
+          }
+        case "NumericLiteral" | "FirstLiteralToken" => Some("Double")
+        case "StringLiteral" | "FirstTemplateToken" | "NoSubstitutionTemplateLiteral" => Some("String")
+        case "TrueKeyword" | "FalseKeyword" | "BooleanLiteral" => Some("Boolean")
+        case "NullKeyword" | "UndefinedKeyword" => Some("Null")
+        case _ => None
+
+    /** The JS truthiness test for a value of the given Scala type.
+      * Returns a function that takes the translated operand and produces
+      * the Scala boolean expression. */
+    private def truthinessTest(tpe: String, operand: String): String =
+      if isNullableType(tpe) then s"$operand.isDefined"
+      else if tpe == "String" then s"$operand.nonEmpty"
+      else if numericTypes.contains(tpe) then s"$operand != 0"
+      else if tpe == "Boolean" then operand
+      else if tpe == "Null" then "false"
+      else operand // for a known reference type, the value itself is truthy
+
+    /** The JS truthiness value (the value that a truthy operand yields in
+      * `x && y` or `x || y`). For Nullable[T], this is `x.get`. */
+    private def truthyValue(tpe: String, operand: String): String =
+      if isNullableType(tpe) then s"$operand.get"
+      else operand
+
+    /** Translate a JS expression used as a condition (if, while, ternary).
+      * Applies truthiness lowering when the operand has a known non-Boolean type. */
+    private def translateCondition(node: RastNode): String =
+      // For `!x`, PrefixUnaryExpression already handles truthiness
+      // For bare identifiers, apply the truthiness test
+      node.kind match
+        case "PrefixUnaryExpression" | "BinaryExpression" | "ConditionalExpression" =>
+          translateExpr(node) // these already handle truthiness internally
+        case _ =>
+          exprType(node) match
+            case Some(tpe) if tpe != "Boolean" =>
+              val operand = translateExpr(node)
+              truthinessTest(tpe, operand)
+            case None =>
+              // No type info: translate as-is, the operand may already be boolean
+              translateExpr(node)
+            case _ => translateExpr(node)
 
     def result(): String = sb.toString
 
@@ -376,7 +415,10 @@ object DefmethodBodyTranslator:
               for f <- fields do
                 sb.append(s"$indent$keyword ${snakeToCamel(f)} = $initExpr.${snakeToCamel(f)}\n")
             else
-              val init = vd.children.drop(1).headOption.map(translateExpr).getOrElse("null")
+              val initNode = vd.children.drop(1).headOption
+              val init = initNode.map(translateExpr).getOrElse("null")
+              // Track local variable types from initialisers whose type is known
+              initNode.flatMap(exprType).foreach(t => localTypes(scalaName) = t)
               sb.append(s"$indent$keyword $scalaName = $init\n")
 
         case "IfStatement" =>
@@ -385,7 +427,7 @@ object DefmethodBodyTranslator:
             refuse("EmptyIfStatement")
             sb.append(s"$indent??? /* empty if */\n")
           else
-            val cond = translateExpr(children.head)
+            val cond = translateCondition(children.head)
             sb.append(s"${indent}if ($cond) {\n")
             if children.size > 1 then
               // Both branches are in value position when the if-else is the last
@@ -411,7 +453,7 @@ object DefmethodBodyTranslator:
           val children = node.children
           if children.size >= 2 then
             val bodyNode = children(1)
-            emitLoop(indent, translateExpr(children.head), bodyNode, isDoWhile = false)
+            emitLoop(indent, translateCondition(children.head), bodyNode, isDoWhile = false)
           else
             refuse("MalformedWhile")
             sb.append(s"$indent??? /* malformed while */\n")
@@ -591,14 +633,18 @@ object DefmethodBodyTranslator:
           val operand = if children.nonEmpty then translateExpr(children.head) else "???"
           node.operator match
             case Some("ExclamationToken") =>
-              // JS `!x` on a Nullable[T] is a null-check, not boolean negation.
-              // The correct Scala is `x.isEmpty`, but the translator cannot
-              // faithfully translate the full expression tree (property chains,
-              // nested Nullable unwrapping). Refuse with a named reason so the
-              // reference body is kept.
-              if children.nonEmpty && isNullableExpr(children.head) then
-                refuse("nullable-ops")
-              s"!$operand"
+              // JS `!x` is the negation of the truthiness test. The correct Scala
+              // depends on the operand's declared type: Nullable -> .isEmpty,
+              // String -> .isEmpty, numeric -> == 0, Boolean -> !x.
+              if children.nonEmpty then
+                exprType(children.head) match
+                  case Some(tpe) =>
+                    val test = truthinessTest(tpe, operand)
+                    if test == operand then s"!$operand" else s"!($test)"
+                  case None =>
+                    refuse("truthiness-unknown-type")
+                    s"!$operand"
+              else s"!$operand"
             case Some("MinusToken") => s"-$operand"
             case Some("PlusToken") => s"$operand.toDouble"
             case Some("TildeToken") => s"~$operand"
@@ -620,13 +666,22 @@ object DefmethodBodyTranslator:
         case "ConditionalExpression" =>
           val children = node.children
           if children.size >= 3 then
-            // JS `x ? a : b` where x is Nullable[T] is a null-check ternary, not
-            // a boolean condition. Refuse so the reference body is kept.
-            if isNullableExpr(children(0)) then refuse("nullable-ops")
-            val cond = translateExpr(children(0))
             val thenE = translateExpr(children(1))
             val elseE = translateExpr(children(2))
-            s"(if $cond then $thenE else $elseE)"
+            // JS `x ? a : b` uses truthiness of x. Lower the condition based
+            // on the operand's declared type.
+            exprType(children(0)) match
+              case Some(tpe) if tpe != "Boolean" =>
+                val cond = translateExpr(children(0))
+                val test = truthinessTest(tpe, cond)
+                s"(if ($test) $thenE else $elseE)"
+              case None =>
+                refuse("truthiness-unknown-type")
+                val cond = translateExpr(children(0))
+                s"(if $cond then $thenE else $elseE)"
+              case _ =>
+                val cond = translateExpr(children(0))
+                s"(if $cond then $thenE else $elseE)"
           else "??? /* bad conditional */"
 
         case "ParenthesizedExpression" =>
@@ -1281,12 +1336,25 @@ object DefmethodBodyTranslator:
               case "undefined" => s"($operandExpr != null)"
               case _ => s"!$operandExpr.isInstanceOf[$typeStr]"
 
-          // JS `x && y` and `x || y` on a Nullable[T] operand are short-circuit
-          // null-coalescing, not boolean conjunction/disjunction. The correct Scala
-          // requires Nullable-aware unwrapping that the translator cannot derive
-          // from the syntax tree alone.
-          if (op == "AmpersandAmpersandToken" || op == "BarBarToken") && isNullableExpr(lhs) then
-            refuse("nullable-ops")
+          // JS `x && y` and `x || y` on a non-Boolean operand are truthiness
+          // short-circuits, not boolean logic. The lowering depends on the
+          // operand's declared Scala type.
+          if op == "AmpersandAmpersandToken" || op == "BarBarToken" then
+            exprType(lhs) match
+              case Some(tpe) if tpe != "Boolean" =>
+                val left = translateExpr(lhs)
+                val right = translateExpr(rhs)
+                val test = truthinessTest(tpe, left)
+                val value = truthyValue(tpe, left)
+                if op == "AmpersandAmpersandToken" then
+                  // x && y: if x is truthy, evaluate y (with x unwrapped if Nullable)
+                  return s"(if ($test) $right else $left)"
+                else
+                  // x || y: if x is truthy, use x (unwrapped); else y
+                  return s"(if ($test) $value else $right)"
+              case None =>
+                refuse("truthiness-unknown-type")
+              case _ => () // Boolean: emit normal && / ||
 
           val left = translateExpr(lhs)
           val right = translateExpr(rhs)
@@ -1724,6 +1792,10 @@ object DefmethodBodyTranslator:
     * `Nullable[Bar[Baz]]`. */
   private def isNullableType(tpe: String): Boolean =
     tpe.startsWith("Nullable[") || tpe.startsWith("Nullable [")
+
+  private val numericTypes: Set[String] = Set(
+    "Int", "Long", "Double", "Float", "Short", "Byte",
+  )
 
   /** True when the type is a specific class rather than a primitive, Any, String,
     * or a collection type. Property access on such a type needs API-level knowledge

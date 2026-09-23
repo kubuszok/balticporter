@@ -358,47 +358,61 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     assert(!result.scalaBody.contains("(using )"), s"label must not be empty: ${result.scalaBody}")
     assertCompiles(result.scalaBody, "def f(x: String, cond: Boolean, done: Boolean, skip: Boolean): String =")
 
-  // ---- nullable-ops refusal ----
+  // ---- truthiness lowering ----
 
   private def prefixUnary(op: String, operand: RastNode): RastNode =
     RastNode("PrefixUnaryExpression", 0, (0, 0), children = List(operand), operator = Some(op))
 
-  test("negation of a Nullable parameter refuses with nullable-ops"):
+  test("negation of Nullable lowers to isEmpty check"):
     val body = block(
       node("IfStatement", prefixUnary("ExclamationToken", ident("second")), block(ret(num(0)))),
       ret(num(1))
     )
     val result = translate(body, paramTypes = Map("second" -> "Nullable[HasLoc]"))
-    assert(result.refusalReasons.contains("nullable-ops"), s"should refuse with nullable-ops: ${result.refusalReasons}")
+    assert(result.scalaBody.contains(".isDefined"), s"!Nullable should use isDefined: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
 
-  test("logical-or on a Nullable parameter refuses with nullable-ops"):
+  test("logical-or on Nullable lowers to if-isDefined-get-else"):
     val body = block(
       ret(binOp("BarBarToken", ident("first"), ident("fallback")))
     )
     val result = translate(body, paramTypes = Map("first" -> "Nullable[String]"))
-    assert(result.refusalReasons.contains("nullable-ops"), s"should refuse with nullable-ops: ${result.refusalReasons}")
+    assert(result.scalaBody.contains("isDefined"), s"|| on Nullable should check isDefined: ${result.scalaBody}")
+    assert(result.scalaBody.contains(".get"), s"|| on Nullable should use .get: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
 
-  test("logical-and on a Nullable parameter refuses with nullable-ops"):
+  test("logical-and on Nullable lowers to if-isDefined-then-rhs"):
     val body = block(
-      ret(binOp("AmpersandAmpersandToken", ident("first"), propAccess(ident("first"), "loc")))
+      ret(binOp("AmpersandAmpersandToken", ident("first"), ident("fallback")))
     )
     val result = translate(body, paramTypes = Map("first" -> "Nullable[HasLoc]"))
-    assert(result.refusalReasons.contains("nullable-ops"), s"should refuse with nullable-ops: ${result.refusalReasons}")
+    assert(result.scalaBody.contains("isDefined"), s"&& on Nullable should check isDefined: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
 
-  test("ternary on a Nullable parameter refuses with nullable-ops"):
+  test("ternary on Nullable lowers to isDefined condition"):
     val body = block(
       ret(node("ConditionalExpression", ident("opt"), num(1), num(0)))
     )
     val result = translate(body, paramTypes = Map("opt" -> "Nullable[Int]"))
-    assert(result.refusalReasons.contains("nullable-ops"), s"should refuse with nullable-ops: ${result.refusalReasons}")
+    assert(result.scalaBody.contains("isDefined"), s"ternary on Nullable should check isDefined: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
 
-  test("negation of a Boolean parameter does not refuse"):
+  test("negation of Boolean stays as boolean negation"):
     val body = block(
       node("IfStatement", prefixUnary("ExclamationToken", ident("flag")), block(ret(num(0)))),
       ret(num(1))
     )
     val result = translate(body, paramTypes = Map("flag" -> "Boolean"))
-    assert(!result.refusalReasons.contains("nullable-ops"), s"Boolean negation should not refuse: ${result.refusalReasons}")
+    assert(result.scalaBody.contains("!flag"), s"Boolean negation should stay: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+
+  test("unknown-type operand in truthiness context refuses"):
+    val body = block(
+      node("IfStatement", prefixUnary("ExclamationToken", ident("mystery")), block(ret(num(0)))),
+      ret(num(1))
+    )
+    val result = translate(body, paramTypes = Map.empty)
+    assert(result.refusalReasons.contains("truthiness-unknown-type"), s"unknown type should refuse: ${result.refusalReasons}")
 
   // ---- js-map-construction refusal ----
 
