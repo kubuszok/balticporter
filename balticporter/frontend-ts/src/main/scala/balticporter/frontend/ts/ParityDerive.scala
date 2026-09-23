@@ -120,7 +120,15 @@ object ParityDerive:
               val line = lines(i)
               sb.append(if i == sigEndLineIdx then line.substring(0, eqIdx + 1) else line)
               sb.append("\n")
-            sb.append(body.text)
+            // Replace the return-type placeholder with the method's declared return type
+            val bodyText =
+              if body.text.contains(dedicated.DefmethodBodyTranslator.ReturnTypePlaceholder) then
+                val retType = extractReturnType(lines, method.signatureLine, sigEndLineIdx, eqIdx)
+                retType match
+                  case Some(t) => body.text.replace(dedicated.DefmethodBodyTranslator.ReturnTypePlaceholder, t)
+                  case None    => body.text.replace(dedicated.DefmethodBodyTranslator.ReturnTypePlaceholder, "Any")
+              else body.text
+            sb.append(bodyText)
             bodyEntries += BodyEntry(method.name, Source.Translated, "", body.refusals.size, idx, method.signatureLine)
             totalRefusals += body.refusals.size
 
@@ -152,6 +160,25 @@ object ParityDerive:
       totalRefusals = totalRefusals,
       unoffered = unoffered
     )
+
+  /** Extract the return type from a method signature: the text between the last `)` and `:` before `=`. For `def f(x: Int): String =` the result is `Some("String")`.
+    */
+  private def extractReturnType(lines: List[String], sigStart: Int, sigEnd: Int, eqIdx: Int): Option[String] =
+    // Join the signature lines into one string up to the =
+    val sig = (sigStart to sigEnd)
+      .map { i =>
+        val line = lines(i)
+        if i == sigEnd then line.substring(0, eqIdx) else line
+      }
+      .mkString(" ")
+    // Find the last `:` after the last `)` and before the `=`
+    val lastParen  = sig.lastIndexOf(')')
+    val colonStart = if lastParen >= 0 then lastParen + 1 else 0
+    val colonIdx   = sig.indexOf(':', colonStart)
+    if colonIdx >= 0 then
+      val retType = sig.substring(colonIdx + 1).trim
+      if retType.nonEmpty then Some(retType) else None
+    else None
 
   /** The older input shape, one occurrence list per name with a refusal count in place of the reasons. */
   def derive(

@@ -31,9 +31,13 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
   private def propAccess(obj: RastNode, prop: String): RastNode =
     node("PropertyAccessExpression", obj, ident(prop))
 
-  private def translate(body: RastNode, apiLookup: Map[String, String] = Map.empty): DefmethodBodyTranslator.TranslationResult =
+  private def translate(
+    body:       RastNode,
+    apiLookup:  Map[String, String] = Map.empty,
+    returnType: Option[String] = None
+  ): DefmethodBodyTranslator.TranslationResult =
     val entry = DefmethodEntry("_free_", "test", Nil, body)
-    DefmethodBodyTranslator.translateBody(entry, Nil, "    ", apiLookup = apiLookup)
+    DefmethodBodyTranslator.translateBody(entry, Nil, "    ", apiLookup = apiLookup, returnType = returnType)
 
   // ---- return lowering ----
 
@@ -256,8 +260,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
         ()
       case scala.util.Failure(ex) => fail(s"compilation check failed: $ex")
 
-  test("early return inside a loop with a break compiles"):
-    // function(x, cond, done) { while (cond) { if (done) return x; if (done) break; } 0 }
+  test("early return inside a loop with a break compiles with Int return type"):
     val body = block(
       node(
         "WhileStatement",
@@ -269,16 +272,14 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ),
       ret(num(0))
     )
-    val result = translate(body)
-    // The return boundary and the break boundary must each have a named label
-    assert(result.scalaBody.contains("(ret$"), s"return boundary named: ${result.scalaBody}")
+    val result = translate(body, returnType = Some("Int"))
+    assert(result.scalaBody.contains("Label[Int]"), s"return Label must carry the declared type: ${result.scalaBody}")
     assert(result.scalaBody.contains("(brk$"), s"break boundary named: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using ret$"), s"return break targets ret label: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using brk$"), s"loop break targets brk label: ${result.scalaBody}")
-    assertCompiles(result.scalaBody)
+    assert(result.scalaBody.contains("(using ret$"), s"return targets ret label: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using brk$"), s"break targets brk label: ${result.scalaBody}")
+    assertCompiles(result.scalaBody, "def f(x: Int, cond: Boolean, done: Boolean, skip: Boolean): Int =")
 
-  test("continue inside a loop with a break compiles"):
-    // function(x, cond, done, skip) { while (cond) { if (skip) continue; if (done) break; x; } 0 }
+  test("continue inside a loop with a break compiles with Int return type"):
     val body = block(
       node(
         "WhileStatement",
@@ -291,25 +292,28 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ),
       ret(num(0))
     )
-    val result = translate(body)
+    val result = translate(body, returnType = Some("Int"))
     assert(result.scalaBody.contains("(brk$"), s"break boundary named: ${result.scalaBody}")
     assert(result.scalaBody.contains("(cnt$"), s"continue boundary named: ${result.scalaBody}")
     assert(result.scalaBody.contains("(using brk$"), s"break targets brk: ${result.scalaBody}")
     assert(result.scalaBody.contains("(using cnt$"), s"continue targets cnt: ${result.scalaBody}")
-    assertCompiles(result.scalaBody)
+    assertCompiles(result.scalaBody, "def f(x: Int, cond: Boolean, done: Boolean, skip: Boolean): Int =")
 
-  test("return inside nested loops compiles"):
-    // function(x, cond, done) { while (cond) { while (done) { return x; } } 0 }
+  test("return inside nested loops compiles with Int return type"):
     val body = block(
-      node("WhileStatement",
-           ident("cond"),
-           block(
-             node("WhileStatement", ident("done"), block(ret(ident("x"))))
-           )
-      ),
+      node("WhileStatement", ident("cond"), block(node("WhileStatement", ident("done"), block(ret(ident("x")))))),
       ret(num(0))
     )
-    val result = translate(body)
-    assert(result.scalaBody.contains("(ret$"), s"return boundary named: ${result.scalaBody}")
+    val result = translate(body, returnType = Some("Int"))
+    assert(result.scalaBody.contains("Label[Int]"), s"return Label type is Int: ${result.scalaBody}")
     assert(result.scalaBody.contains("(using ret$"), s"inner return targets outer label: ${result.scalaBody}")
-    assertCompiles(result.scalaBody)
+    assertCompiles(result.scalaBody, "def f(x: Int, cond: Boolean, done: Boolean, skip: Boolean): Int =")
+
+  test("early return in Unit-typed member compiles"):
+    val body = block(
+      node("IfStatement", ident("done"), block(retVoid)),
+      node("ExpressionStatement", ident("x"))
+    )
+    val result = translate(body, returnType = Some("Unit"))
+    assert(result.scalaBody.contains("Label[Unit]"), s"return Label type is Unit: ${result.scalaBody}")
+    assertCompiles(result.scalaBody, "def f(x: Int, cond: Boolean, done: Boolean, skip: Boolean): Unit =")

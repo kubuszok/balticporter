@@ -24,6 +24,11 @@ object DefmethodBodyTranslator:
       refusalReasons: List[String],
   )
 
+  /** Placeholder emitted in the boundary Label type when the return type is not known at
+    * translation time. `ParityDerive` replaces it with the method's declared return type
+    * before emitting the body into the reference skeleton. */
+  val ReturnTypePlaceholder = "$$BP_RET$$"
+
   /** A prototype assignment extracted from a RAST file.
     *
     * The JS pattern is:
@@ -43,6 +48,9 @@ object DefmethodBodyTranslator:
     * @param nodeParamName when set, property accesses on this identifier are validated
     *   against the DEFNODE hierarchy for the entry's className */
   /** @param apiLookup JS identifier to Scala equivalent, supplied by the consumer's builder (the engine ships no library-specific table). */
+  /** @param returnType the method's declared Scala return type, used for the boundary Label when
+    *   the body has early returns. When absent, the body carries `ReturnTypePlaceholder` and
+    *   `ParityDerive` fills it from the reference skeleton. */
   def translateBody(
       entry: DefmethodEntry,
       hierarchy: List[DefnodeClass],
@@ -50,8 +58,9 @@ object DefmethodBodyTranslator:
       thisBinding: String = "this",
       nodeParamName: Option[String] = None,
       apiLookup: Map[String, String] = Map.empty,
+      returnType: Option[String] = None,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType)
     ctx.translateBlock(entry.bodyNode)
     TranslationResult(
       scalaBody = ctx.result(),
@@ -220,6 +229,7 @@ object DefmethodBodyTranslator:
       thisBinding: String = "this",
       nodeParamName: Option[String] = None,
       apiLookup: Map[String, String] = Map.empty,
+      declaredReturnType: Option[String] = None,
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
@@ -292,7 +302,8 @@ object DefmethodBodyTranslator:
       if needsBoundary then
         val lbl = freshLabel("ret")
         returnLabel = lbl
-        sb.append(s"${baseIndent}scala.util.boundary { ($lbl: scala.util.boundary.Label[Any]) ?=>\n")
+        val retType = declaredReturnType.getOrElse(ReturnTypePlaceholder)
+        sb.append(s"${baseIndent}scala.util.boundary { ($lbl: scala.util.boundary.Label[$retType]) ?=>\n")
       else if needsBraces then
         sb.append(s"$baseIndent{\n")
 
@@ -303,14 +314,16 @@ object DefmethodBodyTranslator:
 
       if needsBoundary || needsBraces then sb.append(s"$baseIndent}\n")
 
+    private val voidValue: String = if declaredReturnType.contains("Unit") then "()" else "null"
+
     def translateStatement(node: RastNode, indent: String, isLast: Boolean): Unit =
       node.kind match
         case "ReturnStatement" =>
           if node.children.isEmpty then
             if isLast then
-              sb.append(s"${indent}null\n")
+              sb.append(s"$indent$voidValue\n")
             else
-              sb.append(s"${indent}scala.util.boundary.break(null)(using $returnLabel)\n")
+              sb.append(s"${indent}scala.util.boundary.break($voidValue)(using $returnLabel)\n")
           else
             val expr = translateExpr(node.children.head)
             if isLast then
