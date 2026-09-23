@@ -404,6 +404,13 @@ object DefmethodBodyTranslator:
           Some(tpe.substring(bracketIdx + 1, tpe.lastIndexOf(']')))
         else None
 
+    /** Translate an expression in return position, applying the declared return
+      * type as the expected type for literal propagation. */
+    private def translateReturnExpr(node: RastNode): String =
+      declaredReturnType match
+        case Some(rt) => translateExprAt(node, rt)
+        case None     => translateExpr(node)
+
     def result(): String = sb.toString
 
     def translateBlock(block: RastNode): Unit =
@@ -418,7 +425,7 @@ object DefmethodBodyTranslator:
         if ret.children.isEmpty then
           sb.append(s"${baseIndent}null\n")
         else
-          val expr = translateExpr(ret.children.head)
+          val expr = translateReturnExpr(ret.children.head)
           sb.append(s"$baseIndent$expr\n")
         return
 
@@ -461,7 +468,7 @@ object DefmethodBodyTranslator:
               refuse("early-return-no-boundary")
               sb.append(s"$indent$voidValue\n")
           else
-            val expr = translateExpr(node.children.head)
+            val expr = translateReturnExpr(node.children.head)
             if isLast then
               sb.append(s"$indent$expr\n")
             else if returnLabel.nonEmpty then
@@ -471,7 +478,11 @@ object DefmethodBodyTranslator:
               sb.append(s"$indent$expr\n")
 
         case "ExpressionStatement" =>
-          val expr = node.children.headOption.map(translateExpr).getOrElse("()")
+          // When this is the last expression in the body, apply the return type
+          val expr = if isLast then
+            node.children.headOption.map(translateReturnExpr).getOrElse("()")
+          else
+            node.children.headOption.map(translateExpr).getOrElse("()")
           sb.append(s"$indent$expr\n")
 
         case "VariableStatement" | "FirstStatement" =>
