@@ -47,12 +47,12 @@ class PortMapTransformSpec extends munit.FunSuite:
   // the acceptance case
   // -------------------------------------------------------------------------
 
-  /** `com.badlogic.gdx.utils.Array`, reduced to the two `toArray` overloads that matter: the reflective one the base drops and the portable one beside it, which is what makes the choice between them
-    * a real decision rather than a formality.
+  /** `com.example.gfx.utils.Array`, reduced to the two `toArray` overloads that matter: the reflective one the base drops and the portable one beside it, which is what makes the choice between them a
+    * real decision rather than a formality.
     */
   private val baseArray = Map(
-    "com/badlogic/gdx/utils/Array.java" ->
-      """package com.badlogic.gdx.utils;
+    "com/example/gfx/utils/Array.java" ->
+      """package com.example.gfx.utils;
         |public class Array<T> {
         |  public Object[] toArray() { return null; }
         |  public <V> V[] toArray(Class<V> type) { return null; }
@@ -60,11 +60,11 @@ class PortMapTransformSpec extends munit.FunSuite:
         |""".stripMargin
   )
 
-  /** Ashley's `ImmutableArray`, reduced to the forwarder pair from `ImmutableArray.java:73-79`. */
+  /** A dependent module's `ImmutableArray`, reduced to a forwarder pair. */
   private val dependent = Map(
-    "com/badlogic/ashley/utils/ImmutableArray.java" ->
-      """package com.badlogic.ashley.utils;
-        |import com.badlogic.gdx.utils.Array;
+    "com/example/ecs/utils/ImmutableArray.java" ->
+      """package com.example.ecs.utils;
+        |import com.example.gfx.utils.Array;
         |public class ImmutableArray<T> {
         |  private final Array<T> array = null;
         |  public Object[] toArray() { return array.toArray(); }
@@ -73,42 +73,32 @@ class PortMapTransformSpec extends munit.FunSuite:
         |""".stripMargin
   )
 
-  /** The base's map AS PUBLISHED in this checkout, if a run has produced one; otherwise the two rows the published one is known to contain, so the test states the same thing either way and a fresh
-    * clone that has never run a migration still runs it. Which source was used is printed, because a test that silently degrades to a fixture proves less than it looks like it does.
-    */
+  /** The base's map: two rows exercising the drop-vs-keep overload split. */
   private def baseMap: PortMap.Map0 =
-    val published = List("run-latest", "baseline").iterator
-      .map(d => Path.of("port-report/LibgdxCoreMigrate", d, "port-map.tsv"))
-      .filter(Files.isRegularFile(_))
-      .flatMap(p => PortMap.read(p).toOption)
-      .find(_.byUpstream("member").contains("com.badlogic.gdx.utils.Array#toArray(Class)"))
-    published match
-      case Some(m)    => m
-      case scala.None =>
-        PortMap.of(
-          "sge",
-          "eng",
-          List("com.badlogic.gdx.utils.Array"),
-          balticporter.tir.SrcMap.Recording(
-            List(
-              balticporter.tir.SrcMap.Entry(
-                "com.badlogic.gdx.utils.Array",
-                "com.badlogic.gdx.utils.Array#toArray()",
-                "def",
-                1,
-                2,
-                "com/badlogic/gdx/utils/Array.java",
-                589,
-                "d0"
-              )
-            )
-          ),
-          dropTypes = Set.empty,
-          dropMethods = Set("com.badlogic.gdx.utils.Array#toArray(Class)"),
-          injectedFqns = Set.empty,
-          bodyKeys = Set.empty,
-          renames = Map.empty
+    PortMap.of(
+      "base-mod",
+      "eng",
+      List("com.example.gfx.utils.Array"),
+      balticporter.tir.SrcMap.Recording(
+        List(
+          balticporter.tir.SrcMap.Entry(
+            "com.example.gfx.utils.Array",
+            "com.example.gfx.utils.Array#toArray()",
+            "def",
+            1,
+            2,
+            "com/example/gfx/utils/Array.java",
+            589,
+            "d0"
+          )
         )
+      ),
+      dropTypes = Set.empty,
+      dropMethods = Set("com.example.gfx.utils.Array#toArray(Class)"),
+      injectedFqns = Set.empty,
+      bodyKeys = Set.empty,
+      renames = Map.empty
+    )
 
   test("ACCEPTANCE: a forwarder into a member the base DROPPED is reported before emission") {
     val (phase, _) = run(model(baseArray, dependent), List(baseMap))
@@ -118,16 +108,16 @@ class PortMapTransformSpec extends munit.FunSuite:
     val f = dropped.head
     // the three things the message has to carry, and that `RewriteTrace`'s orphaned-call finding
     // cannot: WHICH member, WHICH module decided, and WHAT it decided.
-    assertEquals(f.symbol, "com.badlogic.gdx.utils.Array#toArray(Class)")
-    assertEquals(f.base, "sge")
+    assertEquals(f.symbol, "com.example.gfx.utils.Array#toArray(Class)")
+    assertEquals(f.base, "base-mod")
     assert(clue(f.detail).contains("Dropped"))
     // and it is located in the DEPENDENT's Java, at the forwarder — the site an author has to fix.
     assert(clue(f.origin.javaPath).endsWith("ImmutableArray.java"))
 
     // The nilary twin beside it is NOT reported. That is the whole reason arity has to separate the
-    // overloads: both are `com.badlogic.gdx.utils.Array#toArray` to a TIR symbol, and reporting the
+    // overloads: both are `com.example.gfx.utils.Array#toArray` to a TIR symbol, and reporting the
     // portable one would make the check noise on the very call the port is supposed to keep.
-    assert(!phase.findings.exists(_.symbol == "com.badlogic.gdx.utils.Array#toArray()"))
+    assert(!phase.findings.exists(_.symbol == "com.example.gfx.utils.Array#toArray()"))
     // …and nothing was reported as undecidable. An `Ambiguous` here would mean the overloads were
     // never separated at all and the one finding above is luck.
     assertEquals(clue(phase.findings).filter(_.issue == PortMapTransform.Issue.Ambiguous), Nil)
@@ -263,22 +253,22 @@ class PortMapTransformSpec extends munit.FunSuite:
       Set.empty,
       Set.empty,
       Set.empty,
-      renames = Map("com.badlogic.gdx" -> "sge")
+      renames = Map("com.example.gfx" -> "sge")
     )
     assertEquals(
       m.types.map(e => (e.upstream, e.emitted, e.disposition)),
-      List(("com.badlogic.gdx.utils.Array", "sge.utils.Array", PortMap.Disposition.Renamed))
+      List(("com.example.gfx.utils.Array", "sge.utils.Array", PortMap.Disposition.Renamed))
     )
 
     val (phase, out) = run(model(baseArray, dependent), List(m))
     val names        = out.symbols.all.map(_.fullName).toSet
     assert(clue(names).contains("sge.utils.Array"))
-    assert(!names.contains("com.badlogic.gdx.utils.Array"))
+    assert(!names.contains("com.example.gfx.utils.Array"))
     // the member came across with it — a prefix is cut at a separator and the suffix carried
     // verbatim, so `#toArray` did not have to be listed anywhere
     assert(clue(names).exists(_.startsWith("sge.utils.Array#toArray")))
     // …and the DEPENDENT's own namespace is untouched: a rename is the base's fact about the base.
-    assert(clue(names).contains("com.badlogic.ashley.utils.ImmutableArray"))
+    assert(clue(names).contains("com.example.ecs.utils.ImmutableArray"))
     assert(phase.renamedSymbols > 0)
   }
 
@@ -292,7 +282,7 @@ class PortMapTransformSpec extends munit.FunSuite:
       Set.empty,
       Set.empty,
       Set.empty,
-      renames = Map("com.badlogic.gdx" -> "sge")
+      renames = Map("com.example.gfx" -> "sge")
     )
     val (_, _, log) = runTraced(model(baseArray, dependent), List(m))
     val ds          = log.of(balticporter.tir.Decision.Kind.RetypedSignature)
@@ -302,12 +292,12 @@ class PortMapTransformSpec extends munit.FunSuite:
     // too, and reporting them tells this module's author about a module they do not own.
     // The filter is the phase's own `ownedByBase`, as `scan` already uses.
     assert(clue(ds).nonEmpty)
-    assert(ds.forall(_.subjectFqn.startsWith("com.badlogic.ashley.")), clue(ds.map(_.render)))
+    assert(ds.forall(_.subjectFqn.startsWith("com.example.ecs.")), clue(ds.map(_.render)))
 
     val d = ds.head
     // the KEY is the BASE's entry, not this module's manifest: grepping the dependent's policy for
     // this rename finds nothing, and re-running the base is the only thing that changes it
-    assertEquals(d.reason, balticporter.tir.Reason.Configured("port-map-migration", "com.badlogic.gdx.utils.Array -> sge.utils.Array"))
+    assertEquals(d.reason, balticporter.tir.Reason.Configured("port-map-migration", "com.example.gfx.utils.Array -> sge.utils.Array"))
     assertEquals(d.detail("base"), "sge")
     assertEquals(d.detail("to"), "sge.utils.Array")
   }
@@ -321,16 +311,16 @@ class PortMapTransformSpec extends munit.FunSuite:
     val m = PortMap.of(
       "sge",
       "eng",
-      List("com.badlogic.gdx.utils.Array"),
+      List("com.example.gfx.utils.Array"),
       balticporter.tir.SrcMap.Recording(
         List(
           balticporter.tir.SrcMap.Entry(
-            "com.badlogic.gdx.utils.Array",
-            "com.badlogic.gdx.utils.Array#toArray()",
+            "com.example.gfx.utils.Array",
+            "com.example.gfx.utils.Array#toArray()",
             "def",
             1,
             2,
-            "com/badlogic/gdx/utils/Array.java",
+            "com/example/gfx/utils/Array.java",
             589,
             "d0"
           )
@@ -339,13 +329,13 @@ class PortMapTransformSpec extends munit.FunSuite:
       Set.empty,
       Set.empty,
       Set.empty,
-      bodyKeys = Set("com.badlogic.gdx.utils.Array#toArray()"),
+      bodyKeys = Set("com.example.gfx.utils.Array#toArray()"),
       renames = Map.empty
     )
 
     val (phase, _) = run(model(baseArray, dependent), List(m))
     val body       = phase.findings.filter(_.issue == PortMapTransform.Issue.SubstitutedBody)
-    assertEquals(clue(body).map(_.symbol), List("com.badlogic.gdx.utils.Array#toArray()"))
+    assertEquals(clue(body).map(_.symbol), List("com.example.gfx.utils.Array#toArray()"))
     assertEquals(body.head.base, "sge")
     // Exactly ONE, and that is the assertion with teeth. A TIR symbol's `fullName` is `X#toArray`
     // for BOTH overloads, so the 1-argument call is a second, distinct symbol matching the same
@@ -380,7 +370,7 @@ class PortMapTransformSpec extends munit.FunSuite:
       "eng",
       Nil,
       balticporter.tir.SrcMap.Recording(Nil),
-      dropTypes = Set("com.badlogic.gdx.utils.Array"),
+      dropTypes = Set("com.example.gfx.utils.Array"),
       dropMethods = Set.empty,
       injectedFqns = injected,
       bodyKeys = Set.empty,
@@ -389,10 +379,10 @@ class PortMapTransformSpec extends munit.FunSuite:
 
     val (dropped, _) = run(model(baseArray, dependent), List(mapWith(Set.empty)))
     assert(
-      clue(dropped.findings).exists(f => f.issue == PortMapTransform.Issue.DroppedType && f.symbol == "com.badlogic.gdx.utils.Array")
+      clue(dropped.findings).exists(f => f.issue == PortMapTransform.Issue.DroppedType && f.symbol == "com.example.gfx.utils.Array")
     )
 
-    val (replaced, _) = run(model(baseArray, dependent), List(mapWith(Set("com.badlogic.gdx.utils.Array"))))
+    val (replaced, _) = run(model(baseArray, dependent), List(mapWith(Set("com.example.gfx.utils.Array"))))
     assert(!replaced.findings.exists(_.issue == PortMapTransform.Issue.DroppedType))
   }
 

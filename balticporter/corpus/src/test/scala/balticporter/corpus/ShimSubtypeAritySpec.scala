@@ -14,8 +14,8 @@ class ShimSubtypeAritySpec extends PortSuite:
     """package shimsub;
       |import java.util.Iterator;
       |import java.util.List;
-      |/** a library's OWN iterator interface — the shape flexmark, libGDX and every collection
-      |  * library has, invented here so nothing in the engine names a ported library. */
+      |/** a library's OWN iterator interface — the shape every collection library has,
+      |  * invented here so nothing in the engine names a ported library. */
       |interface Cursor<E> extends Iterator<E> { boolean isReversed(); }
       |class Walker {
       |  void drain(Cursor<String> c) { while (c.hasNext()) { c.next(); } }

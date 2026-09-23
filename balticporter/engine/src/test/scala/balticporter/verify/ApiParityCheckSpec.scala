@@ -981,9 +981,9 @@ class ApiParityCheckSpec extends munit.FunSuite:
     import balticporter.core.PortMap.{ Disposition, Entry }
     val keys = ApiParityCheck.javaFieldKeys(
       List(
-        Entry("member", "com.badlogic.gdx.Input$Keys#ALT_LEFT", "sge.Input$Keys#ALT_LEFT", Disposition.Renamed),
-        Entry("member", "com.badlogic.gdx.Input#getX()", "sge.Input#x()", Disposition.Renamed),
-        Entry("member", "com.badlogic.gdx.Input#gone", "", Disposition.Dropped)
+        Entry("member", "com.example.gfx.Input$Keys#ALT_LEFT", "out.Input$Keys#ALT_LEFT", Disposition.Renamed),
+        Entry("member", "com.example.gfx.Input#getX()", "out.Input#x()", Disposition.Renamed),
+        Entry("member", "com.example.gfx.Input#gone", "", Disposition.Dropped)
       )
     )
     assertEquals(keys, Set("Keys#ALT_LEFT"))

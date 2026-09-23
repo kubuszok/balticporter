@@ -25,8 +25,8 @@ class ClasspathCacheSpec extends munit.FunSuite:
     "a line whose jar has been EVICTED from the resolver cache is NOT reused — the coordinates agree and the file is gone"
   ) {
     val f    = tmp("cp.txt")
-    val k    = ClasspathCache.key(List("com.github.tommyettinger:regexodus:0.1.21"))
-    val gone = jar("regexodus-0.1.21.jar")
+    val k    = ClasspathCache.key(List("org.example:util-regex:0.1.21"))
+    val gone = jar("util-regex-0.1.21.jar")
     ClasspathCache.write(f, jar("kept.jar") + java.io.File.pathSeparator + gone, k)
     assert(ClasspathCache.fresh(f, k))
     Files.delete(Path.of(gone))

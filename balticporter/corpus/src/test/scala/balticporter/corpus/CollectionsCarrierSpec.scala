@@ -10,12 +10,10 @@ import balticporter.transform.CollectionsTransform
   */
 class CollectionsCarrierSpec extends PortSuite:
 
-  private val Carrier = "com.fasterxml.jackson.core.type.TypeReference"
+  private val Carrier = "java.lang.ref.WeakReference"
 
-  /** …as the emitter SPELLS it. `type` is a scala keyword, so the package segment is backticked — a reminder that an assertion over emitted text is an assertion about the emitter's rendering and not
-    * about the FQN a manifest writes.
-    */
-  private val Emitted = "com.fasterxml.jackson.core.`type`.TypeReference"
+  /** …as the emitter spells it, which is what assertions over emitted text match on. */
+  private val Emitted = "java.lang.ref.WeakReference"
 
   /** …with the run's DECISION LOG, because `Pipeline` drains a phase's buffer into it (a phase instance re-run with a second phase list must not report the first run's rows) — and the emitter renders
     * porter notes from that same log, which is the pairing `NoteCoverageCheck` holds a real run to.
@@ -25,17 +23,17 @@ class CollectionsCarrierSpec extends PortSuite:
     val (after, notes) = Pipeline.runTraced(SpoonTir.fromSource(source), List(ph))
     (notes, after, new TirEmitter(after, notes = notes).emit)
 
-  /** liqp's `LiquidSupport.LiquidSupportFromInspectable`, cut down to the shape that fails. */
-  private val JacksonShape =
+  /** A type-reference field and a call that returns a reified generic, cut down to the shape that fails. */
+  private val CarrierShape =
     """package demo;
       |import java.util.Map;
-      |import com.fasterxml.jackson.core.type.TypeReference;
-      |import com.fasterxml.jackson.databind.ObjectMapper;
+      |import java.lang.ref.WeakReference;
+      |import ext.Mapper;
       |class T {
-      |  public static final TypeReference<Map<String, Object>> MAP_TYPE_REF =
-      |      new TypeReference<Map<String, Object>>() {};
-      |  static Map<String, Object> toMap(ObjectMapper mapper, Object value) {
-      |    Map<String, Object> converted = mapper.convertValue(value, MAP_TYPE_REF);
+      |  public static final WeakReference<Map<String, Object>> MAP_TYPE_REF =
+      |      new WeakReference<Map<String, Object>>(null) {};
+      |  static Map<String, Object> toMap(Mapper mapper, Object value) {
+      |    Map<String, Object> converted = mapper.resolve(value, MAP_TYPE_REF);
       |    return converted;
       |  }
       |}
@@ -46,26 +44,26 @@ class CollectionsCarrierSpec extends PortSuite:
   // -------------------------------------------------------------------------
 
   test("a declared carrier's type ARGUMENT stays in java's namespace — field type and anon parent") {
-    val (_, _, out) = ported(JacksonShape)
+    val (_, _, out) = ported(CarrierShape)
     assert(
       clue(out).contains(s"$Emitted[java.util.Map[java.lang.String, java.lang.Object]]"),
-      "the argument jackson reads back out of the generic signature must name java's own type"
+      "the argument the carrier reads back out of the generic signature must name java's own type"
     )
     assert(
       !out.contains(s"$Emitted[scala.collection.mutable.Map"),
-      "retyped there, the port asks jackson to construct a trait — 0 compile errors, 10 failures"
+      "retyped there, the port asks the carrier to construct a trait — 0 compile errors, 10 failures"
     )
     // the anonymous subclass is a SECOND position and is the one that carries the signature at run
-    // time: `new TypeReference<…>() {}` is what jackson reflects over.
+    // time: `new TypeRef<…>() {}` is what the carrier reflects over.
     assertEquals(
       clue(out).sliding(s"$Emitted[java.util.Map".length).count(_ == s"$Emitted[java.util.Map"),
       2,
-      "the field's declared type and the `new` whose anonymous subclass CARRIES the\n                   signature jackson reflects over"
+      "the field's declared type and the `new` whose anonymous subclass CARRIES the\n                   signature the carrier reflects over"
     )
   }
 
   test("…and the declaration AROUND the carrier keeps the mapping") {
-    val (_, _, out) = ported(JacksonShape)
+    val (_, _, out) = ported(CarrierShape)
     assert(
       clue(out).contains("scala.collection.mutable.Map[java.lang.String, java.lang.Object]"),
       "a per-ARGUMENT list is exactly what a RuleScope exclusion cannot express"
@@ -81,22 +79,22 @@ class CollectionsCarrierSpec extends PortSuite:
   // -------------------------------------------------------------------------
 
   test("the value is BRIDGED where the carrier is used — the external-producer seam, not new machinery") {
-    val (_, _, out) = ported(JacksonShape)
+    val (_, _, out) = ported(CarrierShape)
     assert(
-      clue(out).contains("balticporter.runtime.JavaCollections.fromJava(mapper.convertValue("),
+      clue(out).contains("balticporter.runtime.JavaCollections.fromJava(mapper.resolve("),
       "the call now really returns java's map while the slot claims scala's; a live view " +
         "bridges it, and `asScala` writes through so the caller's mutations are not lost"
     )
   }
 
   test("…and with NO carrier declared the same source is the defect K20 measured") {
-    val (_, _, out) = ported(JacksonShape, carriers = Set.empty)
+    val (_, _, out) = ported(CarrierShape, carriers = Set.empty)
     assert(
       clue(out).contains(s"$Emitted[scala.collection.mutable.Map"),
       "the pre-K20 behaviour, by the same code path: an empty list is a no-op"
     )
     assert(
-      !out.contains("JavaCollections.fromJava(mapper.convertValue("),
+      !out.contains("JavaCollections.fromJava(mapper.resolve("),
       "and nothing bridges, because the result type OCCURS in the carrier argument and the " +
         "call therefore reads as a generic pass-through"
     )
@@ -109,9 +107,9 @@ class CollectionsCarrierSpec extends PortSuite:
   test("an argument mentioning no mapped type decides nothing and records nothing") {
     val (log, _, out) = ported(
       """package demo;
-        |import com.fasterxml.jackson.core.type.TypeReference;
+        |import java.lang.ref.WeakReference;
         |class T {
-        |  static final TypeReference<String> S = new TypeReference<String>() {};
+        |  static final WeakReference<String> S = new WeakReference<String>(null) {};
         |}
         |""".stripMargin
     )
@@ -165,7 +163,7 @@ class CollectionsCarrierSpec extends PortSuite:
   // -------------------------------------------------------------------------
 
   test("the preservation is RECORDED per declaration, with the entry an agent would edit") {
-    val (log, _, out) = ported(JacksonShape)
+    val (log, _, out) = ported(CarrierShape)
     val rows          = log.all.filter(_.kind == Decision.Kind.ReifiedTypeArg)
     assert(clue(rows.map(_.render)).nonEmpty)
     assert(
