@@ -502,7 +502,8 @@ final class ClassToTraitFactory extends TransformFactory:
 
 /** `{ transform = "registry", facadeMembers = [...], entries = [ { callee, placement { … }, scope, seeds, handles, miss, bound } ] }`
   *
-  * `placement` carries `object` OR `member` (the FQN) plus `table`/`register`/`create`; `miss` is `"null"`, `"jvm-reflect"`, or `{ throw = "fqn", message = "…" }`. Empty `entries` is a no-op.
+  * `placement` carries `object` OR `member` (the FQN) plus `table`/`register`/`create`; `miss` is `"null"`, `"jvm-reflect"`, `{ throw = "fqn", message = "…" }`, or `{ delegate = "fqn" }` (calls a
+  * consumer-named method with the `Class` value, the cross-platform escape hatch). Empty `entries` is a no-op.
   */
 final class RegistryFactory extends TransformFactory:
   def name = RegistryTransform.Name
@@ -522,12 +523,15 @@ final class RegistryFactory extends TransformFactory:
         case _                     => throw ConfigError(p.path, "a placement declares `object` or `member`")
       val miss = e.child("miss") match
         // `jvmReflect` REFLECTS and answers this on a reflective failure; the bare form THROWS
-        // for every unregistered key.
+        // for every unregistered key. `delegate` calls a consumer-named method.
         case Some(t) =>
           t.child("jvmReflect") match
             case Some(j)    => RegistryTransform.Miss.JvmReflect(RegistryTransform.Miss.OnFailure.Throw(j.requireString("throw"), j.string("message").getOrElse("")))
             case scala.None =>
-              RegistryTransform.Miss.Throw(t.requireString("throw"), t.string("message").getOrElse(""))
+              t.string("delegate") match
+                case Some(d)    => RegistryTransform.Miss.Delegate(d)
+                case scala.None =>
+                  RegistryTransform.Miss.Throw(t.requireString("throw"), t.string("message").getOrElse(""))
         case scala.None =>
           e.enumerated(
             "miss",

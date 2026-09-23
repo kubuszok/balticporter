@@ -156,6 +156,39 @@ class RegistryTransformSpec extends munit.FunSuite:
     assert(clue(run(phase(entry(miss = Miss.JvmReflect()))).out).contains("null.asInstanceOf[T]"))
   }
 
+  test("miss = Delegate calls the consumer-named method with the class value and contains no reflection") {
+    val r = run(phase(entry(miss = Miss.Delegate("com.demo.EnginePlatform.createReflectively"))))
+    assert(clue(r.out).contains("com.demo.EnginePlatform.createReflectively(componentType)"))
+    // the minted create body calls the delegate, not JVM reflection.
+    assert(!r.out.contains("getConstructor"))
+    assert(!r.out.contains("InvocationTargetException"))
+    // the registry is still minted — only the miss arm differs.
+    assert(r.out.contains("def create[T <: AnyRef](componentType: Class[T]): T"))
+    assert(r.out.contains("def register[T <: AnyRef](componentType: Class[T], factory: () => T): Unit"))
+  }
+
+  test("miss = Delegate does NOT produce JvmOnlyMiss findings — the delegate is cross-platform") {
+    val p = phase(entry(miss = Miss.Delegate("com.demo.EnginePlatform.createReflectively")))
+    run(p)
+    val rows = p.findings.filter(_.issue == RegistryCheck.Issue.JvmOnlyMiss)
+    assertEquals(clue(rows).size, 0)
+  }
+
+  test("miss = Delegate admits a self-clone — the consumer's delegate can handle arbitrary classes") {
+    val js = java.replace(
+      "Object plain(Class<?> c) { return Reflector.newInstance(c); }",
+      "Object plain(Class<?> c) { return Reflector.newInstance(getClass()); }"
+    )
+    val p = phase(entry(miss = Miss.Delegate("com.demo.EnginePlatform.createReflectively")))
+    Pipeline.runTraced(SpoonTir.fromSource(js, "Demo.java"), List(p))
+    assertEquals(clue(p.findings.count(_.issue == RegistryCheck.Issue.SelfClone)), 0)
+  }
+
+  test("Delegate fingerprints its target") {
+    val fp = phase(entry(miss = Miss.Delegate("com.demo.EnginePlatform.createReflectively"))).surfaceFingerprint
+    assert(clue(fp).contains("Delegate(com.demo.EnginePlatform.createReflectively)"))
+  }
+
   test("`handles` elides the try over a JvmReflect(Throw) arm, which now throws what java caught") {
     val p = phase(entry(handles = Set("com.demo.Broken"), miss = Miss.JvmReflect(Miss.OnFailure.Throw("com.demo.Broken", "no ctor for "))))
     val r = run(p)

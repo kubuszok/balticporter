@@ -193,7 +193,10 @@ manifest {
 
 **`registry`** turns reflective instantiation (`Class.newInstance`-shaped construction from a runtime
 value) into an explicit, `Class`-keyed registry the port mints at a location you name — either a new
-top-level object or a member on a type the port already emits.
+top-level object or a member on a type the port already emits. The `miss` key decides what an
+unregistered key answers: `"null"`, `"jvm-reflect"` (JVM reflection, counted on non-JVM targets),
+`{ throw = "fqn", message = "…" }`, or `{ delegate = "fqn" }` (calls a consumer-named method with
+the `Class` value — the cross-platform escape hatch for ports supplying a per-platform fallback).
 
 **`type-class-array`** gives an array whose element type is a type parameter a witness value to
 allocate, copy and clear through, closing the gap left by Java's implicit `Object` bound on generic

@@ -5,8 +5,8 @@ import balticporter.tir.*
 import balticporter.tir.TypeRepr.NoType
 
 /** Re-points REFLECTIVE INSTANTIATION at a `Class`-keyed registry the port supplies — the mechanism three ports hand-wrote. `callee(classValue)` becomes `<registry>.create(classValue)`, and the
-  * table/`register`/`create` are MINTED at the declared placement. Mechanism universal, every name, scope and miss per-library; an empty spec is a no-op. Every shape it cannot key is refused and
-  * counted ([[RegistryCheck]]).
+  * table/`register`/`create` are MINTED at the declared placement. Mechanism universal, every name, scope and miss per-library; an empty spec is a no-op. Miss variants: `Null`, `Throw`, `JvmReflect`
+  * (JVM-only), `Delegate` (calls a consumer-named method cross-platform). Every shape it cannot key is refused and counted ([[RegistryCheck]]).
   */
 final class RegistryTransform(
   val entries: List[RegistryTransform.Registry] = Nil,
@@ -323,7 +323,7 @@ final class RegistryTransform(
               s"`${e.callee}`'s class is chosen by a STRING at run time, so no registration can " +
                 "exist for it — a name table (`ClassTableTransform`) is the mechanism for this"
             )
-          else if namedAt(program, arg, "getClass") && !e.miss.isInstanceOf[Miss.JvmReflect] then
+          else if namedAt(program, arg, "getClass") && !e.miss.isInstanceOf[Miss.JvmReflect] && !e.miss.isInstanceOf[Miss.Delegate] then
             refuse(
               RegistryCheck.Issue.SelfClone,
               s"`${e.callee}(getClass())` clones an arbitrary subtype, and with miss=${e.miss} the " +
@@ -477,6 +477,8 @@ final class RegistryTransform(
         "case _: java.lang.NoSuchMethodException | _: java.lang.InstantiationException | " +
         s"_: java.lang.IllegalAccessException => $failed ; " +
         "case ex: java.lang.reflect.InvocationTargetException => throw ex.getCause } }"
+    case Miss.Delegate(target) =>
+      s"$target(componentType)"
 
 object RegistryTransform:
 
@@ -519,13 +521,15 @@ object RegistryTransform:
       val s = spelling(p)
       s"${owner(p)}:${s.table}/${s.register}/${s.create}"
 
-  /** What an unregistered key answers. Three outcomes and not one: a port that must not throw, a port whose contract has its own exception, and the JVM's own reflective answer, which carries what
-    * java's OWN contract says when the reflection itself fails.
+  /** What an unregistered key answers. Four outcomes: a port that must not throw, a port whose contract has its own exception, the JVM's own reflective answer (which carries what java's OWN contract
+    * says when the reflection itself fails), and a DELEGATE that calls a consumer-provided method by fully-qualified name — the cross-platform escape hatch for ports that supply a per-platform
+    * implementation (e.g. JVM reflection on the JVM, a lookup table on JS/Native).
     */
   enum Miss:
     case Null
     case Throw(fqn: String, message: String)
     case JvmReflect(onFailure: Miss.OnFailure = Miss.OnFailure.Null)
+    case Delegate(target: String)
 
   object Miss:
 
