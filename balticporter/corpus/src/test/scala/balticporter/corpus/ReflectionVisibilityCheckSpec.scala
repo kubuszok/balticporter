@@ -36,8 +36,8 @@ class ReflectionVisibilityCheckSpec extends PortSuite:
     }"""
 
   test("a reflective call on a private nested class is a PrivateTarget finding") {
-    val p  = port(fixture)
-    val fs = ReflectionVisibilityCheck.check(p.after, p.after.units)
+    val p               = port(fixture)
+    val fs              = ReflectionVisibilityCheck.check(p.after, p.after.units)
     val privateFindings = fs.filter(_.issue == Issue.PrivateTarget)
     assertEquals(clue(privateFindings).size, 1)
     assert(clue(privateFindings.head.targetType).contains("PrivateNested"))
@@ -46,21 +46,23 @@ class ReflectionVisibilityCheckSpec extends PortSuite:
   }
 
   test("a reflective call on a public nested class produces no finding") {
-    val p  = port(fixture)
-    val fs = ReflectionVisibilityCheck.check(p.after, p.after.units)
+    val p              = port(fixture)
+    val fs             = ReflectionVisibilityCheck.check(p.after, p.after.units)
     val publicFindings = fs.filter(f => f.targetType.contains("PublicNested"))
     assertEquals(clue(publicFindings), Nil)
   }
 
   test("a reflective call with a dynamic Class<?> variable is an UnknownTarget finding") {
-    val dyn = port("""
+    val dyn = port(
+      """
       package demo;
       public class DynTest {
         Object create(Class<?> cls) throws Exception {
           return cls.newInstance();
         }
-      }""")
-    val fs = ReflectionVisibilityCheck.check(dyn.after, dyn.after.units)
+      }"""
+    )
+    val fs              = ReflectionVisibilityCheck.check(dyn.after, dyn.after.units)
     val unknownFindings = fs.filter(_.issue == Issue.UnknownTarget)
     assert(clue(unknownFindings).nonEmpty, "a dynamic Class<?> must produce an unknown-target finding")
     assert(clue(Issue.classification(Issue.UnknownTarget)).contains("engine"))
@@ -86,9 +88,8 @@ class ReflectionVisibilityCheckSpec extends PortSuite:
     val fs = ReflectionVisibilityCheck.check(p.after, p.after.units)
     val pf = fs.find(_.issue == Issue.PrivateTarget).getOrElse(fail("no PrivateTarget finding"))
     // the owner is a fully-qualified method name like "demo.Outer#createPrivate"
-    val sym = p.after.symbols.all.find(_.fullName == pf.owner)
-      .getOrElse(fail(s"no symbol for owner '${pf.owner}'"))
-    val d = ReflectionVisibilityCheck.decision(pf, sym.id, pf.owner)
+    val sym = p.after.symbols.all.find(_.fullName == pf.owner).getOrElse(fail(s"no symbol for owner '${pf.owner}'"))
+    val d   = ReflectionVisibilityCheck.decision(pf, sym.id, pf.owner)
     assertEquals(d.kind, Decision.Kind.CountedReflectionRisk)
     assert(clue(d.detail("target")).contains("PrivateNested"))
     assert(d.reason.className == "universal")

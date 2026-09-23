@@ -35,8 +35,8 @@ object ReflectionVisibilityCheck:
     * return a `Constructor`, the instantiation happens at `Constructor.newInstance`.
     */
   private val InstantiationSites: Map[String, Set[String]] = Map(
-    "newInstance"      -> Set("java.lang.Class", "java.lang.reflect.Constructor"),
-    "findConstructor"  -> Set("java.lang.invoke.MethodHandles.Lookup")
+    "newInstance" -> Set("java.lang.Class", "java.lang.reflect.Constructor"),
+    "findConstructor" -> Set("java.lang.invoke.MethodHandles.Lookup")
   )
 
   final case class Finding(issue: Issue, owner: String, targetType: String, origin: Origin):
@@ -70,7 +70,7 @@ object ReflectionVisibilityCheck:
     */
   def check(program: Program, units: List[Tree.ClassDef]): List[Finding] =
     given Program = program
-    val out = collection.mutable.ListBuffer.empty[Finding]
+    val out       = collection.mutable.ListBuffer.empty[Finding]
     units.foreach(u => walkClassDef(u, out))
     out.toList.sortBy(f => (f.issue.toString, f.origin.javaPath, f.origin.line))
 
@@ -95,7 +95,7 @@ object ReflectionVisibilityCheck:
       classifyApply(a, enclosing, out)
       a.fun match
         case s: Tree.Select => walkTree(s.qual, enclosing, out)
-        case _              => walkTree(a.fun, enclosing, out)
+        case _ => walkTree(a.fun, enclosing, out)
       a.args.foreach(walkTree(_, enclosing, out))
     case x: Tree.Block =>
       x.stats.foreach(walkTree(_, enclosing, out))
@@ -158,7 +158,7 @@ object ReflectionVisibilityCheck:
       // Class.newInstance() — read the receiver for a class literal
       a.fun match
         case Tree.Select(qual, _, _, _) => extractClassLiteral(qual)
-        case _                         => None
+        case _                          => None
     else if calleeOwner.startsWith("java.lang.reflect.Constructor") then
       // Constructor.newInstance(...) — walk up to the getConstructor/getDeclaredConstructor call
       a.fun match
