@@ -394,13 +394,25 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     assert(result.scalaBody.contains(".get"), s"|| on Nullable should use .get: ${result.scalaBody}")
     assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
 
-  test("logical-and on Nullable lowers to if-isDefined-then-rhs"):
+  test("logical-and on Nullable unwraps x to x.get in the guarded operand"):
     val body = block(
-      ret(binOp("AmpersandAmpersandToken", ident("first"), ident("fallback")))
+      ret(binOp("AmpersandAmpersandToken", ident("first"), propAccess(ident("first"), "loc")))
     )
-    val result = translate(body, paramTypes = Map("first" -> "Nullable[HasLoc]"))
+    val mi     = ReferenceSignatures.MemberIndex(Map("HasLoc" -> Set("loc")))
+    val result = translate(body, paramTypes = Map("first" -> "Nullable[HasLoc]"), memberIndex = mi)
     assert(result.scalaBody.contains("isDefined"), s"&& on Nullable should check isDefined: ${result.scalaBody}")
+    assert(result.scalaBody.contains("first.get.loc"), s"rhs should unwrap to first.get.loc: ${result.scalaBody}")
     assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+
+  test("value-context || with type mismatch refuses"):
+    val body = block(
+      ret(binOp("BarBarToken", ident("count"), RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("none")))))
+    )
+    val result = translate(body, paramTypes = Map("count" -> "Int"))
+    assert(
+      result.refusalReasons.contains("truthiness-value-context"),
+      s"type-mismatched value || should refuse: ${result.refusalReasons}"
+    )
 
   test("ternary on Nullable lowers to isDefined condition"):
     val body = block(

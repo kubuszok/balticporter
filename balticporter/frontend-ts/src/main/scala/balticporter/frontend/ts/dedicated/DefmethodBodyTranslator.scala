@@ -290,19 +290,21 @@ object DefmethodBodyTranslator:
 
     // Local variable types, inferred from initialisers whose type is known
     private val localTypes = mutable.Map.empty[String, String]
+    // Identifiers currently in a guarded scope where they have been tested
+    // for truthiness and should be unwrapped (Nullable -> .get)
+    private val unwrappedIds = mutable.Set.empty[String]
 
-    /** Look up the declared Scala type of an expression. Checks parameters first,
-      * then local variables. For property accesses on Nullable identifiers,
-      * the result is the inner type after `.get`. */
+    /** Look up the declared Scala type of an expression. Checks locals first
+      * (they shadow parameters inside guarded scopes), then parameters. */
     private def exprType(node: RastNode): Option[String] =
       node.kind match
         case "Identifier" =>
           node.text.flatMap { name =>
             val scalaName = snakeToCamel(name)
-            paramTypes.get(scalaName)
-              .orElse(paramTypes.get(name))
-              .orElse(localTypes.get(scalaName))
+            localTypes.get(scalaName)
               .orElse(localTypes.get(name))
+              .orElse(paramTypes.get(scalaName))
+              .orElse(paramTypes.get(name))
           }
         case "NumericLiteral" | "FirstLiteralToken" => Some("Double")
         case "StringLiteral" | "FirstTemplateToken" | "NoSubstitutionTemplateLiteral" => Some("String")
@@ -832,7 +834,7 @@ object DefmethodBodyTranslator:
     // --------------------------------------------------------------------------
 
     private def translateIdentifier(name: String): String =
-      name match
+      val base = name match
         case "undefined"    => "null"
         case "Infinity"     => "Double.PositiveInfinity"
         case "NaN"          => "Double.NaN"
@@ -847,6 +849,10 @@ object DefmethodBodyTranslator:
           "??? /* arguments */"
         case n if n.startsWith("AST_") => astVarToScalaName(n)
         case n => apiLookup.getOrElse(n, snakeToCamel(n))
+      // When this identifier was tested for Nullable truthiness in an
+      // enclosing && guard, it has been unwrapped and must be read as .get
+      val scalaName = snakeToCamel(name)
+      if unwrappedIds.contains(scalaName) then s"$base.get" else base
 
     private def translatePropertyAccess(node: RastNode): String =
       val children = node.children
@@ -1360,20 +1366,47 @@ object DefmethodBodyTranslator:
 
           // JS `x && y` and `x || y` on a non-Boolean operand are truthiness
           // short-circuits, not boolean logic. The lowering depends on the
-          // operand's declared Scala type.
+          // operand's declared Scala type and the context (condition vs value).
           if op == "AmpersandAmpersandToken" || op == "BarBarToken" then
             exprType(lhs) match
               case Some(tpe) if tpe != "Boolean" =>
                 val left = translateExpr(lhs)
-                val right = translateExpr(rhs)
                 val test = truthinessTest(tpe, left)
-                val value = truthyValue(tpe, left)
-                if op == "AmpersandAmpersandToken" then
-                  // x && y: if x is truthy, evaluate y (with x unwrapped if Nullable)
-                  return s"(if ($test) $right else $left)"
+                // In a condition context (when the result is used as a boolean),
+                // x && y is `test(x) && <y with x unwrapped>`.
+                // In a value context, JS returns one operand: only valid when
+                // both sides have the same declared Scala type.
+                if isNullableType(tpe) then
+                  val lhsName = lhs.text.map(snakeToCamel)
+                  // Translate the RHS with x unwrapped: inside the guarded
+                  // operand, `x` renders as `x.get` (one level)
+                  val rightWithUnwrap = lhsName match
+                    case Some(name) =>
+                      val wasUnwrapped = unwrappedIds.contains(name)
+                      val inner        = tpe.stripPrefix("Nullable[").stripSuffix("]")
+                      unwrappedIds += name
+                      localTypes(name) = inner
+                      val r = translateExpr(rhs)
+                      if !wasUnwrapped then unwrappedIds -= name
+                      localTypes.remove(name)
+                      r
+                    case None => translateExpr(rhs)
+                  if op == "AmpersandAmpersandToken" then
+                    return s"($test && $rightWithUnwrap)"
+                  else
+                    // x || y: if x is truthy, yield x (unwrapped); else y
+                    val value = truthyValue(tpe, left)
+                    return s"(if ($test) $value else ${translateExpr(rhs)})"
                 else
-                  // x || y: if x is truthy, use x (unwrapped); else y
-                  return s"(if ($test) $value else $right)"
+                  val right = translateExpr(rhs)
+                  val rhsType = exprType(rhs)
+                  if op == "AmpersandAmpersandToken" then
+                    return s"($test && $right)"
+                  else
+                    // x || y in value context: both sides must agree in type
+                    if rhsType.exists(_ != tpe) then
+                      refuse("truthiness-value-context")
+                    return s"(if ($test) $left else $right)"
               case None =>
                 refuse("truthiness-unknown-type")
               case _ => () // Boolean: emit normal && / ||
