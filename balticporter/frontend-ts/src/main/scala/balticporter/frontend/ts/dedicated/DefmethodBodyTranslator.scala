@@ -1469,32 +1469,61 @@ object DefmethodBodyTranslator:
       )
       if props.isEmpty then "scala.collection.mutable.Map.empty[String, Any]"
       else
-        // A JS object literal `{ key: val }` is emitted as `mutable.Map(...)`, but
-        // the reference may declare a typed class (a case class or a trait). The
-        // translator cannot construct the class without knowing its constructor.
-        // Refuse so the reference body is kept when the return type is not a Map.
-        declaredReturnType.foreach { rt =>
-          if !rt.contains("Map") && !rt.contains("map") then refuse("js-map-construction")
-        }
-        val entries = props.map { p =>
+        // Extract literal key-value pairs
+        val litEntries = props.flatMap { p =>
           p.kind match
             case "PropertyAssignment" =>
               val key = p.children.headOption.flatMap(_.text).getOrElse("?")
-              val value = p.children.drop(1).headOption.map(translateExpr).getOrElse("???")
-              s"\"${escapeString(key)}\" -> $value"
+              Some((key, p.children.drop(1).headOption))
             case "ShorthandPropertyAssignment" =>
               val key = p.children.headOption.flatMap(_.text).getOrElse("?")
-              s"\"${escapeString(key)}\" -> ${snakeToCamel(key)}"
-            case "SpreadAssignment" =>
-              val expr = p.children.headOption.map(translateExpr).getOrElse("???")
-              s"/* spread */ $expr"
-            case "MethodDeclaration" =>
-              val name = p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("?")
-              refuse(s"MethodInObject:$name")
-              s"\"$name\" -> ??? /* method */"
-            case _ => "??? /* unknown prop */"
+              Some((key, Some(p.children.head)))
+            case _ => None
         }
-        s"scala.collection.mutable.Map(${entries.mkString(", ")})"
+        // Try to construct a typed class when the return type has a known schema
+        val typeName = declaredReturnType.map(_.takeWhile(c => c != '[' && c != ' '))
+        typeName.flatMap(ctorSchema.get) match
+          case Some(ctorParams) =>
+            val keyMap = litEntries.map { case (k, v) => snakeToCamel(k) -> v }.toMap
+            val missingRequired = ctorParams.filterNot(_.hasDefault).filterNot(p => keyMap.contains(p.name))
+            if missingRequired.nonEmpty then
+              refuse("object-literal-missing-field")
+              emitObjectLiteralAsMap(props)
+            else
+              val args = ctorParams.flatMap { param =>
+                keyMap.get(param.name) match
+                  case Some(Some(valueNode)) => Some(s"${param.name} = ${translateExpr(valueNode)}")
+                  case Some(None)            => Some(s"${param.name} = ???")
+                  case None                  => None // has default, omitted
+              }
+              s"${typeName.get}(${args.mkString(", ")})"
+          case None =>
+            // No schema: fall back to mutable.Map, refuse if return type is not a Map
+            declaredReturnType.foreach { rt =>
+              if !rt.contains("Map") && !rt.contains("map") then refuse("js-map-construction")
+            }
+            emitObjectLiteralAsMap(props)
+
+    private def emitObjectLiteralAsMap(props: List[RastNode]): String =
+      val entries = props.map { p =>
+        p.kind match
+          case "PropertyAssignment" =>
+            val key   = p.children.headOption.flatMap(_.text).getOrElse("?")
+            val value = p.children.drop(1).headOption.map(translateExpr).getOrElse("???")
+            s"\"${escapeString(key)}\" -> $value"
+          case "ShorthandPropertyAssignment" =>
+            val key = p.children.headOption.flatMap(_.text).getOrElse("?")
+            s"\"${escapeString(key)}\" -> ${snakeToCamel(key)}"
+          case "SpreadAssignment" =>
+            val expr = p.children.headOption.map(translateExpr).getOrElse("???")
+            s"/* spread */ $expr"
+          case "MethodDeclaration" =>
+            val name = p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("?")
+            refuse(s"MethodInObject:$name")
+            s"\"$name\" -> ??? /* method */"
+          case _ => "??? /* unknown prop */"
+      }
+      s"scala.collection.mutable.Map(${entries.mkString(", ")})"
 
     private def translateTemplateExpr(node: RastNode): String =
       val parts = mutable.ListBuffer.empty[String]

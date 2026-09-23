@@ -427,16 +427,54 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = translate(body, paramTypes = Map.empty)
     assert(result.refusalReasons.contains("truthiness-unknown-type"), s"unknown type should refuse: ${result.refusalReasons}")
 
-  // ---- js-map-construction refusal ----
+  // ---- js-map-construction ----
 
-  test("object literal in non-Map return type refuses with js-map-construction"):
+  test("object literal with constructor schema emits typed constructor"):
     val objLit = node(
       "ObjectLiteralExpression",
       node("PropertyAssignment", ident("mode"), RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("math")))),
       node("PropertyAssignment", ident("style"), RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("display"))))
     )
+    val schema = ReferenceSignatures.ConstructorSchema(
+      Map(
+        "NodeStyling" -> List(
+          ReferenceSignatures.CtorParam("mode", "Mode", hasDefault = false),
+          ReferenceSignatures.CtorParam("loc", "Nullable[SourceLocation]", hasDefault = true),
+          ReferenceSignatures.CtorParam("style", "StyleStr", hasDefault = true),
+          ReferenceSignatures.CtorParam("body", "Array[Any]", hasDefault = true)
+        )
+      )
+    )
     val body   = block(ret(objLit))
-    val result = translate(body, returnType = Some("ParseNodeStyling"))
+    val result = translate(body, returnType = Some("NodeStyling"), ctorSchema = schema)
+    assert(result.scalaBody.contains("NodeStyling("), s"should construct typed class: ${result.scalaBody}")
+    assert(result.scalaBody.contains("mode = "), s"should use named params: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+
+  test("object literal missing required field refuses with object-literal-missing-field"):
+    val objLit = node(
+      "ObjectLiteralExpression",
+      node("PropertyAssignment", ident("style"), RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("display"))))
+    )
+    val schema = ReferenceSignatures.ConstructorSchema(
+      Map(
+        "NodeStyling" -> List(
+          ReferenceSignatures.CtorParam("mode", "Mode", hasDefault = false),
+          ReferenceSignatures.CtorParam("style", "StyleStr", hasDefault = true)
+        )
+      )
+    )
+    val body   = block(ret(objLit))
+    val result = translate(body, returnType = Some("NodeStyling"), ctorSchema = schema)
+    assert(
+      result.refusalReasons.contains("object-literal-missing-field"),
+      s"missing required field should refuse: ${result.refusalReasons}"
+    )
+
+  test("object literal with no schema and non-Map return type refuses"):
+    val objLit = node("ObjectLiteralExpression", node("PropertyAssignment", ident("key"), num(1)))
+    val body   = block(ret(objLit))
+    val result = translate(body, returnType = Some("SomeClass"))
     assert(
       result.refusalReasons.contains("js-map-construction"),
       s"should refuse with js-map-construction: ${result.refusalReasons}"
