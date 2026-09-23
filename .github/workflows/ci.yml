@@ -55,5 +55,9 @@ jobs:
 
       - uses: sbt/setup-sbt@v1
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Compile and test
         run: sbt test

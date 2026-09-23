@@ -305,6 +305,36 @@ lazy val `frontend-ts` = project
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.36.4" % Provided,
       munit,
     ),
+    // The TS exporter bundle: `npm ci && npm run build` in exporter/, then copy dist/export.js
+    // and a manifest into the jar so a consumer can extract it at build time without a sibling
+    // engine checkout.
+    Compile / resourceGenerators += Def.task {
+      val exporterDir = (ThisProject / baseDirectory).value / "exporter"
+      val outDir      = (Compile / resourceManaged).value / "balticporter" / "frontend" / "ts" / "exporter"
+      val marker      = outDir / ".built-marker"
+      val pkgJson     = exporterDir / "package.json"
+      val srcFile     = exporterDir / "src" / "export.ts"
+      val expected    = s"${pkgJson.hashCode}:${srcFile.hashCode}:${srcFile.lastModified}"
+      val cached      = marker.exists && IO.read(marker).trim == expected
+      if (!cached) {
+        val log = streams.value.log
+        log.info("[frontend-ts] Building TS exporter bundle (npm ci && npm run build)")
+        val npmCi = scala.sys.process.Process(Seq("npm", "ci"), exporterDir).!
+        if (npmCi != 0) sys.error("[frontend-ts] npm ci failed")
+        val npmBuild = scala.sys.process.Process(Seq("npm", "run", "build"), exporterDir).!
+        if (npmBuild != 0) sys.error("[frontend-ts] npm run build failed")
+        IO.createDirectory(outDir)
+        IO.copyFile(exporterDir / "dist" / "export.js", outDir / "export.js")
+        // Manifest: the exporter version and the typescript version it depends on, read with regex
+        val pkgContent = IO.read(pkgJson)
+        val exporterVersion = """"version"\s*:\s*"([^"]+)"""".r.findFirstMatchIn(pkgContent).map(_.group(1)).getOrElse("unknown")
+        val tsVersion = """"typescript"\s*:\s*"([^"]+)"""".r.findFirstMatchIn(pkgContent).map(_.group(1)).getOrElse("unknown")
+        IO.write(outDir / "manifest.properties", s"exporter.version=$exporterVersion\ntypescript.version=$tsVersion\n")
+        IO.write(marker, expected)
+        log.info(s"[frontend-ts] Exporter bundle built: export.js + manifest (typescript $tsVersion)")
+      }
+      Seq(outDir / "export.js", outDir / "manifest.properties")
+    }.taskValue,
   )
 
 // Dart frontend — stub awaiting Dart SDK. The exporter uses package:analyzer for resolved ASTs.
