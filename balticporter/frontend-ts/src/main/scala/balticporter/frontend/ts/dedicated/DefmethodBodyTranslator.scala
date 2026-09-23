@@ -51,6 +51,9 @@ object DefmethodBodyTranslator:
   /** @param returnType the method's declared Scala return type, used for the boundary Label when
     *   the body has early returns. When absent, the body carries `ReturnTypePlaceholder` and
     *   `ParityDerive` fills it from the reference skeleton. */
+  /** @param paramTypes maps each parameter name to its declared Scala type from the reference
+    *   signature. Used to detect JS idioms that translate differently when the Scala type is
+    *   `Nullable` (truthiness operators) or a typed class (object literal construction). */
   def translateBody(
       entry: DefmethodEntry,
       hierarchy: List[DefnodeClass],
@@ -59,8 +62,9 @@ object DefmethodBodyTranslator:
       nodeParamName: Option[String] = None,
       apiLookup: Map[String, String] = Map.empty,
       returnType: Option[String] = None,
+      paramTypes: Map[String, String] = Map.empty,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes)
     ctx.translateBlock(entry.bodyNode)
     TranslationResult(
       scalaBody = ctx.result(),
@@ -230,6 +234,7 @@ object DefmethodBodyTranslator:
       nodeParamName: Option[String] = None,
       apiLookup: Map[String, String] = Map.empty,
       declaredReturnType: Option[String] = None,
+      paramTypes: Map[String, String] = Map.empty,
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
@@ -270,6 +275,24 @@ object DefmethodBodyTranslator:
       val base = Set(thisBinding)
       val withParam = nodeParamName.map(base + _).getOrElse(base)
       withParam
+
+    /** True when the given expression node refers to a value whose declared Scala type is
+      * `Nullable[T]`. This is decidable when the expression is a simple identifier that names
+      * a parameter whose type is known from the reference signature. */
+    private def isNullableExpr(node: RastNode): Boolean =
+      node.kind == "Identifier" && node.text.exists { name =>
+        val scalaName = snakeToCamel(name)
+        paramTypes.get(scalaName).orElse(paramTypes.get(name)).exists(isNullableType)
+      }
+
+    /** Look up the declared Scala type of an identifier expression. Returns None
+      * for identifiers not in the paramTypes map. */
+    private def exprType(node: RastNode): Option[String] =
+      if node.kind != "Identifier" then None
+      else node.text.flatMap { name =>
+        val scalaName = snakeToCamel(name)
+        paramTypes.get(scalaName).orElse(paramTypes.get(name))
+      }
 
     def result(): String = sb.toString
 
@@ -365,7 +388,10 @@ object DefmethodBodyTranslator:
             val cond = translateExpr(children.head)
             sb.append(s"${indent}if ($cond) {\n")
             if children.size > 1 then
-              translateStatementBody(children(1), indent + "  ", isLast && children.size <= 2)
+              // Both branches are in value position when the if-else is the last
+              // expression; passing isLast to the then-branch prevents emitting a
+              // boundary.break with an empty label when both branches return.
+              translateStatementBody(children(1), indent + "  ", isLast)
             if children.size > 2 then
               sb.append(s"$indent} else {\n")
               translateStatementBody(children(2), indent + "  ", isLast)
@@ -564,7 +590,15 @@ object DefmethodBodyTranslator:
           val children = node.children
           val operand = if children.nonEmpty then translateExpr(children.head) else "???"
           node.operator match
-            case Some("ExclamationToken") => s"!$operand"
+            case Some("ExclamationToken") =>
+              // JS `!x` on a Nullable[T] is a null-check, not boolean negation.
+              // The correct Scala is `x.isEmpty`, but the translator cannot
+              // faithfully translate the full expression tree (property chains,
+              // nested Nullable unwrapping). Refuse with a named reason so the
+              // reference body is kept.
+              if children.nonEmpty && isNullableExpr(children.head) then
+                refuse("nullable-ops")
+              s"!$operand"
             case Some("MinusToken") => s"-$operand"
             case Some("PlusToken") => s"$operand.toDouble"
             case Some("TildeToken") => s"~$operand"
@@ -586,6 +620,9 @@ object DefmethodBodyTranslator:
         case "ConditionalExpression" =>
           val children = node.children
           if children.size >= 3 then
+            // JS `x ? a : b` where x is Nullable[T] is a null-check ternary, not
+            // a boolean condition. Refuse so the reference body is kept.
+            if isNullableExpr(children(0)) then refuse("nullable-ops")
             val cond = translateExpr(children(0))
             val thenE = translateExpr(children(1))
             val elseE = translateExpr(children(2))
@@ -796,6 +833,14 @@ object DefmethodBodyTranslator:
           val objExpr = translateExpr(obj)
           translatePropOnExpr(objExpr, prop)
       else
+        // When the object is a parameter with a known specific type, the
+        // translator cannot verify that the JS property name exists on the
+        // Scala type (JS names are camelCased but Scala APIs may use different
+        // names entirely). Refuse so the reference body is kept.
+        if obj.kind == "Identifier" && !knownSafeProperties.contains(prop) then
+          exprType(obj).foreach { tpe =>
+            if isSpecificClassType(tpe) then refuse("wrong-member-access")
+          }
         val objExpr = translateExpr(obj)
         translatePropOnExpr(objExpr, prop)
 
@@ -1119,6 +1164,13 @@ object DefmethodBodyTranslator:
             case _ =>
               val scalaArgs = args.map(translateExpr)
               val scalaName = translateIdentifier(name)
+              // A function call whose callee is not a known global, not in
+              // apiLookup, and not a parameter may resolve to a different
+              // scope in Scala (a module-level function the reference placed
+              // on a companion object). Refuse so the reference body is kept.
+              if !apiLookup.contains(name) && !entry.params.contains(name) &&
+                 !name.startsWith("AST_") && scalaName == snakeToCamel(name) then
+                refuse("wrong-function-ref")
               s"$scalaName(${scalaArgs.mkString(", ")})"
 
         case _ =>
@@ -1229,6 +1281,13 @@ object DefmethodBodyTranslator:
               case "undefined" => s"($operandExpr != null)"
               case _ => s"!$operandExpr.isInstanceOf[$typeStr]"
 
+          // JS `x && y` and `x || y` on a Nullable[T] operand are short-circuit
+          // null-coalescing, not boolean conjunction/disjunction. The correct Scala
+          // requires Nullable-aware unwrapping that the translator cannot derive
+          // from the syntax tree alone.
+          if (op == "AmpersandAmpersandToken" || op == "BarBarToken") && isNullableExpr(lhs) then
+            refuse("nullable-ops")
+
           val left = translateExpr(lhs)
           val right = translateExpr(rhs)
           val scalaOp = op match
@@ -1320,6 +1379,13 @@ object DefmethodBodyTranslator:
       )
       if props.isEmpty then "scala.collection.mutable.Map.empty[String, Any]"
       else
+        // A JS object literal `{ key: val }` is emitted as `mutable.Map(...)`, but
+        // the reference may declare a typed class (a case class or a trait). The
+        // translator cannot construct the class without knowing its constructor.
+        // Refuse so the reference body is kept when the return type is not a Map.
+        declaredReturnType.foreach { rt =>
+          if !rt.contains("Map") && !rt.contains("map") then refuse("js-map-construction")
+        }
         val entries = props.map { p =>
           p.kind match
             case "PropertyAssignment" =>
@@ -1575,18 +1641,45 @@ object DefmethodBodyTranslator:
   // Shared helpers (visible to BodyContext and the object)
   // --------------------------------------------------------------------------
 
-  /** True when the statement list contains a ReturnStatement in a non-tail position, meaning
-    * the emitted body needs a `scala.util.boundary` wrapper. A return inside a nested function
-    * expression or arrow function is not counted because it belongs to the inner scope. */
+  /** True when the statement list contains a ReturnStatement that will be emitted as a
+    * `boundary.break`, meaning the body needs a `scala.util.boundary` wrapper. This includes
+    * returns in non-last sibling positions AND returns inside non-tail branches of the last
+    * statement (e.g. the then-branch of an if-else, or a non-last case of a switch). A return
+    * inside a nested function expression or arrow function is not counted. */
   private def hasEarlyReturn(stmts: List[RastNode]): Boolean =
-    def checkNonLast(nodes: List[RastNode]): Boolean =
-      nodes.init.exists(containsReturn)
     def containsReturn(node: RastNode): Boolean =
       node.kind match
         case "ReturnStatement" => true
         case "ArrowFunction" | "FunctionExpression" | "FunctionDeclaration" => false
         case _ => node.children.exists(containsReturn)
-    stmts.size > 1 && checkNonLast(stmts)
+    // A return inside a branch of the last statement that is not itself the tail
+    // expression of the whole block: the then-branch of an if-else whose block
+    // has more than one statement, or a switch case body.
+    def lastStmtHasNonTailReturn(node: RastNode): Boolean =
+      node.kind match
+        case "IfStatement" =>
+          val ch = node.children
+          // If branches contain returns that are inside multi-statement bodies
+          ch.drop(1).exists { branch =>
+            branch.kind match
+              case "Block" =>
+                val inner = branch.children
+                inner.init.exists(containsReturn) || inner.lastOption.exists(lastStmtHasNonTailReturn)
+              case _ => false
+          }
+        case "SwitchStatement" =>
+          node.children.exists { child =>
+            child.kind == "CaseBlock" && child.children.exists { clause =>
+              val body = clause.children.filterNot(c => c.kind == "BreakStatement")
+              body.init.exists(containsReturn) || body.lastOption.exists(lastStmtHasNonTailReturn)
+            }
+          }
+        case "Block" =>
+          val ch = node.children
+          ch.init.exists(containsReturn) || ch.lastOption.exists(lastStmtHasNonTailReturn)
+        case _ => false
+    val nonLastHasReturn = stmts.size > 1 && stmts.init.exists(containsReturn)
+    nonLastHasReturn || stmts.lastOption.exists(lastStmtHasNonTailReturn)
 
   /** True when the node tree contains a BreakStatement (unlabelled) that targets THIS loop.
     * Stops at nested loops (they own their own breaks) and function boundaries. */
@@ -1625,6 +1718,36 @@ object DefmethodBodyTranslator:
     "final", "sealed", "private", "protected", "override", "lazy",
     "implicit", "given", "using", "then", "end", "inline", "opaque",
     "transparent", "erased", "open", "infix",
+  )
+
+  /** True when the type string denotes a Nullable type, e.g. `Nullable[Foo]` or
+    * `Nullable[Bar[Baz]]`. */
+  private def isNullableType(tpe: String): Boolean =
+    tpe.startsWith("Nullable[") || tpe.startsWith("Nullable [")
+
+  /** True when the type is a specific class rather than a primitive, Any, String,
+    * or a collection type. Property access on such a type needs API-level knowledge
+    * that the translator does not have. */
+  private def isSpecificClassType(tpe: String): Boolean =
+    val base = tpe.takeWhile(c => c != '[' && c != ' ')
+    !trivialTypes.contains(base) && base.head.isUpper
+
+  private val trivialTypes: Set[String] = Set(
+    "Any", "AnyRef", "AnyVal", "String", "Int", "Long", "Double", "Float",
+    "Boolean", "Byte", "Short", "Char", "Unit", "Nothing", "Null",
+    "Array", "ArrayBuffer", "List", "Seq", "Set", "Map", "Option",
+    "Iterator", "Iterable", "IndexedSeq", "Vector", "mutable",
+  )
+
+  /** JS property names whose Scala translation is always the same regardless of
+    * the receiver type. Access to these does not need API verification. */
+  private val knownSafeProperties: Set[String] = Set(
+    "length", "size", "toString", "hashCode", "getClass",
+    "push", "pop", "indexOf", "contains", "has", "includes",
+    "forEach", "map", "filter", "reduce", "some", "every", "find",
+    "slice", "concat", "join", "reverse", "sort", "keys", "values",
+    "charAt", "substring", "startsWith", "endsWith", "replace",
+    "split", "trim", "toLowerCase", "toUpperCase",
   )
 
   private def escapeString(s: String): String =

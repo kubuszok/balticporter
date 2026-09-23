@@ -34,10 +34,11 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
   private def translate(
     body:       RastNode,
     apiLookup:  Map[String, String] = Map.empty,
-    returnType: Option[String] = None
+    returnType: Option[String] = None,
+    paramTypes: Map[String, String] = Map.empty
   ): DefmethodBodyTranslator.TranslationResult =
     val entry = DefmethodEntry("_free_", "test", Nil, body)
-    DefmethodBodyTranslator.translateBody(entry, Nil, "    ", apiLookup = apiLookup, returnType = returnType)
+    DefmethodBodyTranslator.translateBody(entry, Nil, "    ", apiLookup = apiLookup, returnType = returnType, paramTypes = paramTypes)
 
   // ---- return lowering ----
 
@@ -317,3 +318,145 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = translate(body, returnType = Some("Unit"))
     assert(result.scalaBody.contains("Label[Unit]"), s"return Label type is Unit: ${result.scalaBody}")
     assertCompiles(result.scalaBody, "def f(x: Int, cond: Boolean, done: Boolean, skip: Boolean): Unit =")
+
+  // ---- empty-using fix: returns in conditional branches of the last statement ----
+
+  test("single if-else where both branches return does not emit empty label"):
+    val body = block(
+      node("IfStatement", ident("cond"), block(ret(num(1))), block(ret(num(2))))
+    )
+    val result = translate(body, returnType = Some("Int"))
+    assert(!result.scalaBody.contains("(using )"), s"label must not be empty: ${result.scalaBody}")
+    assert(!result.scalaBody.contains("boundary"), s"both-branch-return if-else needs no boundary: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+
+  test("if-else where then-branch returns early inside multi-statement block creates boundary"):
+    val body = block(
+      node(
+        "IfStatement",
+        ident("cond"),
+        block(ret(num(1)), node("ExpressionStatement", ident("x"))),
+        block(ret(num(2)))
+      )
+    )
+    val result = translate(body, returnType = Some("Int"))
+    assert(!result.scalaBody.contains("(using )"), s"label must not be empty: ${result.scalaBody}")
+    assert(result.scalaBody.contains("boundary"), s"non-tail return in then-branch needs boundary: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using ret$"), s"break targets the boundary label: ${result.scalaBody}")
+    assertCompiles(result.scalaBody, "def f(x: Int, cond: Boolean, done: Boolean, skip: Boolean): Int =")
+
+  test("single if-else with returns compiles with String return type"):
+    val body = block(
+      node(
+        "IfStatement",
+        ident("cond"),
+        block(ret(RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("yes"))))),
+        block(ret(RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("no")))))
+      )
+    )
+    val result = translate(body, returnType = Some("String"))
+    assert(!result.scalaBody.contains("(using )"), s"label must not be empty: ${result.scalaBody}")
+    assertCompiles(result.scalaBody, "def f(x: String, cond: Boolean, done: Boolean, skip: Boolean): String =")
+
+  // ---- nullable-ops refusal ----
+
+  private def prefixUnary(op: String, operand: RastNode): RastNode =
+    RastNode("PrefixUnaryExpression", 0, (0, 0), children = List(operand), operator = Some(op))
+
+  test("negation of a Nullable parameter refuses with nullable-ops"):
+    val body = block(
+      node("IfStatement", prefixUnary("ExclamationToken", ident("second")), block(ret(num(0)))),
+      ret(num(1))
+    )
+    val result = translate(body, paramTypes = Map("second" -> "Nullable[HasLoc]"))
+    assert(result.refusalReasons.contains("nullable-ops"), s"should refuse with nullable-ops: ${result.refusalReasons}")
+
+  test("logical-or on a Nullable parameter refuses with nullable-ops"):
+    val body = block(
+      ret(binOp("BarBarToken", ident("first"), ident("fallback")))
+    )
+    val result = translate(body, paramTypes = Map("first" -> "Nullable[String]"))
+    assert(result.refusalReasons.contains("nullable-ops"), s"should refuse with nullable-ops: ${result.refusalReasons}")
+
+  test("logical-and on a Nullable parameter refuses with nullable-ops"):
+    val body = block(
+      ret(binOp("AmpersandAmpersandToken", ident("first"), propAccess(ident("first"), "loc")))
+    )
+    val result = translate(body, paramTypes = Map("first" -> "Nullable[HasLoc]"))
+    assert(result.refusalReasons.contains("nullable-ops"), s"should refuse with nullable-ops: ${result.refusalReasons}")
+
+  test("ternary on a Nullable parameter refuses with nullable-ops"):
+    val body = block(
+      ret(node("ConditionalExpression", ident("opt"), num(1), num(0)))
+    )
+    val result = translate(body, paramTypes = Map("opt" -> "Nullable[Int]"))
+    assert(result.refusalReasons.contains("nullable-ops"), s"should refuse with nullable-ops: ${result.refusalReasons}")
+
+  test("negation of a Boolean parameter does not refuse"):
+    val body = block(
+      node("IfStatement", prefixUnary("ExclamationToken", ident("flag")), block(ret(num(0)))),
+      ret(num(1))
+    )
+    val result = translate(body, paramTypes = Map("flag" -> "Boolean"))
+    assert(!result.refusalReasons.contains("nullable-ops"), s"Boolean negation should not refuse: ${result.refusalReasons}")
+
+  // ---- js-map-construction refusal ----
+
+  test("object literal in non-Map return type refuses with js-map-construction"):
+    val objLit = node(
+      "ObjectLiteralExpression",
+      node("PropertyAssignment", ident("mode"), RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("math")))),
+      node("PropertyAssignment", ident("style"), RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("display"))))
+    )
+    val body   = block(ret(objLit))
+    val result = translate(body, returnType = Some("ParseNodeStyling"))
+    assert(
+      result.refusalReasons.contains("js-map-construction"),
+      s"should refuse with js-map-construction: ${result.refusalReasons}"
+    )
+
+  test("object literal in Map return type does not refuse"):
+    val objLit = node("ObjectLiteralExpression", node("PropertyAssignment", ident("key"), num(1)))
+    val body   = block(ret(objLit))
+    val result = translate(body, returnType = Some("Map[String, Int]"))
+    assert(!result.refusalReasons.contains("js-map-construction"), s"Map return type should not refuse: ${result.refusalReasons}")
+
+  // ---- wrong-member-access refusal ----
+
+  test("property access on a typed parameter refuses with wrong-member-access"):
+    val body   = block(ret(propAccess(ident("group"), "bodyNodes")))
+    val result = translate(body, paramTypes = Map("group" -> "AnyParseNode"))
+    assert(
+      result.refusalReasons.contains("wrong-member-access"),
+      s"should refuse with wrong-member-access: ${result.refusalReasons}"
+    )
+
+  test("property access on untyped parameter does not refuse"):
+    val body   = block(ret(propAccess(ident("group"), "bodyNodes")))
+    val result = translate(body)
+    assert(!result.refusalReasons.contains("wrong-member-access"), s"untyped should not refuse: ${result.refusalReasons}")
+
+  test("safe property access on a typed parameter does not refuse"):
+    val body   = block(ret(propAccess(ident("arr"), "length")))
+    val result = translate(body, paramTypes = Map("arr" -> "ArrayBuffer[Int]"))
+    assert(!result.refusalReasons.contains("wrong-member-access"), s"safe property should not refuse: ${result.refusalReasons}")
+
+  // ---- wrong-function-ref refusal ----
+
+  test("unknown function call refuses with wrong-function-ref"):
+    val body   = block(ret(node("CallExpression", ident("unknownHelper"), num(1))))
+    val result = translate(body)
+    assert(
+      result.refusalReasons.contains("wrong-function-ref"),
+      s"should refuse with wrong-function-ref: ${result.refusalReasons}"
+    )
+
+  test("function call via apiLookup does not refuse"):
+    val body   = block(ret(node("CallExpression", ident("makeSpan"), num(1))))
+    val result = translate(body, apiLookup = Map("makeSpan" -> "BuildCommon.makeSpan"))
+    assert(!result.refusalReasons.contains("wrong-function-ref"), s"apiLookup call should not refuse: ${result.refusalReasons}")
+
+  test("function call of a parameter does not refuse"):
+    val entry  = DefmethodEntry("_free_", "test", List("callback"), block(ret(node("CallExpression", ident("callback"), num(1)))))
+    val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+    assert(!result.refusalReasons.contains("wrong-function-ref"), s"parameter call should not refuse: ${result.refusalReasons}")
