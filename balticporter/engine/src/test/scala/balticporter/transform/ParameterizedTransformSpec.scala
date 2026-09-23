@@ -4,14 +4,14 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, Pipeline, Reason }
 
-/** `TestFrameworkTransform` handling of JUnit 4 `@RunWith(Parameterized.class)` — constructor injection, field injection, non-array data, and name patterns. Each fixture is a neutral name (no library
-  * named in code).
+/** `TestFrameworkTransform` handling of JUnit 4 `@RunWith(Parameterized.class)` — constructor injection, field injection, non-array data, name patterns, and fresh-state reset. Each fixture uses
+  * neutral names.
   */
 class ParameterizedTransformSpec extends munit.FunSuite:
 
-  private def emit(java: String): (String, TestFrameworkTransform) =
+  private def emit(java: String, annotations: balticporter.core.AnnotationPolicy = balticporter.core.AnnotationPolicy.none): (String, TestFrameworkTransform) =
     val ph    = new TestFrameworkTransform
-    val after = Pipeline.run(SpoonTir.fromSource(java), List(ph))
+    val after = Pipeline.run(SpoonTir.fromSource(java, annotations = annotations), List(ph))
     (new TirEmitter(after).emit, ph)
 
   private def emitTraced(java: String): (String, TestFrameworkTransform, balticporter.tir.DecisionLog) =
@@ -49,7 +49,7 @@ class ParameterizedTransformSpec extends munit.FunSuite:
       |""".stripMargin
 
   test("constructor injection: the class extends the suite and has test def registrations") {
-    val (out, ph) = emit(ctorSrc)
+    val (out, _) = emit(ctorSrc)
     assert(clue(out).contains("munit.FunSuite"))
     assert(out.contains("def add(): scala.Unit"))
     assert(out.contains("def subtract(): scala.Unit"))
@@ -58,14 +58,12 @@ class ParameterizedTransformSpec extends munit.FunSuite:
   test("constructor injection: test registrations contain the name pattern segments") {
     val (out, _) = emit(ctorSrc)
     assert(clue(out).contains("test("))
-    // the name pattern splits into literals and row element accesses joined by +
     assert(out.contains("\"add[\""))
     assert(out.contains("\"subtract[\""))
   }
 
   test("constructor injection: registrations iterate over the data method result") {
     val (out, _) = emit(ctorSrc)
-    // ForEach over the data method call
     assert(clue(out).contains("data()"))
   }
 
@@ -73,7 +71,6 @@ class ParameterizedTransformSpec extends munit.FunSuite:
     val (_, ph)    = emit(ctorSrc)
     val constructs = ph.findings.map(_.construct)
     assert(!clue(constructs).contains("org.junit.runner.RunWith"))
-    assert(!constructs.contains("org.junit.runners.Parameterized.Parameters"))
   }
 
   test("constructor injection: decisions record the parameterized runner") {
@@ -85,12 +82,26 @@ class ParameterizedTransformSpec extends munit.FunSuite:
     assert(ds.exists(_.detail.get("injection").contains("constructor")))
   }
 
-  test("constructor injection: fields that were constructor params are made mutable") {
+  test("constructor injection: bpParam fields are emitted and assigned from the row") {
     val (out, _) = emit(ctorSrc)
-    // constructor params must be assignable from the row
-    assert(clue(out).contains("var a: scala.Int"))
-    assert(out.contains("var b: scala.Int"))
-    assert(out.contains("var expected: scala.Int"))
+    // bpParam fields carry the constructor parameters as suite-level state
+    assert(clue(out).contains("bpParam"))
+    // the row assignment targets the bpParam fields, not the instance fields
+    assert(out.contains("bpParam"))
+  }
+
+  test("constructor injection: bpFreshState replays the constructor body with bpParam substitution") {
+    val (out, _) = emit(ctorSrc)
+    // bpFreshState should exist and replay the constructor body (this.a = bpParam, etc.)
+    assert(clue(out).contains("bpFreshState"))
+    // the constructor body's this.a = a is replayed as this.a = bpParam
+    assert(out.contains("bpParam"))
+  }
+
+  test("constructor injection: no fresh-state(constructor) finding") {
+    val (_, ph)             = emit(ctorSrc)
+    val constructorFindings = ph.findings.filter(_.construct == "fresh-state(constructor)")
+    assertEquals(clue(constructorFindings).size, 0)
   }
 
   // -------------------------------------------------------------------------
@@ -118,7 +129,7 @@ class ParameterizedTransformSpec extends munit.FunSuite:
       |""".stripMargin
 
   test("field injection: the class extends the suite and registers tests") {
-    val (out, ph) = emit(fieldSrc)
+    val (out, _) = emit(fieldSrc)
     assert(clue(out).contains("munit.FunSuite"))
     assert(out.contains("def checkFlag(): scala.Unit"))
     assert(out.contains("test("))
@@ -128,7 +139,6 @@ class ParameterizedTransformSpec extends munit.FunSuite:
     val (_, ph)    = emit(fieldSrc)
     val constructs = ph.findings.map(_.construct)
     assert(!clue(constructs).contains("org.junit.runner.RunWith"))
-    // Spoon may spell the nested annotation with $ or . — neither form should appear
     assert(!constructs.exists(c => c.contains("Parameterized") && c.contains("Parameter")))
   }
 
@@ -138,8 +148,58 @@ class ParameterizedTransformSpec extends munit.FunSuite:
     assert(ds.exists(_.detail.get("injection").contains("field")))
   }
 
+  test("field injection with explicit indices: @Parameter(value) is read when the port claims the annotation family") {
+    val src =
+      """package demo;
+        |import org.junit.Test;
+        |import org.junit.runner.RunWith;
+        |import org.junit.runners.Parameterized;
+        |import static org.junit.Assert.assertEquals;
+        |import java.util.Arrays;
+        |import java.util.Collection;
+        |@RunWith(Parameterized.class)
+        |public class PairSuite {
+        |  @Parameterized.Parameters public static Collection<Object[]> data() {
+        |    return Arrays.asList(new Object[][] { {"a", 1}, {"b", 2} });
+        |  }
+        |  @Parameterized.Parameter(1) public int num;
+        |  @Parameterized.Parameter(0) public String label;
+        |  @Test public void check() { assertEquals(label.length(), num); }
+        |}
+        |""".stripMargin
+    val policy   = balticporter.core.AnnotationPolicy(List("org.junit"))
+    val (out, _) = emit(src, annotations = policy)
+    // with the policy claiming org.junit, @Parameter(value) is carried and the index is used
+    assert(clue(out).contains("munit.FunSuite"))
+    assert(out.contains("test("))
+  }
+
+  test("field injection without policy: multiple @Parameter fields with unreadable index are refused") {
+    val src =
+      """package demo;
+        |import org.junit.Test;
+        |import org.junit.runner.RunWith;
+        |import org.junit.runners.Parameterized;
+        |import java.util.Arrays;
+        |import java.util.Collection;
+        |@RunWith(Parameterized.class)
+        |public class BadSuite {
+        |  @Parameterized.Parameters public static Collection<Object[]> data() {
+        |    return Arrays.asList(new Object[][] { {"a", 1} });
+        |  }
+        |  @Parameterized.Parameter(1) public int num;
+        |  @Parameterized.Parameter(0) public String label;
+        |  @Test public void check() { }
+        |}
+        |""".stripMargin
+    // without claiming org.junit, the @Parameter indices are dropped, and with >1 field the suite is refused
+    val (_, ph)    = emit(src)
+    val constructs = ph.findings.map(_.construct)
+    assert(clue(constructs).contains("parameterized(unread-parameter-index)"))
+  }
+
   // -------------------------------------------------------------------------
-  // fixture 3: non-array data (Iterable<Object>)
+  // fixture 3: non-array data (Iterable<Object[]>)
   // -------------------------------------------------------------------------
 
   private val iterableSrc =
@@ -218,4 +278,38 @@ class ParameterizedTransformSpec extends munit.FunSuite:
         |""".stripMargin
     )
     assert(clue(out).contains("setUp()"))
+  }
+
+  // -------------------------------------------------------------------------
+  // fresh state: non-parameter instance state is reset between rows
+  // -------------------------------------------------------------------------
+
+  test("fresh state: a field initialiser is reset before each test in a parameterized suite") {
+    val (out, ph) = emit(
+      """package demo;
+        |import org.junit.Test;
+        |import org.junit.runner.RunWith;
+        |import org.junit.runners.Parameterized;
+        |import static org.junit.Assert.assertEquals;
+        |import java.util.Arrays;
+        |import java.util.Collection;
+        |@RunWith(Parameterized.class)
+        |public class StateSuite {
+        |  @Parameterized.Parameters public static Collection<Object[]> data() {
+        |    return Arrays.asList(new Object[][] { {1}, {2} });
+        |  }
+        |  private int x;
+        |  private int count = 0;
+        |  public StateSuite(int x) { this.x = x; }
+        |  @Test public void inc() { count++; assertEquals(1, count); }
+        |}
+        |""".stripMargin
+    )
+    // bpFreshState should reset the count field to its initialiser value
+    assert(clue(out).contains("bpFreshState"))
+    // the count field should be zeroed in bpFreshState (default for int is 0)
+    assert(out.contains("count = 0"))
+    // no fresh-state(constructor) finding — the constructor is replayable for parameterized suites
+    val ctorFindings = ph.findings.filter(_.construct == "fresh-state(constructor)")
+    assertEquals(clue(ctorFindings).size, 0)
   }

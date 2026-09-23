@@ -180,6 +180,11 @@ final class TestFrameworkTransform(
   /** Parameterized suites — classes with `@RunWith` and a `@Parameters` static data method. Each entry carries the data method symbol and the injection mode. */
   private var paramSuites: Map[SymId, ParamInfo] = Map.empty
 
+  /** For Parameterized suites with constructor injection: constructor parameter symbol -> suite-level `bpParam_i` field symbol. Set by [[convertParameterized]], read by [[freshState]] to substitute
+    * parameter references in the replayed constructor body.
+    */
+  private var paramSubst: Map[SymId, SymId] = Map.empty
+
   // ---- the per-test RECONSTRUCTION — see [[planFreshState]] ------------
 
   /** class → the `bpFreshState` member IT declares. */
@@ -364,13 +369,13 @@ final class TestFrameworkTransform(
     p.symbolOf(d.symbol).exists(_.name == InitBlockName)
 
   /** THE ONE CONSTRUCTOR THIS LOWERING MAY REPLAY, or the sentence the refusal reports. Matches JUnit's own precondition (`validateOnlyOneConstructor` + `validateZeroArgConstructor`), so the guard
-    * costs nothing on a class JUnit would run.
+    * costs nothing on a class JUnit would run. For a Parameterized suite, a constructor with parameters IS replayable — the Parameterized runner supplies them.
     */
   private def ctorToReplay(cd: Tree.ClassDef)(using p: Program): Either[String, Option[Tree.DefDef]] =
     cd.body.collect { case d: Tree.DefDef if p.symbolOf(d.symbol).exists(_.name == "<init>") => d } match
       case Nil        => Right(scala.None)
       case one :: Nil =>
-        if one.paramss.flatten.nonEmpty then Left("takes constructor parameters")
+        if one.paramss.flatten.nonEmpty && !paramSuites.contains(cd.symbol) then Left("takes constructor parameters")
         else
           val stats = ctorStatements(one)
           if stats.exists(isThisDelegation) then Left("delegates to another constructor with `this(…)`")
@@ -479,7 +484,12 @@ final class TestFrameworkTransform(
             // the member is CONSUMED rather than left for the emitter to inline again.
             d.rhs.foreach(inits += _)
           case d: Tree.DefDef if ctor.exists(_.symbol == d.symbol) && replayedStatements(d).nonEmpty =>
-            inits ++= replayedStatements(d)
+            // for Parameterized suites, constructor parameter references must be substituted with suite-level bpParam fields
+            val replayed        = replayedStatements(d)
+            val substStatements =
+              if paramSubst.isEmpty then replayed
+              else replayed.map(s => substParams(s))
+            inits ++= substStatements
             kept += d.copy(rhs = Some(Tree.Block(ctorStatements(d).filter(isSuperCall), unitLit(o), unitT, o)))
           case other => kept += other
         }
@@ -531,6 +541,16 @@ final class TestFrameworkTransform(
 
   private def unitLit(o: Origin): Term = Tree.Literal(Constant.UnitC, primTypes("scala.Unit"), o)
 
+  /** Substitute constructor parameter symbol references with `bpParam*` field references in a statement. Used by `freshState` to replay a Parameterized constructor body with suite-level fields. */
+  private def substParams(s: Statement)(using p: Program): Statement =
+    val subst = new Phase:
+      def name:                                                  String = "param-subst"
+      override def transformIdent(t: Tree.Ident)(using Program): Term   =
+        paramSubst.get(t.sym).map(ns => Tree.Ident(ns, t.tpe, t.origin)).getOrElse(t)
+    s match
+      case t: Term => StandardTraversal.mapTerm(subst, t)
+      case other => other
+
   /** the instance used as a VALUE — a `this` that is the QUALIFIER of a selection is a field/method access and not an escape, so this is the difference of two standard walks.
     */
   private def instanceEscapes(cd: Tree.ClassDef)(using p: Program): Int =
@@ -547,53 +567,70 @@ final class TestFrameworkTransform(
   /** Detect Parameterized suites: a class with `@RunWith` (in droppedAnnotations or annotations) and a static `@Parameters`-annotated method. Populates [[paramSuites]]. */
   private def planParameterized(program: Program)(using p: Program): Unit =
     paramSuites = Map.empty
+    def hasParamsAnn(sym: SymId): Boolean =
+      p.symbolOf(sym).exists { s =>
+        s.annotations.exists(a => ParametersAnns(nameOf(a.tpe))) ||
+        s.droppedAnnotations.exists(ParametersAnns)
+      }
+    def hasParamAnn(sym: SymId): Boolean =
+      p.symbolOf(sym).exists { s =>
+        s.annotations.exists(a => ParameterAnns(nameOf(a.tpe))) ||
+        s.droppedAnnotations.exists(ParameterAnns)
+      }
+
+    /** Read `@Parameter(value)` index from carried annotations, or `None` when the argument is lost. */
+    def paramIndex(sym: SymId): Option[Int] =
+      p.symbolOf(sym).flatMap { s =>
+        s.annotations.filter(a => ParameterAnns(nameOf(a.tpe))).flatMap(_.args.collect { case ("value", Tree.Literal(Constant.IntC(n), _, _)) => n }).headOption
+      }
     classDefs.foreach { (sym, cd) =>
       if hasAnn(sym, RunWithAnn) then
-        def hasParamsAnn(sym: SymId): Boolean =
-          p.symbolOf(sym).exists { s =>
-            s.annotations.exists(a => ParametersAnns(nameOf(a.tpe))) ||
-            s.droppedAnnotations.exists(ParametersAnns)
-          }
-        def hasParamAnn(sym: SymId): Boolean =
-          p.symbolOf(sym).exists { s =>
-            s.annotations.exists(a => ParameterAnns(nameOf(a.tpe))) ||
-            s.droppedAnnotations.exists(ParameterAnns)
-          }
-        // find a static method annotated with @Parameters
         val dataMethod = cd.body.collectFirst {
           case d: Tree.DefDef if p.symbolOf(d.symbol).exists(_.flags.isStatic) && hasParamsAnn(d.symbol) => d
         }
         dataMethod match
           case scala.None => () // not a Parameterized suite; @RunWith stays a survey finding
           case Some(dm)   =>
-            // read the name pattern from @Parameters(name = "...") if carried
             val namePattern = p
               .symbolOf(dm.symbol)
               .flatMap { s =>
                 s.annotations.filter(a => ParametersAnns(nameOf(a.tpe))).flatMap(_.args.collect { case ("name", Tree.Literal(Constant.StringC(n), _, _)) => n }).headOption
               }
               .getOrElse("{index}")
-            // determine injection mode: constructor with params or @Parameter fields
-            // for constructor injection, the FIELDS are the injection targets (not the constructor params)
-            // — the constructor body assigns this.field = param, and the test method reads this.field
-            val ctor = cd.body.collectFirst {
-              case d: Tree.DefDef if p.symbolOf(d.symbol).exists(_.name == "<init>") && d.paramss.flatten.nonEmpty =>
-                // find the fields assigned in the constructor body in assignment order
-                val assignedFields = ctorStatements(d).collect {
-                  case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), _, _, _, _)                                                                      => f
-                  case Tree.Assign(Tree.Ident(f, _, _), _, _, _, _) if cd.body.exists { case v: Tree.ValDef if v.symbol == f => true; case _ => false } => f
+            // constructor injection: the constructor PARAMETERS (not fields) and the constructor body
+            val ctorOpt = cd.body.collectFirst {
+              case d: Tree.DefDef if p.symbolOf(d.symbol).exists(_.name == "<init>") && d.paramss.flatten.nonEmpty => d
+            }
+            // field injection: @Parameter-annotated fields with their index
+            val paramFieldDefs = cd.body.collect {
+              case v: Tree.ValDef if hasParamAnn(v.symbol) => v
+            }
+            val injection: Injection | Null =
+              if ctorOpt.isDefined then
+                val d      = ctorOpt.get
+                val params = d.paramss.flatten.flatMap(v => p.symbolOf(v.symbol).map(s => (v.symbol, v.tpt.tpe)))
+                Injection.Constructor(params, d)
+              else if paramFieldDefs.nonEmpty then
+                // read @Parameter(value) index for each field; refuse if ANY field (beyond a single one at default 0) has no readable index
+                val indexed = paramFieldDefs.map { v =>
+                  val idx = paramIndex(v.symbol)
+                  (v.symbol, v.tpt.tpe, idx)
                 }
-                val fieldTypes = assignedFields.flatMap(f => p.symbolOf(f).map(s => (f, s.info)))
-                // fall back to instance fields in declaration order when the constructor body is opaque
-                if fieldTypes.nonEmpty then fieldTypes
-                else cd.body.collect { case v: Tree.ValDef if instanceField(v) => (v.symbol, v.tpt.tpe) }
-            }
-            val paramFields = cd.body.collect {
-              case v: Tree.ValDef if hasParamAnn(v.symbol) => (v.symbol, v.tpt.tpe)
-            }
-            val injection =
-              if ctor.exists(_.nonEmpty) then Injection.Constructor(ctor.get)
-              else if paramFields.nonEmpty then Injection.Fields(paramFields)
+                if paramFieldDefs.sizeIs == 1 then
+                  // single @Parameter defaults to index 0
+                  Injection.Fields(indexed.map { case (s, t, i) => (s, t, i.getOrElse(0)) })
+                else if indexed.exists(_._3.isEmpty) then
+                  found += Finding(
+                    "parameterized(unread-parameter-index)",
+                    cd.origin,
+                    Fix.EngineRule,
+                    at = sym,
+                    advice = "this Parameterized suite uses field injection with multiple @Parameter fields, " +
+                      "and the index argument of at least one @Parameter annotation could not be read. " +
+                      "The row element order cannot be determined and the suite converts as a plain suite."
+                  )
+                  null
+                else Injection.Fields(indexed.map { case (s, t, i) => (s, t, i.get) })
               else
                 found += Finding(
                   "parameterized(no-injection)",
@@ -604,7 +641,7 @@ final class TestFrameworkTransform(
                     "with parameters (constructor injection) nor @Parameter-annotated fields (field " +
                     "injection). The data rows cannot be applied and the suite converts as a plain suite."
                 )
-                null // skip this class
+                null
             if injection != null then paramSuites += sym -> ParamInfo(dm.symbol, namePattern, injection)
     }
 
@@ -660,8 +697,8 @@ final class TestFrameworkTransform(
     given Program = program.rebuilt(symbols = symbols0)
     // both are facts about the whole program's class graph, settled before either walk starts.
     planHierarchy(program)
-    planFreshState(program)
     planParameterized(program)
+    planFreshState(program)
     survey(program)
     // the ASSERTION rewrite runs over every unit — a test HELPER declares no `@Test` and is where
     // assertions are often centralised — and resolves everywhere since assertions are emitted
@@ -1093,6 +1130,17 @@ final class TestFrameworkTransform(
     // ANALYSIS below reads, `cd2` is what is EMITTED — a reference scan over `cd2` would count the
     // reconstruction's own assignments as usages (silently refused eleven fixtures once).
     val cd1 = cd.copy(body = nested)
+    // for Parameterized constructor injection, mint bpParam fields and set up substitution BEFORE freshState replays the constructor body
+    val paramFieldSyms = paramSuites.get(cd.symbol) match
+      case Some(ParamInfo(_, _, Injection.Constructor(params, _))) =>
+        val n    = nextTmp; nextTmp += 1
+        val syms = params.zipWithIndex.map { case ((paramSym, tpe), i) =>
+          val fs = mint(s"bpParam${n}_$i", s"bpParam${n}_$i", Flags(isMutable = true), tpe, owner = cd.symbol)
+          paramSym -> fs
+        }
+        paramSubst = syms.toMap
+        syms.map { case (_, fs) => (fs, params.find(p => paramSubst.get(p._1).contains(fs)).get._2) }
+      case _ => paramSubst = Map.empty; Nil
     val cd2 = freshState(cd1)
     // the suite parent is the ANCHOR's, not the declarer's (see [[suiteAnchors]]): a class that
     // anchors a hierarchy but declares no `@Test` of its own gets the parent and nothing else.
@@ -1199,8 +1247,12 @@ final class TestFrameworkTransform(
               ++ lifecycle(TestFrameworkTransform.AfterAllMember, classTeardowns, cd.origin)
           )
 
-  /** A Parameterized suite: all `@Test` methods stay as `def`s, and one registration loop iterates the `@Parameters` data method's result, calling each test from the body per row. Constructor
-    * parameters or `@Parameter` fields are assigned from the row for each test. JUnit constructs a fresh instance per (row, test) pair; here the same instance's fields are reassigned per row.
+  /** A Parameterized suite: all `@Test` methods stay as `def`s, and one registration loop iterates the `@Parameters` data method's result, calling each test from the body per row.
+    *
+    * JUnit's exact sequence per (row, test): construct a new instance with the row, run @Before, run the test. Here: assign bpParam fields from the row (constructor injection) or @Parameter fields
+    * from the row (field injection), call bpFreshState (which replays the constructor body with parameter references substituted by bpParam fields, and resets all non-parameter instance state), call
+    * @Before,
+    *   call the test method.
     */
   private def convertParameterized(
     cd:             Tree.ClassDef,
@@ -1216,63 +1268,48 @@ final class TestFrameworkTransform(
     val unitT = primTypes("scala.Unit")
     val intT  = primTypes("scala.Int")
     val tests = cd.body.collect { case d: Tree.DefDef if isAnnotated(d, TestAnn) => d }
-    // all @Test become defs (like virtual tests), strip @Test
     tests.foreach(d => consumedTests += d.symbol)
-    // make constructor params mutable for assignment from rows
-    val ctorParams = pi.injection match
-      case Injection.Constructor(ps) => ps.map(_._1).toSet
-      case _                         => Set.empty[SymId]
-    val paramFields = pi.injection match
-      case Injection.Fields(fs) => fs.map(_._1).toSet
-      case _                    => Set.empty[SymId]
-    ctorParams.foreach(madeMutable += _)
-    paramFields.foreach(madeMutable += _)
-    // the registration loop — one ForEach iterating rows, with a counter for the index
+    // the row element accessor: bpRow.asInstanceOf[Array[Object]](idx)
     val n      = nextTmp; nextTmp += 1
     val idxSym = mint(s"bpIdx$n", s"bpIdx$n", Flags(isMutable = true), intT)
-    val arrSym = mint(s"bpArr$n", s"bpArr$n", Flags(), objType)
     val iSym   = mint(s"bpI$n", s"bpI$n", Flags(), intT)
     val rowSym = mint(s"bpRow$n", s"bpRow$n", Flags(), objType)
     def idxRef = Tree.Ident(idxSym, intT, o)
-    def arrRef = Tree.Ident(arrSym, objType, o)
     def rowRef = Tree.Ident(rowSym, objType, o)
     def iRef   = Tree.Ident(iSym, intT, o)
-    // call data method
-    val dataCall = call(pi.dataMethod, o)
-    // field assignment from row
-    val slots: List[(SymId, TypeRepr)] = pi.injection match
-      case Injection.Constructor(ps) => ps
-      case Injection.Fields(fs)      => fs
-    val assigns = slots.zipWithIndex.map { case ((sym, tpe), idx) =>
-      // bpRow is an Object[] element: bpRow.asInstanceOf[Array[Object]](idx).asInstanceOf[T]
-      val arrCast = Tree.TypeApply(
-        Tree.Select(rowRef, asInstanceOfSym, TypeRepr.NoType, o),
-        List(TypeTree(TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, headSymOf(objType)), Nil), o)),
-        TypeRepr.NoType,
-        o
-      )
-      val elem = Tree.ArrayAccess(
-        Tree.TypeApply(
-          Tree.Select(rowRef, asInstanceOfSym, TypeRepr.NoType, o),
-          List(TypeTree(TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, mint("Array", "scala.Array")), List(objType)), o)),
-          objType,
-          o
-        ),
+    val arrayT = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, mint("Array", "scala.Array")), List(objType))
+    def rowElemAt(idx: Int): Term =
+      Tree.ArrayAccess(
+        Tree.TypeApply(Tree.Select(rowRef, asInstanceOfSym, TypeRepr.NoType, o), List(TypeTree(arrayT, o)), objType, o),
         Tree.Literal(Constant.IntC(idx), intT, o),
         objType,
         o
       )
-      val cast = Tree.TypeApply(Tree.Select(elem, asInstanceOfSym, TypeRepr.NoType, o), List(TypeTree(tpe, o)), tpe, o)
-      Tree.Assign(Tree.Ident(sym, tpe, o), cast, unitT, o)
-    }
-    // per-test registrations inside the loop
+    def castTo(elem: Term, tpe: TypeRepr): Term =
+      Tree.TypeApply(Tree.Select(elem, asInstanceOfSym, TypeRepr.NoType, o), List(TypeTree(tpe, o)), tpe, o)
+    // the row assignment: for constructor injection, assign bpParam fields; for field injection, assign @Parameter fields
+    val (assigns, arity) = pi.injection match
+      case Injection.Constructor(params, _) =>
+        val asgn = params.zipWithIndex.map { case ((_, tpe), i) =>
+          val bpSym = paramSubst.values.toList(i)
+          Tree.Assign(Tree.Ident(bpSym, tpe, o), castTo(rowElemAt(i), tpe), unitT, o): Statement
+        }
+        (asgn, params.size)
+      case Injection.Fields(fields) =>
+        val asgn = fields.map { case (sym, tpe, rowIdx) =>
+          madeMutable += sym
+          Tree.Assign(Tree.Ident(sym, tpe, o), castTo(rowElemAt(rowIdx), tpe), unitT, o): Statement
+        }
+        (asgn, fields.size)
+    // call data method
+    val dataCall = call(pi.dataMethod, o)
+    // JUnit's sequence: row assignment -> bpFreshState -> @Before -> test
     val rebuild  = freshCall.get(cd.symbol).toList.map(call(_, o))
     val prologue = assigns ++ rebuild ++ setups.map(call(_, o))
     val regs     = tests.map { d =>
       val nm = p.symbolOf(d.symbol).map(_.name).getOrElse("test")
       testsConverted += 1
-      // name pattern: {index} -> bpI, {0} -> row(0).toString, etc.
-      val nameTerm = paramTestName(nm, pi.namePattern, iRef, rowRef, slots.size, o)
+      val nameTerm = paramTestName(nm, pi.namePattern, iRef, rowRef, arity, o)
       val head     = Tree.Apply(Tree.Ident(testSym, TypeRepr.NoType, o), List(nameTerm), testSym, TypeRepr.NoType, o)
       val testBody = call(d.symbol, o)
       val rhs0     =
@@ -1290,7 +1327,7 @@ final class TestFrameworkTransform(
             "from" -> "@org.junit.Test def (parameterized)",
             "to" -> s"""$testMember("$nm[row]") per data row, registered on $suite""",
             "runner" -> "Parameterized",
-            "injection" -> (pi.injection match { case Injection.Constructor(_) => "constructor"; case Injection.Fields(_) => "field" }),
+            "injection" -> (pi.injection match { case Injection.Constructor(_, _) => "constructor"; case Injection.Fields(_) => "field" }),
             "namePattern" -> pi.namePattern,
             "why" -> ("JUnit's Parameterized runner constructs a fresh instance per (row, test) pair " +
               "and the @Parameters data method provides the rows; each row is injected through the " +
@@ -1311,11 +1348,20 @@ final class TestFrameworkTransform(
     val loop    = Tree.ForEach(Tree.ValDef(rowSym, TypeTree(objType, o), scala.None, o), dataCall, loopBody, unitT, o)
     val idxInit = Tree.ValDef(idxSym, TypeTree(intT, o), Some(Tree.Literal(Constant.IntC(0), intT, o)), o)
     val regBlock: Statement = Tree.Block(List(idxInit), loop, unitT, o)
-    // assemble: original body with @Test stripped to defs, plus the registration block
+    // bpParam fields added to the body for constructor injection
+    val bpParamDefs: List[Statement] = pi.injection match
+      case Injection.Constructor(params, _) =>
+        params.zipWithIndex.map { case ((_, tpe), i) =>
+          val bpSym   = paramSubst.values.toList(i)
+          val defTerm = defaultTerm(tpe, o).getOrElse(nul(o))
+          Tree.ValDef(bpSym, TypeTree(tpe, o), Some(defTerm), o): Statement
+        }
+      case _ => Nil
+    // assemble: original body with @Test stripped to defs, bpParam fields, registration block
     val body = cd.body.map {
-      case d: Tree.DefDef if isAnnotated(d, TestAnn) => d // keep as def, @Test consumed above
+      case d: Tree.DefDef if isAnnotated(d, TestAnn) => d
       case other => other
-    } :+ regBlock
+    } ++ bpParamDefs :+ regBlock
     suitesConverted += 1
     withSuite(cd).copy(
       body = body ++ lifecycle(TestFrameworkTransform.BeforeAllMember, classSetups, o)
@@ -1760,8 +1806,13 @@ final class TestFrameworkTransform(
 object TestFrameworkTransform:
   /** Injection mode for a Parameterized suite: constructor parameters or `@Parameter` public fields. */
   enum Injection:
-    case Constructor(params: List[(SymId, TypeRepr)])
-    case Fields(fields: List[(SymId, TypeRepr)])
+    /** Constructor injection: the runner calls `new Suite(row[0], row[1], ...)`. `params` lists the constructor parameters (symbol, type) in declaration order; `ctor` is the constructor DefDef whose
+      * body must be replayed (with parameter references substituted by suite-level fields) as part of `bpFreshState`.
+      */
+    case Constructor(params: List[(SymId, TypeRepr)], ctor: Tree.DefDef)
+
+    /** Field injection: the runner calls `new Suite()` then assigns `@Parameter(n)` fields from the row. Each entry is (field symbol, type, index in the row). */
+    case Fields(fields: List[(SymId, TypeRepr, Int)])
 
   /** State for a Parameterized suite: the static data method, the name pattern, and the injection mode. */
   final case class ParamInfo(dataMethod: SymId, namePattern: String, injection: Injection)

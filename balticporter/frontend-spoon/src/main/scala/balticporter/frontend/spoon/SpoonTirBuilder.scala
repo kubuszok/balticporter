@@ -1652,9 +1652,13 @@ final private[spoon] class Builder(
 
   private[spoon] def fieldDef1(owner: SymId, f: CtField[?], selfClass: SymId, outerVars: Map[String, SymId], anonSelf: SymId, anonQName: String)(using Obligations): Tree.ValDef =
     withStatic(fieldFlags(f).isStatic) {
-      val ft                   = tpe(f.getType)
-      val flead                = leadingOf(f)
-      val (fanns, fannDropped) = annotationsOf(f, None)
+      val ft    = tpe(f.getType)
+      val flead = leadingOf(f)
+      // a BodyTranslator built on the OWNER translates constant annotation arguments (e.g. `@Parameter(0)`) — the owner context is
+      // sufficient for literals and class constants, and the field's own symbol does not exist yet at this point. Only annotations
+      // claimed by the port's AnnotationPolicy are carried with their arguments; unclaimed ones go to droppedAnnotations as before.
+      val annBt                = new BodyTranslator(owner, selfOf(owner, selfClass), anonSelf, anonQName)
+      val (fanns, fannDropped) = annotationsOf(f, Some(annBt), annotations.claims)
       val id                   = minter.define(memberKey(owner, f.getSimpleName))(sid =>
         Symbol(
           sid,
