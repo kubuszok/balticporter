@@ -218,6 +218,13 @@ declaration is reproduced as the equivalent MUnit shape.
 { transform = "test-framework", suite = "munit.FunSuite", testMember = "test" }
 ```
 
+JUnit 4's `@RunWith(Parameterized.class)` is translated: the `@Parameters` data method stays,
+test methods become `def`s, and one registration loop iterates the data rows at suite construction
+time, registering each test per row with the name pattern (`{index}`, `{0}`, `{1}`, ...) JUnit
+uses. Both constructor injection (a constructor taking the row elements) and field injection
+(`@Parameter`-annotated public fields) are supported. Other `@RunWith` runners (Suite, Enclosed)
+remain refused and counted.
+
 ### Retyping a primitive into a distinct type
 
 **`primitive-to-opaque`** turns every occurrence of a primitive that is being used as a distinct
