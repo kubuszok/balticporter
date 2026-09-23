@@ -147,6 +147,21 @@ your own list, the phase also reads a *reference* hand port declared under `mani
 follows whatever spelling it finds there — useful when you are mechanizing a library that already has
 a trusted hand-written translation to match.
 
+Once the derived policy is stable, you can freeze it into a committed file instead of re-extracting
+the reference tree on every build. Set `manifest.frozenDerivedPolicy` to a path pointing at a TSV
+file in the same format `derived-policy.tsv` uses (copy it from the run's report directory):
+
+```hocon
+manifest {
+  frozenDerivedPolicy = "sge-port/derived-policy.tsv"
+}
+```
+
+With this key set, phases that `derive = true` read their policy from the file and no `parity`
+reference tree is needed. If you keep `parity` alongside `frozenDerivedPolicy`, the run derives from
+the reference as before and fails if the result disagrees with the frozen file — a guard against the
+file going stale.
+
 **`bean-properties`** turns a Java getter/setter pair into a Scala `var`/`val` property:
 
 ```hocon

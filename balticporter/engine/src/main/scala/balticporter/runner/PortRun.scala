@@ -1933,15 +1933,20 @@ final case class PortRun(
       case _ => false
     }
 
-  /** the reference surface, parsed ONCE per run (a determinism run translates twice). A deriving phase with no reference declared, or an unparseable one, is fatal: it would silently no-op.
+  /** the reference surface, parsed ONCE per run (a determinism run translates twice). A deriving phase with no reference declared AND no frozen file, or an unparseable reference, is fatal: it would
+    * silently no-op.
     */
-  private lazy val referenceSurface: List[ApiParityCheck.SurfaceDecl] =
+  private lazy val referenceSurface: Option[List[ApiParityCheck.SurfaceDecl]] =
     manifest.flatMap(_.parity) match
       case scala.None =>
-        sys.error(s"[$label] a phase derives policy from the reference port but the manifest declares no `parity` reference")
+        if manifest.exists(_.frozenDerivedPolicy.isDefined) then scala.None
+        else
+          sys.error(
+            s"[$label] a phase derives policy from the reference port but the manifest declares no `parity` reference and no `frozenDerivedPolicy` file"
+          )
       case Some(ref) =>
         ApiParityCheck.parseSurface(ref.roots, ref.upstreamMarkers) match
-          case Right((decls, _)) => decls
+          case Right((decls, _)) => Some(decls)
           case Left(err)         => sys.error(s"[$label] reference port unparseable: $err")
 
   /** the reference tree's members by java type, for `AddMembersTransform.fromReference`; built only when a phase lists names and the manifest declares a `parity` reference.
@@ -1958,10 +1963,10 @@ final case class PortRun(
   private var lastDerived: Option[ReferencePolicy.Result] = scala.None
 
   /** a DEPENDENT inherits the base's deriving phases without a reference of its own: the base's derived spellings reach it through the base's PUBLISHED map, and its own units have no twin to read —
-    * nothing to derive, nothing fatal, no lane.
+    * nothing to derive, nothing fatal, no lane. A frozen derived-policy file counts as having a source (the file IS the derivation).
     */
   private def derivationRuns: Boolean =
-    anyPhaseDerives && !manifest.exists(m => m.parity.isEmpty && m.bases.nonEmpty)
+    anyPhaseDerives && !manifest.exists(m => m.parity.isEmpty && m.frozenDerivedPolicy.isEmpty && m.bases.nonEmpty)
 
   /** the rows the bases PUBLISHED: a dependent's call into a base-retyped member is coerced off the base's published map, its own units having no reference twin to derive from.
     */
@@ -1979,23 +1984,47 @@ final case class PortRun(
     if !anyPhaseDerives then DerivedPolicy.empty
     else if !derivationRuns then inheritedDerived.resolved(parsed)
     else
-      val m             = manifest.get
-      val memberRenames = effectivePhases.collect { case mr: balticporter.transform.MemberRenameTransform => mr.renames }.flatten.toMap
-      // a collections RETARGET is a type rename to the deriver's eye (java's `Array` is read as `DynamicArray`)
-      val retargetSimple = effectivePhases.collect { case c: balticporter.transform.CollectionsTransform => c.retarget }.flatten.map((j, s) => j -> s.split('.').last).toMap
-      val r              = ReferencePolicy.derive(
-        parsed,
-        referenceSurface,
-        emitted,
-        retargetSimple ++ m.effectiveTypeRenames,
-        m.effectiveFlattenNestedTypes,
-        derivingOpaqueTargets,
-        m.effectivePackageRenames,
-        memberRenames,
-        opaqueCarriers = derivingOpaqueCarriers
-      )
-      lastDerived = Some(r)
-      r.policy.resolved(parsed)
+      val m      = manifest.get
+      val frozen = m.frozenDerivedPolicy.map { p =>
+        val dp = DerivedPolicy.read(p)
+        if dp.isEmpty then sys.error(s"[$label] frozenDerivedPolicy at $p is empty or unreadable")
+        say(s"DERIVED POLICY (frozen file): ${dp.rows.size} row(s) from $p")
+        dp
+      }
+      referenceSurface match
+        case Some(refSurface) =>
+          // derive from the reference as before
+          val memberRenames  = effectivePhases.collect { case mr: balticporter.transform.MemberRenameTransform => mr.renames }.flatten.toMap
+          val retargetSimple = effectivePhases.collect { case c: balticporter.transform.CollectionsTransform => c.retarget }.flatten.map((j, s) => j -> s.split('.').last).toMap
+          val r              = ReferencePolicy.derive(
+            parsed,
+            refSurface,
+            emitted,
+            retargetSimple ++ m.effectiveTypeRenames,
+            m.effectiveFlattenNestedTypes,
+            derivingOpaqueTargets,
+            m.effectivePackageRenames,
+            memberRenames,
+            opaqueCarriers = derivingOpaqueCarriers
+          )
+          lastDerived = Some(r)
+          // when BOTH reference and frozen file are given, fail if they differ
+          frozen.foreach { fp =>
+            val diffs = DerivedPolicy.diff(fp, r.policy)
+            if diffs.nonEmpty then
+              val sample = diffs.take(10).map((fam, up, side) => s"  $fam\t$up\t($side)").mkString("\n")
+              sys.error(
+                s"[$label] frozenDerivedPolicy disagrees with the reference derivation (${diffs.size} row(s) differ):\n$sample" +
+                  (if diffs.size > 10 then s"\n  … and ${diffs.size - 10} more" else "")
+              )
+          }
+          r.policy.resolved(parsed)
+        case scala.None =>
+          // no reference: use the frozen file
+          frozen match
+            case Some(fp)   => fp.resolved(parsed)
+            case scala.None =>
+              sys.error(s"[$label] a phase derives policy but the manifest has neither `parity` nor `frozenDerivedPolicy`")
 
   private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
     if frontend.resolutionRoots.isEmpty then (program.units, Nil)

@@ -141,3 +141,21 @@ object DerivedPolicy:
           case _                      => scala.None
       }
       DerivedPolicy(rows)
+
+  /** Write a derived policy to a file in the same TSV format [[read]] consumes (header + sorted rows + trailing newline). Round-trips: `read(write(p, d))` equals `d` modulo row order.
+    */
+  def write(path: java.nio.file.Path, dp: DerivedPolicy): Unit =
+    java.nio.file.Files.createDirectories(path.getParent)
+    java.nio.file.Files.writeString(
+      path,
+      (Header :: dp.rows.sortBy(r => (r.family.toString, r.upstream)).map(_.tsv)).mkString("", "\n", "\n")
+    )
+
+  /** The rows that differ between two policies, for a stale-file diagnostic. Each triple is (family, upstream, which side has it or how it differs).
+    */
+  def diff(a: DerivedPolicy, b: DerivedPolicy): List[(String, String, String)] =
+    val aSet  = a.rows.map(r => (r.family, r.upstream, r.reference, r.target)).toSet
+    val bSet  = b.rows.map(r => (r.family, r.upstream, r.reference, r.target)).toSet
+    val onlyA = (aSet -- bSet).toList.sortBy(t => (t._1.toString, t._2)).map(t => (t._1.toString, t._2, "only in file"))
+    val onlyB = (bSet -- aSet).toList.sortBy(t => (t._1.toString, t._2)).map(t => (t._1.toString, t._2, "only in derived"))
+    (onlyA ++ onlyB).sortBy(t => (t._1, t._2))

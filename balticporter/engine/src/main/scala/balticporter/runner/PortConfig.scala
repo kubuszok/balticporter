@@ -222,7 +222,9 @@ object PortConfig:
             // explicit `[]` = every file is a party (the no-op value).
             upstreamMarkers = p.strings("upstreamMarkers").getOrElse(ParityRef.DefaultUpstreamMarkers)
           )
-        )
+        ),
+      // Frozen derived policy file: same TSV format as derived-policy.tsv. Not inherited.
+      frozenDerivedPolicy = m.string("frozenDerivedPolicy").map(resolvePath(dir, _))
     )
     view.string("base") match
       case scala.None     => own

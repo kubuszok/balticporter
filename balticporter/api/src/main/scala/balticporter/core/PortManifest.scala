@@ -97,7 +97,12 @@ final case class PortManifest(
     * for a module that states its policy in full and wants it checked against a base it cannot import — strictly weaker, since agreement is now verified rather than guaranteed, but it is what lets
     * `MissingDrop`/`SurfaceMissing` ever fire at all.
     */
-  inherit: Boolean = true
+  inherit: Boolean = true,
+  /** A frozen derived-policy file (same TSV format `derived-policy.tsv` writes). When set, phases that derive spelling policy read it from this file instead of requiring a reference tree. When BOTH
+    * this and a `parity` reference are given, the run derives from the reference and fails if the result differs from this file (a stale frozen file). Not inherited: like `parity`, a fact about this
+    * module's build, not the shared surface. Absent = derive from the reference as before.
+    */
+  frozenDerivedPolicy: Option[Path] = None
 ):
 
   /** THE composition operation: `base.extendedBy(dependent)`. Returns the DEPENDENT with the union of the chain's policy — bases first, so the nearest declaration wins a conflict and the check
