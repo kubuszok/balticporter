@@ -171,6 +171,7 @@ a discovery goes into whichever fits, in the same commit that learned it:
 | `docs/contributing/architecture/` | a DECISION about what the engine is or how it is built |
 | `docs/user-guide/` | how a USER configures, runs, reads and debugs a port |
 | the CONSUMER's own tracker (sge, ssg, lls: re-scale issues) | the STATE of a port — residues, remaining work. This repository tracks no port's progress |
+| `docs/contributing/migration-checklist.md` | which module of which consumer is GENERATED, and what each still needs — updated in the commit that changes a module's state |
 | an agent definition (`.claude/agents/**`) | what a reviewer should hunt for |
 
 **No internal ids.** A rule line, a comment and a message each state their point in plain words; a
