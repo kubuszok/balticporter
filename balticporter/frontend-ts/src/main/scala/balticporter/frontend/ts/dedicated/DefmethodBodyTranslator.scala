@@ -72,8 +72,9 @@ object DefmethodBodyTranslator:
       calleeIndex: ReferenceSignatures.CalleeIndex = ReferenceSignatures.CalleeIndex.empty,
       memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
       ctorSchema: ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
+      enumIndex: ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex)
     ctx.translateBlock(entry.bodyNode)
     TranslationResult(
       scalaBody = ctx.result(),
@@ -247,6 +248,7 @@ object DefmethodBodyTranslator:
       calleeIndex: ReferenceSignatures.CalleeIndex = ReferenceSignatures.CalleeIndex.empty,
       memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
       ctorSchema: ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
+      enumIndex: ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty,
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
@@ -347,6 +349,61 @@ object DefmethodBodyTranslator:
               translateExpr(node)
             case _ => translateExpr(node)
 
+    /** Translate an expression at a slot whose expected Scala type is known.
+      * A string literal at an enum/sealed-object slot becomes the qualified member.
+      * An array literal at a typed collection slot carries the element type. */
+    private def translateExprAt(node: RastNode, expectedType: String): String =
+      val baseType = expectedType.takeWhile(c => c != '[' && c != ' ')
+      node.kind match
+        case "StringLiteral" | "FirstTemplateToken" | "LastTemplateToken" =>
+          val str = node.value match
+            case Some(RastValue.Str(s)) => s
+            case _                      => ""
+          if str.nonEmpty then
+            // Try enum index first: maps (TypeName, "stringValue") -> MemberName
+            enumIndex.resolve(baseType, str) match
+              case Some(memberName) => s"$baseType.$memberName"
+              case None =>
+                // Fallback: check member index for a member matching the string
+                if memberIndex.knowsType(baseType) then
+                  val camel = snakeToCamel(str)
+                  val capitalized = str.take(1).toUpperCase + str.drop(1)
+                  if memberIndex.hasMember(baseType, camel) then s"$baseType.$camel"
+                  else if memberIndex.hasMember(baseType, capitalized) then s"$baseType.$capitalized"
+                  else if memberIndex.hasMember(baseType, str) then s"$baseType.$str"
+                  else
+                    refuse("literal-at-enum-slot")
+                    translateExpr(node)
+                else if isSpecificClassType(expectedType) && !expectedType.contains("String") then
+                  refuse("literal-at-enum-slot")
+                  translateExpr(node)
+                else translateExpr(node)
+          else translateExpr(node)
+        case "ArrayLiteralExpression" =>
+          val elemType = extractElementType(expectedType)
+          if elemType.isDefined then
+            val et = elemType.get
+            if node.children.isEmpty then s"scala.collection.mutable.ArrayBuffer.empty[$et]"
+            else
+              val elems = node.children.map(c => translateExprAt(c, et))
+              s"scala.collection.mutable.ArrayBuffer[$et](${elems.mkString(", ")})"
+          else translateExpr(node)
+        case "NullKeyword" | "UndefinedKeyword" =>
+          if isNullableType(expectedType) then "Nullable.Null"
+          else translateExpr(node)
+        case _ => translateExpr(node)
+
+    /** Extract element type from Array[T], ArrayBuffer[T], List[T], Seq[T]. */
+    private def extractElementType(tpe: String): Option[String] =
+      val bracketIdx = tpe.indexOf('[')
+      if bracketIdx < 0 then None
+      else
+        val prefix = tpe.substring(0, bracketIdx)
+        if Set("Array", "ArrayBuffer", "List", "Seq", "IndexedSeq", "Vector").contains(prefix) ||
+           tpe.startsWith("scala.collection.mutable.ArrayBuffer") then
+          Some(tpe.substring(bracketIdx + 1, tpe.lastIndexOf(']')))
+        else None
+
     def result(): String = sb.toString
 
     def translateBlock(block: RastNode): Unit =
@@ -398,14 +455,20 @@ object DefmethodBodyTranslator:
           if node.children.isEmpty then
             if isLast then
               sb.append(s"$indent$voidValue\n")
-            else
+            else if returnLabel.nonEmpty then
               sb.append(s"${indent}scala.util.boundary.break($voidValue)(using $returnLabel)\n")
+            else
+              refuse("early-return-no-boundary")
+              sb.append(s"$indent$voidValue\n")
           else
             val expr = translateExpr(node.children.head)
             if isLast then
               sb.append(s"$indent$expr\n")
-            else
+            else if returnLabel.nonEmpty then
               sb.append(s"${indent}scala.util.boundary.break($expr)(using $returnLabel)\n")
+            else
+              refuse("early-return-no-boundary")
+              sb.append(s"$indent$expr\n")
 
         case "ExpressionStatement" =>
           val expr = node.children.headOption.map(translateExpr).getOrElse("()")
@@ -1525,7 +1588,7 @@ object DefmethodBodyTranslator:
             else
               val args = ctorParams.flatMap { param =>
                 keyMap.get(param.name) match
-                  case Some(Some(valueNode)) => Some(s"${param.name} = ${translateExpr(valueNode)}")
+                  case Some(Some(valueNode)) => Some(s"${param.name} = ${translateExprAt(valueNode, param.tpe)}")
                   case Some(None)            => Some(s"${param.name} = ???")
                   case None                  => None // has default, omitted
               }

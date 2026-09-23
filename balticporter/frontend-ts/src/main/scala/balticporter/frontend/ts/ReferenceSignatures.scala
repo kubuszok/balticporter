@@ -93,11 +93,23 @@ object ReferenceSignatures:
   object ConstructorSchema:
     val empty: ConstructorSchema = ConstructorSchema(Map.empty)
 
+  /** Index of enum member names by their declared value, parsed from enum definitions in the reference tree. Maps `(EnumTypeName, "stringValue")` to the Scala member name.
+    */
+  final case class EnumIndex(
+    byValue: Map[(String, String), String]
+  ):
+    def resolve(typeName: String, value: String): Option[String] =
+      byValue.get((typeName, value))
+
+  object EnumIndex:
+    val empty: EnumIndex = EnumIndex(Map.empty)
+
   /** Parse all reference Scala files under a directory and build the indices. */
-  def buildIndices(sources: List[(String, String)]): (CalleeIndex, MemberIndex, ConstructorSchema) =
-    val callees = mutable.Map.empty[String, mutable.ListBuffer[String]]
-    val members = mutable.Map.empty[String, mutable.Set[String]]
-    val ctors   = mutable.Map.empty[String, List[CtorParam]]
+  def buildIndices(sources: List[(String, String)]): (CalleeIndex, MemberIndex, ConstructorSchema, EnumIndex) =
+    val callees  = mutable.Map.empty[String, mutable.ListBuffer[String]]
+    val members  = mutable.Map.empty[String, mutable.Set[String]]
+    val ctors    = mutable.Map.empty[String, List[CtorParam]]
+    val enumVals = mutable.Map.empty[(String, String), String]
 
     for (objectName, source) <- sources do
       val logicalLines = joinMultiLineSignatures(source)
@@ -117,11 +129,39 @@ object ReferenceSignatures:
           params.foreach(p => memberSet += p.name)
         }
 
+      // Collect enum definitions and their members
+      parseEnumMembers(source, members, enumVals)
+
     (
       CalleeIndex(callees.map { case (k, v) => k -> v.distinct.toList }.toMap),
       MemberIndex(members.map { case (k, v) => k -> v.toSet }.toMap),
-      ConstructorSchema(ctors.toMap)
+      ConstructorSchema(ctors.toMap),
+      EnumIndex(enumVals.toMap)
     )
+
+  /** Parse enum definitions and collect their members with string values. */
+  private def parseEnumMembers(
+    source:   String,
+    members:  mutable.Map[String, mutable.Set[String]],
+    enumVals: mutable.Map[(String, String), String]
+  ): Unit =
+    val enumStart = """^\s*enum\s+(\w+)""".r
+    val caseLine  = """^\s+case\s+(\w+)\s+extends\s+\w+\("([^"]*)"\)""".r
+    var currentEnum: String = null
+
+    for line <- source.linesIterator do
+      enumStart.findFirstMatchIn(line).foreach { m =>
+        currentEnum = m.group(1)
+        members.getOrElseUpdate(currentEnum, mutable.Set.empty)
+      }
+      if currentEnum != null then
+        caseLine.findFirstMatchIn(line).foreach { m =>
+          val memberName = m.group(1)
+          val strValue   = m.group(2)
+          members.getOrElseUpdate(currentEnum, mutable.Set.empty) += memberName
+          enumVals((currentEnum, strValue)) = memberName
+        }
+        if line.trim == "}" then currentEnum = null
 
   /** Join multi-line class declarations so constructors with wrapped parameters appear on a single logical line.
     */

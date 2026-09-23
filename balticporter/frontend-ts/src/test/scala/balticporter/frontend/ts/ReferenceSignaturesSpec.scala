@@ -107,22 +107,38 @@ class ReferenceSignaturesSpec extends munit.FunSuite:
       |""".stripMargin
 
   test("buildIndices: callee index resolves unique names"):
-    val (ci, _, _) = ReferenceSignatures.buildIndices(List(("BuildCommon", refSource1), ("BuildHTML", refSource2)))
+    val (ci, _, _, _) = ReferenceSignatures.buildIndices(List(("BuildCommon", refSource1), ("BuildHTML", refSource2)))
     assertEquals(ci.resolve("makeSpan"), Right("BuildCommon.makeSpan"))
     assertEquals(ci.resolve("buildGroup"), Right("BuildHTML.buildGroup"))
     assert(ci.resolve("noSuchFn").isLeft)
 
   test("buildIndices: constructor schema parses case class parameters"):
-    val (_, _, cs) = ReferenceSignatures.buildIndices(List(("NodeStyling", refSource3)))
-    val params     = cs.get("NodeStyling")
+    val (_, _, cs, _) = ReferenceSignatures.buildIndices(List(("NodeStyling", refSource3)))
+    val params        = cs.get("NodeStyling")
     assert(params.isDefined, "should find NodeStyling constructor")
     assertEquals(params.get.map(_.name), List("mode", "loc", "style", "body"))
     assert(params.get.find(_.name == "loc").exists(_.hasDefault), "loc should have a default")
     assert(!params.get.find(_.name == "mode").exists(_.hasDefault), "mode should not have a default")
 
   test("buildIndices: member index includes constructor params"):
-    val (_, mi, _) = ReferenceSignatures.buildIndices(List(("NodeStyling", refSource3)))
+    val (_, mi, _, _) = ReferenceSignatures.buildIndices(List(("NodeStyling", refSource3)))
     assert(mi.knowsType("NodeStyling"), "should know NodeStyling")
     assert(mi.hasMember("NodeStyling", "mode"), "should have mode")
     assert(mi.hasMember("NodeStyling", "body"), "should have body")
     assert(!mi.hasMember("NodeStyling", "children"), "should not have children")
+
+  private val refSource4 =
+    """enum Mode(val value: String) extends java.lang.Enum[Mode] {
+      |  case Math extends Mode("math")
+      |  case Text extends Mode("text")
+      |}
+      |""".stripMargin
+
+  test("buildIndices: enum index maps string values to member names"):
+    val (_, mi, _, ei) = ReferenceSignatures.buildIndices(List(("Mode", refSource4)))
+    assertEquals(ei.resolve("Mode", "math"), Some("Math"))
+    assertEquals(ei.resolve("Mode", "text"), Some("Text"))
+    assertEquals(ei.resolve("Mode", "other"), None)
+    assert(mi.knowsType("Mode"), "should know Mode")
+    assert(mi.hasMember("Mode", "Math"), "should have Math member")
+    assert(mi.hasMember("Mode", "Text"), "should have Text member")

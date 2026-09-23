@@ -38,7 +38,8 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     paramTypes:  Map[String, String] = Map.empty,
     calleeIndex: ReferenceSignatures.CalleeIndex = ReferenceSignatures.CalleeIndex.empty,
     memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
-    ctorSchema:  ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty
+    ctorSchema:  ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
+    enumIndex:   ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty
   ): DefmethodBodyTranslator.TranslationResult =
     val entry = DefmethodEntry("_free_", "test", Nil, body)
     DefmethodBodyTranslator.translateBody(
@@ -50,7 +51,8 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       paramTypes = paramTypes,
       calleeIndex = calleeIndex,
       memberIndex = memberIndex,
-      ctorSchema = ctorSchema
+      ctorSchema = ctorSchema,
+      enumIndex = enumIndex
     )
 
   // ---- return lowering ----
@@ -457,10 +459,13 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
         )
       )
     )
+    val ei = ReferenceSignatures.EnumIndex(
+      Map(("Mode", "math") -> "Math", ("StyleStr", "display") -> "Display")
+    )
     val body   = block(ret(objLit))
-    val result = translate(body, returnType = Some("NodeStyling"), ctorSchema = schema)
+    val result = translate(body, returnType = Some("NodeStyling"), ctorSchema = schema, enumIndex = ei)
     assert(result.scalaBody.contains("NodeStyling("), s"should construct typed class: ${result.scalaBody}")
-    assert(result.scalaBody.contains("mode = "), s"should use named params: ${result.scalaBody}")
+    assert(result.scalaBody.contains("mode = Mode.Math"), s"should resolve enum member: ${result.scalaBody}")
     assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
 
   test("object literal missing required field refuses with object-literal-missing-field"):
@@ -497,6 +502,40 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val body   = block(ret(objLit))
     val result = translate(body, returnType = Some("Map[String, Int]"))
     assert(!result.refusalReasons.contains("js-map-construction"), s"Map return type should not refuse: ${result.refusalReasons}")
+
+  // ---- expected-type propagation ----
+
+  test("string literal at enum slot resolves to enum member via enum index"):
+    val objLit = node(
+      "ObjectLiteralExpression",
+      node("PropertyAssignment", ident("mode"), RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("math"))))
+    )
+    val schema = ReferenceSignatures.ConstructorSchema(
+      Map("NodeStyling" -> List(ReferenceSignatures.CtorParam("mode", "Mode", hasDefault = false)))
+    )
+    val ei     = ReferenceSignatures.EnumIndex(Map(("Mode", "math") -> "Math"))
+    val body   = block(ret(objLit))
+    val result = translate(body, returnType = Some("NodeStyling"), ctorSchema = schema, enumIndex = ei)
+    assert(result.scalaBody.contains("Mode.Math"), s"should resolve to Mode.Math: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+
+  test("array literal at typed ArrayBuffer slot carries element type"):
+    val arr    = node("ArrayLiteralExpression", num(1), num(2))
+    val schema = ReferenceSignatures.ConstructorSchema(
+      Map("NodeStyling" -> List(ReferenceSignatures.CtorParam("body", "Array[Int]", hasDefault = true)))
+    )
+    val objLit = node("ObjectLiteralExpression", node("PropertyAssignment", ident("body"), arr))
+    val body   = block(ret(objLit))
+    val result = translate(body, returnType = Some("NodeStyling"), ctorSchema = schema)
+    assert(result.scalaBody.contains("ArrayBuffer[Int]"), s"should carry element type: ${result.scalaBody}")
+
+  test("empty-using is refused not emitted when boundary label is missing"):
+    // A return inside a try-catch where hasEarlyReturn missed it
+    val body = block(
+      node("TryStatement", block(ret(num(1))), node("CatchClause", node("VariableDeclaration", ident("e")), block(ret(num(2)))))
+    )
+    val result = translate(body, returnType = Some("Int"))
+    assert(!result.scalaBody.contains("(using )"), s"must not emit empty using: ${result.scalaBody}")
 
   // ---- wrong-member-access ----
 
