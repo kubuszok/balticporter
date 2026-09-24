@@ -207,3 +207,62 @@ class ParityDeriveSpec extends munit.FunSuite:
     val result = ParityDerive.derive(reference, bodies, ParityDerive.Policy())
     assert(result.emittedSource.contains("42"), "safeDivide body replaced")
     assert(!result.emittedSource.contains("ArithmeticException"), "old body gone")
+
+  test("derive: abstract def is skipped, not offered for replacement"):
+    val reference =
+      """package test
+        |
+        |trait Base {
+        |  def abstractMethod(x: Int): Boolean
+        |}
+        |
+        |object Impl {
+        |
+        |  def concreteMethod(x: Int): Boolean =
+        |    x > 0
+        |}
+        |""".stripMargin
+    val methods = ReferenceSkeleton.findMethodBoundaries(reference.split("\n", -1).toList)
+    assertEquals(methods.size, 1, s"should find only the concrete method: ${methods.map(_.name)}")
+    assertEquals(methods(0).name, "concreteMethod")
+
+  test("derive: expression body followed by class-closing brace does not consume the brace"):
+    val reference =
+      """package test
+        |
+        |class Opts(val phantom: Boolean, val color: String) {
+        |
+        |  def braced(): Int = {
+        |    42
+        |  }
+        |
+        |  def getColor(): String =
+        |    if (phantom) {
+        |      "transparent"
+        |    } else {
+        |      color
+        |    }
+        |}
+        |
+        |object Opts {
+        |  val DEFAULT: Int = 6
+        |}
+        |""".stripMargin
+    val lines   = reference.split("\n", -1).toList
+    val methods = ReferenceSkeleton.findMethodBoundaries(lines)
+    assertEquals(methods.size, 2, s"should find braced and getColor: ${methods.map(_.name)}")
+    assertEquals(methods(0).name, "braced")
+    assertEquals(methods(1).name, "getColor")
+    // Check that getColor body end does NOT include the class-closing `}`
+    val gcEnd       = methods(1).bodyEndLine
+    val classCloser = lines.indexWhere(l => l.trim == "}" && l.takeWhile(_ == ' ').length <= 2, gcEnd + 1)
+    assert(
+      gcEnd < classCloser,
+      s"getColor bodyEnd ($gcEnd: '${lines(gcEnd).trim}') must be before class closer ($classCloser: '${lines(classCloser).trim}')"
+    )
+    // Derive test: class closer must survive
+    val bodies = ParityDerive.Bodies(Map("getColor" -> List(ParityDerive.TranslatedBody("    \"replaced\"\n"))))
+    val result = ParityDerive.derive(reference, bodies, ParityDerive.Policy())
+    assert(result.emittedSource.contains("\"replaced\""), "body replaced")
+    assert(result.emittedSource.contains("object Opts"), s"companion object must be intact:\n${result.emittedSource}")
+    assert(!result.emittedSource.contains("transparent"), "old body gone")

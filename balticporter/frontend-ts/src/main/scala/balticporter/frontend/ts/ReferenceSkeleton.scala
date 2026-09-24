@@ -46,21 +46,24 @@ object ReferenceSkeleton:
     while i < lines.size do
       offeredDef.findFirstMatchIn(lines(i)) match
         case Some(m) =>
-          val isPrivate   = m.group(1) != null
-          val name        = m.group(2).stripPrefix("`").stripSuffix("`")
-          val sigEndLine  = findSignatureEnd(lines, i)
-          val bodyEndLine = findBodyEnd(lines, sigEndLine)
+          val isPrivate  = m.group(1) != null
+          val name       = m.group(2).stripPrefix("`").stripSuffix("`")
+          val sigEndLine = findSignatureEnd(lines, i)
+          val eqIdx      = findEqualsInSignature(lines(sigEndLine))
+          if eqIdx < 0 then
+            // Abstract method (no `=`): skip, do not offer for replacement
+            i += 1
+          else
+            val bodyEndLine = findBodyEnd(lines, sigEndLine)
 
-          // The body starts on the signature's last line when code follows the `=`, otherwise on the next line.
-          val bodyStartLine =
-            val sigLine = lines(sigEndLine)
-            val eqIdx   = findEqualsInSignature(sigLine)
-            val afterEq = if eqIdx >= 0 then sigLine.substring(eqIdx + 1).trim else ""
-            if afterEq.nonEmpty && afterEq != "{" then sigEndLine
-            else sigEndLine + 1
+            // The body starts on the signature's last line when code follows the `=`, otherwise on the next line.
+            val bodyStartLine =
+              val afterEq = lines(sigEndLine).substring(eqIdx + 1).trim
+              if afterEq.nonEmpty && afterEq != "{" then sigEndLine
+              else sigEndLine + 1
 
-          result += ParsedMethod(name, i, bodyStartLine, bodyEndLine, isPrivate)
-          i = bodyEndLine + 1
+            result += ParsedMethod(name, i, bodyStartLine, bodyEndLine, isPrivate)
+            i = bodyEndLine + 1
 
         case None =>
           i += 1
@@ -96,7 +99,10 @@ object ReferenceSkeleton:
       i += 1
     startLine
 
-  /** The line on which a method's signature ends — the first line from `startLine` with balanced parentheses and a signature `=`; `startLine` itself when there is none. */
+  /** The line on which a method's signature ends — the first line from `startLine` with balanced parentheses and a signature `=`; `startLine` itself when there is none.
+    *
+    * Stops as soon as parentheses balance out. If the balanced line has no `=`, the method is abstract and `startLine` is returned (so the caller can check for `=`).
+    */
   def findSignatureEnd(lines: List[String], startLine: Int): Int =
     var depth = 0
     var i     = startLine
@@ -107,7 +113,19 @@ object ReferenceSkeleton:
           case '(' | '[' => depth += 1
           case ')' | ']' => depth -= 1
           case _         => ()
-      if depth <= 0 && findEqualsInSignature(line) >= 0 then return i
+      if depth <= 0 then
+        // Parens are balanced: the signature must end here or has ended already
+        if findEqualsInSignature(line) >= 0 then return i
+        // No `=` with balanced parens and not on the first line means a multi-line
+        // signature that closed its parens but continues to the `=` on the next line
+        else if i > startLine then
+          // Check the next non-blank line for `=`
+          var j = i + 1
+          while j < lines.size && lines(j).trim.isEmpty do j += 1
+          if j < lines.size && findEqualsInSignature(lines(j)) >= 0 then return j
+          else return startLine // abstract method
+        // First line, no parens opened, no `=`: abstract single-line def
+        else return startLine
       i += 1
     startLine
 
@@ -229,7 +247,8 @@ object ReferenceSkeleton:
           else return lastContentLine
         else return lastContentLine
       else
-        val indent = line.takeWhile(_ == ' ').length
+        val indent          = line.takeWhile(_ == ' ').length
+        val depthBeforeLine = braceDepth
         // Track brace depth across the line
         for ch <- line do
           ch match
@@ -237,9 +256,11 @@ object ReferenceSkeleton:
             case '}' => braceDepth -= 1
             case _   => ()
         if indent <= baseIndent && braceDepth <= 0 then
-          // The line at base indent closes all braces: include it only when
-          // it IS a closing brace (the method body's final `}`)
-          if line.trim == "}" || line.trim.startsWith("}") then return i
+          // Include the line only when the expression had open braces that
+          // this line closes (depthBeforeLine > 0 means the expression opened
+          // a brace the class did not). When depthBeforeLine is already 0, the
+          // `}` closes the enclosing class, not the expression.
+          if depthBeforeLine > 0 then return i
           else return lastContentLine
         else
           lastContentLine = i
