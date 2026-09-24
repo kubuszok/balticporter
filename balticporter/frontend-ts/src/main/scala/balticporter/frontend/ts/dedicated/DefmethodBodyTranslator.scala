@@ -442,6 +442,18 @@ object DefmethodBodyTranslator:
     def result(): String = sb.toString
 
     def translateBlock(block: RastNode): Unit =
+      // Pre-check: if the body uses `this` and the member index has data but
+      // does not know the entry's class type, refuse upfront — the translator
+      // cannot validate member accesses on an unknown receiver.
+      if memberIndex.byType.nonEmpty && !memberIndex.knowsType(nodeScalaType) && nodeScalaType != "AstNode" then
+        if containsThisKeyword(block) then
+          refuse("receiver-type-unknown")
+      // Also refuse when nodeScalaType is the default "AstNode" for a non-AST
+      // class that uses `this.` — the entry's class is not in the hierarchy
+      if nodeScalaType == "AstNode" && !entry.className.startsWith("AST_") && memberIndex.byType.nonEmpty then
+        if containsThisKeyword(block) then
+          refuse("receiver-type-unknown")
+
       val stmts = block.children
       if stmts.isEmpty then
         sb.append(s"${baseIndent}()\n")
@@ -1034,13 +1046,22 @@ object DefmethodBodyTranslator:
           case _ => s"Number.$prop"
         )
 
-      // this.x -> check apiLookup first, then translate known properties
+      // this.x -> check apiLookup first, then translate known properties.
+      // When the member index knows the class, validate the property.
       if obj.kind == "ThisKeyword" then
         prop match
           case "TYPE" => s"$thisBinding.nodeType"
           case _ =>
             val camel = snakeToCamel(prop)
             val scalaProp = memberRenames.getOrElse(camel, memberRenames.getOrElse(prop, apiLookup.getOrElse(prop, camel)))
+            if !apiLookup.contains(prop) && !knownSafeProperties.contains(prop) then
+              if memberIndex.knowsType(nodeScalaType) then
+                if !memberIndex.hasMember(nodeScalaType, scalaProp) && !memberIndex.hasMember(nodeScalaType, camel) && !memberIndex.hasMember(nodeScalaType, prop) then
+                  refuse("wrong-member-access")
+              else if memberIndex.byType.nonEmpty then
+                // The member index has data but this type is unknown: the
+                // translator cannot validate the access on this
+                refuse("receiver-type-unknown")
             s"$thisBinding.$scalaProp"
       // node.x where node is a typed node param — validate property access
       else if obj.kind == "Identifier" && nodeNames.contains(obj.text.getOrElse("")) then
@@ -1068,14 +1089,24 @@ object DefmethodBodyTranslator:
         // member index from the reference tree. If the type is known and the
         // member is not declared on it, refuse with wrong-member-access.
         if obj.kind == "Identifier" && !knownSafeProperties.contains(prop) then
-          exprType(obj).foreach { tpe =>
-            val baseType = tpe.takeWhile(c => c != '[' && c != ' ')
-            if memberIndex.knowsType(baseType) then
-              if !memberIndex.hasMember(baseType, effectiveProp) && !memberIndex.hasMember(baseType, snakeToCamel(prop)) && !memberIndex.hasMember(baseType, prop) then
+          val tpe = exprType(obj)
+          tpe match
+            case Some(t) =>
+              val baseType = t.takeWhile(c => c != '[' && c != ' ')
+              if memberIndex.knowsType(baseType) then
+                if !memberIndex.hasMember(baseType, effectiveProp) && !memberIndex.hasMember(baseType, snakeToCamel(prop)) && !memberIndex.hasMember(baseType, prop) then
+                  refuse("wrong-member-access")
+              else if isSpecificClassType(t) then
                 refuse("wrong-member-access")
-            else if isSpecificClassType(tpe) then
-              refuse("wrong-member-access")
-          }
+            case None =>
+              // Receiver type unknown and not a known binding: the translator
+              // cannot validate the access.
+              val objName = obj.text.getOrElse("")
+              val scObjName = snakeToCamel(objName)
+              if !apiLookup.contains(objName) && !entry.params.contains(objName) &&
+                 !localNames.contains(scObjName) && !localTypes.contains(scObjName) &&
+                 calleeIndex.resolve(scObjName).isLeft then
+                refuse("receiver-type-unknown")
         val objExpr = translateExpr(obj)
         if renamedProp.isDefined then s"$objExpr.${renamedProp.get}"
         else translatePropOnExpr(objExpr, prop)
@@ -2037,6 +2068,13 @@ object DefmethodBodyTranslator:
   // --------------------------------------------------------------------------
   // Shared helpers (visible to BodyContext and the object)
   // --------------------------------------------------------------------------
+
+  /** True when the RAST tree contains a ThisKeyword node. */
+  private def containsThisKeyword(node: RastNode): Boolean =
+    node.kind match
+      case "ThisKeyword" => true
+      case "ArrowFunction" | "FunctionExpression" | "FunctionDeclaration" => false
+      case _ => node.children.exists(containsThisKeyword)
 
   /** Collect all identifier names that are assigned to (LHS of `=`) in the body.
     * Used to detect JS const variables that are later reassigned, which must
