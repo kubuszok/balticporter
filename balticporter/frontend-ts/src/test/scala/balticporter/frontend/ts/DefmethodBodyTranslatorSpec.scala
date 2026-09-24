@@ -712,4 +712,157 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     )
     val ci     = ReferenceSignatures.CalleeIndex(Map("makeSpan" -> List("TestObj")))
     val result = translate(body, calleeIndex = ci, oracle = orc)
-    assert(!result.refusalReasons.contains("callee-arity-mismatch"), s"should not refuse matching arity: ${result.refusalReasons}")
+    assert(
+      !result.refusalReasons.contains("callee-arity-mismatch"),
+      s"should not refuse matching arity: ${result.refusalReasons}"
+    )
+
+  // ---- toFixed locale independence ----
+
+  test("toFixed emits BigDecimal HALF_UP for locale independence"):
+    val call = node(
+      "CallExpression",
+      propAccess(ident("n"), "toFixed"),
+      num(4)
+    )
+    val body   = block(ret(call))
+    val result = translate(body, paramTypes = Map("n" -> "Double"))
+    assert(
+      result.scalaBody.contains("BigDecimal") && result.scalaBody.contains("HALF_UP"),
+      s"toFixed should use BigDecimal HALF_UP: ${result.scalaBody}"
+    )
+    assert(!result.scalaBody.contains("f\""), s"toFixed must not use f-interpolation: ${result.scalaBody}")
+
+  test("toFixed with half-up rounding differs from half-even at 2.5"):
+    // JS: (2.55).toFixed(1) === "2.6" (half-up)
+    // f"%.1f" on JVM uses half-even: "2.5"
+    // BigDecimal HALF_UP: "2.6" -- matches JS
+    val call = node(
+      "CallExpression",
+      propAccess(ident("x"), "toFixed"),
+      num(1)
+    )
+    val body   = block(ret(call))
+    val result = translate(body, paramTypes = Map("x" -> "Double"))
+    assert(result.scalaBody.contains("setScale(1"), s"precision should be passed to setScale: ${result.scalaBody}")
+
+  // ---- int-division-on-number ----
+
+  test("division in a method with Int return type refuses int-division-on-number"):
+    val body   = block(ret(binOp("SlashToken", ident("a"), ident("b"))))
+    val result = translate(body, returnType = Some("Int"))
+    assert(
+      result.refusalReasons.contains("int-division-on-number"),
+      s"Int return with / should refuse: ${result.refusalReasons}"
+    )
+
+  test("division in a method with Double return type does not refuse"):
+    val body   = block(ret(binOp("SlashToken", ident("a"), ident("b"))))
+    val result = translate(body, returnType = Some("Double"))
+    assert(
+      !result.refusalReasons.contains("int-division-on-number"),
+      s"Double return with / should not refuse: ${result.refusalReasons}"
+    )
+
+  // ---- val vs var for reassigned const ----
+
+  test("const variable later assigned becomes var"):
+    val body = block(
+      node(
+        "VariableStatement",
+        node(
+          "VariableDeclarationList",
+          RastNode("VariableDeclaration", 0, (0, 0), children = List(ident("x"), num(0)), flags = List("const"))
+        )
+      ),
+      node("ExpressionStatement", binOp("EqualsToken", ident("x"), num(1))),
+      ret(ident("x"))
+    )
+    val entry  = DefmethodEntry("_free_", "test", Nil, body)
+    val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+    assert(result.scalaBody.contains("var x"), s"reassigned const should become var: ${result.scalaBody}")
+
+  test("const variable not reassigned stays val"):
+    val body = block(
+      node(
+        "VariableStatement",
+        node(
+          "VariableDeclarationList",
+          RastNode("VariableDeclaration", 0, (0, 0), children = List(ident("x"), num(0)), flags = List("const"))
+        )
+      ),
+      ret(ident("x"))
+    )
+    val entry  = DefmethodEntry("_free_", "test", Nil, body)
+    val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+    assert(result.scalaBody.contains("val x"), s"non-reassigned const should stay val: ${result.scalaBody}")
+
+  // ---- callee-arity-mismatch for too few args ----
+
+  test("call with fewer arguments than callee declares refuses with callee-arity-mismatch"):
+    val call = node("CallExpression", ident("makeSpan"), num(1))
+    val body = block(ret(call))
+    val orc  = ReferenceSignatures.TypeOracle.fromEntries(
+      List(
+        ("TestObj",
+         ReferenceSignatures.MethodSig("makeSpan",
+                                       List(
+                                         ReferenceSignatures.ParamSig("a", "Int"),
+                                         ReferenceSignatures.ParamSig("b", "Int")
+                                       ),
+                                       "Any"
+         )
+        )
+      )
+    )
+    val ci     = ReferenceSignatures.CalleeIndex(Map("makeSpan" -> List("TestObj")))
+    val result = translate(body, calleeIndex = ci, oracle = orc)
+    assert(result.refusalReasons.contains("callee-arity-mismatch"), s"should refuse too few args: ${result.refusalReasons}")
+
+  // ---- null-at-non-nullable-slot ----
+
+  test("null at a String slot refuses null-at-non-nullable-slot"):
+    val schema = ReferenceSignatures.ConstructorSchema(
+      Map("Foo" -> List(ReferenceSignatures.CtorParam("name", "String", hasDefault = false)))
+    )
+    val objLit = node("ObjectLiteralExpression", node("PropertyAssignment", ident("name"), RastNode("NullKeyword", 0, (0, 0))))
+    val body   = block(ret(objLit))
+    val result = translate(body, returnType = Some("Foo"), ctorSchema = schema)
+    assert(
+      result.refusalReasons.contains("null-at-non-nullable-slot"),
+      s"null at String slot should refuse: ${result.refusalReasons}"
+    )
+
+  test("null at a Nullable slot does not refuse"):
+    val schema = ReferenceSignatures.ConstructorSchema(
+      Map("Foo" -> List(ReferenceSignatures.CtorParam("name", "Nullable[String]", hasDefault = false)))
+    )
+    val objLit = node("ObjectLiteralExpression", node("PropertyAssignment", ident("name"), RastNode("NullKeyword", 0, (0, 0))))
+    val body   = block(ret(objLit))
+    val result = translate(body, returnType = Some("Foo"), ctorSchema = schema)
+    assert(
+      !result.refusalReasons.contains("null-at-non-nullable-slot"),
+      s"null at Nullable slot should not refuse: ${result.refusalReasons}"
+    )
+
+  // ---- array destructuring in for-of ----
+
+  test("for-of with array destructuring emits tuple pattern"):
+    val body = block(
+      node(
+        "ForOfStatement",
+        node(
+          "VariableDeclarationList",
+          node(
+            "VariableDeclaration",
+            ident("_pair"),
+            node("ArrayBindingPattern", node("BindingElement", ident("k")), node("BindingElement", ident("v")))
+          )
+        ),
+        ident("myMap"),
+        block(node("ExpressionStatement", ident("process")))
+      ),
+      ret(num(0))
+    )
+    val result = translate(body)
+    assert(result.scalaBody.contains("(k, v) <- myMap"), s"should destructure as tuple: ${result.scalaBody}")

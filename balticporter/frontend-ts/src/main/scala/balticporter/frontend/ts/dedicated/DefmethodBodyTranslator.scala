@@ -294,6 +294,9 @@ object DefmethodBodyTranslator:
       val withParam = nodeParamName.map(base + _).getOrElse(base)
       withParam
 
+    // Names that are declared const but later assigned in the body: emit var
+    private val reassignedNames: Set[String] = collectReassignedNames(entry.bodyNode)
+
     // Local variable types, inferred from initialisers whose type is known
     private val localTypes = mutable.Map.empty[String, String]
     // Identifiers currently in a guarded scope where they have been tested
@@ -316,6 +319,19 @@ object DefmethodBodyTranslator:
         case "StringLiteral" | "FirstTemplateToken" | "NoSubstitutionTemplateLiteral" => Some("String")
         case "TrueKeyword" | "FalseKeyword" | "BooleanLiteral" => Some("Boolean")
         case "NullKeyword" | "UndefinedKeyword" => Some("Null")
+        case "TemplateExpression" | "TemplateString" => Some("String")
+        case "CallExpression" =>
+          // Known return types for specific JS methods
+          val callee = node.children.headOption
+          callee match
+            case Some(prop) if prop.kind == "PropertyAccessExpression" && prop.children.size >= 2 =>
+              val method = prop.children.last.text.getOrElse("")
+              method match
+                case "toFixed" | "toString" | "substring" | "trim" |
+                     "toLowerCase" | "toUpperCase" | "replace" | "replaceAll" |
+                     "join" | "split" => Some("String")
+                case _ => None
+            case _ => None
         case _ => None
 
     /** The JS truthiness test for a value of the given Scala type.
@@ -396,7 +412,11 @@ object DefmethodBodyTranslator:
           else translateExpr(node)
         case "NullKeyword" | "UndefinedKeyword" =>
           if isNullableType(expectedType) then "Nullable.Null"
-          else translateExpr(node)
+          else
+            val base = expectedType.takeWhile(c => c != '[' && c != ' ')
+            if base != "Any" && base != "AnyRef" && base != "Null" && base != "Nothing" then
+              refuse("null-at-non-nullable-slot")
+            translateExpr(node)
         case _ => translateExpr(node)
 
     /** Extract element type from Array[T], ArrayBuffer[T], List[T], Seq[T]. */
@@ -496,7 +516,8 @@ object DefmethodBodyTranslator:
               vd <- vdl.children.filter(_.kind == "VariableDeclaration") do
             val name = vd.children.headOption.flatMap(_.text).getOrElse("_")
             val isConst = vd.flags.contains("const") || node.flags.contains("Const")
-            val keyword = if isConst then "val" else "var"
+            // JS const that is later assigned in the body must become var
+            val keyword = if isConst && !reassignedNames.contains(name) then "val" else "var"
             val scalaName = snakeToCamel(name)
             // Handle destructuring: { x, y } = obj
             val hasObjectBinding = vd.children.exists(_.kind == "ObjectBindingPattern")
@@ -765,7 +786,14 @@ object DefmethodBodyTranslator:
               // JS unary + is numeric coercion. Skip when the operand is already numeric.
               val operandType = if children.nonEmpty then exprType(children.head) else None
               if operandType.exists(numericTypes.contains) then operand
-              else s"$operand.toDouble"
+              else
+                // When the operand is a String and the result is used in string
+                // concatenation, the JS round-trip `+s` strips trailing zeros and
+                // the ".0" suffix for whole numbers. JVM Double.toString keeps
+                // ".0", so use BigDecimal.stripTrailingZeros.toPlainString to match.
+                if operandType.contains("String") then
+                  s"new java.math.BigDecimal($operand).stripTrailingZeros.toPlainString"
+                else s"$operand.toDouble"
             case Some("TildeToken") => s"~$operand"
             case Some("PlusPlusToken") => s"{ $operand += 1; $operand }"
             case Some("MinusMinusToken") => s"{ $operand -= 1; $operand }"
@@ -1128,7 +1156,10 @@ object DefmethodBodyTranslator:
                 oracle.get(cap, methName).orElse(oracle.get(oName, methName))
               else None
             calleeSig.foreach { s =>
-              if args.length > s.params.length && !s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq[")) then
+              val isVararg = s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq["))
+              if args.length > s.params.length && !isVararg then
+                refuse("callee-arity-mismatch")
+              if args.length < s.params.length && !isVararg then
                 refuse("callee-arity-mismatch")
             }
             val scalaArgs = calleeSig match
@@ -1238,10 +1269,11 @@ object DefmethodBodyTranslator:
                 else s"$objExpr.padEnd(${scalaArgs.mkString(", ")})"
               case "toFixed" =>
                 val precision = scalaArgs.headOption.getOrElse("0")
-                // toFixed returns a String in JS. When the caller then applies
-                // unary + (numeric coercion), the result must stay numeric to
-                // avoid deprecated Double + String concatenation.
-                s"""f"$${$objExpr}%.${precision}f""""
+                // JS toFixed returns a String with locale-independent "." decimal
+                // separator and half-away-from-zero rounding. java.lang.String.format
+                // follows Locale.getDefault on the JVM (comma on comma-locale hosts).
+                // BigDecimal HALF_UP matches JS rounding; toPlainString uses ".".
+                s"new java.math.BigDecimal($objExpr).setScale($precision, java.math.RoundingMode.HALF_UP).toPlainString"
               case "toString" =>
                 if scalaArgs.nonEmpty then s"java.lang.Integer.toString($objExpr.toInt, ${scalaArgs.head})"
                 else s"$objExpr.toString"
@@ -1391,7 +1423,10 @@ object DefmethodBodyTranslator:
               // Look up the callee's signature for expected-type propagation
               val calleeSig = lookupCallee(qualifiedCallee)
               calleeSig.foreach { s =>
-                if args.length > s.params.length && !s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq[")) then
+                val isVararg = s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq["))
+                if args.length > s.params.length && !isVararg then
+                  refuse("callee-arity-mismatch")
+                if args.length < s.params.length && !isVararg then
                   refuse("callee-arity-mismatch")
               }
               val scalaArgs = calleeSig match
@@ -1556,6 +1591,16 @@ object DefmethodBodyTranslator:
               case None =>
                 refuse("truthiness-unknown-type")
               case _ => () // Boolean: emit normal && / ||
+
+          // JS `/` is always floating-point division. When the reference declares
+          // an integral return type the Scala `/` on Int operands truncates, which
+          // JS does not. Refuse so the consumer can decide.
+          if op == "SlashToken" then
+            declaredReturnType.foreach { rt =>
+              val base = rt.takeWhile(c => c != '[' && c != ' ')
+              if Set("Int", "Long", "Short", "Byte").contains(base) then
+                refuse("int-division-on-number")
+            }
 
           // JS + on string and non-string is string concatenation. Scala 2.13
           // deprecated numeric + String. Use .toString to keep the concat safe.
@@ -1844,9 +1889,21 @@ object DefmethodBodyTranslator:
       if children.size >= 2 then
         val varDecl = children.head
         val iterable = children(1)
-        val varName = varDecl.children.headOption
-          .flatMap(c => c.children.headOption.flatMap(_.text).orElse(c.text))
-          .getOrElse("_item")
+        // Detect array destructuring: `for (const [k, v] of map)`
+        val arrayBinding = varDecl.children.headOption
+          .flatMap(_.children.find(_.kind == "ArrayBindingPattern"))
+        val varPattern = arrayBinding match
+          case Some(abp) =>
+            val elems = abp.children.filter(_.kind == "BindingElement")
+              .flatMap(_.children.find(_.kind == "Identifier").flatMap(_.text))
+              .map(snakeToCamel)
+            if elems.size == 2 then s"(${elems.head}, ${elems(1)})"
+            else s"(${elems.mkString(", ")})"
+          case None =>
+            val varName = varDecl.children.headOption
+              .flatMap(c => c.children.headOption.flatMap(_.text).orElse(c.text))
+              .getOrElse("_item")
+            snakeToCamel(varName)
         val iterExpr = translateExpr(iterable)
         val bodyNode = children.find(_.kind == "Block").orElse(children.lift(2))
           .getOrElse(RastNode("Block", 0, (0, 0)))
@@ -1862,9 +1919,9 @@ object DefmethodBodyTranslator:
         if hasContinue then
           val cntLbl = freshLabel("cnt")
           continueLabel = cntLbl
-          sb.append(s"${forIndent}for (${snakeToCamel(varName)} <- $iterExpr) scala.util.boundary { ($cntLbl: scala.util.boundary.Label[scala.Unit]) ?=>\n")
+          sb.append(s"${forIndent}for ($varPattern <- $iterExpr) scala.util.boundary { ($cntLbl: scala.util.boundary.Label[scala.Unit]) ?=>\n")
         else
-          sb.append(s"${forIndent}for (${snakeToCamel(varName)} <- $iterExpr) {\n")
+          sb.append(s"${forIndent}for ($varPattern <- $iterExpr) {\n")
         translateStatementBody(bodyNode, forIndent + "  ", false)
         sb.append(s"$forIndent}\n")
         if hasBreak then sb.append(s"$indent}\n")
@@ -1964,6 +2021,36 @@ object DefmethodBodyTranslator:
   // --------------------------------------------------------------------------
   // Shared helpers (visible to BodyContext and the object)
   // --------------------------------------------------------------------------
+
+  /** Collect all identifier names that are assigned to (LHS of `=`) in the body.
+    * Used to detect JS const variables that are later reassigned, which must
+    * become `var` in Scala. Skips nested function scopes. */
+  private def collectReassignedNames(body: RastNode): Set[String] =
+    val names = mutable.Set.empty[String]
+    def walk(node: RastNode): Unit =
+      node.kind match
+        case "ArrowFunction" | "FunctionExpression" | "FunctionDeclaration" => ()
+        case "BinaryExpression" if node.operator.exists(op =>
+            op == "EqualsToken" || op == "FirstAssignment" ||
+            op == "PlusEqualsToken" || op == "FirstCompoundAssignment" ||
+            op == "MinusEqualsToken" || op == "AsteriskEqualsToken" ||
+            op == "SlashEqualsToken" || op == "BarEqualsToken" ||
+            op == "AmpersandEqualsToken" || op == "PercentEqualsToken") =>
+          node.children.headOption match
+            case Some(lhs) if lhs.kind == "Identifier" =>
+              lhs.text.foreach(names += _)
+            case _ => ()
+          node.children.foreach(walk)
+        case "PostfixUnaryExpression" | "PrefixUnaryExpression"
+          if node.operator.exists(op => op == "PlusPlusToken" || op == "MinusMinusToken") =>
+          node.children.headOption match
+            case Some(operand) if operand.kind == "Identifier" =>
+              operand.text.foreach(names += _)
+            case _ => ()
+          node.children.foreach(walk)
+        case _ => node.children.foreach(walk)
+    walk(body)
+    names.toSet
 
   /** True when the statement list contains a ReturnStatement that will be emitted as a
     * `boundary.break`, meaning the body needs a `scala.util.boundary` wrapper. This includes
