@@ -73,8 +73,10 @@ object DefmethodBodyTranslator:
       memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
       ctorSchema: ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
       enumIndex: ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty,
+      memberRenames: Map[String, String] = Map.empty,
+      oracle: ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle)
     ctx.translateBlock(entry.bodyNode)
     TranslationResult(
       scalaBody = ctx.result(),
@@ -249,6 +251,8 @@ object DefmethodBodyTranslator:
       memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
       ctorSchema: ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
       enumIndex: ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty,
+      memberRenames: Map[String, String] = Map.empty,
+      oracle: ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
@@ -757,7 +761,11 @@ object DefmethodBodyTranslator:
                     s"!$operand"
               else s"!$operand"
             case Some("MinusToken") => s"-$operand"
-            case Some("PlusToken") => s"$operand.toDouble"
+            case Some("PlusToken") =>
+              // JS unary + is numeric coercion. Skip when the operand is already numeric.
+              val operandType = if children.nonEmpty then exprType(children.head) else None
+              if operandType.exists(numericTypes.contains) then operand
+              else s"$operand.toDouble"
             case Some("TildeToken") => s"~$operand"
             case Some("PlusPlusToken") => s"{ $operand += 1; $operand }"
             case Some("MinusMinusToken") => s"{ $operand -= 1; $operand }"
@@ -987,7 +995,8 @@ object DefmethodBodyTranslator:
         prop match
           case "TYPE" => s"$thisBinding.nodeType"
           case _ =>
-            val scalaProp = apiLookup.getOrElse(prop, snakeToCamel(prop))
+            val camel = snakeToCamel(prop)
+            val scalaProp = memberRenames.getOrElse(camel, memberRenames.getOrElse(prop, apiLookup.getOrElse(prop, camel)))
             s"$thisBinding.$scalaProp"
       // node.x where node is a typed node param — validate property access
       else if obj.kind == "Identifier" && nodeNames.contains(obj.text.getOrElse("")) then
@@ -995,7 +1004,10 @@ object DefmethodBodyTranslator:
         val scalaObj = if objName == "this" then thisBinding else snakeToCamel(objName)
         prop match
           case "TYPE" => s"$scalaObj.nodeType"
-          case _ => s"$scalaObj.${snakeToCamel(prop)}"
+          case _ =>
+            val camel = snakeToCamel(prop)
+            val scalaProp = memberRenames.getOrElse(camel, memberRenames.getOrElse(prop, camel))
+            s"$scalaObj.$scalaProp"
       // AST_X.prototype -> skip (handled by prototype extraction)
       else if obj.kind == "PropertyAccessExpression" then
         val objParts = obj.children
@@ -1006,21 +1018,23 @@ object DefmethodBodyTranslator:
           val objExpr = translateExpr(obj)
           translatePropOnExpr(objExpr, prop)
       else
+        val renamedProp = memberRenames.get(snakeToCamel(prop)).orElse(memberRenames.get(prop))
+        val effectiveProp = renamedProp.getOrElse(snakeToCamel(prop))
         // When the object is a parameter with a known specific type, check the
         // member index from the reference tree. If the type is known and the
         // member is not declared on it, refuse with wrong-member-access.
         if obj.kind == "Identifier" && !knownSafeProperties.contains(prop) then
           exprType(obj).foreach { tpe =>
             val baseType = tpe.takeWhile(c => c != '[' && c != ' ')
-            val scalaProp = snakeToCamel(prop)
             if memberIndex.knowsType(baseType) then
-              if !memberIndex.hasMember(baseType, scalaProp) && !memberIndex.hasMember(baseType, prop) then
+              if !memberIndex.hasMember(baseType, effectiveProp) && !memberIndex.hasMember(baseType, snakeToCamel(prop)) && !memberIndex.hasMember(baseType, prop) then
                 refuse("wrong-member-access")
             else if isSpecificClassType(tpe) then
               refuse("wrong-member-access")
           }
         val objExpr = translateExpr(obj)
-        translatePropOnExpr(objExpr, prop)
+        if renamedProp.isDefined then s"$objExpr.${renamedProp.get}"
+        else translatePropOnExpr(objExpr, prop)
 
     /** Translate a property access on an already-translated object expression. */
     private def translatePropOnExpr(objExpr: String, prop: String): String =
@@ -1105,7 +1119,24 @@ object DefmethodBodyTranslator:
                     return s"super.${innerScala}(${scalaArgs.mkString(", ")})"
 
             val objExpr = translateExpr(obj)
-            val scalaArgs = args.map(translateExpr)
+            // Look up the callee's parameter types for expected-type propagation
+            val calleeSig: Option[ReferenceSignatures.MethodSig] =
+              if obj.kind == "Identifier" then
+                val oName = snakeToCamel(obj.text.getOrElse(""))
+                val cap = if oName.nonEmpty then oName.take(1).toUpperCase + oName.drop(1) else ""
+                val methName = snakeToCamel(method)
+                oracle.get(cap, methName).orElse(oracle.get(oName, methName))
+              else None
+            calleeSig.foreach { s =>
+              if args.length > s.params.length && !s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq[")) then
+                refuse("callee-arity-mismatch")
+            }
+            val scalaArgs = calleeSig match
+              case Some(s) =>
+                args.zipWithIndex.map { case (arg, i) =>
+                  s.params.lift(i).map(p => translateExprAt(arg, p.tpe)).getOrElse(translateExpr(arg))
+                }
+              case None => args.map(translateExpr)
 
             method match
               // Collection methods
@@ -1207,6 +1238,9 @@ object DefmethodBodyTranslator:
                 else s"$objExpr.padEnd(${scalaArgs.mkString(", ")})"
               case "toFixed" =>
                 val precision = scalaArgs.headOption.getOrElse("0")
+                // toFixed returns a String in JS. When the caller then applies
+                // unary + (numeric coercion), the result must stay numeric to
+                // avoid deprecated Double + String concatenation.
                 s"""f"$${$objExpr}%.${precision}f""""
               case "toString" =>
                 if scalaArgs.nonEmpty then s"java.lang.Integer.toString($objExpr.toInt, ${scalaArgs.head})"
@@ -1340,21 +1374,33 @@ object DefmethodBodyTranslator:
               val scalaArgs = args.map(translateExpr)
               s"CompressorFlags.clearFlag(${scalaArgs.mkString(", ")})"
             case _ =>
-              val scalaArgs = args.map(translateExpr)
               val scalaName = translateIdentifier(name)
-              // A function call whose callee is not a known global, not in
-              // apiLookup, and not a parameter: try the callee index from
-              // the reference tree to qualify it. On ambiguity, refuse.
-              if !apiLookup.contains(name) && !entry.params.contains(name) &&
-                 !name.startsWith("AST_") && scalaName == snakeToCamel(name) then
-                calleeIndex.resolve(scalaName) match
-                  case Right(qualified) =>
-                    return s"$qualified(${scalaArgs.mkString(", ")})"
-                  case Left("callee-ambiguous") =>
-                    refuse("callee-ambiguous")
-                  case Left(_) =>
-                    refuse("wrong-function-ref")
-              s"$scalaName(${scalaArgs.mkString(", ")})"
+              // Resolve the callee: try callee index for unqualified names
+              val qualifiedCallee =
+                if !apiLookup.contains(name) && !entry.params.contains(name) &&
+                   !name.startsWith("AST_") && scalaName == snakeToCamel(name) then
+                  calleeIndex.resolve(scalaName) match
+                    case Right(qualified) => qualified
+                    case Left("callee-ambiguous") =>
+                      refuse("callee-ambiguous")
+                      scalaName
+                    case Left(_) =>
+                      refuse("wrong-function-ref")
+                      scalaName
+                else scalaName
+              // Look up the callee's signature for expected-type propagation
+              val calleeSig = lookupCallee(qualifiedCallee)
+              calleeSig.foreach { s =>
+                if args.length > s.params.length && !s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq[")) then
+                  refuse("callee-arity-mismatch")
+              }
+              val scalaArgs = calleeSig match
+                case Some(s) =>
+                  args.zipWithIndex.map { case (arg, i) =>
+                    s.params.lift(i).map(p => translateExprAt(arg, p.tpe)).getOrElse(translateExpr(arg))
+                  }
+                case None => args.map(translateExpr)
+              s"$qualifiedCallee(${scalaArgs.mkString(", ")})"
 
         case _ =>
           val calleeExpr = translateExpr(callee)
@@ -1511,6 +1557,16 @@ object DefmethodBodyTranslator:
                 refuse("truthiness-unknown-type")
               case _ => () // Boolean: emit normal && / ||
 
+          // JS + on string and non-string is string concatenation. Scala 2.13
+          // deprecated numeric + String. Use .toString to keep the concat safe.
+          if op == "PlusToken" then
+            val lhsStr = lhs.kind == "StringLiteral" || lhs.kind == "FirstTemplateToken" || lhs.kind == "NoSubstitutionTemplateLiteral" || lhs.kind == "TemplateExpression"
+            val rhsStr = rhs.kind == "StringLiteral" || rhs.kind == "FirstTemplateToken" || rhs.kind == "NoSubstitutionTemplateLiteral" || rhs.kind == "TemplateExpression"
+            if !lhsStr && rhsStr then
+              return s"${translateExpr(lhs)}.toString + ${translateExpr(rhs)}"
+            if lhsStr && !rhsStr then
+              return s"${translateExpr(lhs)} + ${translateExpr(rhs)}.toString"
+
           val left = translateExpr(lhs)
           val right = translateExpr(rhs)
           val scalaOp = op match
@@ -1582,7 +1638,7 @@ object DefmethodBodyTranslator:
           else
             // Multi-statement function body -- use a fresh context for the lambda's own scope
             val innerIndent = baseIndent + "    "
-            val innerCtx = new BodyContext(entry, hierarchy, innerIndent, apiLookup = apiLookup)
+            val innerCtx = new BodyContext(entry, hierarchy, innerIndent, apiLookup = apiLookup, memberRenames = memberRenames, oracle = oracle)
             innerCtx.translateBlock(block)
             refusals ++= innerCtx.refusals
             val bodyStr = innerCtx.result().stripTrailing()
@@ -1659,20 +1715,29 @@ object DefmethodBodyTranslator:
       s"scala.collection.mutable.Map(${entries.mkString(", ")})"
 
     private def translateTemplateExpr(node: RastNode): String =
+      // Emit as string concatenation ("a " + expr + " b") rather than an
+      // s-string. Concatenation avoids nested quotes from expressions like
+      // toFixed, and the output does not contain "${" which pattern guards
+      // in the consumer would catch.
       val parts = mutable.ListBuffer.empty[String]
       for c <- node.children do
         c.kind match
           case "TemplateHead" | "TemplateMiddle" | "TemplateTail" =>
             c.value match
-              case Some(RastValue.Str(s)) => parts += escapeString(s)
+              case Some(RastValue.Str(s)) if s.nonEmpty =>
+                parts += "\"" + escapeString(s) + "\""
               case _ => ()
           case "NoSubstitutionTemplateLiteral" =>
             c.value match
-              case Some(RastValue.Str(s)) => parts += escapeString(s)
+              case Some(RastValue.Str(s)) =>
+                parts += "\"" + escapeString(s) + "\""
               case _ => ()
           case _ =>
-            parts += s"$${${translateExpr(c)}}"
-      s"s\"${parts.mkString}\""
+            val expr = translateExpr(c)
+            parts += s"$expr.toString"
+      if parts.isEmpty then "\"\""
+      else if parts.length == 1 then parts.head
+      else parts.mkString(" + ")
 
     /** Emit a while or do-while loop with named boundary wrapping for break/continue. */
     private def emitLoop(indent: String, cond: String, bodyNode: RastNode, isDoWhile: Boolean): Unit =
@@ -1883,6 +1948,13 @@ object DefmethodBodyTranslator:
       val own = cls.selfProps.toSet
       cls.base.flatMap(byName.get).map(p => own ++ collectAllProps(p)).getOrElse(own)
 
+    /** Try to look up a callee's method signature from the oracle by splitting a qualified name. */
+    private def lookupCallee(qualifiedName: String): Option[ReferenceSignatures.MethodSig] =
+      val dotIdx = qualifiedName.lastIndexOf('.')
+      if dotIdx >= 0 then
+        oracle.get(qualifiedName.substring(0, dotIdx), qualifiedName.substring(dotIdx + 1))
+      else None
+
     /** Check if a node is a `.TYPE` property access (e.g., `node.TYPE`). */
     private def isTypePropertyAccess(node: RastNode): Boolean =
       node.kind == "PropertyAccessExpression" &&
@@ -2012,6 +2084,11 @@ object DefmethodBodyTranslator:
       .replace("\n", "\\n")
       .replace("\r", "\\r")
       .replace("\t", "\\t")
+
+  /** Escape a string for use as text inside an s"..." interpolator.
+    * Dollar signs must be doubled to avoid being read as interpolation. */
+  private def escapeForSString(s: String): String =
+    escapeString(s).replace("$", "$$")
 
   /** Dart RAST node kind → TS RAST node kind mapping.
     * Normalizes Dart analyzer AST kinds to the TS kinds the body translator handles. */

@@ -32,14 +32,16 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     node("PropertyAccessExpression", obj, ident(prop))
 
   private def translate(
-    body:        RastNode,
-    apiLookup:   Map[String, String] = Map.empty,
-    returnType:  Option[String] = None,
-    paramTypes:  Map[String, String] = Map.empty,
-    calleeIndex: ReferenceSignatures.CalleeIndex = ReferenceSignatures.CalleeIndex.empty,
-    memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
-    ctorSchema:  ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
-    enumIndex:   ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty
+    body:          RastNode,
+    apiLookup:     Map[String, String] = Map.empty,
+    returnType:    Option[String] = None,
+    paramTypes:    Map[String, String] = Map.empty,
+    calleeIndex:   ReferenceSignatures.CalleeIndex = ReferenceSignatures.CalleeIndex.empty,
+    memberIndex:   ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
+    ctorSchema:    ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
+    enumIndex:     ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty,
+    memberRenames: Map[String, String] = Map.empty,
+    oracle:        ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty
   ): DefmethodBodyTranslator.TranslationResult =
     val entry = DefmethodEntry("_free_", "test", Nil, body)
     DefmethodBodyTranslator.translateBody(
@@ -52,7 +54,9 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       calleeIndex = calleeIndex,
       memberIndex = memberIndex,
       ctorSchema = ctorSchema,
-      enumIndex = enumIndex
+      enumIndex = enumIndex,
+      memberRenames = memberRenames,
+      oracle = oracle
     )
 
   // ---- return lowering ----
@@ -601,3 +605,111 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val entry  = DefmethodEntry("_free_", "test", List("callback"), block(ret(node("CallExpression", ident("callback"), num(1)))))
     val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
     assert(!result.refusalReasons.contains("wrong-function-ref"), s"parameter call should not refuse: ${result.refusalReasons}")
+
+  // ---- template literal ----
+
+  test("template literal with interpolation emits string concatenation"):
+    val tmpl = node(
+      "TemplateExpression",
+      RastNode("TemplateHead", 0, (0, 0), value = Some(RastValue.Str("hello "))),
+      ident("name"),
+      RastNode("TemplateTail", 0, (0, 0), value = Some(RastValue.Str(" world")))
+    )
+    val body   = block(ret(tmpl))
+    val result = translate(body)
+    assert(result.scalaBody.contains("\"hello \""), s"should emit text as string literal: ${result.scalaBody}")
+    assert(result.scalaBody.contains(".toString"), s"should call toString on interpolated expr: ${result.scalaBody}")
+    assert(result.scalaBody.contains("\" world\""), s"should emit tail text: ${result.scalaBody}")
+    assert(!result.scalaBody.contains("${"), s"output must not contain dollar-brace: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+
+  test("template literal with only text parts produces plain string"):
+    val tmpl = node(
+      "TemplateExpression",
+      RastNode("TemplateHead", 0, (0, 0), value = Some(RastValue.Str("price: $5")))
+    )
+    val body   = block(ret(tmpl))
+    val result = translate(body)
+    assert(result.scalaBody.contains("\"price: $5\""), s"plain text stays as string literal: ${result.scalaBody}")
+    assert(!result.scalaBody.contains("${"), s"output must not contain dollar-brace: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+
+  // ---- memberRenames ----
+
+  test("memberRenames maps a JS property to a Scala name on this"):
+    val body   = block(ret(propAccess(thisKw, "type")))
+    val result = translate(body, memberRenames = Map("type_" -> "tpe"))
+    assert(result.scalaBody.contains("this.tpe"), s"should use renamed member: ${result.scalaBody}")
+
+  test("memberRenames maps a JS property on a typed parameter"):
+    val body   = block(ret(propAccess(ident("group"), "type")))
+    val mi     = ReferenceSignatures.MemberIndex(Map("AnyParseNode" -> Set("tpe", "loc")))
+    val result = translate(body, paramTypes = Map("group" -> "AnyParseNode"), memberIndex = mi, memberRenames = Map("type_" -> "tpe"))
+    assert(result.scalaBody.contains("group.tpe"), s"should use renamed member: ${result.scalaBody}")
+    assert(!result.refusalReasons.contains("wrong-member-access"), s"renamed member should not refuse: ${result.refusalReasons}")
+
+  // ---- oracle-based argument type propagation ----
+
+  test("array literal at callee parameter slot carries expected element type"):
+    val arr  = node("ArrayLiteralExpression", RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("bold"))))
+    val call = node("CallExpression", ident("makeSpan"), arr, ident("children"))
+    val body = block(ret(call))
+    val orc  = ReferenceSignatures.TypeOracle.fromEntries(
+      List(
+        ("TestObj",
+         ReferenceSignatures.MethodSig(
+           "makeSpan",
+           List(
+             ReferenceSignatures.ParamSig("classes", "scala.collection.mutable.ArrayBuffer[String]"),
+             ReferenceSignatures.ParamSig("children", "scala.collection.mutable.ArrayBuffer[HtmlDomNode]")
+           ),
+           "Span"
+         )
+        )
+      )
+    )
+    val ci     = ReferenceSignatures.CalleeIndex(Map("makeSpan" -> List("TestObj")))
+    val result = translate(body, calleeIndex = ci, oracle = orc)
+    assert(result.scalaBody.contains("ArrayBuffer[String]"), s"should carry element type: ${result.scalaBody}")
+
+  // ---- callee-arity-mismatch ----
+
+  test("call with more arguments than callee declares refuses with callee-arity-mismatch"):
+    val call = node("CallExpression", ident("makeSpan"), num(1), num(2), num(3))
+    val body = block(ret(call))
+    val orc  = ReferenceSignatures.TypeOracle.fromEntries(
+      List(
+        ("TestObj",
+         ReferenceSignatures.MethodSig("makeSpan",
+                                       List(
+                                         ReferenceSignatures.ParamSig("a", "Int"),
+                                         ReferenceSignatures.ParamSig("b", "Int")
+                                       ),
+                                       "Any"
+         )
+        )
+      )
+    )
+    val ci     = ReferenceSignatures.CalleeIndex(Map("makeSpan" -> List("TestObj")))
+    val result = translate(body, calleeIndex = ci, oracle = orc)
+    assert(result.refusalReasons.contains("callee-arity-mismatch"), s"should refuse arity mismatch: ${result.refusalReasons}")
+
+  test("call with matching argument count does not refuse arity"):
+    val call = node("CallExpression", ident("makeSpan"), num(1), num(2))
+    val body = block(ret(call))
+    val orc  = ReferenceSignatures.TypeOracle.fromEntries(
+      List(
+        ("TestObj",
+         ReferenceSignatures.MethodSig("makeSpan",
+                                       List(
+                                         ReferenceSignatures.ParamSig("a", "Int"),
+                                         ReferenceSignatures.ParamSig("b", "Int")
+                                       ),
+                                       "Any"
+         )
+        )
+      )
+    )
+    val ci     = ReferenceSignatures.CalleeIndex(Map("makeSpan" -> List("TestObj")))
+    val result = translate(body, calleeIndex = ci, oracle = orc)
+    assert(!result.refusalReasons.contains("callee-arity-mismatch"), s"should not refuse matching arity: ${result.refusalReasons}")
