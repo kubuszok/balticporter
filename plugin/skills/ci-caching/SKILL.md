@@ -48,6 +48,10 @@ Rules that keep it that way:
 - The generated-tree key is computed by `kubuszok/balticporter/.github/actions/generated-port`
   (each consumer wraps it in a local action that pins its version in ONE place). Downstream jobs
   take the key from `needs.generate.outputs.key` — they cannot compute it (shallow checkout).
+  An Actions cache key is limited to 512 characters: every further upstream commit and builder
+  hash a consumer adds goes into `key-extra`, which the shared action folds into one digest; a
+  consumer that composes its own key folds it the same way (ssg's key failed validation at seven
+  upstream commits).
 - The generator's own marker (`target/balticporter-<module>/.generated-marker`) repeats the inputs
   it can read without the submodule: engine pin, upstream commit, generator hash, JDK major. A
   restored tree whose marker does not match is refused with the reason — it is never silently

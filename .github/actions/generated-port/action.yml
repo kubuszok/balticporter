@@ -67,7 +67,11 @@ runs:
         jdk=$(java -XshowSettings:properties -version 2>&1 | awk '/java.specification.version/ {print $3}')
         test -n "$pin" && test -n "$upstream" && test -n "$generator" && test -n "$jdk"
         name=$(basename "$TREE_PATH")
-        echo "key=generated-port-v1-$name-jdk$jdk-$pin-$upstream-$generator-$KEY_EXTRA" >> "$GITHUB_OUTPUT"
+        # an Actions cache key is limited to 512 characters: the caller's extra inputs (one commit per
+        # further upstream, one hash per builder) are folded into a digest, so the key length is fixed
+        extra=""
+        if [ -n "$KEY_EXTRA" ]; then extra="-$(printf '%s' "$KEY_EXTRA" | sha256sum | cut -c1-40)"; fi
+        echo "key=generated-port-v1-$name-jdk$jdk-$pin-$upstream-$generator$extra" >> "$GITHUB_OUTPUT"
 
     - name: Restore the generated port
       id: restore
