@@ -341,14 +341,19 @@ object DefmethodBodyTranslator:
                     oracle.get(cap, snakeToCamel(method)).orElse(oracle.get(oName, snakeToCamel(method))).map(_.returnType)
                   else None
             case Some(id) if id.kind == "Identifier" =>
-              val name     = snakeToCamel(id.text.getOrElse(""))
-              val resolved = calleeIndex.resolve(name)
-              resolved match
-                case Right(qualified) =>
-                  val dotIdx = qualified.lastIndexOf('.')
-                  if dotIdx >= 0 then oracle.get(qualified.substring(0, dotIdx), qualified.substring(dotIdx + 1)).map(_.returnType)
-                  else None
-                case _ => None
+              val rawName  = id.text.getOrElse("")
+              val name     = snakeToCamel(rawName)
+              // Try apiLookup first (it disambiguates names the callee index
+              // considers ambiguous, e.g. buildExpression in both BuildHTML
+              // and BuildMathML)
+              val qualified = apiLookup.get(rawName) match
+                case Some(q) if q.contains('.') => Some(q)
+                case _ => calleeIndex.resolve(name).toOption
+              qualified.flatMap { q =>
+                val dotIdx = q.lastIndexOf('.')
+                if dotIdx >= 0 then oracle.get(q.substring(0, dotIdx), q.substring(dotIdx + 1)).map(_.returnType)
+                else None
+              }
             case _ => None
         case _ => None
 
@@ -451,6 +456,11 @@ object DefmethodBodyTranslator:
     /** Translate an expression in return position, applying the declared return
       * type as the expected type for literal propagation. */
     private def translateReturnExpr(node: RastNode): String =
+      // Check return type compatibility when both the return type and the
+      // expression type are known
+      declaredReturnType.foreach { rt =>
+        exprType(node).foreach(argType => checkTypeCompatibility(argType, rt))
+      }
       declaredReturnType match
         case Some(rt) => translateExprAt(node, rt)
         case None     => translateExpr(node)
@@ -1224,6 +1234,13 @@ object DefmethodBodyTranslator:
                 refuse("callee-arity-mismatch")
               if args.length < s.params.length && !isVararg then
                 refuse("callee-arity-mismatch")
+              // Check argument types against declared parameter types
+              for (arg, i) <- args.zipWithIndex do
+                s.params.lift(i).foreach { param =>
+                  exprType(arg).foreach { argType =>
+                    checkTypeCompatibility(argType, param.tpe)
+                  }
+                }
             }
             // For predicate methods, translate the callback with truthiness lowering.
             // Infer the element type from the receiver's collection type so the
@@ -1502,6 +1519,12 @@ object DefmethodBodyTranslator:
                   refuse("callee-arity-mismatch")
                 if args.length < s.params.length && !isVararg then
                   refuse("callee-arity-mismatch")
+                for (arg, i) <- args.zipWithIndex do
+                  s.params.lift(i).foreach { param =>
+                    exprType(arg).foreach { argType =>
+                      checkTypeCompatibility(argType, param.tpe)
+                    }
+                  }
               }
               val scalaArgs = calleeSig match
                 case Some(s) =>
@@ -2140,6 +2163,30 @@ object DefmethodBodyTranslator:
       if dotIdx >= 0 then
         oracle.get(qualifiedName.substring(0, dotIdx), qualifiedName.substring(dotIdx + 1))
       else None
+
+    /** Check whether `have` is compatible with `want`. When both are known
+      * specific types with different base names that are not in a subtype
+      * relationship the member index can prove, refuse argument-type-mismatch. */
+    private def checkTypeCompatibility(have: String, want: String): Unit =
+      val haveBase = have.takeWhile(c => c != '[' && c != ' ')
+      val wantBase = want.takeWhile(c => c != '[' && c != ' ')
+      if wantBase == "Any" || wantBase == "AnyRef" || haveBase == "Any" ||
+         haveBase == "Nothing" || wantBase == "Nothing" || haveBase == "Null" then ()
+      else if haveBase == wantBase then
+        // Same container: compare element types when both are parameterized
+        val haveElem = extractElementType(have)
+        val wantElem = extractElementType(want)
+        (haveElem, wantElem) match
+          case (Some(he), Some(we)) => checkTypeCompatibility(he, we)
+          case _                    => () // same base, no type params or not extractable
+      else if numericTypes.contains(haveBase) && numericTypes.contains(wantBase) then
+        () // numeric-to-numeric conversions are compatible in JS
+      else if trivialTypes.contains(haveBase) && trivialTypes.contains(wantBase) then
+        // Both are known, different non-numeric trivial types
+        refuse(s"argument-type-mismatch:$haveBase->$wantBase")
+      else if isSpecificClassType(have) && isSpecificClassType(want) then
+        // Two specific class types with different base names: refuse
+        refuse(s"argument-type-mismatch:$haveBase->$wantBase")
 
     /** Check if a node is a `.TYPE` property access (e.g., `node.TYPE`). */
     private def isTypePropertyAccess(node: RastNode): Boolean =

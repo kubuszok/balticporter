@@ -934,3 +934,62 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = translate(body, paramTypes = Map("items" -> "Array[Int]"))
     assert(result.scalaBody.contains("> 0"), s"comparison filter stays: ${result.scalaBody}")
     assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+
+  // ---- argument-type-mismatch ----
+
+  test("call passing wrong type to callee refuses argument-type-mismatch"):
+    // Fixture: two sibling classes HtmlNode and MathNode. makeRow takes MathNode.
+    // buildExpr returns HtmlNode. Passing buildExpr result to makeRow mismatches.
+    val orc = ReferenceSignatures.TypeOracle.fromEntries(
+      List(
+        ("Builder", ReferenceSignatures.MethodSig("makeRow", List(ReferenceSignatures.ParamSig("children", "scala.collection.mutable.ArrayBuffer[MathNode]")), "MathNode")),
+        ("Builder", ReferenceSignatures.MethodSig("buildExpr", List(ReferenceSignatures.ParamSig("expr", "Array[Any]")), "scala.collection.mutable.ArrayBuffer[HtmlNode]"))
+      )
+    )
+    val ci = ReferenceSignatures.CalleeIndex(
+      Map(
+        "makeRow" -> List("Builder"),
+        "buildExpr" -> List("Builder")
+      )
+    )
+    // body: return makeRow(buildExpr(expression))
+    val innerCall = node("CallExpression", ident("buildExpr"), ident("expression"))
+    val outerCall = node("CallExpression", ident("makeRow"), innerCall)
+    val body      = block(ret(outerCall))
+    val result    = translate(body, calleeIndex = ci, oracle = orc)
+    assert(
+      result.refusalReasons.exists(_.startsWith("argument-type-mismatch:")),
+      s"should refuse type mismatch: ${result.refusalReasons}"
+    )
+    assert(
+      result.refusalReasons.exists(_.contains("HtmlNode->MathNode")),
+      s"should name the types: ${result.refusalReasons}"
+    )
+
+  test("call passing matching type does not refuse"):
+    val orc = ReferenceSignatures.TypeOracle.fromEntries(
+      List(
+        ("Builder", ReferenceSignatures.MethodSig("makeRow", List(ReferenceSignatures.ParamSig("children", "scala.collection.mutable.ArrayBuffer[MathNode]")), "MathNode")),
+        ("Builder",
+         ReferenceSignatures.MethodSig(
+           "buildMathExpr",
+           List(ReferenceSignatures.ParamSig("expr", "Array[Any]")),
+           "scala.collection.mutable.ArrayBuffer[MathNode]"
+         )
+        )
+      )
+    )
+    val ci = ReferenceSignatures.CalleeIndex(
+      Map(
+        "makeRow" -> List("Builder"),
+        "buildMathExpr" -> List("Builder")
+      )
+    )
+    val innerCall = node("CallExpression", ident("buildMathExpr"), ident("expression"))
+    val outerCall = node("CallExpression", ident("makeRow"), innerCall)
+    val body      = block(ret(outerCall))
+    val result    = translate(body, calleeIndex = ci, oracle = orc)
+    assert(
+      !result.refusalReasons.exists(_.startsWith("argument-type-mismatch:")),
+      s"matching type should not refuse: ${result.refusalReasons}"
+    )

@@ -267,11 +267,11 @@ object ReferenceSignatures:
     val results      = mutable.ListBuffer.empty[(String, MethodSig)]
     val logicalLines = joinMultiLineSignatures(source)
     val defPattern   =
-      """^\s{2}(?:private\s+|protected\s+)?def\s+(\w+)\s*(?:\[.*?\])?\s*\((.*)\)\s*:\s*(.+?)\s*=\s*(?:\{?\s*)?$""".r
+      """^\s{2}(?:private\s+|protected\s+)?def\s+(\w+)\s*(?:\[.*?\])?\s*\((.*)\)\s*:\s*(.+?)\s*=\s*.*$""".r
     val defNoParamsPattern =
-      """^\s{2}(?:private\s+|protected\s+)?def\s+(\w+)\s*:\s*(.+?)\s*=\s*(?:\{?\s*)?$""".r
+      """^\s{2}(?:private\s+|protected\s+)?def\s+(\w+)\s*:\s*(.+?)\s*=\s*.*$""".r
     val defMultiParamPattern =
-      """^\s{2}(?:private\s+|protected\s+)?def\s+(\w+)\s*(?:\[.*?\])?\s*\((.*?)\)\s*\(.*\)\s*:\s*(.+?)\s*=\s*(?:\{?\s*)?$""".r
+      """^\s{2}(?:private\s+|protected\s+)?def\s+(\w+)\s*(?:\[.*?\])?\s*\((.*?)\)\s*\(.*\)\s*:\s*(.+?)\s*=\s*.*$""".r
 
     for line <- logicalLines do
       line match
