@@ -17,11 +17,26 @@ object ReferenceSkeleton:
     isPrivate:     Boolean
   )
 
-  /** A concrete `def` the reader does not offer for replacement, with the line it is declared on. */
-  final case class UnofferedMember(name: String, line: Int)
+  /** A concrete `def` the reader does not offer for replacement, with the line it is declared on and the reason the reader could not offer it. */
+  final case class UnofferedMember(name: String, line: Int, reason: String)
 
-  private val offeredDef = """^\s{2}(private\s+)?def\s+(`?\w+`?)""".r
-  private val anyDef     = """^\s*(?:(?:override|final|private|protected|inline|transparent|implicit|infix|open)(?:\[\w+\])?\s+)*def\s+(`?\w+`?)""".r
+  private val offeredDef      = """^\s{2}(private\s+)?def\s+(`?\w+`?)""".r
+  private val anyDef          = """^\s*(?:(?:override|final|private|protected|inline|transparent|implicit|infix|open)(?:\[\w+\])?\s+)*def\s+(`?\w+`?)""".r
+  private val modifierExtract = """(override|final|protected|inline|transparent|implicit|infix|open)(?:\[\w+\])?""".r
+
+  /** Why `offeredDef` did not match a line that `anyDef` matched: wrong indentation or a modifier the reader does not accept. */
+  private[ts] def classifyUnoffered(line: String): String =
+    val indent = line.length - line.stripLeading().length
+    if indent != 2 then "nested"
+    else
+      val stripped = line.stripLeading()
+      val defIdx   = stripped.indexOf("def ")
+      if defIdx <= 0 then "nested"
+      else
+        val beforeDef  = stripped.substring(0, defIdx)
+        val nonPrivate = modifierExtract.findAllMatchIn(beforeDef).map(_.group(1)).toList
+        if nonPrivate.isEmpty then "nested"
+        else nonPrivate.head
 
   /** The replaceable methods of a reference file, in source order. */
   def findMethodBoundaries(lines: List[String]): List[ParsedMethod] =
@@ -62,7 +77,7 @@ object ReferenceSkeleton:
       else
         anyDef.findFirstMatchIn(line).flatMap { m =>
           val closing = parametersCloseOn(lines, idx)
-          if findEqualsInSignature(lines(closing)) >= 0 then Some(UnofferedMember(m.group(1).stripPrefix("`").stripSuffix("`"), idx))
+          if findEqualsInSignature(lines(closing)) >= 0 then Some(UnofferedMember(m.group(1).stripPrefix("`").stripSuffix("`"), idx, classifyUnoffered(line)))
           else None
         }
     }

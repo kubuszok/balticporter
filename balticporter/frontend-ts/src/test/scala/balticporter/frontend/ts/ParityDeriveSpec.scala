@@ -113,3 +113,42 @@ class ParityDeriveSpec extends munit.FunSuite:
     assert(result.emittedSource.contains("rast-first"))
     assert(result.emittedSource.contains("rast-second"))
     assertEquals(result.rastCount, 2)
+
+  test("derive: unoffered members carry skeleton-cannot-offer with the reason kind"):
+    val reference =
+      """package test
+        |
+        |object Mixed {
+        |
+        |  def offered(x: Int): Int =
+        |    x + 1
+        |
+        |  override def overridden(x: Int): Int =
+        |    x + 2
+        |
+        |  protected def guarded(x: Int): Int =
+        |    x + 3
+        |
+        |    def nested(x: Int): Int =
+        |      x + 4
+        |}
+        |""".stripMargin
+    val bodies = ParityDerive.Bodies(
+      Map(
+        "offered" -> List(ParityDerive.TranslatedBody("    x * 10\n")),
+        "overridden" -> List(ParityDerive.TranslatedBody("    x * 20\n")),
+        "guarded" -> List(ParityDerive.TranslatedBody("    x * 30\n")),
+        "nested" -> List(ParityDerive.TranslatedBody("    x * 40\n"))
+      )
+    )
+    val result = ParityDerive.derive(reference, bodies, ParityDerive.Policy())
+    assertEquals(result.rastCount, 1) // only `offered` is replaceable
+    val entries = (result.bodies ++ result.unoffered).sortBy(_.line)
+    val offered = entries.find(_.methodName == "offered").get
+    assertEquals(offered.source, "translated")
+    val overridden = entries.find(_.methodName == "overridden").get
+    assertEquals((overridden.offered, overridden.why), (false, "skeleton-cannot-offer:override"))
+    val guarded = entries.find(_.methodName == "guarded").get
+    assertEquals((guarded.offered, guarded.why), (false, "skeleton-cannot-offer:protected"))
+    val nestedE = entries.find(_.methodName == "nested").get
+    assertEquals((nestedE.offered, nestedE.why), (false, "skeleton-cannot-offer:nested"))

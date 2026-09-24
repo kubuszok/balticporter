@@ -239,8 +239,11 @@ one of:
 | `occurrence-out-of-range` | the name was translated fewer times than the reference declares it |
 | `uncompilable-pattern:<pattern>` | the translated text contains a pattern the library's policy lists as not compilable in the port |
 | `translator-refusal:<reason>` | the translator left a hole in the body (`<reason>` is its own, several joined by `+`), or the file's syntax tree is `missing-rast` / `unreadable-rast`, or the signature has no `=` to cut at (`unreadable-signature`) |
-| `unclassified` | a translated body of that name EXISTS and no rule above turned it away — the method is one the reader cannot replace, or no table row connects this file to the syntax tree the body came from |
+| `skeleton-cannot-offer:<kind>` | the reference file reader cannot replace this member; `kind` is the reason: `override` (has `override` modifier), `protected`/`final`/`inline`/... (has a modifier the reader does not accept), or `nested` (indented deeper than a top-level member) |
+| `reference-only:<reason>` | the consumer's library configuration declares this member has no upstream counterpart; `reason` is the consumer's own explanation |
+| `translated-elsewhere` | a translated body of that name exists in another file's module, but no module connects this file to its syntax tree |
+| `unclassified` | a translated body of that name exists and no rule above explains why it was not used; this should be empty after every declined site has been classified |
 
-`unclassified` is the bucket to work on first: it is translated code that is not being used for a
-reason nobody decided. `bodies-summary.txt` beside the table is the one line `run.summary.line`
+`skeleton-cannot-offer` and `reference-only` are the two families that replace the old
+`unclassified` bucket. `bodies-summary.txt` beside the table is the one line `run.summary.line`
 returns; its counts add up to the table's rows.

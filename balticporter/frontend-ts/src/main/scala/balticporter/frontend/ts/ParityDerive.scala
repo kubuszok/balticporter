@@ -13,14 +13,17 @@ object ParityDerive:
     val Translated = "translated"
     val Reference  = "reference"
 
-  /** Why a reference body was kept. `unclassified` is the one that explains nothing: a translated body of that name existed and no rule here refused it. */
+  /** Why a reference body was kept. `unclassified` should be empty by construction: every declined site names its guard. */
   object Why:
     val NoTranslatedBody     = "no-translated-body"
     val OccurrenceOutOfRange = "occurrence-out-of-range"
     val Unclassified         = "unclassified"
+    val TranslatedElsewhere  = "translated-elsewhere"
     val Private              = "private"
     def uncompilablePattern(pattern: String): String = s"uncompilable-pattern:$pattern"
     def translatorRefusal(reason:    String): String = s"translator-refusal:$reason"
+    def skeletonCannotOffer(kind:    String): String = s"skeleton-cannot-offer:$kind"
+    def referenceOnly(reason:        String): String = s"reference-only:$reason"
 
   /** One translated body and every reason the translator gave for leaving part of it untranslated. */
   final case class TranslatedBody(text: String, refusals: List[String] = Nil)
@@ -145,10 +148,9 @@ object ParityDerive:
         sb.append("\n")
         lineIdx += 1
 
-    // A member the reader never offers keeps its reference body; where a translated body of its name exists, nothing here explains that.
+    // A member the reader never offers keeps its reference body; the skeleton's own classification says why it could not be offered.
     val unoffered = ReferenceSkeleton.unofferedMembers(lines, methods).map { m =>
-      val why = if candidates(m.name).nonEmpty then Why.Unclassified else Why.NoTranslatedBody
-      BodyEntry(m.name, Source.Reference, why, 0, -1, m.line, offered = false)
+      BodyEntry(m.name, Source.Reference, Why.skeletonCannotOffer(m.reason), 0, -1, m.line, offered = false)
     }
 
     ParityResult(

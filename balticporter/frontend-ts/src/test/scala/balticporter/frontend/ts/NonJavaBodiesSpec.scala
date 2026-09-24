@@ -128,8 +128,8 @@ class NonJavaBodiesSpec extends munit.FunSuite:
       List("demo/Shapes.scala", "blocked", "0", "reference", "uncompilable-pattern:forbiddenCall"),
       List("demo/Shapes.scala", "holed", "0", "reference", "translator-refusal:UnhandledStatement:DebuggerStatement"),
       List("demo/Shapes.scala", "absent", "0", "reference", "no-translated-body"),
-      List("demo/Shapes.scala", "toString", "-", "reference", "unclassified"),
-      List("other/Unfed.scala", "area", "0", "reference", "unclassified"),
+      List("demo/Shapes.scala", "toString", "-", "reference", "skeleton-cannot-offer:override"),
+      List("other/Unfed.scala", "area", "0", "reference", "translated-elsewhere"),
       List("other/Unfed.scala", "lonely", "0", "reference", "no-translated-body")
     ).map(_.mkString("\t")).mkString("", "\n", "\n")
     val tsv = Files.readString(root.resolve("report/bodies.tsv"))
@@ -155,7 +155,7 @@ class NonJavaBodiesSpec extends munit.FunSuite:
     assertEquals(summary.translated + summary.byWhy.map(_._2).sum, summary.total)
     assertEquals(
       summary.line,
-      "translated 2/11 (18.2%); reference: no-translated-body=2, occurrence-out-of-range=1, translator-refusal=3, unclassified=2, uncompilable-pattern=1"
+      "translated 2/11 (18.2%); reference: no-translated-body=2, occurrence-out-of-range=1, skeleton-cannot-offer=1, translated-elsewhere=1, translator-refusal=3, uncompilable-pattern=1"
     )
     assertEquals(Files.readString(root.resolve("report/bodies-summary.txt")), summary.line + "\n")
 
@@ -163,3 +163,50 @@ class NonJavaBodiesSpec extends munit.FunSuite:
     val (first, _)  = run()
     val (second, _) = run()
     assertEquals(Files.readString(first.resolve("report/bodies.tsv")), Files.readString(second.resolve("report/bodies.tsv")))
+
+  test("zero unclassified: unofferable, reference-only and normal members are all classified"):
+    val refOnlyLib              = library.copy(referenceOnly = Map("holed" -> "untranslatable-construct"))
+    val (root, reference, rast) = fixture()
+    NonJavaBodies.build(refOnlyLib, reference, rast) match
+      case built: NonJavaBodies.Built =>
+        val result       = built.derive(root.resolve("out2"), root.resolve("report2"))
+        val unclassified = result.rows.filter(_.why == ParityDerive.Why.Unclassified)
+        assertEquals(
+          unclassified,
+          Nil,
+          s"expected 0 unclassified but found: ${unclassified.map(r => s"${r.file}/${r.member}").mkString(", ")}"
+        )
+        // The holed member gets the consumer's reason
+        val holedRow = result.rows.find(r => r.member == "holed" && r.file.contains("Shapes")).get
+        assertEquals(holedRow.why, "reference-only:untranslatable-construct")
+        // The override def toString gets the skeleton reason
+        val toStringRow = result.rows.find(r => r.member == "toString" && r.file.contains("Shapes")).get
+        assertEquals(toStringRow.why, "skeleton-cannot-offer:override")
+      case refused: NonJavaBodies.Refused => fail(refused.message)
+
+  test("referenceOnly: a key that matches no member is reported as unmatched"):
+    val refOnlyLib              = library.copy(referenceOnly = Map("nonexistent" -> "test-reason", "area" -> "known-shape"))
+    val (root, reference, rast) = fixture()
+    NonJavaBodies.build(refOnlyLib, reference, rast) match
+      case built: NonJavaBodies.Built =>
+        val result = built.derive(root.resolve("out3"), root.resolve("report3"))
+        assertEquals(result.unmatchedReferenceOnly, List("nonexistent"))
+        // area matched (it appears in multiple files)
+        assert(!result.unmatchedReferenceOnly.contains("area"))
+        // area rows have reference-only reason
+        val areaRows = result.rows.filter(_.member == "area")
+        assert(areaRows.nonEmpty)
+        assert(areaRows.forall(_.why == "reference-only:known-shape"), s"area rows: ${areaRows.map(_.why)}")
+      case refused: NonJavaBodies.Refused => fail(refused.message)
+
+  test("referenceOnly on an offered member keeps the reference body"):
+    val refOnlyLib              = library.copy(referenceOnly = Map("area" -> "keep-reference"))
+    val (root, reference, rast) = fixture()
+    NonJavaBodies.build(refOnlyLib, reference, rast) match
+      case built: NonJavaBodies.Built =>
+        built.derive(root.resolve("out4"), root.resolve("report4"))
+        val emitted = Files.readString(root.resolve("out4/demo/Shapes.scala"))
+        // The reference body should be kept, not the translated one
+        assert(emitted.contains("x * 2"), "first area overload should keep reference body")
+        assert(!emitted.contains("\n    10\n"), "translated body should not be spliced")
+      case refused: NonJavaBodies.Refused => fail(refused.message)

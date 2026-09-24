@@ -22,12 +22,15 @@ object NonJavaBodies:
     build:            List[RastFile] => ParityDerive.Bodies
   )
 
-  /** A registered library. `modules` may need a file of its own first (a class hierarchy) and refuses when it cannot be read. */
+  /** A registered library. `modules` may need a file of its own first (a class hierarchy) and refuses when it cannot be read. `referenceOnly` maps a member name to the consumer's reason why that
+    * member has no upstream counterpart and should always keep its reference body; a key that matches no member in any file is a finding.
+    */
   final case class Library(
-    name:     String,
-    policy:   ParityDerive.Policy,
-    readRast: Path => RastFile,
-    modules:  Loader => Either[String, List[Module]]
+    name:          String,
+    policy:        ParityDerive.Policy,
+    readRast:      Path => RastFile,
+    modules:       Loader => Either[String, List[Module]],
+    referenceOnly: Map[String, String] = Map.empty
   )
 
   /** The translated bodies of one reference file, the syntax-tree files they came from, and the reason there are none when its module could not be built. */
@@ -41,10 +44,11 @@ object NonJavaBodies:
 
   /** Bodies per reference file, keyed by the file's path relative to `referenceDir` with `/` separators; a file with no entry has no module feeding it. */
   final case class Built(
-    library:      String,
-    policy:       ParityDerive.Policy,
-    referenceDir: Path,
-    files:        Map[String, FileBodies]
+    library:       String,
+    policy:        ParityDerive.Policy,
+    referenceDir:  Path,
+    files:         Map[String, FileBodies],
+    referenceOnly: Map[String, String] = Map.empty
   ) extends Result:
 
     def bodiesFor(relativeFile: String): ParityDerive.Bodies =
@@ -55,17 +59,23 @@ object NonJavaBodies:
     private def translatedSomewhere(member: String): Boolean =
       translatedNames(member) || policy.aliases.getOrElse(member, Nil).exists(translatedNames)
 
-    /** One reference file derived, with its report rows. In a file no module feeds, a member whose name WAS translated elsewhere in the library is `unclassified`. */
+    /** One reference file derived, with its report rows. A `referenceOnly` member keeps its reference body with the consumer's reason; an unfed file's translated-elsewhere member is recorded as such.
+      */
     def deriveFile(relativeFile: String, referenceSource: String): (String, List[BodiesReport.Row]) =
-      val entry  = files.get(relativeFile)
-      val result = ParityDerive.derive(referenceSource, entry.fold(ParityDerive.Bodies.empty)(_.bodies), policy)
-      val rows   = BodiesReport.rows(relativeFile, result).map { row =>
-        if row.why != ParityDerive.Why.NoTranslatedBody then row
-        else
-          entry match
-            case Some(FileBodies(_, _, Some(refusal)))   => row.copy(why = ParityDerive.Why.translatorRefusal(refusal))
-            case None if translatedSomewhere(row.member) => row.copy(why = ParityDerive.Why.Unclassified)
-            case _                                       => row
+      val entry     = files.get(relativeFile)
+      val rawBodies = entry.fold(ParityDerive.Bodies.empty)(_.bodies)
+      val bodies    = if referenceOnly.isEmpty then rawBodies else ParityDerive.Bodies(rawBodies.byName -- referenceOnly.keySet)
+      val result    = ParityDerive.derive(referenceSource, bodies, policy)
+      val rows      = BodiesReport.rows(relativeFile, result).map { row =>
+        referenceOnly.get(row.member) match
+          case Some(reason) => row.copy(why = ParityDerive.Why.referenceOnly(reason))
+          case None         =>
+            if row.why != ParityDerive.Why.NoTranslatedBody then row
+            else
+              entry match
+                case Some(FileBodies(_, _, Some(refusal)))   => row.copy(why = ParityDerive.Why.translatorRefusal(refusal))
+                case None if translatedSomewhere(row.member) => row.copy(why = ParityDerive.Why.TranslatedElsewhere)
+                case _                                       => row
       }
       (result.emittedSource, rows)
 
@@ -81,11 +91,13 @@ object NonJavaBodies:
         Files.write(target, emitted.getBytes(StandardCharsets.UTF_8))
         written += target
         rows ++= fRows
-      val all = rows.result()
-      Run(written.result(), all, BodiesReport.write(reportDir, all))
+      val all       = rows.result()
+      val matched   = all.filter(r => referenceOnly.contains(r.member)).map(_.member).toSet
+      val unmatched = (referenceOnly.keySet -- matched).toList.sorted
+      Run(written.result(), all, BodiesReport.write(reportDir, all), unmatched)
 
-  /** What one derive run wrote. */
-  final case class Run(written: List[Path], rows: List[BodiesReport.Row], summary: BodiesReport.Summary)
+  /** What one derive run wrote. `unmatchedReferenceOnly` lists `referenceOnly` keys that matched no member in any file; the consumer should treat each as a policy finding. */
+  final case class Run(written: List[Path], rows: List[BodiesReport.Row], summary: BodiesReport.Summary, unmatchedReferenceOnly: List[String] = Nil)
 
   /** Translated bodies for the given `library` value: `referenceDir` is the root of its hand-written Scala (any package directories included), `rastDir` the root of its exported syntax trees. */
   def build(library: Library, referenceDir: Path, rastDir: Path): Result =
@@ -129,7 +141,7 @@ object NonJavaBodies:
               parts.flatMap(_.refusal).headOption.filter(_ => parts.forall(_.refusal.isDefined))
             )
           }
-          Built(library.name, library.policy, referenceDir, files)
+          Built(library.name, library.policy, referenceDir, files, library.referenceOnly)
 
   /** The directory prefix under which the most module paths resolve — the reference root may or may not include package directories. Ties take the shortest prefix. */
   private def anchorOf(references: List[String], subPaths: List[String]): String =
