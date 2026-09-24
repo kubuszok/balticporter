@@ -128,6 +128,16 @@ for name in "${consumers[@]}"; do
   fi
 done
 
+# The local publishes served THIS run only. Left in ivy-local they shadow Central for every other
+# build on the machine (a `<name>-port` at the library's released version but linked against this
+# run's engine broke a consumer's build with two engine hashes), and they hide a published-artifact
+# break that CI would see; the run's evidence is in $work, not in ~/.ivy2.
+for entry in $published; do
+  n="${entry%%=*}"; v="${entry#*=}"
+  rm -rf "$HOME/.ivy2/local/com.kubuszok/${n}_3/$v" "$HOME/.ivy2/local/com.kubuszok/${n}-port_3/$v"
+done
+rm -rf "$HOME/.ivy2/local/com.kubuszok/balticporter-"*"_3/$version"
+
 echo
 echo "engine $version, level $level"
 printf "%b" "$summary" | column -t -s "$(printf '\t')"
