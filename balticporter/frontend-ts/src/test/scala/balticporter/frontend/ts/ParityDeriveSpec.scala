@@ -152,3 +152,58 @@ class ParityDeriveSpec extends munit.FunSuite:
     assertEquals((guarded.offered, guarded.why), (false, "skeleton-cannot-offer:protected"))
     val nestedE = entries.find(_.methodName == "nested").get
     assertEquals((nestedE.offered, nestedE.why), (false, "skeleton-cannot-offer:nested"))
+
+  test("derive: boundary-braced body does not bleed into the next method"):
+    val reference =
+      """package test
+        |
+        |object BoundaryTest {
+        |
+        |  def first(x: Int, y: Int): Boolean = boundary {
+        |    if (x > 0) {
+        |      break(true)
+        |    }
+        |    false
+        |  }
+        |
+        |  def second(x: Int): Int =
+        |    x + 1
+        |}
+        |""".stripMargin
+    val methods = ReferenceSkeleton.findMethodBoundaries(reference.split("\n", -1).toList)
+    assertEquals(methods.size, 2, s"should find two methods: ${methods.map(_.name)}")
+    assertEquals(methods(0).name, "first")
+    assertEquals(methods(1).name, "second")
+    // The first method's body must include the closing `}` of boundary
+    val firstEnd = methods(0).bodyEndLine
+    val lines    = reference.split("\n", -1).toList
+    assert(lines(firstEnd).trim == "}", s"first body end should be the closing brace: '${lines(firstEnd)}'")
+    // Derive with a replacement body — `second` must stay intact
+    val bodies = ParityDerive.Bodies(Map("first" -> List(ParityDerive.TranslatedBody("    true\n"))))
+    val result = ParityDerive.derive(reference, bodies, ParityDerive.Policy())
+    assert(result.emittedSource.contains("x + 1"), s"second method must be intact: ${result.emittedSource}")
+    assert(!result.emittedSource.contains("break(true)"), "first method's old body must be gone")
+
+  test("derive: try-braced body is correctly bounded"):
+    val reference =
+      """package test
+        |
+        |object TryTest {
+        |
+        |  def safeDivide(a: Int, b: Int): Int = try {
+        |    a / b
+        |  } catch {
+        |    case _: ArithmeticException => 0
+        |  }
+        |
+        |  def next(x: Int): Int = x
+        |}
+        |""".stripMargin
+    val methods = ReferenceSkeleton.findMethodBoundaries(reference.split("\n", -1).toList)
+    assertEquals(methods.size, 2)
+    assertEquals(methods(0).name, "safeDivide")
+    assertEquals(methods(1).name, "next")
+    val bodies = ParityDerive.Bodies(Map("safeDivide" -> List(ParityDerive.TranslatedBody("    42\n"))))
+    val result = ParityDerive.derive(reference, bodies, ParityDerive.Policy())
+    assert(result.emittedSource.contains("42"), "safeDivide body replaced")
+    assert(!result.emittedSource.contains("ArithmeticException"), "old body gone")

@@ -122,20 +122,44 @@ object ReferenceSkeleton:
       i -= 1
     -1
 
-  /** The last line of a method body: the matching brace for a braced body, the end of the indented region otherwise. */
+  /** The last line of a method body: the matching brace for a braced body, the end of the indented region otherwise.
+    *
+    * A body that opens with `{` uses brace matching when the brace IS the method body's outer delimiter: bare `{`, `boundary {`, `scala.util.boundary {`. Control-flow keywords (`try`, `if`, `while`,
+    * `for`, `match`) introduce nested blocks where the brace is NOT the method body's outer delimiter, so those use indentation.
+    */
   private def findBodyEnd(lines: List[String], sigEndLine: Int): Int =
     val sigLine = lines(sigEndLine)
     val eqIdx   = findEqualsInSignature(sigLine)
     val afterEq = if eqIdx >= 0 then sigLine.substring(eqIdx + 1).trim else ""
 
-    if afterEq == "{" || afterEq.startsWith("{") then findMatchingBrace(lines, sigEndLine, eqIdx + 1)
+    if afterEq.endsWith("{") && isBodyBrace(afterEq) then findMatchingBrace(lines, sigEndLine, eqIdx + 1)
     else if afterEq.nonEmpty then findExpressionEnd(lines, sigEndLine)
     else if sigEndLine + 1 < lines.size then
-      // Only a next line that is literally `{` delimits the method; `if (...) {` or `x match {` are expression bodies read by indentation.
       val nextLine = lines(sigEndLine + 1).trim
       if nextLine == "{" then findMatchingBrace(lines, sigEndLine + 1, 0)
       else findExpressionEnd(lines, sigEndLine + 1)
     else sigEndLine
+
+  /** True when afterEq ending in `{` is a body-level brace, not a control-flow block. */
+  private def isBodyBrace(afterEq: String): Boolean =
+    val beforeBrace = afterEq.stripSuffix("{").trim
+    if beforeBrace.isEmpty then true // bare `{`
+    else
+      // The last word before `{` determines the kind
+      val lastWord = beforeBrace.split("\\s+|\\.|\\(|\\)").filter(_.nonEmpty).lastOption.getOrElse("")
+      !controlFlowKeywords.contains(lastWord)
+
+  private val controlFlowKeywords: Set[String] = Set(
+    "try",
+    "if",
+    "else",
+    "while",
+    "for",
+    "do",
+    "match",
+    "catch",
+    "finally"
+  )
 
   private def findMatchingBrace(lines: List[String], startLine: Int, startCol: Int): Int =
     var depth           = 0
@@ -168,11 +192,22 @@ object ReferenceSkeleton:
       i += 1
     if startLine < lines.size - 1 then lines.size - 1 else startLine
 
-  /** The end of an unbraced body: it runs while lines stay indented deeper than a top-level member, across blank lines that are followed by more of it. */
+  /** The end of an unbraced body: it runs while lines stay indented deeper than a top-level member, across blank lines that are followed by more of it. A line at the base indent still belongs to the
+    * body when brace depth is positive (e.g. `} catch {` or the closing `}` of a try-catch).
+    */
   private def findExpressionEnd(lines: List[String], startLine: Int): Int =
     val baseIndent      = 2
     var lastContentLine = startLine
-    var i               = startLine + 1
+    var braceDepth      = 0
+    var i               = startLine
+
+    // Count braces in the start line to track multi-block expressions
+    for ch <- lines(startLine) do
+      ch match
+        case '{' => braceDepth += 1
+        case '}' => braceDepth -= 1
+        case _   => ()
+    i = startLine + 1
 
     while i < lines.size do
       val line = lines(i)
@@ -182,21 +217,30 @@ object ReferenceSkeleton:
         if nextNonEmpty < lines.size then
           val nextLine   = lines(nextNonEmpty)
           val nextIndent = nextLine.takeWhile(_ == ' ').length
-          if nextIndent > baseIndent && !nextLine.trim.startsWith("def ") &&
+          if (nextIndent > baseIndent || braceDepth > 0) && !nextLine.trim.startsWith("def ") &&
             !nextLine.trim.startsWith("private def ") &&
             !nextLine.trim.startsWith("//") &&
             !nextLine.trim.startsWith("/*") &&
             !nextLine.trim.startsWith("val ") &&
             !nextLine.trim.startsWith("var ") &&
             !nextLine.trim.startsWith("class ") &&
-            !nextLine.trim.startsWith("object ") &&
-            nextLine.trim != "}"
+            !nextLine.trim.startsWith("object ")
           then i = nextNonEmpty
           else return lastContentLine
         else return lastContentLine
       else
         val indent = line.takeWhile(_ == ' ').length
-        if indent <= baseIndent then return lastContentLine
+        // Track brace depth across the line
+        for ch <- line do
+          ch match
+            case '{' => braceDepth += 1
+            case '}' => braceDepth -= 1
+            case _   => ()
+        if indent <= baseIndent && braceDepth <= 0 then
+          // The line at base indent closes all braces: include it only when
+          // it IS a closing brace (the method body's final `}`)
+          if line.trim == "}" || line.trim.startsWith("}") then return i
+          else return lastContentLine
         else
           lastContentLine = i
           i += 1
