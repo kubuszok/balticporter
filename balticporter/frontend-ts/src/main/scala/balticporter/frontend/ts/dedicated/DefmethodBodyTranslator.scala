@@ -296,6 +296,8 @@ object DefmethodBodyTranslator:
 
     // Names that are declared const but later assigned in the body: emit var
     private val reassignedNames: Set[String] = collectReassignedNames(entry.bodyNode)
+    // Parameter names that are reassigned in the body: refuse upfront
+    private val reassignedParams: Set[String] = entry.params.filter(reassignedNames.contains).toSet
 
     // Local variable types, inferred from initialisers whose type is known
     private val localTypes = mutable.Map.empty[String, String]
@@ -513,9 +515,12 @@ object DefmethodBodyTranslator:
       else if needsBraces then
         sb.append(s"$baseIndent{\n")
 
+      val innerIndent = if needsBoundary || needsBraces then baseIndent + "  " else baseIndent
+      // Refuse when a parameter is reassigned in the body: Scala parameters are vals
+      if reassignedParams.nonEmpty then refuse("reassigned-immutable")
+
       for (stmt, idx) <- stmts.zipWithIndex do
         val isLast = idx == stmts.size - 1
-        val innerIndent = if needsBoundary || needsBraces then baseIndent + "  " else baseIndent
         translateStatement(stmt, innerIndent, isLast)
 
       if needsBoundary || needsBraces then sb.append(s"$baseIndent}\n")

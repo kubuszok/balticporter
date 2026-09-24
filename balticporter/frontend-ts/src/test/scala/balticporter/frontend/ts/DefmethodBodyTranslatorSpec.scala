@@ -797,6 +797,29 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
     assert(result.scalaBody.contains("val x"), s"non-reassigned const should stay val: ${result.scalaBody}")
 
+  test("reassigned parameter refuses with reassigned-immutable"):
+    val body = block(
+      node(
+        "ExpressionStatement",
+        binOp("EqualsToken", ident("extraVinculum"), binOp("AsteriskToken", num(1000), ident("extraVinculum")))
+      ),
+      ret(ident("extraVinculum"))
+    )
+    val entry  = DefmethodEntry("_free_", "test", List("extraVinculum"), body)
+    val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+    assert(result.refusalReasons.contains("reassigned-immutable"), s"should refuse reassigned param: ${result.refusalReasons}")
+
+  test("non-reassigned parameter does not refuse reassigned-immutable"):
+    val body = block(
+      ret(ident("x"))
+    )
+    val entry  = DefmethodEntry("_free_", "test", List("x"), body)
+    val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+    assert(
+      !result.refusalReasons.contains("reassigned-immutable"),
+      s"should not refuse non-reassigned param: ${result.refusalReasons}"
+    )
+
   // ---- callee-arity-mismatch for too few args ----
 
   test("call with fewer arguments than callee declares refuses with callee-arity-mismatch"):

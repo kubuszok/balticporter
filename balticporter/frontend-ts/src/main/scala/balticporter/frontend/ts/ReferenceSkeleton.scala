@@ -129,14 +129,21 @@ object ReferenceSkeleton:
       i += 1
     startLine
 
-  /** The index of the `=` that ends a signature on `line`, or -1: the rightmost `=` preceded by whitespace that is not part of `==`, `!=`, `<=`, `>=` or `=>`. */
+  /** The index of the `=` that ends a signature on `line`, or -1: the rightmost `=` preceded by whitespace that is not part of `==`, `!=`, `<=`, `>=` or `=>` and not inside parentheses or brackets
+    * (which would be a default parameter value).
+    */
   def findEqualsInSignature(line: String): Int =
-    var i = line.length - 1
+    var i     = line.length - 1
+    var depth = 0
     while i >= 1 do
-      if line(i) == '=' then
-        val prev = line(i - 1)
-        val next = if i + 1 < line.length then line(i + 1) else ' '
-        if (prev == ' ' || prev == '\t') && next != '>' && next != '=' then return i
+      line(i) match
+        case ')' | ']'         => depth += 1
+        case '(' | '['         => depth -= 1
+        case '=' if depth == 0 =>
+          val prev = line(i - 1)
+          val next = if i + 1 < line.length then line(i + 1) else ' '
+          if (prev == ' ' || prev == '\t') && next != '>' && next != '=' then return i
+        case _ => ()
       i -= 1
     -1
 

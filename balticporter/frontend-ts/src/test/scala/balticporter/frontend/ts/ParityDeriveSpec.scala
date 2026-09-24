@@ -266,3 +266,37 @@ class ParityDeriveSpec extends munit.FunSuite:
     assert(result.emittedSource.contains("\"replaced\""), "body replaced")
     assert(result.emittedSource.contains("object Opts"), s"companion object must be intact:\n${result.emittedSource}")
     assert(!result.emittedSource.contains("transparent"), "old body gone")
+
+  test("findEqualsInSignature: default parameter = is not a body ="):
+    val line1 = "  def expandOnce(expandableOnly: Boolean = false): Int | Boolean"
+    assertEquals(ReferenceSkeleton.findEqualsInSignature(line1), -1)
+    val line2 = "  def consumeArg(delims: Nullable[Array[String]] = Nullable.Null): MacroArg"
+    assertEquals(ReferenceSkeleton.findEqualsInSignature(line2), -1)
+
+  test("findEqualsInSignature: body = after default-parameter parens"):
+    val line = "  def foo(x: Int = 0): String ="
+    val idx  = ReferenceSkeleton.findEqualsInSignature(line)
+    assert(idx > 0, s"should find the body =, got $idx")
+    assertEquals(line(idx), '=')
+    // The `=` should be the last one (body =), not the default parameter one
+    assert(idx > line.indexOf("):"), s"= at $idx should be after the closing paren")
+
+  test("derive: abstract def with default parameter is not offered"):
+    val reference =
+      """package test
+        |
+        |trait Base {
+        |  def expandOnce(expandableOnly: Boolean = false): Int | Boolean
+        |
+        |  def consumeArg(delims: Nullable[Array[String]] = Nullable.Null): MacroArg
+        |}
+        |
+        |object Impl {
+        |
+        |  def concreteMethod(x: Int): Boolean =
+        |    x > 0
+        |}
+        |""".stripMargin
+    val methods = ReferenceSkeleton.findMethodBoundaries(reference.split("\n", -1).toList)
+    assertEquals(methods.size, 1, s"should find only the concrete method: ${methods.map(_.name)}")
+    assertEquals(methods(0).name, "concreteMethod")
