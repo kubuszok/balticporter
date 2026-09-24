@@ -866,3 +866,32 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     )
     val result = translate(body)
     assert(result.scalaBody.contains("(k, v) <- myMap"), s"should destructure as tuple: ${result.scalaBody}")
+
+  // ---- module-level value resolution ----
+
+  test("module-level value resolves through callee index"):
+    val body   = block(ret(node("ElementAccessExpression", ident("styles"), num(0))))
+    val ci     = ReferenceSignatures.CalleeIndex(Map("styles" -> List("Style")))
+    val result = translate(body, calleeIndex = ci)
+    assert(result.scalaBody.contains("Style.styles(0)"), s"should qualify module value: ${result.scalaBody}")
+
+  test("module-level value does not shadow local variable"):
+    val body = block(
+      node(
+        "VariableStatement",
+        node(
+          "VariableDeclarationList",
+          RastNode("VariableDeclaration", 0, (0, 0), children = List(ident("styles"), node("ArrayLiteralExpression", num(1))))
+        )
+      ),
+      ret(node("ElementAccessExpression", ident("styles"), num(0)))
+    )
+    val ci     = ReferenceSignatures.CalleeIndex(Map("styles" -> List("Style")))
+    val result = translate(body, calleeIndex = ci)
+    assert(!result.scalaBody.contains("Style.styles"), s"local should not be qualified: ${result.scalaBody}")
+
+  test("module-level value does not shadow parameter"):
+    val entry  = DefmethodEntry("_free_", "test", List("styles"), block(ret(node("ElementAccessExpression", ident("styles"), num(0)))))
+    val ci     = ReferenceSignatures.CalleeIndex(Map("styles" -> List("Style")))
+    val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ", calleeIndex = ci)
+    assert(!result.scalaBody.contains("Style.styles"), s"param should not be qualified: ${result.scalaBody}")

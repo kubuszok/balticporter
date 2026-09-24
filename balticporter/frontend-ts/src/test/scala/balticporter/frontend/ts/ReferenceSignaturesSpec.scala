@@ -134,6 +134,19 @@ class ReferenceSignaturesSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
+  private val refSource5 =
+    """object Style:
+      |  val styles: Array[Style] = Array(DISPLAY, TEXT, SCRIPT, SCRIPTSCRIPT)
+      |  lazy val lookup: Map[String, Style] = Map.empty
+      |  def fromId(id: Int): Style = styles(id)
+      |""".stripMargin
+
+  test("buildIndices: callee index includes module-level val and lazy val"):
+    val (ci, _, _, _) = ReferenceSignatures.buildIndices(List(("Style", refSource5)))
+    assertEquals(ci.resolve("styles"), Right("Style.styles"))
+    assertEquals(ci.resolve("lookup"), Right("Style.lookup"))
+    assertEquals(ci.resolve("fromId"), Right("Style.fromId"))
+
   test("buildIndices: enum index maps string values to member names"):
     val (_, mi, _, ei) = ReferenceSignatures.buildIndices(List(("Mode", refSource4)))
     assertEquals(ei.resolve("Mode", "math"), Some("Math"))

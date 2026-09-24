@@ -119,6 +119,14 @@ object ReferenceSignatures:
         defNamePattern.findFirstMatchIn(line).foreach { m =>
           callees.getOrElseUpdate(m.group(1), mutable.ListBuffer.empty) += objectName
         }
+      // Collect module-level val/lazy val/var names for the callee index,
+      // so that a TS module-level `const X = [...]` referenced from a method
+      // resolves through the same index as a function call.
+      val valNamePattern = """^\s{2}(?:private\s+|protected\s+)?(?:lazy\s+)?(?:val|var)\s+(\w+)""".r
+      for line <- source.linesIterator do
+        valNamePattern.findFirstMatchIn(line).foreach { m =>
+          callees.getOrElseUpdate(m.group(1), mutable.ListBuffer.empty) += objectName
+        }
 
       // Collect class constructors by joining multi-line declarations
       val classLines = joinClassDeclarations(source)

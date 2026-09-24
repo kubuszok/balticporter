@@ -299,6 +299,8 @@ object DefmethodBodyTranslator:
 
     // Local variable types, inferred from initialisers whose type is known
     private val localTypes = mutable.Map.empty[String, String]
+    // All locally declared variable names (even when the type is unknown)
+    private val localNames = mutable.Set.empty[String]
     // Identifiers currently in a guarded scope where they have been tested
     // for truthiness and should be unwrapped (Nullable -> .get)
     private val unwrappedIds = mutable.Set.empty[String]
@@ -533,6 +535,7 @@ object DefmethodBodyTranslator:
               val initNode = vd.children.drop(1).headOption
               val init = initNode.map(translateExpr).getOrElse("null")
               // Track local variable types from initialisers whose type is known
+              localNames += scalaName
               initNode.flatMap(exprType).foreach(t => localTypes(scalaName) = t)
               // A variable whose initialiser is empty or whitespace produces
               // Unit in value position when read later
@@ -984,7 +987,20 @@ object DefmethodBodyTranslator:
         case n if n.startsWith("_") && !apiLookup.contains(n) && !entry.params.contains(n) =>
           refuse("wrong-member-access")
           snakeToCamel(n)
-        case n => apiLookup.getOrElse(n, snakeToCamel(n))
+        case n =>
+          val scName = apiLookup.getOrElse(n, snakeToCamel(n))
+          // Resolve unqualified identifiers through the callee index:
+          // a TS module-level const referenced from a method body needs
+          // its enclosing object qualifier. Skip locals and parameters.
+          if !apiLookup.contains(n) && !entry.params.contains(n) &&
+             !localTypes.contains(scName) && !localTypes.contains(n) &&
+             !localNames.contains(scName) && !localNames.contains(n) &&
+             !n.startsWith("AST_") && scName == snakeToCamel(n) &&
+             n.head.isLower then
+            calleeIndex.resolve(scName) match
+              case Right(qualified) => qualified
+              case Left(_)         => scName
+          else scName
       // When this identifier was tested for Nullable truthiness in an
       // enclosing && guard, it has been unwrapped and must be read as .get
       val scalaName = snakeToCamel(name)
