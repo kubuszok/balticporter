@@ -12,6 +12,16 @@ Detail for `CLAUDE.md` §5, §5.1 and §5.4.
 Per-library measure lanes, baselines and port reports live in each consumer repository (lls, sge,
 ssg). The engine verifies itself against the consumers with `just consumers-check`.
 
+## The consumers check proves SOURCE compatibility, not the published chain
+
+`consumers-check` publishes the engine AND each consumer's port artifact (`lls-port`) to the ivy-local
+repository, and a dependent consumer with `Resolver.defaultLocal` picks that fresh `lls-port` up. So a
+change to a value type a consumer's policy links against (`PortManifest` gained a parameter: the
+case-class `apply`/`copy` signatures moved) passes every consumer locally and throws
+`NoSuchMethodError` on the dependent's CI, which resolves the PUBLISHED `lls-port` (sge PR #155,
+2026-09-24). A change to `PortManifest`, `RunScope` or any type a `*-port` artifact constructs is a
+RELEASE of every base's port artifact before a dependent may pin the engine; say so in the commit.
+
 ## Required checks
 
 Every run must record: `signature`, `omissions`, `portability(all|emitted|injected)`,
