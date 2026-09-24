@@ -327,11 +327,27 @@ object DefmethodBodyTranslator:
           val callee = node.children.headOption
           callee match
             case Some(prop) if prop.kind == "PropertyAccessExpression" && prop.children.size >= 2 =>
+              val obj    = prop.children.head
               val method = prop.children.last.text.getOrElse("")
               method match
                 case "toFixed" | "toString" | "substring" | "trim" |
                      "toLowerCase" | "toUpperCase" | "replace" | "replaceAll" |
                      "join" | "split" => Some("String")
+                case _ =>
+                  // Look up the oracle for the callee's return type
+                  if obj.kind == "Identifier" then
+                    val oName = snakeToCamel(obj.text.getOrElse(""))
+                    val cap   = if oName.nonEmpty then oName.take(1).toUpperCase + oName.drop(1) else ""
+                    oracle.get(cap, snakeToCamel(method)).orElse(oracle.get(oName, snakeToCamel(method))).map(_.returnType)
+                  else None
+            case Some(id) if id.kind == "Identifier" =>
+              val name     = snakeToCamel(id.text.getOrElse(""))
+              val resolved = calleeIndex.resolve(name)
+              resolved match
+                case Right(qualified) =>
+                  val dotIdx = qualified.lastIndexOf('.')
+                  if dotIdx >= 0 then oracle.get(qualified.substring(0, dotIdx), qualified.substring(dotIdx + 1)).map(_.returnType)
+                  else None
                 case _ => None
             case _ => None
         case _ => None
@@ -1209,12 +1225,23 @@ object DefmethodBodyTranslator:
               if args.length < s.params.length && !isVararg then
                 refuse("callee-arity-mismatch")
             }
+            // For predicate methods, translate the callback with truthiness lowering.
+            // Infer the element type from the receiver's collection type so the
+            // lambda parameter gets a known type for truthiness.
+            val isPredicate = predicateMethods.contains(method)
+            val elemType: Option[String] =
+              if isPredicate then exprType(obj).flatMap(extractElementType) else None
             val scalaArgs = calleeSig match
               case Some(s) =>
                 args.zipWithIndex.map { case (arg, i) =>
                   s.params.lift(i).map(p => translateExprAt(arg, p.tpe)).getOrElse(translateExpr(arg))
                 }
-              case None => args.map(translateExpr)
+              case None =>
+                if isPredicate then
+                  args.zipWithIndex.map { case (arg, i) =>
+                    if i == 0 then translatePredicateLambda(arg, elemType) else translateExpr(arg)
+                  }
+                else args.map(translateExpr)
 
             method match
               // Collection methods
@@ -1743,6 +1770,61 @@ object DefmethodBodyTranslator:
           if paramStrs.isEmpty then s"(() => $expr)"
           else s"((${paramStrs.mkString(", ")}) => $expr)"
 
+    /** Translate a lambda whose result is used as a Boolean predicate
+      * (filter, find, some/exists, every/forall, findIndex). The body
+      * expression goes through truthiness lowering: a String becomes
+      * `.nonEmpty`, a Nullable becomes `.isDefined`, unknown type refuses. */
+    private def translatePredicateLambda(node: RastNode, elemType: Option[String] = None): String =
+      node.kind match
+        case "ArrowFunction" | "FunctionExpression" =>
+          val params = node.children.filter(_.kind == "Parameter")
+          val paramStrs = params.map { p =>
+            val name = p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
+            snakeToCamel(name)
+          }
+          val paramNames = params.flatMap(_.children.find(_.kind == "Identifier").flatMap(_.text)).map(snakeToCamel).toSet
+          // Register the lambda parameter type from the element type so that
+          // truthiness lowering knows the parameter's type
+          val savedTypes = mutable.Map.empty[String, String]
+          elemType.foreach { et =>
+            paramStrs.headOption.foreach { pn =>
+              localTypes.get(pn).foreach(old => savedTypes(pn) = old)
+              localTypes(pn) = et
+            }
+          }
+          val body = node.children.find(_.kind == "Block")
+          val exprNode = body match
+            case Some(block) =>
+              if block.children.size == 1 && block.children.head.kind == "ReturnStatement" then
+                block.children.head.children.headOption
+              else if block.children.size == 1 && block.children.head.kind == "ExpressionStatement" then
+                block.children.head.children.headOption
+              else None // multi-statement: fall back to normal translation
+            case None => node.children.find(c => c.kind != "Parameter")
+          val result = exprNode match
+            case Some(expr) =>
+              // In predicate context, an expression whose type is unknown and
+              // is not already Boolean must refuse
+              val knownType = exprType(expr)
+              if knownType.isEmpty && expr.kind == "Identifier" then
+                refuse("truthiness-unknown-type")
+              val translated = translateCondition(expr)
+              if paramStrs.isEmpty then s"(() => $translated)"
+              else s"((${paramStrs.mkString(", ")}) => $translated)"
+            case None =>
+              // Multi-statement or unparseable: fall back to normal
+              translateFunctionExpr(node)
+          // Restore saved types
+          paramStrs.headOption.foreach { pn =>
+            savedTypes.get(pn) match
+              case Some(old) => localTypes(pn) = old
+              case None      => localTypes.remove(pn)
+          }
+          result
+        case _ =>
+          // Not a lambda literal: translate as-is
+          translateExpr(node)
+
     private def translateObjectLiteral(node: RastNode): String =
       val props = node.children.filter(c =>
         c.kind == "PropertyAssignment" || c.kind == "ShorthandPropertyAssignment" ||
@@ -2217,6 +2299,12 @@ object DefmethodBodyTranslator:
     "slice", "concat", "join", "reverse", "sort", "keys", "values",
     "charAt", "substring", "startsWith", "endsWith", "replace",
     "split", "trim", "toLowerCase", "toUpperCase",
+  )
+
+  /** JS collection methods whose callback returns a Boolean predicate. A lambda
+    * argument in this position has its body translated with truthiness lowering. */
+  private val predicateMethods: Set[String] = Set(
+    "filter", "find", "some", "every", "findIndex",
   )
 
   private def escapeString(s: String): String =

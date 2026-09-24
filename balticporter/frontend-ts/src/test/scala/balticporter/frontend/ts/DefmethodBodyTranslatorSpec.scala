@@ -895,3 +895,42 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val ci     = ReferenceSignatures.CalleeIndex(Map("styles" -> List("Style")))
     val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ", calleeIndex = ci)
     assert(!result.scalaBody.contains("Style.styles"), s"param should not be qualified: ${result.scalaBody}")
+
+  // ---- predicate lambda truthiness ----
+
+  test("filter with identity lambda on String collection applies nonEmpty"):
+    val lambda = node("ArrowFunction", RastNode("Parameter", 0, (0, 0), children = List(ident("cls"))), block(ret(ident("cls"))))
+    val call   = node("CallExpression", propAccess(ident("classes"), "filter"), lambda)
+    val body   = block(ret(call))
+    val result = translate(body, paramTypes = Map("classes" -> "Array[String]"))
+    assert(result.scalaBody.contains("nonEmpty"), s"String truthiness in filter should use nonEmpty: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+
+  test("filter with identity lambda on Nullable collection applies isDefined"):
+    val lambda = node("ArrowFunction", RastNode("Parameter", 0, (0, 0), children = List(ident("item"))), block(ret(ident("item"))))
+    val call   = node("CallExpression", propAccess(ident("items"), "filter"), lambda)
+    val body   = block(ret(call))
+    val result = translate(body, paramTypes = Map("items" -> "Array[Nullable[Int]]", "item" -> "Nullable[Int]"))
+    assert(result.scalaBody.contains("isDefined"), s"Nullable truthiness in filter should use isDefined: ${result.scalaBody}")
+
+  test("find with identity lambda on unknown type refuses"):
+    val lambda = node("ArrowFunction", RastNode("Parameter", 0, (0, 0), children = List(ident("x"))), block(ret(ident("x"))))
+    val call   = node("CallExpression", propAccess(ident("items"), "find"), lambda)
+    val body   = block(ret(call))
+    val result = translate(body)
+    assert(
+      result.refusalReasons.contains("truthiness-unknown-type"),
+      s"unknown type in predicate should refuse: ${result.refusalReasons}"
+    )
+
+  test("filter with non-identity lambda is not affected"):
+    val lambda = node(
+      "ArrowFunction",
+      RastNode("Parameter", 0, (0, 0), children = List(ident("x"))),
+      block(ret(binOp("GreaterThanToken", ident("x"), num(0))))
+    )
+    val call   = node("CallExpression", propAccess(ident("items"), "filter"), lambda)
+    val body   = block(ret(call))
+    val result = translate(body, paramTypes = Map("items" -> "Array[Int]"))
+    assert(result.scalaBody.contains("> 0"), s"comparison filter stays: ${result.scalaBody}")
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
