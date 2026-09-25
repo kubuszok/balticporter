@@ -65,8 +65,10 @@ object RowOverrides:
     }
     (Plan(planned.filter(_._2.nonEmpty).toMap), findings.result())
 
-  /** One row file's emitted types against the main file's, by emitted FQN → text: a type only the row declares, a type the row lacks, and every reachable member whose signature differs. */
-  def compare(s: Shadow, main: Map[String, String], row: Map[String, String]): List[CheckReport.Finding] =
+  /** One row file's emitted types against the main file's, by emitted FQN → text: a type only the row declares, a type the row lacks, and every member the shared code can reach whose signature
+    * differs. `mainReach`/`rowReach` are each translation's TIR view of the shadowed files (see [[reachable]]).
+    */
+  def compare(s: Shadow, main: Map[String, String], row: Map[String, String], mainReach: RowReach.View, rowReach: RowReach.View): List[CheckReport.Finding] =
     val onlyRow = (row.keySet -- main.keySet).toList.sorted.map { n =>
       finding("no-main-type", s.row, s.rel, s"`$n` is declared by the row file and by no main file at `${s.main}`")
     }
@@ -75,10 +77,37 @@ object RowOverrides:
     }
     val differing = (main.keySet intersect row.keySet).toList.sorted.flatMap { n =>
       (RowSurface.of(main(n), n), RowSurface.of(row(n), s"${s.row}:$n")) match
-        case (Right(a), Right(b)) => RowSurface.diff(a, b).map(d => finding("surface", s.row, s.rel, d.render))
-        case (a, b)               => (a.left.toSeq ++ b.left.toSeq).toList.map(e => finding("surface", s.row, s.rel, s"emitted text does not parse, so its surface cannot be compared: $e"))
+        case (Right(a), Right(b)) =>
+          RowSurface.diff(javaCtors(a, mainReach), javaCtors(b, rowReach)).flatMap(d => reachable(d, mainReach, rowReach).map(detail => finding("surface", s.row, s.rel, detail)))
+        case (a, b) => (a.left.toSeq ++ b.left.toSeq).toList.map(e => finding("surface", s.row, s.rel, s"emitted text does not parse, so its surface cannot be compared: $e"))
     }
     onlyRow ++ onlyMain ++ differing
+
+  /** A difference the shared code can see, rendered; `None` for one it cannot. The access is java's (enclosing types included) where the TIR declares the member, capped by the emitted one: a java
+    * `private` member is never compared, even where the emitter widened it; a package-private one only when a file outside the shadowed set references, extends or overrides it, or when no declaration
+    * was found to read its references from.
+    */
+  def reachable(d: RowSurface.Difference, mainReach: RowReach.View, rowReach: RowReach.View): Option[String] =
+    import RowSurface.Access
+    val key    = RowReach.normal(d.member)
+    val java   = (mainReach.access.get(key) ++ rowReach.access.get(key)).maxByOption(_.ordinal)
+    val access = java.fold(d.access)(j => if j.ordinal < d.access.ordinal then j else d.access)
+    access match
+      case Access.Private        => scala.None
+      case Access.PackagePrivate =>
+        val sites = (mainReach.outside.getOrElse(key, Nil) ++ rowReach.outside.getOrElse(key, Nil)).distinct.sorted
+        if sites.nonEmpty then Some(s"${d.render}; package-private, and referenced outside the row's own files by ${sites.mkString(", ")}")
+        else Option.when(java.isEmpty)(s"${d.render}; package-private, and no declaration was found to read its references from")
+      case _ => Some(d.render)
+
+  /** A no-argument constructor java never declared is Scala's own (a class whose constructors are all independent gets an empty primary): no shared code can call it, so it leaves the set. */
+  private def javaCtors(surface: Map[String, List[RowSurface.Sig]], reach: RowReach.View): Map[String, List[RowSurface.Sig]] =
+    surface
+      .map { (k, sigs) =>
+        val noNilary = k.endsWith("#this") && reach.ctorArities.get(RowReach.normal(k).stripSuffix(".this")).exists(as => as.nonEmpty && !as(0))
+        k -> (if noNilary then sigs.filterNot(_.text.endsWith("def this()")) else sigs)
+      }
+      .filter(_._2.nonEmpty)
 
   /** The files one tree declares, package-relative and sorted; `Left` when the root is absent or an entry matches nothing. */
   def expand(tree: RowSource): Either[String, List[String]] =

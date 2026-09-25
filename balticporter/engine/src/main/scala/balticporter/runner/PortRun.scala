@@ -1810,7 +1810,18 @@ final case class PortRun(
         say(s"row `$row`: translating ${shadows.size} upstream file(s) in place of the main ones…")
         val t = sub.translateOnce()
         sub.recordRunDecisions(t, injectedSources, plan)
-        val units = shadows.flatMap { s =>
+        // what the shared code can reach, from each translation's resolved references
+        def reach(tr: PortRun.Translated, files: Set[String]): RowReach.View =
+          val (in, out) = tr.emitOrder.filterNot(isDropped(tr.program, _)).partition(u => files(at(u)))
+          RowReach.of(
+            tr.program,
+            in,
+            out,
+            (enc, o) => s"${tr.program.symbolOf(enc).map(_.fullName).getOrElse("?")} (${CheckReport.relativise(o.javaPath)}:${o.line})"
+          )
+        val mainReach = reach(main, shadows.map(s => PortRun.real(frontend.sourceRoot.resolve(s.main))).toSet)
+        val rowReach  = reach(t, shadows.map(s => PortRun.real(s.file)).toSet)
+        val units     = shadows.flatMap { s =>
           val rowBy  = t.emitOrder.filter(u => at(u) == PortRun.real(s.file) && !isDropped(t.program, u)).map(u => named(t.program, u) -> u).toMap
           val mainAt = PortRun.real(frontend.sourceRoot.resolve(s.main))
           val mainBy = main.emitOrder.filter(u => at(u) == mainAt && !isDropped(main.program, u)).map(u => named(main.program, u) -> u).toMap
@@ -1820,7 +1831,7 @@ final case class PortRun(
               findings += RowOverrides.finding("open-marker", row, s.rel, s"${m.ownerFqn} — ${m.marker.kind.label}: ${m.marker.what}")
             }
           val rowText = rowBy.toList.sortBy(_._1).map((n, u) => n -> t.sourceOf(u))
-          findings ++= RowOverrides.compare(s, mainBy.map((n, u) => n -> main.sourceOf(u)), rowText.toMap)
+          findings ++= RowOverrides.compare(s, mainBy.map((n, u) => n -> main.sourceOf(u)), rowText.toMap, mainReach, rowReach)
           rowText
         }
         PortRun.RowTranslation(row, t, units)

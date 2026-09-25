@@ -47,9 +47,13 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   `rowSources` row, not two hand-written copies** (reusable mechanism, per-port policy): the row's
   file shadows the main one in a second translation of the same program with the same phases, the
   type goes to `src_managed/<row>/scala` for every targeted row and never to `main`, and the emitted
-  surfaces must agree — shared code compiles once against every row, so a differing reachable
-  member, a type the main file does not declare, or an undeclared row is a fatal `row-source`
-  finding. It is NOT a licence to shadow a class whose emulation needs context the java class does
+  surfaces must agree WHERE SHARED CODE CAN SEE THEM — a differing public/protected member, a
+  package-private one a main file outside the shadowed set references, extends or overrides (read
+  from the TIR's resolved references, the site named), a type the main file does not declare, or
+  an undeclared row is a fatal `row-source` finding; a java-`private` member (even emitter-widened)
+  and a package-private one only the shadowed files use may differ, and constructors compare as a
+  SET, never by which is primary (a libGDX core/GWT async pair: 5 refusals -> 0). Tests, injected
+  and hand-written code are not read for references (engine limit). It is NOT a licence to shadow a class whose emulation needs context the java class does
   not take (see the row-shadowing dead end in `phases.md`). Not inherited, like `platformDirs`.
 - **Emission identity is (`portRoot`, `sourceSet`)**; `PortRun` opens with an unconditional
   `wipe(emitDir)`, so a second run at the same pair DELETES the first. N maven modules under one

@@ -160,6 +160,132 @@ class RowSourcesSpec extends munit.FunSuite:
     List("main", "jvm", "js", "native").foreach(r => assertEquals(files(row(root, r)), Nil, r))
   }
 
+  // an executor and its result, whose emulation runs the task at once: every constructor independent,
+  // and a package-private constructor and field only the row's own files call
+  private val coreExecutor =
+    """package com.demo.async;
+      |import java.util.concurrent.*;
+      |public class Executor {
+      |  private final ExecutorService pool;
+      |  public Executor(int max) { this(max, "worker"); }
+      |  public Executor(int max, String name) { pool = Executors.newFixedThreadPool(max); }
+      |  public <T> Result<T> submit(Callable<T> task) { Result<T> r = new Result<T>(pool.submit(task)); r.tries = 1; return r; }
+      |  void touch(int n) {}
+      |}""".stripMargin
+  private val coreResult =
+    """package com.demo.async;
+      |import java.util.concurrent.Future;
+      |public class Result<T> {
+      |  private final Future<T> future;
+      |  int tries;
+      |  Result(Future<T> future) { this.future = future; }
+      |  public boolean isDone() { return future.isDone(); }
+      |}""".stripMargin
+  private val emuExecutor =
+    """package com.demo.async;
+      |import java.util.concurrent.Callable;
+      |public class Executor {
+      |  public Executor(int max) {}
+      |  public Executor(int max, String name) {}
+      |  public <T> Result<T> submit(Callable<T> task) {
+      |    T v = null;
+      |    try { v = task.call(); } catch (Exception e) { throw new RuntimeException(e); }
+      |    Result<T> r = new Result<T>(v); r.tries = 1L; return r;
+      |  }
+      |  void touch(long n) {}
+      |}""".stripMargin
+  private val emuResult =
+    """package com.demo.async;
+      |public class Result<T> {
+      |  private final T result;
+      |  long tries;
+      |  Result(T result) { this.result = result; }
+      |  public boolean isDone() { return true; }
+      |}""".stripMargin
+
+  /** the async fixture: `Executor` and `Result` shadowed on `js`, `User` shared. */
+  private def asyncRun(user: String, emuExec: String = emuExecutor): (Path, () => PortResult) =
+    val root = Files.createTempDirectory("rowsources-async")
+    val src  = root.resolve("upstream/lib/src")
+    val emuR = root.resolve("upstream/web/emu")
+    java(src, "com/demo/async/Executor.java", coreExecutor)
+    java(src, "com/demo/async/Result.java", coreResult)
+    java(src, "com/demo/async/User.java", user)
+    java(emuR, "com/demo/async/Executor.java", emuExec)
+    java(emuR, "com/demo/async/Result.java", emuResult)
+    val files = List("com/demo/async/Executor.java", "com/demo/async/Result.java", "com/demo/async/User.java")
+    root -> (() =>
+      PortRun(
+        label = "demo",
+        portRoot = root.resolve("port"),
+        sourceSet = SourceSet.Main,
+        frontend = FrontendConfig(src, files, Nil),
+        phases = Nil,
+        manifest = Some(PortManifest("demo", rowSources = Map("js" -> List(RowSource(emuR))), targets = Platform.values.toSet))
+      ).execute()
+    )
+
+  private val publicUser =
+    """package com.demo.async;
+      |public class User {
+      |  public boolean go(Executor e) { return e.submit(() -> "x").isDone(); }
+      |}""".stripMargin
+
+  test("constructors compare as the set callers see: a promoted primary equals the same constructors written independently") {
+    val (root, go) = asyncRun(publicUser)
+    go()
+    val js  = Files.readString(row(root, "js").resolve("com/demo/async/Executor.scala"))
+    val jvm = Files.readString(row(root, "jvm").resolve("com/demo/async/Executor.scala"))
+    assert(clue(jvm).contains("class Executor(max$p: scala.Int, name$p: java.lang.String)"))
+    assert(clue(js).contains("def this(max: scala.Int, name: java.lang.String)"))
+  }
+
+  test(
+    "package-private constructors and fields that differ pass when only the row's own files use them, and java-private fields are never compared"
+  ) {
+    val (root, go) = asyncRun(publicUser)
+    go()
+    val js  = Files.readString(row(root, "js").resolve("com/demo/async/Result.scala"))
+    val jvm = Files.readString(row(root, "jvm").resolve("com/demo/async/Result.scala"))
+    assert(clue(js).contains("result") && !js.contains("future"))
+    assert(clue(jvm).contains("future") && !jvm.contains("result"))
+  }
+
+  test("a differing package-private member a shared file references is refused, naming the site") {
+    val (root, go) = asyncRun(
+      """package com.demo.async;
+        |public class User {
+        |  public int go() { Result<String> r = new Result<String>((java.util.concurrent.Future<String>) null); return r.tries; }
+        |}""".stripMargin
+    )
+    val msg = intercept[RuntimeException](go()).getMessage
+    assert(
+      clue(msg).contains("com.demo.async.Result#this") && msg.contains("com.demo.async.User#go (com/demo/async/User.java:3)"),
+      "the constructor, with its site"
+    )
+    assert(msg.contains("com.demo.async.Result#tries") && msg.contains("User.java:3"), "the field, with its site")
+    assert(!msg.contains("Result#future") && !msg.contains("Result#result"), "a java-private field is never surface")
+    assert(!msg.contains("Executor#touch"), "a package-private method nothing outside uses may differ")
+  }
+
+  test("a differing package-private method a shared subclass overrides is refused") {
+    val (_, go) = asyncRun(
+      """package com.demo.async;
+        |public class User extends Executor {
+        |  public User() { super(1); }
+        |  void touch(int n) {}
+        |}""".stripMargin
+    )
+    val msg = intercept[RuntimeException](go()).getMessage
+    assert(clue(msg).contains("com.demo.async.Executor#touch") && msg.contains("overrides it"))
+  }
+
+  test("a public constructor one row lacks is still refused") {
+    val (_, go) = asyncRun(publicUser, emuExecutor.replace("  public Executor(int max, String name) {}\n", ""))
+    val msg     = intercept[RuntimeException](go()).getMessage
+    assert(clue(msg).contains("com.demo.async.Executor#this") && msg.contains("java.lang.String"))
+  }
+
   test("RowSurface ignores parameter names, bodies and private members, and keeps visibility") {
     val a = RowSurface
       .of(

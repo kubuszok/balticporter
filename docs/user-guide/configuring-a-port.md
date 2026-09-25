@@ -228,9 +228,16 @@ manifest {
   its translation, every other row the port targets gets the main one. The shared code compiles once
   against every row, so the run **refuses** (counted in the `row-source` lane, and fatal): a row the
   port does not build, an entry that matches no file, a row file declaring a type the main set does
-  not have at that path, and two emitted surfaces that differ — every member code outside the type
-  can reach (anything not plain `private`), compared without parameter names or bodies, each
-  differing member named. Each row's header names its own upstream file; its source map is
+  not have at that path, and two emitted surfaces that differ where the shared code can see it,
+  compared without parameter names or bodies, each differing member named. What is compared:
+  every public or protected member; a package-private member only when a main file OUTSIDE the
+  row's replaced files references, extends or overrides it (read from the translation's resolved
+  references, and the refusal names that site) — one only the replaced files use may differ; never
+  a member java declared `private`, even where the emitter widened it. Constructors compare as the
+  set of callable signatures, so a promoted primary equals the same constructors written
+  independently, and a no-argument primary java never declared is left out. Only the main source
+  set's java is read for references: a test source set, an injected file or hand-written code that
+  reaches a package-private member of a replaced type is not seen. Each row's header names its own upstream file; its source map is
   `rows/<row>/srcmap.tsv` beside the shared one, which `correlate` reads for a path under that row's
   directory. Absent, or `{}`, is the no-op; not inherited (this module's build, like `platformDirs`).
 - **`providedSources`** is for a replacement your own build already compiles from its own sources
