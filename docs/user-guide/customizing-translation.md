@@ -122,7 +122,14 @@ A forwarder entry with no `members` is refused outright — it can only ever be 
 call's own receiver and arguments (`{recv}`, `{arg0}` …), for the cases `method-body` below cannot
 reach because there is no single declaration to rewrite the body of. A literal brace is `{{`/`}}`.
 Each hole is spliced where the template names it, so a template that needs the argument before the
-receiver binds the receiver first to keep java's evaluation order:
+receiver binds the receiver first to keep java's evaluation order.
+
+`{this}` names the instance of the nearest named class whose member encloses the call. Inside an
+anonymous class it is that OUTER class's instance, emitted `Outer.this`; inside a lambda it is plain
+`this`, which Scala does not rebind. A call in a `static` member, or in an anonymous class created
+in one, has no such instance: it is refused, reported as a finding starting `{this} refused`, and
+left as java wrote it. Never write a literal `this` in a template — inside an anonymous class it
+would silently name the anonymous instance.
 
 ```hocon
 { transform = "call-site-substitution"

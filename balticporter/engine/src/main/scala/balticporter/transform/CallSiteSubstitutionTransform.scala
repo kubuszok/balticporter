@@ -4,8 +4,9 @@ import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRe
 import balticporter.tir.*
 
 /** Replaces a CALL with ready-made Scala naming the call's own receiver and arguments — the call-level twin of [[MethodBodyTransform]], used where a base drops a member a dependent still calls and
-  * only that one call, never the whole declaration, can be rewritten. An entry is a [[MemberKey]] naming the resolved callee, a template with `{recv}`, `{arg0}`…`{argN}`, `{{`/`}}`, and the SCOPE of
-  * the declarations whose calls it rewrites. One callee may carry several entries: at each call the most specific scope admitting the enclosing declaration wins, and a tie is refused and counted.
+  * only that one call, never the whole declaration, can be rewritten. An entry is a [[MemberKey]] naming the resolved callee, a template with `{recv}`, `{this}`, `{arg0}`…`{argN}`, `{{`/`}}`, and the
+  * SCOPE of the declarations whose calls it rewrites. One callee may carry several entries: at each call the most specific scope admitting the enclosing declaration wins, and a tie is refused and
+  * counted.
   */
 final class CallSiteSubstitutionTransform(val entries: List[CallSiteSubstitutionTransform.Entry]) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
 
@@ -15,7 +16,7 @@ final class CallSiteSubstitutionTransform(val entries: List[CallSiteSubstitution
 
   def name: String = "call-site-substitution"
 
-  import CallSiteSubstitutionTransform.{ Bound as BoundCall, Entry, Setting, Template, rankKeys, receiverOf, siteFault, ties }
+  import CallSiteSubstitutionTransform.{ Bound as BoundCall, Entry, NoEnclosingSelf, Setting, Template, ThisRefused, enclosingSelf, rankKeys, receiverOf, selfTerm, siteFault, ties }
 
   /** callee key → its template, for the keys whose only entry is the unscoped default — what a port with no scoped entry reads. */
   def calls: Map[String, String] = entries.filter(_.scope.isUnrestricted).map(e => e.call -> e.template).toMap
@@ -157,6 +158,9 @@ final class CallSiteSubstitutionTransform(val entries: List[CallSiteSubstitution
   /** (callee, call site) → the `Only` scope entry that admitted it, marked fired once the site is really rewritten. */
   private var firedAt: Map[(SymId, Origin), String] = Map.empty
 
+  /** (callee, call site) → the class whose instance `{this}` names there, or why none can be named. Only for sites whose chosen template has the hole. */
+  private var selfAt: Map[(SymId, Origin), Either[String, SymId]] = Map.empty
+
   /** call sites rewritten, by declared key, in a stable order. Reflects the last [[run]]. */
   def substituted: List[(String, Int)] = done.toList.sortBy(_._1)
 
@@ -247,13 +251,16 @@ final class CallSiteSubstitutionTransform(val entries: List[CallSiteSubstitution
     firedScope = Set.empty
     chosen = Map.empty
     firedAt = Map.empty
+    selfAt = Map.empty
     if bySym.isEmpty then return program
 
     // CLASSIFY every call site FIRST, through the DECLARATION the call is in (the xref's nearest
     // enclosing definition), never through the call node — the traversal hooks cannot see it.
-    val sel    = collection.mutable.Map.empty[(SymId, Origin), Either[String, (Entry, BoundCall)]]
-    val fired  = collection.mutable.Map.empty[(SymId, Origin), String]
-    val byEncl = collection.mutable.Map.empty[(SymId, Entry), Int]
+    val sel           = collection.mutable.Map.empty[(SymId, Origin), Either[String, (Entry, BoundCall)]]
+    val fired         = collection.mutable.Map.empty[(SymId, Origin), String]
+    val selves        = collection.mutable.Map.empty[(SymId, Origin), Either[String, SymId]]
+    lazy val anonTpts = CallSiteSubstitutionTransform.anonSupertypes(program)
+    val byEncl        = collection.mutable.Map.empty[(SymId, Entry), Int]
     bySym.toList.sortBy(_._1.raw).foreach { (callee, cands) =>
       program.usages(callee).foreach { u =>
         u.site match
@@ -274,12 +281,20 @@ final class CallSiteSubstitutionTransform(val entries: List[CallSiteSubstitution
                 case Some(prev) if prev != p =>
                   sel.update(at, Left("two calls of this callee share one source position and their declarations select different entries"))
                 case _ => sel.update(at, p)
+              p.foreach { (_, b) =>
+                if b.template.usesThis then
+                  val self = enclosingSelf(program, u.enclosing, anonTpts)
+                  selves.get(at) match
+                    case Some(prev) if prev != self => selves.update(at, Left(s"$ThisRefused: two calls share one source position and sit under different instances"))
+                    case _                          => selves.update(at, self)
+              }
             }
           case _ => ()
       }
     }
     chosen = sel.toMap
     firedAt = fired.toMap
+    selfAt = selves.toMap
     // one decision row per (declaration, entry), read from the pre-rewrite program. Held to sites
     // this phase will ACTUALLY rewrite via siteFault, the same predicate the traversal applies,
     // so a row can never claim a substitution that was refused.
@@ -288,8 +303,8 @@ final class CallSiteSubstitutionTransform(val entries: List[CallSiteSubstitution
         u.site match
           case a: Tree.Apply if a.method == callee =>
             chosen.get((callee, a.origin)).foreach {
-              case Right((e, b)) if siteFault(a, b).isEmpty => byEncl.update((u.enclosing, e), byEncl.getOrElse((u.enclosing, e), 0) + 1)
-              case _                                        => ()
+              case Right((e, b)) if siteFault(a, b, selfFor(a)).isEmpty => byEncl.update((u.enclosing, e), byEncl.getOrElse((u.enclosing, e), 0) + 1)
+              case _                                                    => ()
             }
           case _ => ()
       }
@@ -339,12 +354,17 @@ final class CallSiteSubstitutionTransform(val entries: List[CallSiteSubstitution
           case None                => t
           case Some(Left(why))     => refused += ((cands.head._2.key, why, t.origin)); t
           case Some(Right((e, b))) =>
-            siteFault(t, b) match
+            val self = selfFor(t)
+            siteFault(t, b, self) match
               case Some(why) => refused += ((b.key, why, t.origin)); t
               case None      =>
                 done.update(b.key, done.getOrElse(b.key, 0) + 1)
                 firedAt.get((t.method, t.origin)).foreach(firedScope += _)
-                b.template.splice(receiverOf(t), t.args, t.tpe, t.origin)
+                b.template.splice(receiverOf(t), t.args, t.tpe, t.origin, self.toOption)
+
+  /** the `{this}` term at a call site — a site the xref did not see has no known enclosing declaration, so no instance to name. */
+  private def selfFor(t: Tree.Apply): Either[String, Term] =
+    selfAt.getOrElse((t.method, t.origin), Left(NoEnclosingSelf)).map(selfTerm(_, t.origin))
 
   /** `Foo::bar` naming a substituted callee — no argument list to splice a template into. */
   override def transformTerm(t: Term)(using Program): Term =
@@ -399,7 +419,7 @@ object CallSiteSubstitutionTransform:
   /** Why this site cannot take the template — `None` when it can. One predicate, applied by both the rewriting traversal and the decision recorder, so a decision can never claim a substitution the
     * rewrite refused.
     */
-  def siteFault(t: Tree.Apply, b: Bound): Option[String] =
+  def siteFault(t: Tree.Apply, b: Bound, self: Either[String, Term] = Left(NoEnclosingSelf)): Option[String] =
     if t.args.exists(a => Tree.uncomment(a).isInstanceOf[Tree.Repeated]) then Some("the call passes a VARARG SPREAD, which no positional hole can name")
     else if b.template.maxArg.isDefined && t.args.sizeIs != b.arity then
       Some(
@@ -407,11 +427,64 @@ object CallSiteSubstitutionTransform:
           s"${b.arity}, so the template's positions no longer name what they were checked against"
       )
     else if b.template.usesRecv && receiverOf(t).isEmpty then Some("the template names {recv} and this call has no receiver term (a static or unqualified call)")
+    else if b.template.usesThis then self.left.toOption
     else None
+
+  /** the prefix of every reason a `{this}` site is refused with. */
+  val ThisRefused = "{this} refused"
+
+  /** why `{this}` is refused at a call site the xref did not place in any declaration. */
+  val NoEnclosingSelf: String = s"$ThisRefused: no enclosing member — the call sits in no declaration the cross-reference index recorded, so no instance can be named"
+
+  /** `{this}` as a TREE rather than text, so the emitter qualifies it (`Outer.this`) wherever the site renders inside a nested class body, and a lambda keeps Scala's own lexical `this`. */
+  def selfTerm(cls: SymId, at: Origin): Term = Tree.This(cls, TypeRepr.TypeRef(TypeRepr.NoPrefix, cls), at)
+
+  /** The class whose instance `{this}` names at a call inside `encl`: the nearest NAMED class whose instance member lexically encloses the call. A lambda is transparent (Scala's lambda keeps the
+    * enclosing `this`) and so is an anonymous class, climbed through its creation site, because its own `this` is not the class a scope entry names. `Left(reason)` wherever that path crosses a STATIC
+    * member (no instance exists) or cannot be read.
+    */
+  def enclosingSelf(program: Program, encl: SymId, anonTpts: => Map[SymId, TypeTree]): Either[String, SymId] =
+    def isClass(s: SymId)  = program.definitionOf(s).exists(_.isInstanceOf[Tree.ClassDef])
+    def isAnon(s:  SymId)  = program.symbolOf(s).exists(_.name == "<anon>")
+    def staticIn(s: SymId) = Left(
+      s"$ThisRefused: static member — the call sits in STATIC `${program.symbolOf(s).map(_.fullName).getOrElse("?")}`, which has no instance"
+    )
+    @annotation.tailrec
+    def climb(at: SymId, fuel: Int): Either[String, SymId] =
+      if fuel <= 0 || at == SymId.None then Left(NoEnclosingSelf)
+      else if isClass(at) then Right(at)
+      else if isAnon(at) then
+        anonCreationSite(program, at, anonTpts) match
+          case Some(site) => climb(site, fuel - 1)
+          case None       =>
+            Left(
+              s"$ThisRefused: anonymous class — the member enclosing the `new` of this anonymous class is unknown, so its enclosing instance cannot be named"
+            )
+      else
+        program.symbolOf(at) match
+          case None                        => Left(NoEnclosingSelf)
+          case Some(s) if s.flags.isStatic => staticIn(at)
+          case Some(s)                     => climb(s.owner, fuel - 1)
+    if isClass(encl) then Left(s"$ThisRefused: no enclosing member — the call sits in a class header, where java has no `this` to name")
+    else climb(encl, 64)
+
+  /** every anonymous class in `program` → the supertype its `new` names, the key its creation site is indexed under. */
+  def anonSupertypes(program: Program): Map[SymId, TypeTree] =
+    program.units.flatMap(u => StandardTraversal.allAnonClasses(u)(using program)).map((a, tpt) => a.symbol -> tpt).toMap
+
+  /** the declaration enclosing the `new` that created anonymous class `anon`, read off the cross-reference index's usage of that `new`'s supertype. */
+  private def anonCreationSite(program: Program, anon: SymId, anonTpts: Map[SymId, TypeTree]): Option[SymId] =
+    def heads(t: TypeRepr): List[SymId] = t match
+      case TypeRepr.TypeRef(_, s)      => List(s)
+      case TypeRepr.AppliedType(tc, _) => heads(tc)
+      case TypeRepr.AndType(l, r)      => heads(l) ++ heads(r)
+      case _                           => Nil
+    anonTpts.get(anon).flatMap(tpt => heads(tpt.tpe).iterator.flatMap(program.usages).collectFirst { case Usage(_, n: Tree.New, enc) if n.anon.exists(_.symbol == anon) && enc != SymId.None => enc })
 
   /** ONE hole. */
   enum Hole:
     case Recv
+    case This
     case Arg(index: Int)
 
   /** A parsed expression template — literal parts interleaved with holes. Parsed once at bind time, so a template fault becomes a finding before the pipeline runs. `parts` always has exactly one more
@@ -420,14 +493,18 @@ object CallSiteSubstitutionTransform:
   final case class Template(parts: List[String], holes: List[Hole]):
     def usesRecv: Boolean = holes.contains(Hole.Recv)
 
+    /** does the template name the instance enclosing the call site? */
+    def usesThis: Boolean = holes.contains(Hole.This)
+
     /** the highest `{argN}` index the template names, or `None` when it names no argument. */
     def maxArg: Option[Int] = holes.collect { case Hole.Arg(i) => i }.maxOption
 
-    /** the template with `recv` and `args` spliced in — as a [[Tree.Opaque]] carrying the TERMS, never a rendered string (see `Tree.Opaque`). Guarded by [[siteFault]] at every caller.
+    /** the template with `recv`, `self` and `args` spliced in — as a [[Tree.Opaque]] carrying the TERMS, never a rendered string (see `Tree.Opaque`). Guarded by [[siteFault]] at every caller.
       */
-    def splice(recv: Option[Term], args: List[Term], tpe: TypeRepr, origin: Origin): Term =
+    def splice(recv: Option[Term], args: List[Term], tpe: TypeRepr, origin: Origin, self: Option[Term] = None): Term =
       val terms = holes.map {
         case Hole.Recv   => recv.get
+        case Hole.This   => self.get
         case Hole.Arg(i) => args(i)
       }
       Tree.Opaque.spliced(parts, terms, tpe, origin)
@@ -435,7 +512,7 @@ object CallSiteSubstitutionTransform:
   object Template:
 
     /** Parse a template, or say precisely what is wrong with it. Tiny grammar, refused outside it rather than carried through as literal text — a lenient parse would emit `{arg0}` as an
-      * unattributable compile error. `{recv}` the receiver; `{arg0}`…`{argN}` positional arguments; `{{`/`}}` a literal brace.
+      * unattributable compile error. `{recv}` the receiver; `{this}` the instance enclosing the call site; `{arg0}`…`{argN}` positional arguments; `{{`/`}}` a literal brace.
       */
     def parse(text: String): Either[String, Template] =
       val parts = List.newBuilder[String]
@@ -457,7 +534,7 @@ object CallSiteSubstitutionTransform:
                 case Some(h) => parts += cur.toString; cur.clear(); holes += h; i = close + 1
                 case None    =>
                   bad = Some(
-                    s"`{$nm}` at index $i is not a hole: write `{recv}` for the receiver, " +
+                    s"`{$nm}` at index $i is not a hole: write `{recv}` for the receiver, `{this}` for the enclosing instance, " +
                       "`{arg0}`…`{argN}` for the arguments, or `{{` for a literal brace"
                   )
           case c => cur.append(c); i += 1
@@ -468,5 +545,6 @@ object CallSiteSubstitutionTransform:
 
     private def holeOf(nm: String): Option[Hole] =
       if nm == "recv" then Some(Hole.Recv)
+      else if nm == "this" then Some(Hole.This)
       else if nm.startsWith("arg") then nm.drop(3).toIntOption.filter(_ >= 0).map(Hole.Arg.apply)
       else None
