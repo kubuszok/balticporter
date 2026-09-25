@@ -158,6 +158,11 @@ where that value comes from is a port's to say (a hand-written file may carry a 
   Scala the compiler will not flag it, so the refusal must be counted when written, not just left
   approximated: a bare `return` under a function literal is
   scala's NON-LOCAL RETURN — three in libGDX core at 0 errors. Count the refusal when written.
+- **A refusal check validates against a source INDEPENDENT of the resolver that produced the name.**
+  The unresolved-reference check asked the same callee index that had resolved a bare `frequency`
+  to `Mangler.frequency` (members filed under the FILE's name, not the declaring object), so it could
+  never fire and a body 3 compile errors deep read `translated`. Ask what the TARGET declares, from
+  a parse of its declaration; spec every syntactic form the check covers (bare name AND `X.m`).
 - **A repair at the USE cannot discharge the DECLARATION's obligation.** An F-bounded result pinned
   at the call left the OVERRIDE EDGE (JLS 8.4.2 erasure override) unmeasured for six waves; stating
   the type at the declaration closed 8 of 42 `RefChecks` rows and `overload-risk` fell 6. Where a
