@@ -110,9 +110,13 @@ Per check, what a non-zero number is telling you:
 - **`substitution(emitted)`** — a type you dropped that the emitter wrote a file for anyway (checked
   BEFORE the injection copy, so the file can only have come from the emitter).
   **`substitution(dangling)`** — a dropped type with neither an injected replacement nor its uses
-  rewritten away, still referenced by N files (checked AFTER injection, over the final tree, and
-  textually — injected sources never pass through the TIR). Both are §1(b)/(c): supply an `inject`
-  replacement at that FQN, or plug in a rule that rewrites its uses away.
+  rewritten away, still referenced from CODE by N files (checked AFTER injection, over the final
+  tree, lexically — injected sources never pass through the TIR; comments, strings and porter notes
+  are masked, and both the upstream and the renamed FQN are searched). Both are §1(b)/(c): supply an
+  `inject` replacement at that FQN, or plug in a rule that rewrites its uses away.
+  **`substitution(doc-mention)`** — NOT fatal: an upstream comment, copied verbatim, still names a
+  dropped type with no replacement while the code does not. One row per type and file; edit the
+  upstream comment or accept it — no engine or policy change is owed.
 - **`policy`** — see §4.
 - **`manifest`** — `ManifestAgreement` between this module and its base. A drop, rename or
   signature-affecting phase in one module and not the other; a phase name appearing twice with

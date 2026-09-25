@@ -3,6 +3,7 @@ paths:
   - "Justfile"
   - "scripts/**"
   - "build.sbt"
+  - "balticporter/engine/**/core/SubstitutionCheck.scala"
 ---
 
 # Measurement — baselines, correlation, paths
@@ -25,7 +26,7 @@ RELEASE of every base's port artifact before a dependent may pin the engine; say
 ## Required checks
 
 Every run must record: `signature`, `omissions`, `portability(all|emitted|injected)`,
-`dependency-coverage(all|declared|)`, `substitution(emitted|dangling)`, `remediation`, `policy`,
+`dependency-coverage(all|declared|)`, `substitution(emitted|dangling|doc-mention)`, `remediation`, `policy`,
 `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`, `base-surface`,
 `rewrite-callsites`, `idiom(converted|refused|residue)`,
 `catalog(consulted|unreached|unmechanised|undischarged|uncited)` — plus what the run's own pipeline
@@ -38,6 +39,11 @@ registers. Why the families are split:
   never asserted on (a citation invented to silence it is worse than the gap). `idiom`: `refused = 0`
   is met by converting nothing; the denominator is recomputed every run; all three required of every
   port, `jdk-surface`'s reason.
+- `substitution(dangling)` is fatal, so it reads CODE only (universal): a text search counted a
+  dropped exception's name in two copied `@throws` Javadoc lines as dangling at 0 code references,
+  and comments cannot be rewritten. Mask comments, literals and porter notes with the Scala 3
+  tokenizer, match the upstream AND the emitted (renamed) FQN at identifier boundaries, and count a
+  comment-only mention apart in the non-fatal `substitution(doc-mention)`, one row per type and file.
 - `dependency-coverage` is the OTHER half of `portability`: a finding needs three conjuncts (usage
   fired, no declared dependency covers it, no `verdictOverrides` alternative), read THROUGH the
   overrides not as a second filter. `(all)` is the enumeration behind the residue filtered by

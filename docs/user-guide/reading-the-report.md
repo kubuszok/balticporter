@@ -73,7 +73,8 @@ enabled, for instance). What each headline number in `counts.tsv` means:
 | `portability(all\|emitted\|injected)` | sites using a JVM-only JDK API — `all` everywhere, `emitted` in code this run wrote, `injected` in files it copied in from your `inject` list |
 | `remediation` | the same portability findings grouped into "here is the one change that would fix these", ranked |
 | `substitution(emitted)` | a type you dropped, but the emitter wrote a file for it anyway — check your drop key against what actually got generated |
-| `substitution(dangling)` | a type you dropped, with neither an injected replacement nor its uses rewritten away — still referenced, and by how many files |
+| `substitution(dangling)` | a type you dropped, with neither an injected replacement nor its uses rewritten away — still referenced from code, and by how many files. Fatal. A mention of its upstream or renamed name inside a comment or a string is not a reference |
+| `substitution(doc-mention)` | a comment copied verbatim from upstream names a type you dropped and did not replace, while the code no longer refers to it — one row per type and file, never fatal. Edit the upstream comment or accept the mention |
 | `policy` | a policy entry you declared that never fired at all — see below |
 | `manifest` | this module's declared base chain disagrees with it — see [Multi-module ports](multi-module-ports.md) |
 | `port-map` | a reference into a base module the base's own published map says it does not emit |

@@ -1107,7 +1107,14 @@ final case class PortRun(
       refusedRemedies.foreach(a => println("  ! " + a.render))
 
     // CHECK 2 — over the FINAL tree.
-    val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs, providedReplacements.contains))
+    val substitutionScan = SubstitutionCheck.scan(outDir, ownSubs, providedReplacements.contains, fqn => droppedEmittedNames.getOrElse(fqn, fqn))
+    val danglingSubs     = record(PortRun.SubstitutionDangling, substitutionScan.dangling)
+    // Not fatal, and kept out of the report's substitution list: upstream comments are copied verbatim.
+    record(PortRun.SubstitutionDocMention, substitutionScan.docMentions)
+    if substitutionScan.docMentions.nonEmpty then
+      say(
+        s"substitutions: ${substitutionScan.docMentions.size} upstream comment mention(s) of a dropped type with no replacement (not fatal)"
+      )
     if ownSubs.dropTypes.nonEmpty && danglingSubs.isEmpty then say(s"substitutions: ${ownSubs.dropTypes.size} dropped types verified removed from the final code")
 
     // ---- policy: this module's own declared keys only (inherited keys checked by ManifestAgreement) ----
@@ -1662,10 +1669,12 @@ final case class PortRun(
 
   /** Record a [[SubstitutionCheck]] result and return it. */
   private def record(check: String, fs: List[SubstitutionCheck.Finding]): List[SubstitutionCheck.Finding] =
-    CheckReport.record(check,
-                       fs.map { f =>
-                         CheckReport.Finding(check, f.kind.toString, f.fqn, s"${f.fqn.replace('.', '/')}.scala", 0, f.render)
-                       }
+    CheckReport.record(
+      check,
+      fs.map { f =>
+        val path = if f.file.nonEmpty then f.file else s"${f.fqn.replace('.', '/')}.scala"
+        CheckReport.Finding(check, f.kind.toString, f.fqn, path, f.line, f.render)
+      }
     )
     fs
 
@@ -2282,27 +2291,28 @@ object PortRun:
     List(new UnusedSymbolTransform, new SuppressionPhase)
 
   // ---- check lane names (as they appear in counts.tsv) ----
-  val Signature            = "signature"
-  val Omissions            = OmissionCheck.Name
-  val PortabilityAll       = "portability(all)"
-  val PortabilityEmitted   = PortabilityCheck.EmittedLane
-  val PortabilityInjected  = "portability(injected)"
-  val Remediation          = balticporter.tir.Resolution.Check
-  val SubstitutionEmitted  = "substitution(emitted)"
-  val SubstitutionDangling = "substitution(dangling)"
-  val Policy               = "policy"
-  val Manifest             = "manifest"
-  val PortMapCheck         = "port-map"
-  val BaseSurface          = "base-surface"
-  val TriviaDropped        = "trivia"
-  val TriviaRecovered      = "trivia(recovered)"
-  val TriviaDeliberate     = "trivia(deliberate)"
-  val JdkSurface           = JdkSurfaceCheck.Name
-  val IdiomConverted       = IdiomCheck.Converted
-  val IdiomRefused         = IdiomCheck.Refused
-  val IdiomResidue         = IdiomCheck.Residue
-  val UnusedHandled        = UnusedSymbolTransform.Handled
-  val UnusedRefused        = UnusedSymbolTransform.Refused
+  val Signature              = "signature"
+  val Omissions              = OmissionCheck.Name
+  val PortabilityAll         = "portability(all)"
+  val PortabilityEmitted     = PortabilityCheck.EmittedLane
+  val PortabilityInjected    = "portability(injected)"
+  val Remediation            = balticporter.tir.Resolution.Check
+  val SubstitutionEmitted    = "substitution(emitted)"
+  val SubstitutionDangling   = "substitution(dangling)"
+  val SubstitutionDocMention = "substitution(doc-mention)"
+  val Policy                 = "policy"
+  val Manifest               = "manifest"
+  val PortMapCheck           = "port-map"
+  val BaseSurface            = "base-surface"
+  val TriviaDropped          = "trivia"
+  val TriviaRecovered        = "trivia(recovered)"
+  val TriviaDeliberate       = "trivia(deliberate)"
+  val JdkSurface             = JdkSurfaceCheck.Name
+  val IdiomConverted         = IdiomCheck.Converted
+  val IdiomRefused           = IdiomCheck.Refused
+  val IdiomResidue           = IdiomCheck.Residue
+  val UnusedHandled          = UnusedSymbolTransform.Handled
+  val UnusedRefused          = UnusedSymbolTransform.Refused
 
   /** Checks every run must record. Named, not derived, so a forgotten check fails the next run. */
   val RequiredChecks: Set[String] = Set(
@@ -2314,6 +2324,7 @@ object PortRun:
     Remediation,
     SubstitutionEmitted,
     SubstitutionDangling,
+    SubstitutionDocMention,
     Policy,
     Manifest,
     PortMapCheck,
@@ -2406,7 +2417,7 @@ final case class PortReport(
 ):
 
   /** Findings that must stop the run (leaked drops, dangling subs, fatal manifest disagreements). */
-  def fatal: List[String] = substitution.map(_.render) ++ manifest.filter(_.kind.fatal).map(_.render)
+  def fatal: List[String] = substitution.filter(_.fatal).map(_.render) ++ manifest.filter(_.kind.fatal).map(_.render)
 
   def render: String =
     val rows = List(

@@ -110,3 +110,76 @@ class SubstitutionCheckSpec extends munit.FunSuite:
     // nothing provided is exactly the check without the parameter
     assertEquals(SubstitutionCheck.dangling(dir, subs, _ => false), SubstitutionCheck.dangling(dir, subs))
   }
+
+  // ---- code versus comments: only code can dangle ----
+
+  private val javadocOnly =
+    """package com.x
+      |/** Parses the input.
+      |  * @throws com.x.FooException in case the input is malformed
+      |  */
+      |class Parser { def parse(s: String): Int = throw new com.y.PortError(s) }
+      |""".stripMargin
+
+  test("a mention only in an upstream comment is not fatal, and is one doc-mention row per file") {
+    val dir  = tree("com/x/Parser.scala" -> javadocOnly, "com/x/Other.scala" -> "package com.x\n// see com.x.FooException\nclass Other")
+    val subs = Substitutions(dropTypes = Set("com.x.FooException"))
+    val s    = SubstitutionCheck.scan(dir, subs)
+    assertEquals(s.dangling, Nil)
+    assertEquals(
+      s.docMentions.map(f => (f.kind, f.fqn, f.file, f.line)).sortBy(_._3),
+      List(
+        (SubstitutionCheck.Kind.DocMention, "com.x.FooException", "com/x/Other.scala", 2),
+        (SubstitutionCheck.Kind.DocMention, "com.x.FooException", "com/x/Parser.scala", 3)
+      )
+    )
+    assert(s.docMentions.forall(!_.fatal))
+    assert(clue(s.docMentions.head.render).contains("an upstream comment names com.x.FooException"))
+  }
+
+  test("a code reference by the upstream name is fatal, and a comment in the same file adds no doc-mention row") {
+    val dir  = tree("com/x/Parser.scala" -> (javadocOnly + "class Q { def e: com.x.FooException = ??? }\n"))
+    val subs = Substitutions(dropTypes = Set("com.x.FooException"))
+    val s    = SubstitutionCheck.scan(dir, subs)
+    assertEquals(s.dangling, List(SubstitutionCheck.Finding(SubstitutionCheck.Kind.Dangling, "com.x.FooException", 1)))
+    assert(s.dangling.forall(_.fatal))
+    assertEquals(s.docMentions, Nil)
+  }
+
+  test("a code reference by the RENAMED name is fatal; the renamed name in a comment is a doc mention") {
+    val dir = tree(
+      "org/port/A.scala" -> "package org.port\nclass A { def e: org.port.FooException = ??? }",
+      "org/port/B.scala" -> "package org.port\n/** throws org.port.FooException */\nclass B"
+    )
+    val subs    = Substitutions(dropTypes = Set("com.x.FooException"))
+    val renamed = (fqn: String) => fqn.replace("com.x.", "org.port.")
+    val s       = SubstitutionCheck.scan(dir, subs, emittedName = renamed)
+    assertEquals(s.dangling.map(f => f.fqn -> f.references), List("com.x.FooException" -> 1))
+    assertEquals(s.docMentions.map(_.file), List("org/port/B.scala"))
+    // without the emitted name the code reference is invisible, which is the miss this closes
+    assertEquals(SubstitutionCheck.dangling(dir, subs), Nil)
+  }
+
+  test("a mention inside a string literal is neither a code reference nor a doc mention") {
+    val src =
+      "package com.x\nclass A {\n  val m = \"com.x.FooException\"\n  val c = '\"'\n  val n = s\"was com.x.FooException $m\"\n  val t = \"\"\"com.x.FooException\"\"\"\n}\n"
+    val dir = tree("com/x/A.scala" -> src)
+    val s   = SubstitutionCheck.scan(dir, Substitutions(dropTypes = Set("com.x.FooException")))
+    assertEquals(s, SubstitutionCheck.Scan(Nil, Nil))
+  }
+
+  test("a match is bounded by identifiers: a longer name is not a reference, a nested type is") {
+    val dir = tree(
+      "com/x/A.scala" -> "package com.x\nclass A { def a: com.x.FooExceptionHandler = ??? }",
+      "com/x/B.scala" -> "package com.x\nclass B { def b: com.x.FooException.Kind = ??? }"
+    )
+    val s = SubstitutionCheck.scan(dir, Substitutions(dropTypes = Set("com.x.FooException")))
+    assertEquals(s.dangling.map(_.references), List(1))
+  }
+
+  test("porter notes naming a dropped type are neither code nor an upstream comment") {
+    val dir = tree(
+      "com/x/A.scala" -> "package com.x\n/* porter: dropped-type reason=configured phase=substitutions key=com.x.FooException */\nclass A"
+    )
+    assertEquals(SubstitutionCheck.scan(dir, Substitutions(dropTypes = Set("com.x.FooException"))), SubstitutionCheck.Scan(Nil, Nil))
+  }
