@@ -710,3 +710,99 @@ class SurfaceFoldSpec extends munit.FunSuite:
     assertEquals(dep.surfaceFold.ownKeys, Map("nullability" -> Set.empty[String]))
     assertEquals(nulls(dep).annotations, Set("com.demo.Null"))
   }
+
+  // -------------------------------------------------------------------------------------------
+  // SCOPED INTRUSION — a subject whose scope confines it to names outside a base's claim
+  // cannot edit that base's shared surface and must not be reported as an intrusion candidate.
+  // -------------------------------------------------------------------------------------------
+
+  private def scopedRedirect(from: String, to: String, scope: RuleScope): TypeRedirectTransform =
+    new TypeRedirectTransform(
+      redirects = Map(from -> to),
+      scopes = if scope.isUnrestricted then Map.empty else Map(from -> scope)
+    )
+
+  test("a scoped redirect CONFINED to the dependent's namespace does NOT fire the intrusion screen") {
+    // The exact shape the ecs port has: the base emits `com.demo.Bits`, and the dependent
+    // redirects it to `scala.collection.mutable.BitSet` scoped to ONLY the dependent's own
+    // package. The redirect cannot touch the base's declarations, so it cannot edit the shared surface.
+    val b   = base(List(redirect("com.other.A" -> "com.dep.A")))
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(scopedRedirect("com.demo.Bits", "scala.collection.mutable.BitSet", RuleScope.Only(Set("com.ashley"))))
+      )
+    )
+    assertEquals(dep.surfaceFold.intrusions, Nil)
+    assertEquals(dep.surfaceFold.refusals, Nil)
+    assertEquals(dep.effectiveSurface.size, 1) // one merged phase
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
+  }
+
+  test("…and the SAME redirect UNSCOPED still fires — the default scope can touch the base") {
+    val b   = base(List(redirect("com.other.A" -> "com.dep.A")))
+    val dep = b.extendedBy(
+      PortManifest("dep", surface = List(redirect("com.demo.Bits" -> "scala.collection.mutable.BitSet")))
+    )
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Bits"))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
+  }
+
+  test("a scoped redirect whose scope NAMES the base's namespace still fires") {
+    // Scope `Only(Set("com.demo"))` reaches INTO the base's claim, so the redirect CAN edit
+    // the shared surface.
+    val b   = base(List(redirect("com.other.A" -> "com.dep.A")))
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(scopedRedirect("com.demo.Bits", "scala.collection.mutable.BitSet", RuleScope.Only(Set("com.demo"))))
+      )
+    )
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Bits"))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
+  }
+
+  test("a scoped redirect with `Everywhere(except)` is never confined — it covers the base") {
+    val b   = base(List(redirect("com.other.A" -> "com.dep.A")))
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(scopedRedirect("com.demo.Bits", "scala.collection.mutable.BitSet", RuleScope.Everywhere(Set("com.ashley"))))
+      )
+    )
+    // `Everywhere` always overlaps with the base, so the intrusion screen fires
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Bits"))
+  }
+
+  test("SCOPED intrusion bypass also works through the NO-MERGE path (base has no type-redirect)") {
+    // When the base has no type-redirect at all, the dependent's phase enters the pipeline
+    // through the `case -1` arm — the screen must check scopes there too.
+    val b   = PortManifest("base", governs = Set("com.demo")) // no type-redirect of its own
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(scopedRedirect("com.demo.Bits", "scala.collection.mutable.BitSet", RuleScope.Only(Set("com.ashley"))))
+      )
+    )
+    assertEquals(dep.surfaceFold.intrusions, Nil)
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
+  }
+
+  test("…and the same no-merge path WITHOUT a scope still fires") {
+    val b   = PortManifest("base", governs = Set("com.demo"))
+    val dep = b.extendedBy(
+      PortManifest("dep", surface = List(redirect("com.demo.Bits" -> "scala.collection.mutable.BitSet")))
+    )
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Bits"))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
+  }
+
+  test("`subjectScope` default is everywhere — no existing phase changes behaviour") {
+    // A phase that does not override `subjectScope` returns `RuleScope.everywhere` for every
+    // subject, so the screen fires exactly as before.
+    val n = nullability(Set("com.demo.Null"))
+    assertEquals(n.subjectScope("com.demo.Null"), RuleScope.everywhere)
+  }

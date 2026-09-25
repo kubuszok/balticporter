@@ -108,6 +108,11 @@ final class TypeRedirectTransform(
   def subjects: Set[String] =
     (redirects.keySet ++ memberRenames.keySet).map(MergeablePolicy.subjectOf)
 
+  /** The scope governing one subject — read from `scopeOf`, so the intrusion screen skips a subject whose scope confines it to names outside a base's claim.
+    */
+  override def subjectScope(subject: String): RuleScope =
+    scopes.getOrElse(subject, RuleScope.everywhere)
+
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: TypeRedirectTransform =>
       val typeClash = (redirects.keySet & o.redirects.keySet).filter(k => redirects(k) != o.redirects(k))

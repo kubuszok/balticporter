@@ -1,6 +1,6 @@
 package balticporter.core
 
-import balticporter.tir.Phase
+import balticporter.tir.{ Phase, RuleScope }
 
 /** How one parameterised phase's policy composes with a nearer manifest's instance of the same phase — the merge contract. `extendedBy` concatenates `surface` phases by identity, so two instances of
   * one name never merge without this — fatal `SurfaceDivergence`. The phase answers (merge semantics differ per phase); three obligations: preserve both inputs' own keys or refuse, be
@@ -18,6 +18,12 @@ trait MergeablePolicy extends SurfacePolicy:
     * declaring a phase its base lacks is screened too. Over-approximate rather than under — a harmless subject costs a refusal, an omitted one is a hole.
     */
   def subjects: Set[String]
+
+  /** The scope that governs one subject of this phase's policy — where the rewrite for that subject applies, as a `RuleScope`. A subject whose scope confines it to names outside a base's claim cannot
+    * edit the base's shared surface and is not reported as an intrusion candidate for that base. Default: `RuleScope.everywhere`, which keeps today's behaviour for every phase that has no per-subject
+    * scope (all existing phases except `TypeRedirectTransform`).
+    */
+  def subjectScope(subject: String): RuleScope = RuleScope.everywhere
 
 object MergeablePolicy:
 
@@ -113,7 +119,7 @@ object SurfaceFold:
           // candidate is what stops the run.
           case -1 =>
             intrusions = intrusions ++ (p match
-              case a: MergeablePolicy => candidates(seen, p.name, a.subjects)
+              case a: MergeablePolicy => candidates(seen, p.name, a.subjects, a)
               case _ => Nil)
             phases = phases :+ p
           case i =>
@@ -127,7 +133,10 @@ object SurfaceFold:
                     // only the layer holding the base's published map can make, and a confirmed
                     // one stops the run before any phase runs rather than by leaving a pipeline
                     // half-composed.
-                    intrusions = intrusions ++ candidates(seen, p.name, added)
+                    // The LATER instance's scopes govern the added subjects: ask it (or the merged
+                    // result, which carries the same scopes for the added keys).
+                    val policy = p match { case m: MergeablePolicy => m; case _ => a }
+                    intrusions = intrusions ++ candidates(seen, p.name, added, policy)
                     Outcome.Merged(merged, added)
                   case Left(why) => Outcome.Kept(Refusal(p.name, Cause.Conflict, why))
               case _ => noContract(earlier, p)
@@ -177,15 +186,20 @@ object SurfaceFold:
 
   /** The `governs` screen, manifest half: which subjects this module adds could edit a base's shared surface? Not a bare prefix (a base's claim holds types it drops, and redirecting into a
     * dependent's replacement is legitimate) — a candidate is a subject the base's own policy does not account for. "Nothing stands at that name" is the criterion, not "is dropped"
-    * (`PortManifest.shipsInjectionAt`). Screened against the base's published port map.
+    * (`PortManifest.shipsInjectionAt`). Screened against the base's published port map. A subject whose scope confines it entirely to names outside a base's claim cannot edit that base's shared
+    * surface and is skipped.
     */
-  private def candidates(bases: List[PortManifest], phase: String, added: Set[String]): List[Intrusion] =
+  private def candidates(bases: List[PortManifest], phase: String, added: Set[String], policy: MergeablePolicy): List[Intrusion] =
     def admitted(b: PortManifest, subject: String): Boolean =
       b.effectiveDropTypes.contains(subject) && !b.shipsInjectionAt(subject)
+    def confinedOutside(b: PortManifest, subject: String): Boolean =
+      policy.subjectScope(subject) match
+        case RuleScope.Only(entries) => entries.forall(e => !b.claims(e))
+        case _                       => false
     for
       subject <- added.toList.sorted
       b <- bases
-      if b.claims(subject) && !admitted(b, subject)
+      if b.claims(subject) && !admitted(b, subject) && !confinedOutside(b, subject)
     yield
       val why =
         if b.effectiveDropTypes.contains(subject) then

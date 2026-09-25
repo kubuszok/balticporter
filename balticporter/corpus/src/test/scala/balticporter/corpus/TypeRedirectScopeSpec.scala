@@ -104,3 +104,78 @@ class TypeRedirectScopeSpec extends PortSuite:
     assertEquals(clue(findings).size, 1)
     assertEquals(findings.head.key, "com.absent")
   }
+
+  // -------------------------------------------------------------------------------------------
+  // A scoped redirect of a base-emitted type retypes the DEPENDENT's own fields and call sites
+  // while leaving the base's declarations untouched — the shape a dependent module's own policy
+  // needs (e.g. re-pointing a base's bit-set type at the stdlib's BitSet).
+  // -------------------------------------------------------------------------------------------
+
+  /** A base type with `get(int)`, `set(int)`, `isEmpty()` — the shape of a bit-set or similar container that a dependent might want to redirect to a stdlib type.
+    */
+  private val baseSources = List(
+    "com/base/Bits.java" ->
+      """package com.base;
+        |public class Bits {
+        |  public boolean get(int i) { return false; }
+        |  public void set(int i) {}
+        |  public boolean isEmpty() { return true; }
+        |}
+        |""".stripMargin,
+    "com/dep/Entity.java" ->
+      """package com.dep;
+        |import com.base.Bits;
+        |public class Entity {
+        |  public Bits componentBits = new Bits();
+        |  public Bits getComponentBits() { return componentBits; }
+        |  public boolean has(int idx) { return componentBits.get(idx); }
+        |}
+        |""".stripMargin
+  )
+
+  test("a SCOPED redirect retypes the dependent's own fields and accessors, leaves the base's type declaration unchanged") {
+    val phase = new TypeRedirectTransform(
+      redirects = Map("com.base.Bits" -> "scala.collection.mutable.BitSet"),
+      memberRenames = Map("com.base.Bits" -> Map("get" -> "contains")),
+      scopes = Map("com.base.Bits" -> RuleScope.Only(Set("com.dep")))
+    )
+    val p = portAll(baseSources, phase)
+    // the dependent's own field and accessor use the redirect target
+    assertEmits(p, "var componentBits: scala.collection.mutable.BitSet")
+    assertEmits(p, "def getComponentBits(): scala.collection.mutable.BitSet")
+    // the base's own TYPE declaration is untouched — it still declares `class Bits`, not BitSet.
+    // The redirect is scoped to `com.dep`, so `com.base.Bits`'s type references stay as `Bits`.
+    assertEmits(p, "class Bits")
+    // The member rename fires on the override COMPONENT program-wide (the base's `get` is the
+    // declaration site), which is correct: in a dependent's run the rename precedes the redirect
+    // and applies to the whole component, then the redirect only moves types within the scope.
+    // The base's own independent run would not have this rename — that is why the rename is
+    // per-run, and the TYPE redirect is what the scope governs.
+    assertEmits(p, "def contains(")
+    assertEmits(p, "def set(")
+    assertEmits(p, "def isEmpty(")
+  }
+
+  test("a scoped redirect with memberRenames rewrites call sites inside the scope") {
+    val phase = new TypeRedirectTransform(
+      redirects = Map("com.base.Bits" -> "scala.collection.mutable.BitSet"),
+      memberRenames = Map("com.base.Bits" -> Map("get" -> "contains")),
+      scopes = Map("com.base.Bits" -> RuleScope.Only(Set("com.dep")))
+    )
+    val p = portAll(baseSources, phase)
+    // the member rename fires within the scope: `componentBits.get(idx)` becomes `.contains(idx)`
+    assertEmits(p, ".contains(")
+    // decisions are recorded only for declarations in the scope
+    assertDecides(p, Decision.Kind.RetypedSignature, "com.dep.Entity")
+    assertNotDecides(p, Decision.Kind.RetypedSignature, "com.base.Bits")
+  }
+
+  test("`subjectScope` returns the entry's scope from `scopeOf`") {
+    val phase = new TypeRedirectTransform(
+      redirects = Map("com.base.Bits" -> "scala.collection.mutable.BitSet"),
+      scopes = Map("com.base.Bits" -> RuleScope.Only(Set("com.dep")))
+    )
+    assertEquals(phase.subjectScope("com.base.Bits"), RuleScope.Only(Set("com.dep")))
+    // an entry with no declared scope returns everywhere
+    assertEquals(phase.subjectScope("com.other.X"), RuleScope.everywhere)
+  }
