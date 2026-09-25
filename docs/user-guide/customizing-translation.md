@@ -172,7 +172,10 @@ override, not just the one you name:
 **`nullary-arity`** drops the empty parameter list from a getter-like method, mints scoped to
 *nothing* by default (adding an arity where java had one is a change to the surface, so it needs an
 explicit `scope`, or `force` naming exact members). **`visibility`** widens a member's visibility to
-public where java declared it narrower (`widen = ["com.example.Pool#<init>(int)"]`). **`class-tag-params`**
+public where java declared it narrower (`widen = ["com.example.Pool#<init>(int)"]`), or ships a java
+`protected` member as Scala's plain, subclass-only `protected` instead of `protected[pkg]`
+(`narrow = ["com.example.Base#process"]`, every override following); a narrowing that would break a
+reference from a non-subclass in the package is refused and reported. **`class-tag-params`**
 turns a `Class<T>` parameter into a Scala `ClassTag[T]` context parameter for the members you name.
 
 Each of these three, and `bean-properties` below, accepts `derive = true`: instead of (or beside)

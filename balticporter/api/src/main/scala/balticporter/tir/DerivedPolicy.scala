@@ -31,6 +31,7 @@ final case class DerivedPolicy(
   def keepParensIds: Set[SymId] = idsOf(rows.iterator.filter(_.family == Family.KeepParens))
   def classTagIds:   Set[SymId] = idsOf(rows.iterator.filter(_.family == Family.ClassTagParam))
   def publicIds:     Set[SymId] = idsOf(rows.iterator.filter(_.family == Family.Public))
+  def protectedIds:  Set[SymId] = idsOf(rows.iterator.filter(_.family == Family.Protected))
 
   /** member id -> the JVM name the reference gives it */
   def targetNames: Map[SymId, String] =
@@ -104,7 +105,10 @@ object DerivedPolicy:
       /** a java accessor WITH parameters the reference spells under the property name (`x(pointer)` for `getX(int pointer)`, `referenceCount(name)` for `getReferenceCount(String)`): `target` is that
         * name; the rename step moves the whole override component or refuses
         */
-      Rename
+      Rename,
+      /** a java `protected` member the reference spells as plain `protected` (subclass-only, no package qualifier): the visibility step narrows its override component or refuses
+        */
+      Protected
 
   /** @param upstream
     *   the java symbol's `fullName` @param reference the hand port's spelling at that slot (`Seconds`, `Nullable[Texture]`, `def x: T`) @param target the opaque target FQN for `OpaqueSlot`, empty

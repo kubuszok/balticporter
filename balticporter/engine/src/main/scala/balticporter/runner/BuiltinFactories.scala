@@ -306,7 +306,12 @@ final class ClassTagParamsFactory extends TransformFactory:
 final class VisibilityFactory extends TransformFactory:
   def name = "visibility"
   def fromConfig(config: ConfigView): Phase =
-    new VisibilityTransform(config.strings("widen").getOrElse(Nil).toSet, config.bool("derive").getOrElse(false))
+    new VisibilityTransform(
+      config.strings("widen").getOrElse(Nil).toSet,
+      config.bool("derive").getOrElse(false),
+      config.strings("narrow").getOrElse(Nil).toSet,
+      config.bool("deriveNarrow").getOrElse(false)
+    )
 
 final class ThreadConfinedStaticsFactory extends TransformFactory:
   def name = "thread-confined-statics"

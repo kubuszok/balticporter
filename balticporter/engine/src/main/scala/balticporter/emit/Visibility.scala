@@ -23,6 +23,9 @@ object Visibility:
     /** Cross-package `protected[pkg]`. */
     case ProtectedAt(pkg: String)
 
+    /** Plain `protected` — subclass-only, narrower than java's; only where the port asked for it. */
+    case Protected
+
   /** Does this level need the emitter's own package tail as a qualifier? */
   def needsOwnPackage(v: Vis): Boolean = v == Vis.PackagePrivate || v == Vis.ProtectedPkg
 
@@ -196,7 +199,7 @@ object Visibility:
     /** Package the qualifier names; `""` for public or bare private. */
     def qualifierPkgOf(id: SymId, v: Vis): String = v match
       case Vis.Public                            => ""
-      case Vis.Private                           => ""
+      case Vis.Private | Vis.Protected           => ""
       case Vis.PackagePrivate | Vis.ProtectedPkg => pkgOf(id)
       case Vis.PrivateAt(q)                      => q
       case Vis.ProtectedAt(q)                    => q
@@ -225,6 +228,8 @@ object Visibility:
       // Method-local class: no modifier (JLS 14.3). Owner is not a declared type.
       if isType && !topLevel && !classDefs.contains(s.owner) then Vis.Public
       else if f.isPrivate then Vis.Private
+      // a port-configured narrowing (`VisibilityTransform.narrow`): the whole override component carries it
+      else if f.isProtected && !f.isStatic && s.tags.contains(balticporter.transform.VisibilityTransform.SubclassOnly) then Vis.Protected
       else if f.isProtected then
         // protected static in companion: no qualified form expresses subclass access
         if f.isStatic then widen(Cause.ProtectedStatic, "protected")

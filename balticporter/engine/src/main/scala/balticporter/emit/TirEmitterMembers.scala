@@ -1184,6 +1184,7 @@ private[emit] trait TirEmitterMembers:
       case Visibility.Vis.ProtectedPkg   => s"protected[${esc(currentPkgTail)}] "
       case Visibility.Vis.PrivateAt(q)   => s"private[${esc(TirEmitter.tailSegment(q))}] "
       case Visibility.Vis.ProtectedAt(q) => s"protected[${esc(TirEmitter.tailSegment(q))}] "
+      case Visibility.Vis.Protected      => "protected "
 
   private[emit] def mods(s: Symbol, privateIn: Option[String] = scala.None): String =
     val f = s.flags

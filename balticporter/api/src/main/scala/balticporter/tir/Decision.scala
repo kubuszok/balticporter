@@ -153,6 +153,11 @@ object Decision:
       */
     case CountedReflectionRisk
 
+    /** a java `protected` member shipped as scala's plain `protected` (subclass-only) instead of `protected[pkg]`, because the port asked for it and no reference from a same-package non-subclass
+      * exists. DETAIL: `from`, `to`, and the key that listed the override component.
+      */
+    case NarrowedVisibility
+
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
   /** The DECLARATIONS a per-SITE rewrite reached, each with the earliest origin inside it. Recorded once per declaration (not per occurrence) since a site-level rewrite is already visible in the diff

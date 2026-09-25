@@ -253,6 +253,8 @@ object ReferencePolicy:
         out += DerivedPolicy.Row(DerivedPolicy.Family.Parenless, rowKey(ms, overloaded), s"def ${r.name}: ${r.resultType}")
       // java declares it narrower than public, the reference ships it public: widened
       if r.accessLevel == "public" && (ms.flags.isProtected || ms.flags.isPackagePrivate) then out += DerivedPolicy.Row(DerivedPolicy.Family.Public, rowKey(ms, overloaded), s"public ${r.name}")
+      // java `protected`, the reference plain `protected` (no package qualifier): subclass-only
+      if r.accessLevel == "protected" && ms.flags.isProtected && !ms.flags.isStatic then out += DerivedPolicy.Row(DerivedPolicy.Family.Protected, rowKey(ms, overloaded), s"protected ${r.name}")
       // the reference gives the member a JVM name of its own (`@targetName("addLabel")`)
       if r.targetName.nonEmpty then out += DerivedPolicy.Row(DerivedPolicy.Family.TargetName, rowKey(ms, overloaded), s"@targetName ${r.targetName}", r.targetName)
       // the reference KEEPS the parens (`def size(): Int`): the detector must not drop them
@@ -279,6 +281,7 @@ object ReferencePolicy:
       if nullWrapped(r.resultType) && reference_(v.tpt.tpe) then out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, fs.fullName + ":field", r.resultType)
       // java declares the FIELD narrower than public, the reference ships it public (`var isChecked` read by a subclass in another package): widened, as a method is
       if r.accessLevel == "public" && (fs.flags.isProtected || fs.flags.isPackagePrivate) then out += DerivedPolicy.Row(DerivedPolicy.Family.Public, fs.fullName + ":field", s"public ${fs.name}")
+      if r.accessLevel == "protected" && fs.flags.isProtected && !fs.flags.isStatic then out += DerivedPolicy.Row(DerivedPolicy.Family.Protected, fs.fullName + ":field", s"protected ${fs.name}")
       out.result()
 
     program.units.filter(u => emitted(u.symbol)).foreach { unit =>
