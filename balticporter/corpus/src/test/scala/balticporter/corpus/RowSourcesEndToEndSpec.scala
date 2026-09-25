@@ -26,8 +26,16 @@ class RowSourcesEndToEndSpec extends munit.FunSuite:
       "com/demo/Clock.java",
       "package com.demo;\npublic class Clock {\n  private final String where;\n  public Clock() { this.where = System.getProperty(\"java.vendor\") == null ? \"?\" : \"jvm\"; }\n  public String name() { return \"core-\" + where; }\n}"
     )
-    java(emu, "com/demo/Clock.java", "package com.demo;\npublic class Clock {\n  public Clock() {}\n  public String name() { return \"emu\"; }\n}")
-    java(src, "com/demo/User.java", "package com.demo;\npublic class User {\n  public static String tell() { return \"clock=\" + new Clock().name(); }\n}")
+    java(
+      emu,
+      "com/demo/Clock.java",
+      "package com.demo;\npublic class Clock {\n  public Clock() {}\n  public String name() { return \"emu\"; }\n}"
+    )
+    java(
+      src,
+      "com/demo/User.java",
+      "package com.demo;\npublic class User {\n  public static String tell() { return \"clock=\" + new Clock().name(); }\n}"
+    )
     PortRun(
       label = "e2e",
       portRoot = root.resolve("port"),
@@ -43,12 +51,15 @@ class RowSourcesEndToEndSpec extends munit.FunSuite:
 
   /** compile the shared tree with one row's tree, then call the shared code the row's type answers. */
   private def compileAndRun(row: String): String =
-    val out      = Files.createTempDirectory(s"rowsources-$row")
-    val sources  = scalaFiles(SbtGen.managedMain(port)) ++ scalaFiles(SbtGen.managedDir(port, row))
+    val out     = Files.createTempDirectory(s"rowsources-$row")
+    val sources = scalaFiles(SbtGen.managedMain(port)) ++ scalaFiles(SbtGen.managedDir(port, row))
     // the test JVM's class path is the build tool's worker, so name the standard library's jars outright
     val stdlib   = List(classOf[scala.Option[?]], classOf[scala.deriving.Mirror]).map(c => Path.of(c.getProtectionDomain.getCodeSource.getLocation.toURI).toString).distinct
     val reporter = dotty.tools.dotc.Main.process(("-classpath" :: stdlib.mkString(_root_.java.io.File.pathSeparator) :: "-d" :: out.toString :: sources).toArray)
-    assert(!reporter.hasErrors, s"row `$row` with the shared tree does not compile: ${reporter.allErrors.map(_.msg.message).mkString("\n")}")
+    assert(
+      !reporter.hasErrors,
+      s"row `$row` with the shared tree does not compile: ${reporter.allErrors.map(_.msg.message).mkString("\n")}"
+    )
     val loader = new _root_.java.net.URLClassLoader(Array(out.toUri.toURL), getClass.getClassLoader)
     loader.loadClass("com.demo.User").getMethod("tell").invoke(null).asInstanceOf[String]
 

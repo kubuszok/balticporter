@@ -53,7 +53,12 @@ object RowOverrides:
               mainByRel.get(rel) match
                 case Some(main) => List(Shadow(row, tree.root.resolve(rel), rel, main, tree))
                 case scala.None =>
-                  findings += finding("no-main-type", row, rel, s"row `$row` declares `$rel`, which the main source set does not; a row may only replace a type the shared code already has")
+                  findings += finding(
+                    "no-main-type",
+                    row,
+                    rel,
+                    s"row `$row` declares `$rel`, which the main source set does not; a row may only replace a type the shared code already has"
+                  )
                   Nil
             }
       }
@@ -62,7 +67,7 @@ object RowOverrides:
 
   /** One row file's emitted types against the main file's, by emitted FQN → text: a type only the row declares, a type the row lacks, and every reachable member whose signature differs. */
   def compare(s: Shadow, main: Map[String, String], row: Map[String, String]): List[CheckReport.Finding] =
-    val onlyRow  = (row.keySet -- main.keySet).toList.sorted.map { n =>
+    val onlyRow = (row.keySet -- main.keySet).toList.sorted.map { n =>
       finding("no-main-type", s.row, s.rel, s"`$n` is declared by the row file and by no main file at `${s.main}`")
     }
     val onlyMain = (main.keySet -- row.keySet).toList.sorted.map { n =>
@@ -104,7 +109,10 @@ object RowOverrides:
       rr  = RealPath.of(r)
       if abs.startsWith(rr)
     yield normal(rr.relativize(abs).toString)
-    frontend.copy(files = frontend.files.map(f => byMain.getOrElse(f, f)), resolutionExcludes = (frontend.resolutionExcludes ++ excludes).distinct)
+    frontend.copy(
+      files = frontend.files.map(f => byMain.getOrElse(f, f)),
+      resolutionExcludes = (frontend.resolutionExcludes ++ excludes).distinct
+    )
 
   /** The header provenance for one row's translation: each row tree's files are named by the path a reader finds them at upstream. */
   def provenanceFor(p: Provenance, shadows: List[Shadow]): Provenance =

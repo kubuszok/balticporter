@@ -37,7 +37,11 @@ class RowSourcesSpec extends munit.FunSuite:
     val src  = root.resolve("upstream/lib/src")
     val emuR = root.resolve("upstream/web/emu")
     java(src, "com/demo/Clock.java", coreClock)
-    java(src, "com/demo/User.java", "package com.demo;\npublic class User {\n  public String tell(Clock c) { return c.name() + c.now(); }\n}")
+    java(
+      src,
+      "com/demo/User.java",
+      "package com.demo;\npublic class User {\n  public String tell(Clock c) { return c.name() + c.now(); }\n}"
+    )
     java(emuR, "com/demo/Clock.java", emu)
     (root, src, emuR)
 
@@ -58,7 +62,9 @@ class RowSourcesSpec extends munit.FunSuite:
 
   private def row(root: Path, r: String): Path = SbtGen.managedDir(root.resolve("port"), r)
 
-  test("a row's file replaces the main type on that row only; the other rows get the main translation, and the shared tree neither") {
+  test(
+    "a row's file replaces the main type on that row only; the other rows get the main translation, and the shared tree neither"
+  ) {
     val (root, src, emu) = fixture()
     run(root, src, Map("js" -> List(RowSource(emu))))
     assertEquals(files(row(root, "main")), List("com/demo/User.scala"))
@@ -92,7 +98,10 @@ class RowSourcesSpec extends munit.FunSuite:
     assert(rows.nonEmpty && rows.forall(e => e.row == "js" && e.javaPath == "web/emu/com/demo/Clock.java"), rows)
     val idx  = SrcMap.Index.of(shared ++ rows)
     val line = rows.find(_.member.contains("#now")).map(_.start).getOrElse(fail("no `now` entry on the row"))
-    assertEquals(idx.resolveFile("port/src_managed/js/scala/com/demo/Clock.scala", line).map(_.javaPath), Some("web/emu/com/demo/Clock.java"))
+    assertEquals(
+      idx.resolveFile("port/src_managed/js/scala/com/demo/Clock.scala", line).map(_.javaPath),
+      Some("web/emu/com/demo/Clock.java")
+    )
     assertEquals(idx.resolveFile("port/src_managed/jvm/scala/com/demo/Clock.scala", line).map(_.javaPath), Some("com/demo/Clock.java"))
   }
 
@@ -132,7 +141,9 @@ class RowSourcesSpec extends munit.FunSuite:
     assert(clue(refused(root, src, Map("js" -> List(RowSource(emu, List("com/demo/Nope.java")))))).contains("missing"))
   }
 
-  test("two surfaces whose reachable signatures differ are refused, naming each differing member, and no tree is left behind") {
+  test(
+    "two surfaces whose reachable signatures differ are refused, naming each differing member, and no tree is left behind"
+  ) {
     val (root, src, emu) = fixture(
       """package com.demo;
         |public class Clock {
@@ -150,8 +161,20 @@ class RowSourcesSpec extends munit.FunSuite:
   }
 
   test("RowSurface ignores parameter names, bodies and private members, and keeps visibility") {
-    val a = RowSurface.of("package p\nclass A(val x: Int) {\n  def f(a: Int): Int = a\n  private def g(): Unit = ()\n  private[p] def h(): Unit = ()\n}\n", "a").toOption.get
-    val b = RowSurface.of("package p\nclass A(val x: Int) {\n  def f(other: Int): Int = other + 1\n  private[p] def h(): Unit = println()\n}\n", "b").toOption.get
+    val a = RowSurface
+      .of(
+        "package p\nclass A(val x: Int) {\n  def f(a: Int): Int = a\n  private def g(): Unit = ()\n  private[p] def h(): Unit = ()\n}\n",
+        "a"
+      )
+      .toOption
+      .get
+    val b = RowSurface
+      .of(
+        "package p\nclass A(val x: Int) {\n  def f(other: Int): Int = other + 1\n  private[p] def h(): Unit = println()\n}\n",
+        "b"
+      )
+      .toOption
+      .get
     assertEquals(RowSurface.diff(a, b), Nil)
     val c = RowSurface.of("package p\nclass A(val x: Int) {\n  def f(a: Int): Int = a\n  protected def h(): Unit = ()\n}\n", "c").toOption.get
     assertEquals(RowSurface.diff(a, c).map(_.member), List("p.A#h"))
