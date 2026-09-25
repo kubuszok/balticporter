@@ -34,6 +34,7 @@ object BuiltinFactories:
     new ElementWitnessFactory,
     new NullaryArityFactory,
     new ClassTagParamsFactory,
+    new TypeClassParamsFactory,
     new VisibilityFactory,
     new ThreadConfinedStaticsFactory,
     new DiscriminatedUnionTransformFactory,
@@ -300,6 +301,33 @@ final class ClassTagParamsFactory extends TransformFactory:
   def name = "class-tag-params"
   def fromConfig(config: ConfigView): Phase =
     new ClassTagParamsTransform(config.strings("members").getOrElse(Nil).toSet, config.bool("derive").getOrElse(false))
+
+/** `{ transform = "type-class-params", rules = [ { members = ["a.B#m"], typeClass = "x.Factory", create = "create", instantiators = ["a.Refl#newInstance"], spelling = "keep-parameter", classValue =
+  * "class-tag", handles = ["a.ReflEx"] } ] }`
+  *
+  * A method's `Class<T>` parameter used to construct a `T` becomes a context clause on a port-supplied type class; `spelling` is `type-argument` (default) or `keep-parameter`; `classValue` is
+  * `refuse` (default), `class-tag` or `member:<name>`.
+  */
+final class TypeClassParamsFactory extends TransformFactory:
+  def name = TypeClassParamsTransform.Name
+  def fromConfig(config: ConfigView): Phase =
+    val rules = config.children("rules").getOrElse(Nil).map { r =>
+      val classValue = r.string("classValue") match
+        case scala.None => TypeClassParamsTransform.ClassValue.Refuse
+        case Some(s)    =>
+          TypeClassParamsTransform.ClassValue.parse(s).getOrElse(throw ConfigError(r.path, s"`classValue` is `refuse`, `class-tag` or `member:<name>`, not `$s`"))
+      TypeClassParamsTransform.Rule(
+        members = r.strings("members").getOrElse(Nil).toSet,
+        typeClass = r.requireString("typeClass"),
+        create = r.string("create").getOrElse("create"),
+        instantiators = r.strings("instantiators").getOrElse(Nil).toSet,
+        spelling =
+          r.enumerated("spelling", TypeClassParamsTransform.Spelling.values.map(s => TypeClassParamsTransform.Spelling.render(s) -> s).toMap).getOrElse(TypeClassParamsTransform.Spelling.TypeArgument),
+        classValue = classValue,
+        handles = r.strings("handles").getOrElse(Nil).toSet
+      )
+    }
+    new TypeClassParamsTransform(rules)
 
 /** `{ transform = "visibility", widen = ["a.B#<init>(File,FileType)"], derive = true }` — ships the listed members public where java declared them narrower; `derive` takes the reference's.
   */

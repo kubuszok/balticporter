@@ -249,6 +249,61 @@ unregistered key answers: `"null"`, `"jvm-reflect"` (JVM reflection, counted on 
 `{ throw = "fqn", message = "…" }`, or `{ delegate = "fqn" }` (calls a consumer-named method with
 the `Class` value — the cross-platform escape hatch for ports supplying a per-platform fallback).
 
+**`type-class-params`** removes reflective construction altogether. A method whose `Class<T>`
+parameter is only there to build a `T` (`c.newInstance()`, `c.getDeclaredConstructor().newInstance()`,
+or a library helper you list under `instantiators`) takes a *type class you write* as a context
+parameter instead, and every construction becomes a call on it. No reflection runs on any
+platform, and asking for a type your type class cannot be derived for is a compile error:
+
+```hocon
+{ transform = "type-class-params", rules = [ {
+    members       = ["com.example.Engine#createComponent", "com.example.PooledEngine$Pools#obtain"]
+    typeClass     = "com.example.port.ComponentFactory"   # yours, in your own sources
+    create        = "create"                              # its nilary member building a T
+    instantiators = ["com.example.Reflection#newInstance"]
+    handles       = ["com.example.ReflectionException"]   # a try catching only these is elided
+    spelling      = "keep-parameter"                      # or "type-argument" (the default)
+    classValue    = "class-tag"                           # "refuse" (default) or "member:<name>"
+} ] }
+```
+
+`spelling = "keep-parameter"` keeps callers as java wrote them — `engine.createComponent(classOf[X])`
+— with `(using ComponentFactory[T])` added. `"type-argument"` drops the parameter, so callers write
+`engine.createComponent[X]`; any other read of the class in the body (a map key, say) is then
+answered by `classValue`: `"class-tag"` adds a `ClassTag[T]` clause and reads its `runtimeClass`,
+`"member:<name>"` reads that member of your type class, and `"refuse"` refuses the member. The
+whole override family converts or none of it does. A call passing a `Class` *value* to a
+type-argument member, a constructor called with arguments, or a `try` whose handlers `handles`
+does not describe is refused or reported as a `policy` finding, and the refused member keeps its
+java form. If a `registry` entry covered the same callee, remove it.
+
+The type class and its derivation belong to your port, not the engine. A Scala 3 macro that
+builds `new T()` for a concrete class with an accessible no-argument constructor is enough:
+
+```scala
+import scala.quoted.*
+
+trait ComponentFactory[T]:
+  def create(): T
+
+object ComponentFactory:
+  inline given derived[T]: ComponentFactory[T] = ${ derivedImpl[T] }
+
+  private def derivedImpl[T: Type](using q: Quotes): Expr[ComponentFactory[T]] =
+    import q.reflect.*
+    val tpe = TypeRepr.of[T]
+    val cls = tpe.classSymbol.getOrElse(report.errorAndAbort(s"${tpe.show} is not a class"))
+    if cls.flags.is(Flags.Abstract) || cls.flags.is(Flags.Trait) then report.errorAndAbort(s"${tpe.show} is abstract")
+    val ctor = (cls.primaryConstructor :: cls.declarations.filter(_.isClassConstructor))
+      .find(c => !c.isNoSymbol && !c.flags.is(Flags.Private) && !c.flags.is(Flags.Protected) && c.paramSymss.forall(ps => ps.isEmpty || ps.head.isTypeParam))
+      .getOrElse(report.errorAndAbort(s"${tpe.show} has no accessible no-argument constructor"))
+    val built = New(Inferred(tpe)).select(ctor).appliedToArgs(Nil).asExprOf[T]
+    '{ new ComponentFactory[T] { def create(): T = $built } }
+```
+
+Because `derived` lives in the type class's companion, callers need no import; a type that must be
+built differently gets its own `given` beside it.
+
 **`type-class-array`** gives an array whose element type is a type parameter a witness value to
 allocate, copy and clear through, closing the gap left by Java's implicit `Object` bound on generic
 arrays.

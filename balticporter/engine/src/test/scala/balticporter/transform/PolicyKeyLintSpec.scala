@@ -73,6 +73,12 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "a parameter's type is the class-literal type itself (`Class<T>`), a fact of the language and " +
           "not a library name — the class-file identity is the instrument, as for `java.lang.Enum` above")
     ),
+    "TypeClassParamsTransform.scala" -> Map(
+      "fullName ==" ->
+        ("`java.lang.Class` and `java.lang.reflect.Constructor` are WELL-KNOWN JDK classes the program never declares: the phase asks " +
+          "whether a parameter is the class-literal type and whether a call is the JDK's own reflective construction, facts of the " +
+          "language and not a library name — the class-file identity is the instrument, as for `class-tag-params` above")
+    ),
     "SuppressionPhase.scala" -> Map(
       "fullName ==" ->
         ("`scala.annotation.nowarn` is a WELL-KNOWN external annotation type the program never " +

@@ -27,7 +27,7 @@ mechanism/policy table is in `.claude/rules/phases.md`, loaded with the transfor
 `ClassTableTransform`, `StaticForwarderTransform`, `Substitutions`, `CollectionsTransform`,
 `PrimitiveToOpaqueTransform` (`OpaqueSpec`: seeds, `derive`, `carriers`), `PortabilityCheck`,
 `ApiParityCheck`, `MemberRenameTransform`, `NullabilityTransform`, `BeanPropertyTransform`,
-`NullaryArityTransform`, `ClassToTraitTransform`, `ClassTagParamsTransform`, `VisibilityTransform`,
+`NullaryArityTransform`, `ClassToTraitTransform`, `ClassTagParamsTransform`, `TypeClassParamsTransform`, `VisibilityTransform`,
 `ThreadConfinedStaticsTransform`, `AddMembersTransform`, `RegistryTransform`, `ElementWitnessTransform`,
 `TypeRedirectTransform`. Each takes its policy as a value, implements `SurfacePolicy` where the value
 reaches an emitted signature, and `MergeablePolicy` where a dependent may add keys (§1.5).

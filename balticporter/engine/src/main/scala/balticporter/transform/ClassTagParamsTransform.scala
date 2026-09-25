@@ -64,93 +64,13 @@ final class ClassTagParamsTransform(val members: Set[String] = Set.empty, val de
     if targets.isEmpty || classSym.isEmpty then return program
     given Program = program
     val cls       = classSym.get
-    val graph     = OverrideGraph.build(program)
     val mint      = new Mint(program)
 
-    /** the `Class<T>` parameters of a method, each with the type parameter it names. */
-    def classParams(d: Tree.DefDef): List[(Tree.ValDef, SymId)] =
-      val tps = d.tparams.map(_.symbol).toSet
-      d.paramss.flatten.flatMap { v =>
-        v.tpt.tpe match
-          case TypeRepr.AppliedType(TypeRepr.TypeRef(_, c), List(TypeRepr.TypeRef(_, t))) if c == cls && tps(t) => List(v -> t)
-          case _                                                                                                => Nil
-      }
-
-    /** the class parameters of every candidate component: a call passing one of them (a converted method delegating to another) is determined by that parameter's own type parameter, whose tag is in
-      * scope there. Shrinks as components refuse (the fixpoint below).
-      */
-    var candidateParams: Map[SymId, SymId] =
-      targets.toList
-        .flatMap(t => graph.closureOf(t).members.toList)
-        .distinct
-        .flatMap { m =>
-          program.definitionOf(m) match
-            case Some(d: Tree.DefDef) if program.owned(m) => classParams(d).map((v, tp) => v.symbol -> tp)
-            case _                                        => Nil
-        }
-        .toMap
-
-    /** the type argument a call's class argument names: a class literal, or a candidate parameter. */
-    def literalArg(t: Term): Option[TypeRepr] = t match
-      case Tree.Literal(Constant.ClassOfC(tp), _, _)          => Some(tp)
-      case Tree.Typed(inner, _, _, _)                         => literalArg(inner)
-      case Tree.Ident(s, _, _) if candidateParams.contains(s) => Some(TypeRepr.TypeRef(TypeRepr.NoPrefix, candidateParams(s)))
-      case _                                                  => scala.None
-
-    // ---- decide, whole component or none; to a fixpoint, since a refusal removes its parameters
-    //      from what a delegating call may pass ----------------------------------------------------
-    val plans        = collection.mutable.Map.empty[SymId, Plan]
-    val refusedComps = collection.mutable.ListBuffer.empty[(SymId, String)]
-    var stable       = false
-    while !stable do
-      stable = true
-      plans.clear(); refusedComps.clear()
-      val seen = collection.mutable.Set.empty[SymId]
-      targets.toList.sortBy(_.raw).foreach { t =>
-        if !seen(t) then
-          val closure = graph.closureOf(t)
-          val comp    = closure.members
-          seen ++= comp
-          val defs = comp.toList.sortBy(_.raw).map(m => m -> program.definitionOf(m))
-          if closure.isAnchored then refusedComps += (t -> closure.anchorReason(program).getOrElse("the override component reaches a declaration this program cannot move"))
-          else if defs.exists((m, d) => !program.owned(m) || !d.exists(_.isInstanceOf[Tree.DefDef])) then
-            refusedComps += (t -> "a member of the override component is not a method declaration this program owns")
-          else
-            val perMember = defs.map((m, d) => m -> classParams(d.get.asInstanceOf[Tree.DefDef]))
-            val arities   = perMember.map(_._2.size).distinct
-            if arities != List(perMember.head._2.size) || perMember.head._2.isEmpty then
-              refusedComps += (t -> "the override component's members do not agree on their `Class<T>` parameters (or have none)")
-            else
-              // every owned call must pass class LITERALS that determine every type parameter
-              val bad = perMember.flatMap { (m, cps) =>
-                val idx = cps.map((v, _) => program.definitionOf(m).get.asInstanceOf[Tree.DefDef].paramss.flatten.indexOf(v))
-                val d   = program.definitionOf(m).get.asInstanceOf[Tree.DefDef]
-                program.usages(m).flatMap {
-                  case Usage(UsageKind.Call, a: Tree.Apply, _) =>
-                    val lits         = idx.map(i => a.args.lift(i).flatMap(literalArg))
-                    val alreadyTyped = a.fun.isInstanceOf[Tree.TypeApply]
-                    val determined   = cps.map(_._2).toSet
-                    if lits.exists(_.isEmpty) then
-                      List(
-                        s"a call at ${a.origin.javaPath}:${a.origin.line} passes a `Class` VALUE, which a context clause cannot take without an explicit `using` argument"
-                      )
-                    else if !alreadyTyped && d.tparams.exists(tp => !determined(tp.symbol)) then
-                      List(s"a call at ${a.origin.javaPath}:${a.origin.line} would need type arguments the class literals do not determine")
-                    else Nil
-                  case Usage(UsageKind.Call, other, _) => List(s"a call at ${other.origin.javaPath}:${other.origin.line} is not a plain application")
-                  case Usage(UsageKind.TermRef, r, _)  => List(s"a method reference at ${r.origin.javaPath}:${r.origin.line} cannot supply the tag")
-                  case _                               => Nil
-                }
-              }
-              if bad.nonEmpty then
-                refusedComps += (t -> bad.head)
-                val gone = perMember.flatMap(_._2).map(_._1.symbol).toSet
-                if gone.exists(candidateParams.contains) then
-                  candidateParams = candidateParams.filterNot((p, _) => gone(p)); stable = false
-              else perMember.foreach { (m, cps) => plans(m) = Plan(cps.map((v, tp) => (v.symbol, tp))) }
-      }
-      // an anchored/unowned component's refusal is recorded once, after the fixpoint
-    refusedComps.toList.foreach((t, why) => refuse(program, t, why))
+    // every owned call must pass class LITERALS (or a converted caller's own parameter) that determine every type parameter
+    val outcome = ClassParamComponents.decide(targets, cls, keepsParam = false, (_, _, _, _) => scala.None)
+    val plans   = outcome.plans.map((m, p) => m -> Plan(p.params))
+    def literalArg(t: Term): Option[TypeRepr] = ClassParamComponents.literalArg(t, outcome.candidates)
+    outcome.refused.foreach((t, why) => refuse(program, t, why))
     if plans.isEmpty then return program
 
     // ---- the signature edit: drop the parameter, add the clause, bind the class in the body ----

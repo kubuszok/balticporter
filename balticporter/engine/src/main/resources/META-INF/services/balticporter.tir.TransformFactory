@@ -23,6 +23,7 @@ balticporter.runner.RegistryFactory
 balticporter.runner.ElementWitnessFactory
 balticporter.runner.NullaryArityFactory
 balticporter.runner.ClassTagParamsFactory
+balticporter.runner.TypeClassParamsFactory
 balticporter.runner.VisibilityFactory
 balticporter.runner.ThreadConfinedStaticsFactory
 balticporter.transform.DiscriminatedUnionTransformFactory
