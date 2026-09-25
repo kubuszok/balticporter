@@ -72,7 +72,12 @@ class TypeClassParamsEndToEndSpec extends munit.FunSuite:
         classValue = ClassValue.Tag,
         handles = Set("java.lang.InstantiationException", "java.lang.IllegalAccessException")
       ),
-      Rule(Set(s"$pkg.KeptPools#create", s"$pkg.KeptPools#shared"), s"$pkg.Factory", spelling = Spelling.KeepParameter, handles = Set("java.lang.ReflectiveOperationException"))
+      Rule(
+        Set(s"$pkg.KeptPools#create", s"$pkg.KeptPools#shared"),
+        s"$pkg.Factory",
+        spelling = Spelling.KeepParameter,
+        handles = Set("java.lang.ReflectiveOperationException")
+      )
     )
   )
 

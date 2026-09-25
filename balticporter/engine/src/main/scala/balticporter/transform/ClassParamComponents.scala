@@ -74,12 +74,11 @@ private[transform] object ClassParamComponents:
           else
             val perMember = defs.map((m, d) => (m, d.get.asInstanceOf[Tree.DefDef], classParams(d.get.asInstanceOf[Tree.DefDef], cls)))
             val arities   = perMember.map(_._3.size).distinct
-            if arities != List(perMember.head._3.size) || perMember.head._3.isEmpty then
-              refused += (t -> "the override component's members do not agree on their `Class<T>` parameters (or have none)")
+            if arities != List(perMember.head._3.size) || perMember.head._3.isEmpty then refused += (t -> "the override component's members do not agree on their `Class<T>` parameters (or have none)")
             else
               val bad = perMember.flatMap { (m, d, cps) =>
-                val all = d.paramss.flatten
-                val idx = cps.map((v, _) => all.indexOf(v))
+                val all   = d.paramss.flatten
+                val idx   = cps.map((v, _) => all.indexOf(v))
                 val calls = program.usages(m).flatMap {
                   case Usage(UsageKind.Call, a: Tree.Apply, _) =>
                     val args         = idx.map(i => a.args.lift(i))

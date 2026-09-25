@@ -7,13 +7,7 @@ import balticporter.tir.*
   * becomes `summon[F[T]].<create>()`: no reflection on any platform, and a type the instance cannot be derived for is a compile error. Whole override component or none; a call passing a `Class`
   * VALUE, a method reference, an undetermined type parameter, or reflection on the class this rule cannot express refuses, counted. An empty rule list is a no-op.
   */
-final class TypeClassParamsTransform(val rules: List[TypeClassParamsTransform.Rule] = Nil)
-    extends Phase,
-      PolicySource,
-      SurfacePolicy,
-      MergeablePolicy,
-      PolicyBound,
-      Rewrite:
+final class TypeClassParamsTransform(val rules: List[TypeClassParamsTransform.Rule] = Nil) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound, Rewrite:
   import TypeClassParamsTransform.*
 
   def name: String = TypeClassParamsTransform.Name
@@ -34,7 +28,12 @@ final class TypeClassParamsTransform(val rules: List[TypeClassParamsTransform.Ru
       if conflicts.nonEmpty then Left(conflicts.map(m => s"$m: already converted by a different type-class rule").mkString("; "))
       else
         val added = o.rules.filterNot(rules.contains)
-        Right(MergeablePolicy.Merged(new TypeClassParamsTransform(rules ++ added), (added.flatMap(_.members).toSet -- mine.keySet).map(MergeablePolicy.subjectOf)))
+        Right(
+          MergeablePolicy.Merged(
+            new TypeClassParamsTransform(rules ++ added),
+            (added.flatMap(_.members).toSet -- mine.keySet).map(MergeablePolicy.subjectOf)
+          )
+        )
     case _ => Left(s"expected TypeClassParamsTransform, got ${later.getClass.getSimpleName}")
 
   private var bound:        Map[Int, Set[SymId]]      = Map.empty
@@ -98,7 +97,13 @@ final class TypeClassParamsTransform(val rules: List[TypeClassParamsTransform.Ru
     if plans.isEmpty then return program
 
     // ---- minted external symbols ----
-    val summonSym = mint.member("summon", MemberKey("scala.Predef", "summon").render, mint.tpe("Predef", "scala.Predef"), TypeRepr.NoType, Flags(isStatic = true))
+    val summonSym = mint.member(
+      "summon",
+      MemberKey("scala.Predef", "summon").render,
+      mint.tpe("Predef", "scala.Predef"),
+      TypeRepr.NoType,
+      Flags(isStatic = true)
+    )
     val ctSym     = mint.tpe("ClassTag", "scala.reflect.ClassTag")
     val rtSym     = mint.member("runtimeClass", MemberKey("scala.reflect.ClassTag", "runtimeClass").render, ctSym, TypeRepr.NoType, Flags())
     val usedRules = plans.values.map(_._1).toSet
@@ -115,9 +120,9 @@ final class TypeClassParamsTransform(val rules: List[TypeClassParamsTransform.Ru
     val created         = createSym.map(_.swap)
     val allInstantiator = instantiator.values.flatten.toSet
 
-    def ref(tp: SymId):                  TypeRepr = TypeRepr.TypeRef(TypeRepr.NoPrefix, tp)
-    def applied(tc: SymId, tp: SymId):   TypeRepr = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, tc), List(ref(tp)))
-    def summoned(tc: SymId, tp: SymId, at: Origin): Term =
+    def ref(tp:     SymId):                         TypeRepr = TypeRepr.TypeRef(TypeRepr.NoPrefix, tp)
+    def applied(tc: SymId, tp: SymId):              TypeRepr = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, tc), List(ref(tp)))
+    def summoned(tc: SymId, tp: SymId, at: Origin): Term     =
       Tree.TypeApply(Tree.Ident(summonSym, TypeRepr.NoType, at), List(TypeTree(applied(tc, tp), at)), applied(tc, tp), at)
     // class parameter → (rule, its type parameter), for every converted member
     val paramOf: Map[SymId, (Int, SymId)] = plans.values.toList.flatMap((i, p) => p.params.map((v, tp) => v -> (i, tp))).toMap
@@ -180,7 +185,12 @@ final class TypeClassParamsTransform(val rules: List[TypeClassParamsTransform.Ru
           val tag   = drops && r.classValue == ClassValue.Tag
           def usingParam(tc: SymId, tp: SymId, slot: String): Tree.ValDef =
             val tpe = applied(tc, tp)
-            Tree.ValDef(mint.member("", MemberKey(fqn, slot).render + "/" + tp.raw, d.symbol, tpe, Flags(isParam = true, isGiven = true)), TypeTree(tpe, at), scala.None, at)
+            Tree.ValDef(
+              mint.member("", MemberKey(fqn, slot).render + "/" + tp.raw, d.symbol, tpe, Flags(isParam = true, isGiven = true)),
+              TypeTree(tpe, at),
+              scala.None,
+              at
+            )
           val clause = plan.params.flatMap { (_, tp) =>
             usingParam(tcSym(i), tp, "<using-typeclass>") :: (if tag then List(usingParam(ctSym, tp, "<using-classtag>")) else Nil)
           }
@@ -197,7 +207,7 @@ final class TypeClassParamsTransform(val rules: List[TypeClassParamsTransform.Ru
             val classTpe = applied(cls, tp)
             val answer: Term = r.classValue match
               case ClassValue.Member(_) => Tree.Select(summoned(tcSym(i), tp, at), keySym(i), classTpe, at)
-              case _ => Tree.Typed(Tree.Select(summoned(ctSym, tp, at), rtSym, TypeRepr.NoType, at), TypeTree(classTpe, at), classTpe, at)
+              case _                    => Tree.Typed(Tree.Select(summoned(ctSym, tp, at), rtSym, TypeRepr.NoType, at), TypeTree(classTpe, at), classTpe, at)
             Tree.ValDef(v, TypeTree(classTpe, at), Some(answer), at)
           }
           val rhs =
@@ -268,14 +278,14 @@ object TypeClassParamsTransform:
       case Tag       => "class-tag"
       case Member(n) => s"member:$n"
     def parse(s: String): Option[ClassValue] = s match
-      case "refuse"                          => Some(Refuse)
-      case "class-tag"                       => Some(Tag)
+      case "refuse"                                     => Some(Refuse)
+      case "class-tag"                                  => Some(Tag)
       case m if m.startsWith("member:") && m.length > 7 => Some(Member(m.drop(7)))
-      case _                                 => scala.None
+      case _                                            => scala.None
 
   /** One type class and the members it replaces the `Class` parameter of. `typeClass` is the port-supplied `F[_]`'s FQN; `create` its nullary member building a `T` (called `create()`);
-    * `instantiators` library callees `m(classValue)` that construct reflectively (the JDK's own `Class.newInstance` and `getConstructor().newInstance()` need no key); `handles` the exceptions a
-    * java `catch` names for the retired construction.
+    * `instantiators` library callees `m(classValue)` that construct reflectively (the JDK's own `Class.newInstance` and `getConstructor().newInstance()` need no key); `handles` the exceptions a java
+    * `catch` names for the retired construction.
     */
   final case class Rule(
     members:       Set[String],
@@ -308,16 +318,16 @@ object TypeClassParamsTransform:
 
     /** the class value an expression names, when it names a parameter directly. */
     private def param(t: Term): Option[SymId] = t match
-      case Tree.Ident(s, _, _)        => Some(s)
-      case Tree.Typed(e, _, _, _)     => param(e)
-      case Tree.Commented(_, e)       => param(e)
-      case _                          => scala.None
+      case Tree.Ident(s, _, _)    => Some(s)
+      case Tree.Typed(e, _, _, _) => param(e)
+      case Tree.Commented(_, e)   => param(e)
+      case _                      => scala.None
 
     /** no argument at all — a java vararg call with nothing passed carries one EMPTY repeated argument. */
     def noArgs(args: List[Term]): Boolean = args match
-      case Nil                                 => true
-      case List(Tree.Repeated(Nil, _, _))      => true
-      case _                                   => false
+      case Nil                            => true
+      case List(Tree.Repeated(Nil, _, _)) => true
+      case _                              => false
 
     /** The parameter a call constructs from: `c.newInstance()`, `c.getConstructor().newInstance()` / `getDeclaredConstructor`, or a named instantiator `f(c)`. */
     def constructed(a: Tree.Apply, instantiators: Set[SymId]): Option[SymId] =
@@ -329,15 +339,16 @@ object TypeClassParamsTransform:
       else
         a.fun match
           case Tree.Select(q, _, _, _) if member(a.method, cls, "newInstance") => param(q)
-          case Tree.Select(inner: Tree.Apply, _, _, _) if ctor.exists(member(a.method, _, "newInstance")) && noArgs(inner.args) &&
-              (member(inner.method, cls, "getConstructor") || member(inner.method, cls, "getDeclaredConstructor")) =>
+          case Tree.Select(inner: Tree.Apply, _, _, _)
+              if ctor.exists(member(a.method, _, "newInstance")) && noArgs(inner.args) &&
+                (member(inner.method, cls, "getConstructor") || member(inner.method, cls, "getDeclaredConstructor")) =>
             inner.fun match
               case Tree.Select(q, _, _, _) => param(q)
               case _                       => scala.None
           case _ => scala.None
 
-    /** Why a member's body cannot convert: reflection on its class value this rule cannot express (a constructor with arguments, an instantiator given more than the class), or — where the
-      * parameter is dropped and the rule declares no answer — any other read of the class value. Counted by occurrence: every read not consumed by a construction or a delegating call.
+    /** Why a member's body cannot convert: reflection on its class value this rule cannot express (a constructor with arguments, an instantiator given more than the class), or — where the parameter
+      * is dropped and the rule declares no answer — any other read of the class value. Counted by occurrence: every read not consumed by a construction or a delegating call.
       */
     def bodyRefusal(
       d:             Tree.DefDef,
@@ -353,7 +364,10 @@ object TypeClassParamsTransform:
           case (acc, Tree.Ident(s, _, _)) if params(s) => acc.copy(reads = acc.reads + 1)
           case (acc, a: Tree.Apply)                    =>
             if constructed(a, instantiators).exists(params) then
-              acc.copy(consumed = acc.consumed + 1, chains = acc.chains + (if a.fun.isInstanceOf[Tree.Select] && !instantiators(a.method) && !member(a.method, cls, "newInstance") then 1 else 0))
+              acc.copy(
+                consumed = acc.consumed + 1,
+                chains = acc.chains + (if a.fun.isInstanceOf[Tree.Select] && !instantiators(a.method) && !member(a.method, cls, "newInstance") then 1 else 0)
+              )
             else
               val delegated = program.definitionOf(a.method) match
                 case Some(callee: Tree.DefDef) =>
@@ -376,8 +390,12 @@ object TypeClassParamsTransform:
         }
         c.reflective.orElse(if c.getters > c.chains then Some(d.origin) else scala.None) match
           case Some(at) =>
-            Some(s"the body at ${at.javaPath}:${at.line} uses the `Class` value reflectively in a way this rule cannot express (a constructor with arguments, or an instantiator given more than the class)")
+            Some(
+              s"the body at ${at.javaPath}:${at.line} uses the `Class` value reflectively in a way this rule cannot express (a constructor with arguments, or an instantiator given more than the class)"
+            )
           case scala.None if !keeps && rule.classValue == ClassValue.Refuse && c.reads > c.consumed =>
-            Some(s"the body of ${d.origin.javaPath}:${d.origin.line} reads the `Class` value beyond constructing from it, and this rule declares no `classValue` to answer it with")
+            Some(
+              s"the body of ${d.origin.javaPath}:${d.origin.line} reads the `Class` value beyond constructing from it, and this rule declares no `classValue` to answer it with"
+            )
           case _ => scala.None
       }

@@ -2,8 +2,8 @@ package balticporter.corpus.tcfixture
 
 import scala.quoted.*
 
-/** What a CONSUMER writes for `type-class-params`: how to build a `T` with no reflection. The instance is derived at compile time for a concrete class with an accessible no-argument constructor;
-  * any other type is a compile error at the call that asks for one.
+/** What a CONSUMER writes for `type-class-params`: how to build a `T` with no reflection. The instance is derived at compile time for a concrete class with an accessible no-argument constructor; any
+  * other type is a compile error at the call that asks for one.
   */
 trait Factory[T]:
   def create(): T

@@ -53,10 +53,19 @@ class TypeClassParamsTransformSpec extends munit.FunSuite:
       case head :: rest => (head :: rest.takeWhile(l => to.isEmpty || !l.contains(to))).mkString("\n")
       case Nil          => ""
   private val all =
-    Set("com.demo.PM#create", "com.demo.PM#obtain", "com.demo.PM#viaCtor", "com.demo.PM#viaUtil", "com.demo.PM#withArg", "com.demo.PM#guarded")
+    Set(
+      "com.demo.PM#create",
+      "com.demo.PM#obtain",
+      "com.demo.PM#viaCtor",
+      "com.demo.PM#viaUtil",
+      "com.demo.PM#withArg",
+      "com.demo.PM#guarded"
+    )
   private val handles = Set("java.lang.InstantiationException", "java.lang.IllegalAccessException")
 
-  test("type-argument spelling: the parameter becomes a type class clause, every construction reads the instance, a literal caller names `[X]`") {
+  test(
+    "type-argument spelling: the parameter becomes a type class clause, every construction reads the instance, a literal caller names `[X]`"
+  ) {
     val (out, phase) = port(Rule(all, "x.Factory", instantiators = Set("com.demo.Refl#make"), classValue = ClassValue.Tag, handles = handles))
     val pm           = section(out, "class PM", "class User")
     assert(clue(pm).contains("def create[T <: java.lang.Object](using x.Factory[T], scala.reflect.ClassTag[T]): T"))
@@ -64,7 +73,12 @@ class TypeClassParamsTransformSpec extends munit.FunSuite:
     assert(pm.contains("return scala.Predef.summon[x.Factory[T]].create().asInstanceOf[T]"), pm)
     assert(!section(pm, "def create", "def obtain").contains("catch"), pm)
     // a read of the class beyond construction is answered by the tag; the delegating call names `[T]`
-    assert(pm.contains("val c: java.lang.Class[T] = scala.Predef.summon[scala.reflect.ClassTag[T]].runtimeClass.asInstanceOf[java.lang.Class[T]]"), pm)
+    assert(
+      pm.contains(
+        "val c: java.lang.Class[T] = scala.Predef.summon[scala.reflect.ClassTag[T]].runtimeClass.asInstanceOf[java.lang.Class[T]]"
+      ),
+      pm
+    )
     assert(pm.contains("cached = this.create[T]"), pm)
     // a named instantiator is a construction too
     assert(section(pm, "def viaUtil", "def withArg").contains("summon[x.Factory[T]].create()"), pm)
@@ -73,7 +87,9 @@ class TypeClassParamsTransformSpec extends munit.FunSuite:
     assert(user.contains("pm.obtain[com.demo.Foo]"), user)
   }
 
-  test("refusals are counted and leave java's spelling: a `Class` value, a constructor with arguments, a handler the rule does not declare") {
+  test(
+    "refusals are counted and leave java's spelling: a `Class` value, a constructor with arguments, a handler the rule does not declare"
+  ) {
     val (out, phase) = port(Rule(all, "x.Factory", instantiators = Set("com.demo.Refl#make"), classValue = ClassValue.Tag, handles = handles))
     val pm           = section(out, "class PM", "class User")
     val found        = phase.policyReport.findings.map(f => s"${f.key}: ${f.detail}")
@@ -89,9 +105,19 @@ class TypeClassParamsTransformSpec extends munit.FunSuite:
     assert(user.contains("pm.viaCtor(k)") && user.contains("pm.withArg(classOf[com.demo.Foo])"), user)
   }
 
-  test("keep-parameter spelling: the `Class` parameter stays beside the clause, callers read as java wrote them, a concrete `Class` value is accepted") {
-    val (out, phase) = port(Rule(all - "com.demo.PM#withArg", "x.Factory", instantiators = Set("com.demo.Refl#make"), spelling = Spelling.KeepParameter, handles = handles))
-    val pm           = section(out, "class PM", "class User")
+  test(
+    "keep-parameter spelling: the `Class` parameter stays beside the clause, callers read as java wrote them, a concrete `Class` value is accepted"
+  ) {
+    val (out, phase) = port(
+      Rule(
+        all - "com.demo.PM#withArg",
+        "x.Factory",
+        instantiators = Set("com.demo.Refl#make"),
+        spelling = Spelling.KeepParameter,
+        handles = handles
+      )
+    )
+    val pm = section(out, "class PM", "class User")
     assert(clue(pm).contains("def create[T <: java.lang.Object](c: java.lang.Class[T])(using x.Factory[T]): T"))
     assert(pm.contains("def obtain[T <: java.lang.Object](c: java.lang.Class[T])(using x.Factory[T]): T"), pm)
     assert(pm.contains("cached = this.create(c)"), pm)
@@ -102,7 +128,9 @@ class TypeClassParamsTransformSpec extends munit.FunSuite:
     assert(!phase.policyReport.findings.exists(_.detail.contains("VALUE")), phase.policyReport.findings.mkString("\n"))
   }
 
-  test("classValue = refuse: a member reading its class as a key refuses, and so does the member it delegates to, whose caller now passes a value") {
+  test(
+    "classValue = refuse: a member reading its class as a key refuses, and so does the member it delegates to, whose caller now passes a value"
+  ) {
     val (out, phase) = port(Rule(Set("com.demo.PM#create", "com.demo.PM#obtain"), "x.Factory", handles = handles))
     val pm           = section(out, "class PM", "class User")
     assert(pm.contains("def obtain[T <: java.lang.Object](c: java.lang.Class[T]): T"), pm)
@@ -113,8 +141,15 @@ class TypeClassParamsTransformSpec extends munit.FunSuite:
   }
 
   test("classValue = member:<name> reads the class off the type class, with no second clause") {
-    val (out, _) = port(Rule(Set("com.demo.PM#create", "com.demo.PM#obtain"), "x.Factory", classValue = ClassValue.Member("runtimeClass"), handles = handles))
-    val pm       = section(out, "class PM", "class User")
+    val (out, _) = port(
+      Rule(
+        Set("com.demo.PM#create", "com.demo.PM#obtain"),
+        "x.Factory",
+        classValue = ClassValue.Member("runtimeClass"),
+        handles = handles
+      )
+    )
+    val pm = section(out, "class PM", "class User")
     assert(clue(pm).contains("def obtain[T <: java.lang.Object](using x.Factory[T]): T"))
     assert(pm.contains("val c: java.lang.Class[T] = scala.Predef.summon[x.Factory[T]].runtimeClass"), pm)
   }
@@ -131,8 +166,12 @@ class TypeClassParamsTransformSpec extends munit.FunSuite:
     val r  = Rule(Set("a.B#m"), "x.F")
     val fp = new TypeClassParamsTransform(List(r)).surfaceFingerprint
     assert(fp.contains("x.F.create") && fp.contains("a.B#m") && !fp.contains("spelling") && !fp.contains("classValue"), fp)
-    assert(new TypeClassParamsTransform(List(r.copy(spelling = Spelling.KeepParameter))).surfaceFingerprint.contains("spelling=keep-parameter"))
-    assert(new TypeClassParamsTransform(List(r.copy(classValue = ClassValue.Tag))).surfaceFingerprint.contains("classValue=class-tag"))
+    assert(
+      new TypeClassParamsTransform(List(r.copy(spelling = Spelling.KeepParameter))).surfaceFingerprint.contains("spelling=keep-parameter")
+    )
+    assert(
+      new TypeClassParamsTransform(List(r.copy(classValue = ClassValue.Tag))).surfaceFingerprint.contains("classValue=class-tag")
+    )
     assert(new TypeClassParamsTransform(List(r)).mergedWith(new TypeClassParamsTransform(List(r.copy(typeClass = "y.G")))).isLeft)
     val merged = new TypeClassParamsTransform(List(r)).mergedWith(new TypeClassParamsTransform(List(Rule(Set("a.B#n"), "x.F"))))
     assertEquals(merged.map(_.added), Right(Set("a.B")))
