@@ -3,7 +3,7 @@ package balticporter.corpus.tcfixture
 import scala.quoted.*
 
 /** What a CONSUMER writes for `type-class-params`: how to build a `T` with no reflection. The instance is derived at compile time for a concrete class with an accessible no-argument constructor; any
-  * other type is a compile error at the call that asks for one.
+  * other type is a compile error at the call that asks for one. Main sources, not test: a macro expanded in the run that defines it suspends its callers, and zinc loses their analysis.
   */
 trait Factory[T]:
   def create(): T
