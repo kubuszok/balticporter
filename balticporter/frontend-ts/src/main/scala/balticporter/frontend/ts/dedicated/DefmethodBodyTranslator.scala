@@ -60,6 +60,8 @@ object DefmethodBodyTranslator:
     *   tree's declared members. When absent, access on specific class types is refused. */
   /** @param ctorSchema constructor parameter lists from the reference tree, used to construct
     *   typed objects from JS object literals instead of emitting `mutable.Map`. */
+  /** @param enclosingOwner the object path the body is emitted into, when the caller knows it; a
+    *   private member of any other object is refused, and so is every private member when absent. */
   def translateBody(
       entry: DefmethodEntry,
       hierarchy: List[DefnodeClass],
@@ -75,8 +77,9 @@ object DefmethodBodyTranslator:
       enumIndex: ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty,
       memberRenames: Map[String, String] = Map.empty,
       oracle: ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
+      enclosingOwner: Option[String] = None,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner)
     ctx.translateBlock(entry.bodyNode)
     ctx.checkUnresolvedReferences()
     TranslationResult(
@@ -254,6 +257,7 @@ object DefmethodBodyTranslator:
       enumIndex: ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty,
       memberRenames: Map[String, String] = Map.empty,
       oracle: ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
+      enclosingOwner: Option[String] = None,
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
@@ -304,9 +308,18 @@ object DefmethodBodyTranslator:
     private val localTypes = mutable.Map.empty[String, String]
     // All locally declared variable names (even when the type is unknown)
     private val localNames = mutable.Set.empty[String]
-    // Qualified references emitted via the callee index: (objectName, memberName) pairs
-    // that must be validated after translation completes.
+    // Qualified references emitted via the callee index or a property access on a known
+    // object: (owner, member) pairs validated after translation completes.
     private val emittedQualifiedRefs = mutable.Set.empty[(String, String)]
+
+    /** Qualify a bare name the callee index resolved, recording the reference for validation. */
+    private def qualify(ref: ReferenceSignatures.MemberRef): String =
+      emittedQualifiedRefs += ((ref.owner, ref.member))
+      ref.qualified
+
+    /** The oracle's signature of an index-resolved member: under its declaring owner, else under the file declaring it (the oracle may be keyed by file). */
+    private def signatureOf(ref: ReferenceSignatures.MemberRef): Option[ReferenceSignatures.MethodSig] =
+      oracle.get(ref.owner, ref.member).orElse(oracle.get(ref.file, ref.member))
     // Identifiers currently in a guarded scope where they have been tested
     // for truthiness and should be unwrapped (Nullable -> .get)
     private val unwrappedIds = mutable.Set.empty[String]
@@ -352,14 +365,9 @@ object DefmethodBodyTranslator:
               // Try apiLookup first (it disambiguates names the callee index
               // considers ambiguous, e.g. buildExpression in both BuildHTML
               // and BuildMathML)
-              val qualified = apiLookup.get(rawName) match
-                case Some(q) if q.contains('.') => Some(q)
-                case _ => calleeIndex.resolve(name).toOption
-              qualified.flatMap { q =>
-                val dotIdx = q.lastIndexOf('.')
-                if dotIdx >= 0 then oracle.get(q.substring(0, dotIdx), q.substring(dotIdx + 1)).map(_.returnType)
-                else None
-              }
+              apiLookup.get(rawName) match
+                case Some(q) if q.contains('.') => lookupCallee(q).map(_.returnType)
+                case _ => calleeIndex.resolveMember(name).toOption.flatMap(signatureOf).map(_.returnType)
             case _ => None
         case _ => None
 
@@ -474,17 +482,17 @@ object DefmethodBodyTranslator:
     def result(): String = sb.toString
 
     /** Check every qualified reference emitted through the callee index or
-      * recorded from a property access on a known skeleton object. A reference
-      * `X.m` where `X` is a known object but `m` is not a declared member
-      * produces an `unresolved-reference` refusal. Unknown receiver types are
-      * left alone -- the translator does not guess. */
+      * recorded from a property access on a known skeleton object against what
+      * that object itself DECLARES: `X.m` where `X` declares no `m` refuses
+      * `unresolved-reference`, and a private `m` the emitting context cannot
+      * reach refuses `private-member-of-other-object`. */
     def checkUnresolvedReferences(): Unit =
-      for (obj, member) <- emittedQualifiedRefs do
-        val inCalleeIndex = calleeIndex.byName.get(member).exists(_.contains(obj))
-        val inMemberIndex = memberIndex.hasMember(obj, member)
-        val inOracle      = oracle.get(obj, member).isDefined
-        if !inCalleeIndex && !inMemberIndex && !inOracle then
-          refuse("unresolved-reference")
+      for (obj, member) <- emittedQualifiedRefs.toList.sorted do
+        calleeIndex.declared(obj, member) match
+          case Some(ref) if !ref.accessibleFrom(enclosingOwner) => refuse("private-member-of-other-object")
+          case Some(_)                                          => ()
+          case None if memberIndex.hasMember(obj, member)       => ()
+          case None                                             => refuse("unresolved-reference")
 
     def translateBlock(block: RastNode): Unit =
       // Pre-check: if the body uses `this` and the member index has data but
@@ -1057,12 +1065,9 @@ object DefmethodBodyTranslator:
              !localNames.contains(scName) && !localNames.contains(n) &&
              !n.startsWith("AST_") && scName == snakeToCamel(n) &&
              n.head.isLower then
-            calleeIndex.resolve(scName) match
-              case Right(qualified) =>
-                val dotIdx = qualified.indexOf('.')
-                if dotIdx >= 0 then emittedQualifiedRefs += ((qualified.substring(0, dotIdx), qualified.substring(dotIdx + 1)))
-                qualified
-              case Left(_) => scName
+            calleeIndex.resolveMember(scName) match
+              case Right(ref) => qualify(ref)
+              case Left(_)    => scName
           else scName
       // When this identifier was tested for Nullable truthiness in an
       // enclosing && guard, it has been unwrapped and must be read as .get
@@ -1528,23 +1533,21 @@ object DefmethodBodyTranslator:
             case _ =>
               val scalaName = translateIdentifier(name)
               // Resolve the callee: try callee index for unqualified names
-              val qualifiedCallee =
+              val resolvedCallee: Option[ReferenceSignatures.MemberRef] =
                 if !apiLookup.contains(name) && !entry.params.contains(name) &&
                    !name.startsWith("AST_") && scalaName == snakeToCamel(name) then
-                  calleeIndex.resolve(scalaName) match
-                    case Right(qualified) =>
-                      val dotIdx = qualified.indexOf('.')
-                      if dotIdx >= 0 then emittedQualifiedRefs += ((qualified.substring(0, dotIdx), qualified.substring(dotIdx + 1)))
-                      qualified
+                  calleeIndex.resolveMember(scalaName) match
+                    case Right(ref) => Some(ref)
                     case Left("callee-ambiguous") =>
                       refuse("callee-ambiguous")
-                      scalaName
+                      None
                     case Left(_) =>
                       refuse("wrong-function-ref")
-                      scalaName
-                else scalaName
+                      None
+                else None
+              val qualifiedCallee = resolvedCallee.fold(scalaName)(qualify)
               // Look up the callee's signature for expected-type propagation
-              val calleeSig = lookupCallee(qualifiedCallee)
+              val calleeSig = resolvedCallee.fold(lookupCallee(qualifiedCallee))(signatureOf)
               calleeSig.foreach { s =>
                 val isVararg = s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq["))
                 if args.length > s.params.length && !isVararg then

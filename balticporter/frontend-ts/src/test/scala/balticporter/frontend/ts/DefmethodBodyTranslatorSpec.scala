@@ -1059,3 +1059,56 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       !result.refusalReasons.contains("unresolved-reference"),
       s"unknown receiver should not refuse unresolved-reference: ${result.refusalReasons}"
     )
+
+  // ---- the declaring owner of a resolved name ----
+
+  private val ownersSource =
+    """package demo
+      |
+      |object A {
+      |  def a(): Int = 1
+      |}
+      |
+      |object B {
+      |  private var f: Int = 0
+      |  var g: Int = 0
+      |
+      |  object Inner {
+      |    def h(): Int = 2
+      |  }
+      |}
+      |""".stripMargin
+
+  private lazy val ownersIndex: ReferenceSignatures.CalleeIndex = ReferenceSignatures.buildIndices(List(("File", ownersSource)))._1
+
+  private def translateIn(owner: Option[String], body: RastNode): DefmethodBodyTranslator.TranslationResult =
+    DefmethodBodyTranslator.translateBody(DefmethodEntry("_free_", "test", Nil, body), Nil, "    ", calleeIndex = ownersIndex, enclosingOwner = owner)
+
+  test("a bare name resolves to its declaring object, and a private member of another object is refused"):
+    val result = translateIn(Some("A"), block(ret(ident("f"))))
+    assert(result.scalaBody.contains("B.f"), s"qualified by the declaring object: ${result.scalaBody}")
+    assert(!result.scalaBody.contains("File.f"), s"never by the file's name: ${result.scalaBody}")
+    assertEquals(result.refusalReasons, List("private-member-of-other-object"))
+
+  test("a private member is refused when the emitting object is unknown"):
+    val result = translateIn(None, block(ret(ident("f"))))
+    assertEquals(result.refusalReasons, List("private-member-of-other-object"))
+
+  test("a public member of another object resolves as that object's member"):
+    val result = translateIn(Some("A"), block(ret(ident("g"))))
+    assertEquals(result.scalaBody.trim, "B.g")
+    assertEquals(result.refusalReasons, Nil)
+
+  test("a private member declared on the emitting object translates"):
+    val result = translateIn(Some("B"), block(ret(ident("f"))))
+    assertEquals(result.scalaBody.trim, "B.f")
+    assertEquals(result.refusalReasons, Nil)
+
+  test("a property access on a known object reaching its private member is refused"):
+    val result = translateIn(Some("A"), block(ret(propAccess(ident("B"), "f"))))
+    assert(result.refusalReasons.contains("private-member-of-other-object"), s"${result.refusalReasons}")
+
+  test("a member of a nested object is validated against that object, not a prefix of its path"):
+    val result = translateIn(Some("A"), block(ret(node("CallExpression", ident("h")))))
+    assert(result.scalaBody.contains("B.Inner.h()"), s"${result.scalaBody}")
+    assertEquals(result.refusalReasons, Nil)

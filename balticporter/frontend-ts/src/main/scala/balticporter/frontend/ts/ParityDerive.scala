@@ -99,8 +99,8 @@ object ParityDerive:
         val idx = consumed(method.name)
         consumed(method.name) = idx + 1
 
-        val sigEndLineIdx = ReferenceSkeleton.findSignatureEnd(lines, method.signatureLine)
-        val eqIdx         = ReferenceSkeleton.findEqualsInSignature(lines(sigEndLineIdx))
+        val sigEndLineIdx = if method.equalsLine >= 0 then method.equalsLine else ReferenceSkeleton.findSignatureEnd(lines, method.signatureLine)
+        val eqIdx         = if method.equalsLine >= 0 then method.equalsColumn else ReferenceSkeleton.findEqualsInSignature(lines(sigEndLineIdx))
         val named         = candidates(method.name)
 
         val decision: Either[String, TranslatedBody] =

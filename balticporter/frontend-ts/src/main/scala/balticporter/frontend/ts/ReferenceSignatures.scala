@@ -50,29 +50,70 @@ object ReferenceSignatures:
     def fromEntries(entries: List[(String, MethodSig)]): TypeOracle =
       TypeOracle(entries.map { case (obj, sig) => (obj, sig.methodName) -> sig }.toMap)
 
-  /** Index of function/method names to their enclosing object, built from the reference tree. Used to qualify unresolved callee identifiers: `makeSpan(...)` becomes `BuildCommon.makeSpan(...)`.
+  /** A member of an object, as the reference tree declares it: `owner` is the declaring object's path (`Outer.Inner`), `file` the name the caller gave the file declaring it. */
+  final case class MemberRef(
+    owner:     String,
+    member:    String,
+    file:      String,
+    isPrivate: Boolean,
+    kind:      ReferenceDeclarations.Kind = ReferenceDeclarations.Kind.Def
+  ):
+    def qualified: String = s"$owner.$member"
+
+    /** A def, val or var: what a bare identifier or a call in a translated body can name. */
+    def isTerm: Boolean =
+      import ReferenceDeclarations.Kind.*
+      kind match
+        case Def | AbstractDef | Val | Var => true
+        case _                             => false
+
+    /** True when code emitted inside `context` (an object path) can name this member: a private member only from its owner or from a template nested in it. */
+    def accessibleFrom(context: Option[String]): Boolean =
+      !isPrivate || context.exists(c => c == owner || c.startsWith(owner + "."))
+
+  /** The members every object of the reference tree declares, keyed by the DECLARING object. Used to qualify unresolved callee identifiers: `makeSpan(...)` becomes `BuildCommon.makeSpan(...)`.
+    * `objects` also lists objects that declare nothing; `unparsed` names the files the reader could not parse, which contribute nothing.
     */
   final case class CalleeIndex(
-    byName: Map[String, List[String]]
+    members:  List[MemberRef],
+    objects:  Set[String] = Set.empty,
+    unparsed: List[String] = Nil
   ):
-    /** Resolve a simple function name to its fully qualified form. Returns Right(qualified) on a unique match, Left(reason) on ambiguity or absence.
-      */
-    def resolve(simpleName: String): Either[String, String] =
-      byName.get(simpleName) match
-        case None | Some(Nil)       => Left("callee-not-found")
-        case Some(enclosing :: Nil) => Right(s"$enclosing.$simpleName")
-        case Some(multiple)         => Left("callee-ambiguous")
+    private lazy val byMember: Map[String, List[MemberRef]] = members.filter(_.isTerm).groupBy(_.member)
+    private lazy val byOwner:  Map[String, List[MemberRef]] = members.groupBy(_.owner)
 
-    /** All object names that appear as enclosing containers in this index. */
-    lazy val knownObjects: Set[String] =
-      byName.values.flatten.toSet
+    /** The declaring object of a simple name: Right on a unique owner, Left(reason) on ambiguity or absence. */
+    def resolveMember(simpleName: String): Either[String, MemberRef] =
+      byMember.getOrElse(simpleName, Nil).distinctBy(_.owner) match
+        case Nil        => Left("callee-not-found")
+        case one :: Nil => Right(one)
+        case _          => Left("callee-ambiguous")
 
-    /** The member names known to belong to `objectName`. */
-    def membersOf(objectName: String): Set[String] =
-      byName.collect { case (name, objects) if objects.contains(objectName) => name }.toSet
+    /** [[resolveMember]] as the qualified text. */
+    def resolve(simpleName: String): Either[String, String] = resolveMember(simpleName).map(_.qualified)
+
+    /** What `owner` itself declares under `member` — the declaration, never a resolution. */
+    def declared(owner: String, member: String): Option[MemberRef] =
+      byOwner.getOrElse(owner, Nil).find(_.member == member)
+
+    /** Every object path in this index. */
+    lazy val knownObjects: Set[String] = objects ++ members.map(_.owner)
+
+    /** The member names `objectName` declares. */
+    def membersOf(objectName: String): Set[String] = byOwner.getOrElse(objectName, Nil).map(_.member).toSet
 
   object CalleeIndex:
-    val empty: CalleeIndex = CalleeIndex(Map.empty)
+    val empty: CalleeIndex = CalleeIndex(Nil)
+
+    /** An index of public members from `member -> declaring objects`. */
+    def apply(byName: Map[String, List[String]]): CalleeIndex =
+      CalleeIndex(byName.toList.flatMap((m, owners) => owners.map(o => MemberRef(o, m, o, isPrivate = false))))
+
+    /** The index of the structurally-read `declarations` of the file the caller named `file`: object members only, since a class or trait member is not reachable through its owner's name. */
+    def of(file: String, declarations: List[ReferenceDeclarations.Declaration]): CalleeIndex =
+      val reachable = declarations.filter(d => d.owner.nonEmpty && d.ownerIsObject)
+      val objects   = declarations.collect { case d if d.kind == ReferenceDeclarations.Kind.Object && d.ownerIsObject => if d.owner.isEmpty then d.name else s"${d.owner}.${d.name}" }
+      CalleeIndex(reachable.map(d => MemberRef(d.owner, d.name, file, d.isPrivate, d.kind)), objects.toSet)
 
   /** Index of class/object member names, built from the reference tree. Used to validate property access on typed parameters.
     */
@@ -112,29 +153,18 @@ object ReferenceSignatures:
   object EnumIndex:
     val empty: EnumIndex = EnumIndex(Map.empty)
 
-  /** Parse all reference Scala files under a directory and build the indices. */
+  /** Parse the reference Scala files, given as `(file name, source)`, and build the indices. The callee index files each member under the object that DECLARES it, read from the parse. */
   def buildIndices(sources: List[(String, String)]): (CalleeIndex, MemberIndex, ConstructorSchema, EnumIndex) =
-    val callees  = mutable.Map.empty[String, mutable.ListBuffer[String]]
-    val members  = mutable.Map.empty[String, mutable.Set[String]]
-    val ctors    = mutable.Map.empty[String, List[CtorParam]]
-    val enumVals = mutable.Map.empty[(String, String), String]
+    val calleeParts = mutable.ListBuffer.empty[CalleeIndex]
+    val unparsed    = mutable.ListBuffer.empty[String]
+    val members     = mutable.Map.empty[String, mutable.Set[String]]
+    val ctors       = mutable.Map.empty[String, List[CtorParam]]
+    val enumVals    = mutable.Map.empty[(String, String), String]
 
     for (objectName, source) <- sources do
-      val logicalLines = joinMultiLineSignatures(source)
-      // Collect method names for callee index
-      val defNamePattern = """^\s{2}(?:private\s+|protected\s+)?def\s+(\w+)""".r
-      for line <- logicalLines do
-        defNamePattern.findFirstMatchIn(line).foreach { m =>
-          callees.getOrElseUpdate(m.group(1), mutable.ListBuffer.empty) += objectName
-        }
-      // Collect module-level val/lazy val/var names for the callee index,
-      // so that a TS module-level `const X = [...]` referenced from a method
-      // resolves through the same index as a function call.
-      val valNamePattern = """^\s{2}(?:private\s+|protected\s+)?(?:lazy\s+)?(?:val|var)\s+(\w+)""".r
-      for line <- source.linesIterator do
-        valNamePattern.findFirstMatchIn(line).foreach { m =>
-          callees.getOrElseUpdate(m.group(1), mutable.ListBuffer.empty) += objectName
-        }
+      ReferenceDeclarations.read(objectName, source) match
+        case Right(decls) => calleeParts += CalleeIndex.of(objectName, decls)
+        case Left(error)  => unparsed += error
 
       // Collect class constructors by joining multi-line declarations
       val classLines = joinClassDeclarations(source)
@@ -149,7 +179,7 @@ object ReferenceSignatures:
       parseEnumMembers(source, members, enumVals)
 
     (
-      CalleeIndex(callees.map { case (k, v) => k -> v.distinct.toList }.toMap),
+      CalleeIndex(calleeParts.toList.flatMap(_.members), calleeParts.toList.flatMap(_.objects).toSet, unparsed.toList),
       MemberIndex(members.map { case (k, v) => k -> v.toSet }.toMap),
       ConstructorSchema(ctors.toMap),
       EnumIndex(enumVals.toMap)

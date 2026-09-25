@@ -129,8 +129,10 @@ class ParityDeriveSpec extends munit.FunSuite:
         |  protected def guarded(x: Int): Int =
         |    x + 3
         |
+        |  object Inner {
         |    def nested(x: Int): Int =
         |      x + 4
+        |  }
         |}
         |""".stripMargin
     val bodies = ParityDerive.Bodies(
@@ -300,3 +302,62 @@ class ParityDeriveSpec extends munit.FunSuite:
     val methods = ReferenceSkeleton.findMethodBoundaries(reference.split("\n", -1).toList)
     assertEquals(methods.size, 1, s"should find only the concrete method: ${methods.map(_.name)}")
     assertEquals(methods(0).name, "concreteMethod")
+
+  private val tablesReference =
+    """package test
+      |
+      |trait Walker {
+      |  def parent(n: Int = 0): AnyRef | Null
+      |
+      |  def depth(): Int
+      |}
+      |
+      |object Tables {
+      |
+      |  private def block0: Vector[String] = Vector(
+      |    "a",
+      |    "b"
+      |  )
+      |
+      |  private def block1: Vector[String] = Vector(
+      |    "c"
+      |  )
+      |}
+      |""".stripMargin
+
+  test("derive: an abstract member, with or without default parameters, has exactly one row"):
+    val result  = ParityDerive.derive(tablesReference, ParityDerive.Bodies.empty, ParityDerive.Policy())
+    val entries = (result.bodies ++ result.unoffered).map(e => (e.methodName, e.offered, e.why))
+    assertEquals(entries.count(_._1 == "parent"), 1)
+    assertEquals(entries.count(_._1 == "depth"), 1)
+    assert(entries.contains(("parent", false, "skeleton-cannot-offer:abstract")), s"$entries")
+    assert(entries.contains(("depth", false, "skeleton-cannot-offer:abstract")), s"$entries")
+
+  test("derive: a body that opens a bracket after its `=` is offered, and its neighbour keeps its own row"):
+    val bodies = ParityDerive.Bodies(Map("block1" -> List(ParityDerive.TranslatedBody("    Vector(\"z\")\n"))))
+    val result = ParityDerive.derive(tablesReference, bodies, ParityDerive.Policy())
+    assertEquals(result.bodies.map(e => (e.methodName, e.source)), List(("block0", "reference"), ("block1", "translated")))
+    assert(result.emittedSource.contains("\"a\","), s"block0 intact:\n${result.emittedSource}")
+    assert(result.emittedSource.contains("Vector(\"z\")"), s"block1 replaced:\n${result.emittedSource}")
+    assert(!result.emittedSource.contains("\"c\""), s"block1's old body gone:\n${result.emittedSource}")
+    assertEquals(BodiesReport.coverage("Tables.scala", tablesReference, result), Nil)
+
+  test("findEqualsInSignature: a bracket the body opens after the `=` does not hide it"):
+    val line = "  private def block0: Vector[String] = Vector("
+    assertEquals(ReferenceSkeleton.findEqualsInSignature(line), line.indexOf(" = ") + 1)
+
+  test("coverage: every emitted member with exactly one row is clean, a dropped row is reported"):
+    val result = ParityDerive.derive(syntheticReference, ParityDerive.Bodies.empty, ParityDerive.Policy())
+    assertEquals(BodiesReport.coverage("Foo.scala", syntheticReference, result), Nil)
+    val dropped = result.copy(bodies = result.bodies.filterNot(_.methodName == "priv"))
+    val found   = BodiesReport.coverage("Foo.scala", syntheticReference, dropped)
+    assertEquals(found.size, 1)
+    assert(found.head.contains("priv: declared, no row"), s"$found")
+    intercept[BodiesReport.CoverageViolation](BodiesReport.requireCoverage("Foo.scala", syntheticReference, dropped))
+
+  test("coverage: a doubled row and a row naming no member are reported"):
+    val result  = ParityDerive.derive(syntheticReference, ParityDerive.Bodies.empty, ParityDerive.Policy())
+    val doubled = result.copy(bodies = result.bodies ++ result.bodies.take(1))
+    assert(BodiesReport.coverage("Foo.scala", syntheticReference, doubled).exists(_.contains("1 declared, 2 rows")))
+    val stray = result.copy(unoffered = List(ParityDerive.BodyEntry("ghost", "reference", "x", line = 1, offered = false)))
+    assert(BodiesReport.coverage("Foo.scala", syntheticReference, stray).exists(_.contains("ghost: a row, no declared method")))

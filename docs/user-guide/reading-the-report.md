@@ -239,7 +239,7 @@ one of:
 | `occurrence-out-of-range` | the name was translated fewer times than the reference declares it |
 | `uncompilable-pattern:<pattern>` | the translated text contains a pattern the library's policy lists as not compilable in the port |
 | `translator-refusal:<reason>` | the translator left a hole in the body (`<reason>` is its own, several joined by `+`), or the file's syntax tree is `missing-rast` / `unreadable-rast`, or the signature has no `=` to cut at (`unreadable-signature`) |
-| `skeleton-cannot-offer:<kind>` | the reference file reader cannot replace this member; `kind` is the reason: `override` (has `override` modifier), `protected`/`final`/`inline`/... (has a modifier the reader does not accept), or `nested` (indented deeper than a top-level member) |
+| `skeleton-cannot-offer:<kind>` | the reference file reader cannot replace this member; `kind` is the reason: `abstract` (no body to replace), `constructor` (a secondary constructor), `override` (has `override` modifier), `protected`/`final`/`inline`/... (has a modifier the reader does not accept), or `nested` (a member of a nested template) |
 | `reference-only:<reason>` | the consumer's library configuration declares this member has no upstream counterpart; `reason` is the consumer's own explanation |
 | `translated-elsewhere` | a translated body of that name exists in another file's module, but no module connects this file to its syntax tree |
 | `unclassified` | a translated body of that name exists and no rule above explains why it was not used; this should be empty after every declined site has been classified |
@@ -247,3 +247,16 @@ one of:
 `skeleton-cannot-offer` and `reference-only` are the two families that replace the old
 `unclassified` bucket. `bodies-summary.txt` beside the table is the one line `run.summary.line`
 returns; its counts add up to the table's rows.
+
+The rows are checked against the methods the reference file DECLARES, read by the Scala parser
+(every `def`, abstract or concrete, and every secondary constructor of every template; a local
+`def` inside a body is not a member). A method with no row, two rows, or a row naming no method
+stops the derive with `BodiesReport.CoverageViolation` listing each one, as does a reference
+file the parser rejects: a table that silently loses members has a dishonest denominator. Each
+such stop is an engine bug (kind a, a fix in `ReferenceSkeleton`), never a port setting.
+
+A translated body reaches another object's member only through the object that declares it
+(`Base.frequency`, never the file's name). A `private` member of another object is refused as
+`translator-refusal:private-member-of-other-object`, and so is every private member when the
+consumer does not pass `enclosingOwner` to `DefmethodBodyTranslator.translateBody`; a name no
+object declares is `unresolved-reference`.

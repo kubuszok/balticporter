@@ -66,7 +66,8 @@ object NonJavaBodies:
       val rawBodies = entry.fold(ParityDerive.Bodies.empty)(_.bodies)
       val bodies    = if referenceOnly.isEmpty then rawBodies else ParityDerive.Bodies(rawBodies.byName -- referenceOnly.keySet)
       val result    = ParityDerive.derive(referenceSource, bodies, policy)
-      val rows      = BodiesReport.rows(relativeFile, result).map { row =>
+      BodiesReport.requireCoverage(relativeFile, referenceSource, result)
+      val rows = BodiesReport.rows(relativeFile, result).map { row =>
         referenceOnly.get(row.member) match
           case Some(reason) => row.copy(why = ParityDerive.Why.referenceOnly(reason))
           case None         =>

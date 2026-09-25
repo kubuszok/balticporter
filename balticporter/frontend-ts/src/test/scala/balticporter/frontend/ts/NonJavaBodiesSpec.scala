@@ -210,3 +210,26 @@ class NonJavaBodiesSpec extends munit.FunSuite:
         assert(emitted.contains("x * 2"), "first area overload should keep reference body")
         assert(!emitted.contains("\n    10\n"), "translated body should not be spliced")
       case refused: NonJavaBodies.Refused => fail(refused.message)
+
+  test("a file whose syntax tree is missing keeps one row per member, abstract and bracket-opening bodies included"):
+    val root      = Files.createTempDirectory("non-java-bodies-tables")
+    val reference = root.resolve("reference")
+    Files.createDirectories(reference.resolve("demo"))
+    Files.createDirectories(root.resolve("rast"))
+    Files.writeString(
+      reference.resolve("demo/Tables.scala"),
+      "package demo\n\ntrait Walker {\n  def parent(n: Int = 0): AnyRef | Null\n}\n\nobject Tables {\n\n  private def block0: Vector[String] = Vector(\n    \"a\"\n  )\n\n  private def block1: Vector[String] = Vector(\n    \"b\"\n  )\n}\n"
+    )
+    val tables = library.copy(modules = _ => Right(List(NonJavaBodies.Module("Tables.scala", "src/tables.rast.json", Nil, bodiesOf))))
+    NonJavaBodies.build(tables, reference, root.resolve("rast")) match
+      case built: NonJavaBodies.Built =>
+        val rows = built.derive(root.resolve("out"), root.resolve("report")).rows.map(r => (r.member, r.occurrence, r.why))
+        assertEquals(
+          rows,
+          List(
+            ("parent", "-", "skeleton-cannot-offer:abstract"),
+            ("block0", "0", "translator-refusal:missing-rast"),
+            ("block1", "0", "translator-refusal:missing-rast")
+          )
+        )
+      case refused: NonJavaBodies.Refused => fail(refused.message)

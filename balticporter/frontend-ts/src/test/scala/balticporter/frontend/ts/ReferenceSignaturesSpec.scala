@@ -155,3 +155,55 @@ class ReferenceSignaturesSpec extends munit.FunSuite:
     assert(mi.knowsType("Mode"), "should know Mode")
     assert(mi.hasMember("Mode", "Math"), "should have Math member")
     assert(mi.hasMember("Mode", "Text"), "should have Text member")
+
+  // ---- declaring owners ----
+
+  private val twoObjects =
+    """package demo
+      |
+      |object A {
+      |  def a(): Int = 1
+      |}
+      |
+      |object B {
+      |  private var f: Int = 0
+      |  var g: Int = 0
+      |
+      |  object Inner {
+      |    def h(): Int = 2
+      |  }
+      |}
+      |
+      |class C {
+      |  def m(): Int = 3
+      |}
+      |""".stripMargin
+
+  test("buildIndices: a member is filed under the object that declares it, not under the file's name"):
+    val (ci, _, _, _) = ReferenceSignatures.buildIndices(List(("File", twoObjects)))
+    assertEquals(ci.resolve("a"), Right("A.a"))
+    assertEquals(ci.resolve("g"), Right("B.g"))
+    assertEquals(ci.resolveMember("f").map(r => (r.owner, r.member, r.file, r.isPrivate)), Right(("B", "f", "File", true)))
+    assertEquals(ci.declared("File", "f"), None)
+    assertEquals(ci.knownObjects, Set("A", "B", "B.Inner"))
+
+  test("buildIndices: a nested object's member is qualified by the whole object path"):
+    val (ci, _, _, _) = ReferenceSignatures.buildIndices(List(("File", twoObjects)))
+    assertEquals(ci.resolveMember("h").map(r => (r.owner, r.member)), Right(("B.Inner", "h")))
+
+  test("buildIndices: a class member is not reachable through the class name and is not indexed"):
+    val (ci, _, _, _) = ReferenceSignatures.buildIndices(List(("File", twoObjects)))
+    assertEquals(ci.resolve("m"), Left("callee-not-found"))
+
+  test("buildIndices: a file the parser rejects is recorded, not guessed around"):
+    val (ci, _, _, _) = ReferenceSignatures.buildIndices(List(("Bad", "object Bad {\n  def x( = \n")))
+    assertEquals(ci.unparsed.size, 1)
+    assertEquals(ci.resolve("x"), Left("callee-not-found"))
+
+  test("a private member is accessible only from its owner or a template nested in it"):
+    val ref = ReferenceSignatures.MemberRef("B", "f", "File", isPrivate = true)
+    assert(ref.accessibleFrom(Some("B")))
+    assert(ref.accessibleFrom(Some("B.Inner")))
+    assert(!ref.accessibleFrom(Some("A")))
+    assert(!ref.accessibleFrom(Some("Bee")))
+    assert(!ref.accessibleFrom(None))

@@ -303,6 +303,7 @@ lazy val `frontend-ts` = project
     libraryDependencies ++= Seq(
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core"   % "2.36.4",
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.36.4" % Provided,
+      "org.scalameta" %% "scalameta" % "4.17.2", // reference Scala read structurally: declaring owners, member lines
       munit,
     ),
     // The TS exporter bundle: `npm ci && npm run build` in exporter/, then copy dist/export.js

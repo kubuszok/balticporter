@@ -35,6 +35,32 @@ object BodiesReport:
       Row(file.replace('\\', '/'), e.methodName, if e.offered then e.occurrence.toString else "-", e.source, why)
     }
 
+  /** Every way the rows of one file fail to account for the methods its source DECLARES, read by the parser rather than by the skeleton reader that produced them: a method with no row, a method with
+    * more than one, a row on a line that declares no method. Empty when every emitted member has exactly one row; a non-empty answer is a bug in the reader, never a property of the file.
+    */
+  def coverage(file: String, referenceSource: String, result: ParityDerive.ParityResult): List[String] =
+    ReferenceDeclarations.read(file, referenceSource) match
+      case Left(error)  => List(s"unparseable: $error")
+      case Right(decls) =>
+        val declared = decls.filter(_.isMethod).map(d => (d.line, d.name)).groupMapReduce(identity)(_ => 1)(_ + _)
+        val recorded = (result.bodies ++ result.unoffered).map(e => (e.line, e.methodName)).groupMapReduce(identity)(_ => 1)(_ + _)
+        (declared.keySet ++ recorded.keySet).toList.sorted.flatMap { key =>
+          val (line, name) = key
+          (declared.getOrElse(key, 0), recorded.getOrElse(key, 0)) match
+            case (d, r) if d == r => Nil
+            case (_, 0)           => List(s"$file:${line + 1} $name: declared, no row")
+            case (0, _)           => List(s"$file:${line + 1} $name: a row, no declared method")
+            case (d, r)           => List(s"$file:${line + 1} $name: $d declared, $r rows")
+        }
+
+  /** Thrown when a derive's rows do not account for exactly the members the skeleton emits: a lost or doubled row makes the table's denominator a lie, so the run stops instead of writing it. */
+  final class CoverageViolation(val violations: List[String]) extends IllegalStateException(s"bodies.tsv does not account for every emitted member exactly once:\n  ${violations.mkString("\n  ")}")
+
+  /** [[coverage]] of one derived file, thrown as a [[CoverageViolation]] when it finds anything. */
+  def requireCoverage(file: String, referenceSource: String, result: ParityDerive.ParityResult): Unit =
+    val violations = coverage(file, referenceSource, result)
+    if violations.nonEmpty then throw CoverageViolation(violations)
+
   def summarize(rows: List[Row]): Summary =
     val reference = rows.filter(_.source != ParityDerive.Source.Translated)
     val byWhy     = reference.groupBy(_.why.takeWhile(_ != ':')).map((k, v) => k -> v.size).toList.sortBy(_._1)

@@ -4,17 +4,22 @@ import scala.collection.mutable
 
 /** Reads a hand-written reference Scala file as a list of replaceable method bodies, by line ranges.
   *
-  * Only a `def` or `private def` indented two spaces is offered for replacement; every other concrete `def` is listed by [[unofferedMembers]] so a report can still account for it.
+  * Only a concrete `def` or `private def` indented two spaces is offered for replacement; every other `def`, abstract ones included, is listed by [[unofferedMembers]] so a report can still account
+  * for it.
   */
 object ReferenceSkeleton:
 
-  /** One method of the reference file: `signatureLine` is the `def` line, `bodyEndLine` the last body line (inclusive). */
+  /** One method of the reference file: `signatureLine` is the `def` line, `bodyEndLine` the last body line (inclusive). `equalsLine`/`equalsColumn` locate the signature's `=` when the parse did, -1
+    * otherwise.
+    */
   final case class ParsedMethod(
     name:          String,
     signatureLine: Int,
     bodyStartLine: Int,
     bodyEndLine:   Int,
-    isPrivate:     Boolean
+    isPrivate:     Boolean,
+    equalsLine:    Int = -1,
+    equalsColumn:  Int = -1
   )
 
   /** A concrete `def` the reader does not offer for replacement, with the line it is declared on and the reason the reader could not offer it. */
@@ -38,8 +43,30 @@ object ReferenceSkeleton:
         if nonPrivate.isEmpty then "nested"
         else nonPrivate.head
 
-  /** The replaceable methods of a reference file, in source order. */
+  /** The declarations of the reference file, read by the parser; None when it does not parse, and the readers below fall back to the line heuristics. */
+  def structure(lines: List[String]): Option[List[ReferenceDeclarations.Declaration]] =
+    ReferenceDeclarations.read("reference.scala", lines.mkString("\n")).toOption
+
+  /** The replaceable methods of a reference file, in source order: every concrete method whose `def` line the reader accepts, its signature and body bounded by the parse. */
   def findMethodBoundaries(lines: List[String]): List[ParsedMethod] =
+    structure(lines) match
+      case Some(decls) => structuralBoundaries(lines, decls)
+      case None        => textBoundaries(lines)
+
+  private val offeredLine = """^\s{2}(private\s+)?def\s""".r
+
+  private def structuralBoundaries(lines: List[String], decls: List[ReferenceDeclarations.Declaration]): List[ParsedMethod] =
+    decls.filter(_.kind == ReferenceDeclarations.Kind.Def).sortBy(_.line).flatMap { d =>
+      for
+        span <- d.body
+        m <- offeredLine.findFirstMatchIn(lines(d.line))
+      yield
+        val afterEq       = lines(span.equalsLine).substring(span.equalsColumn + 1).trim
+        val bodyStartLine = if afterEq.nonEmpty && afterEq != "{" then span.equalsLine else span.equalsLine + 1
+        ParsedMethod(d.name, d.line, bodyStartLine, span.endLine, m.group(1) != null, span.equalsLine, span.equalsColumn)
+    }
+
+  private def textBoundaries(lines: List[String]): List[ParsedMethod] =
     val result = mutable.ListBuffer.empty[ParsedMethod]
     var i      = 0
 
@@ -70,18 +97,38 @@ object ReferenceSkeleton:
 
     result.toList
 
-  /** Every concrete `def` outside the ranges of `offered` — a modifier or an indentation the reader does not match. A `def` inside an offered method's range is a local and is not listed; an abstract
-    * `def` has no body and is not listed either.
+  /** The reason an abstract `def` is not offered: it has no body to replace. */
+  val Abstract = "abstract"
+
+  /** The reason a secondary constructor is not offered: no translated body is ever keyed by it. */
+  val Constructor = "constructor"
+
+  /** Every method the file declares that `offered` does not hold — an abstract one ([[Abstract]]), a secondary constructor ([[Constructor]]), or a concrete one with a modifier or an indentation the
+    * reader does not match. A local `def` is not a member and is not listed.
     */
   def unofferedMembers(lines: List[String], offered: List[ParsedMethod]): List[UnofferedMember] =
+    structure(lines) match
+      case None        => textUnoffered(lines, offered)
+      case Some(decls) =>
+        val taken = offered.map(_.signatureLine).toSet
+        decls.filter(d => d.isMethod && !taken(d.line)).sortBy(_.line).map { d =>
+          val reason = d.kind match
+            case ReferenceDeclarations.Kind.AbstractDef => Abstract
+            case ReferenceDeclarations.Kind.Constructor => Constructor
+            case _                                      => classifyUnoffered(lines(d.line))
+          UnofferedMember(d.name, d.line, reason)
+        }
+
+  private def textUnoffered(lines: List[String], offered: List[ParsedMethod]): List[UnofferedMember] =
     val covered = offered.flatMap(m => m.signatureLine to m.bodyEndLine).toSet
     lines.zipWithIndex.flatMap { case (line, idx) =>
       if covered.contains(idx) then None
       else
-        anyDef.findFirstMatchIn(line).flatMap { m =>
+        anyDef.findFirstMatchIn(line).map { m =>
+          val name    = m.group(1).stripPrefix("`").stripSuffix("`")
           val closing = parametersCloseOn(lines, idx)
-          if findEqualsInSignature(lines(closing)) >= 0 then Some(UnofferedMember(m.group(1).stripPrefix("`").stripSuffix("`"), idx, classifyUnoffered(line)))
-          else None
+          if findEqualsInSignature(lines(closing)) >= 0 then UnofferedMember(name, idx, classifyUnoffered(line))
+          else UnofferedMember(name, idx, Abstract)
         }
     }
 
@@ -129,21 +176,25 @@ object ReferenceSkeleton:
       i += 1
     startLine
 
-  /** The index of the `=` that ends a signature on `line`, or -1: the rightmost `=` preceded by whitespace that is not part of `==`, `!=`, `<=`, `>=` or `=>` and not inside parentheses or brackets
-    * (which would be a default parameter value).
+  /** The index of the `=` that ends a signature on `line`, or -1: the rightmost `=` preceded by whitespace that is not part of `==`, `!=`, `<=`, `>=` or `=>`, not in a string literal and not inside a
+    * bracket group CLOSED on this line (a default parameter value). A bracket this line opens and leaves open belongs to the body after the `=` (`= Vector(`) and hides nothing.
     */
   def findEqualsInSignature(line: String): Int =
-    var i     = line.length - 1
-    var depth = 0
+    var i        = line.length - 1
+    var depth    = 0
+    var inString = false
     while i >= 1 do
-      line(i) match
-        case ')' | ']'         => depth += 1
-        case '(' | '['         => depth -= 1
-        case '=' if depth == 0 =>
-          val prev = line(i - 1)
-          val next = if i + 1 < line.length then line(i + 1) else ' '
-          if (prev == ' ' || prev == '\t') && next != '>' && next != '=' then return i
-        case _ => ()
+      val ch = line(i)
+      if ch == '"' && line(i - 1) != '\\' then inString = !inString
+      else if !inString then
+        ch match
+          case ')' | ']' | '}'   => depth += 1
+          case '(' | '[' | '{'   => depth = math.max(0, depth - 1)
+          case '=' if depth == 0 =>
+            val prev = line(i - 1)
+            val next = if i + 1 < line.length then line(i + 1) else ' '
+            if (prev == ' ' || prev == '\t') && next != '>' && next != '=' then return i
+          case _ => ()
       i -= 1
     -1
 
