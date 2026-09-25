@@ -168,6 +168,11 @@ final class TypeRedirectTransform(
   private var mapping:     Map[SymId, SymId] = Map.empty
   private var memberTwins: Map[SymId, SymId] = Map.empty
 
+  /** A scoped redirect's source INSTANCE member → its twin under the target, and the scope of the pass now running (the hooks cannot see which declaration they are under).
+    */
+  private var instanceTwins: Map[SymId, SymId] = Map.empty
+  private var passScope:     RuleScope         = RuleScope.everywhere
+
   /** Refusals this run made — reset at the head of every run, since a phase instance is reused across two translations.
     */
   private var runFindings: List[PolicyFinding] = Nil
@@ -214,6 +219,7 @@ final class TypeRedirectTransform(
   override def run(program0: Program): Program =
     runFindings = Nil
     scopeFired = Map.empty
+    instanceTwins = Map.empty
     if redirects.isEmpty then
       mapping = Map.empty; memberTwins = Map.empty
       return program0
@@ -273,6 +279,22 @@ final class TypeRedirectTransform(
       }
     }
 
+    // an INSTANCE call whose receiver a SCOPED redirect moved binds to the TARGET's member: a twin
+    // under the target, carrying the name this phase's own renames gave it — so a later follow of
+    // the SOURCE member's spelling (a base's published rename) cannot reach the call. Unscoped, the
+    // source type survives nowhere, so its members are the target's and keep their symbols.
+    instanceTwins = mapping.filter((fromType, _) => scopeBySource.get(fromType).exists(!_.isUnrestricted)).flatMap { (fromType, toType) =>
+      val fromFqn = table.get(fromType).map(_.fullName).getOrElse("")
+      val toFqn   = table.get(toType).map(_.fullName).getOrElse("")
+      program.symbols.all.filter(m => m.owner == fromType && !m.flags.isStatic && m.name != "<init>" && PolicyBinder.isExecutable(m.info)).toList.map { m =>
+        val id = SymId(next); next += 1
+        table = table.updated(
+          m.copy(id = id, owner = toType, fullName = if m.fullName.startsWith(fromFqn) then toFqn + m.fullName.drop(fromFqn.length) else m.fullName)
+        )
+        m.id -> id
+      }
+    }
+
     val membersOf: Map[SymId, List[SymId]] =
       mapping.map((fromType, _) => fromType -> program.symbols.all.filter(_.owner == fromType).map(_.id).toList)
 
@@ -323,6 +345,7 @@ final class TypeRedirectTransform(
       val fullMap   = mapping
       val fullTwins = memberTwins
       val twinScope = fullTwins.keys.flatMap(m => scoped.symbolOf(m).flatMap(s => scopeBySource.get(s.owner)).map(m -> _)).toMap
+      val fullInst  = instanceTwins
       var units     = program.units
       var symbols   = table
       var fired     = Map.empty[String, Set[String]]
@@ -330,6 +353,8 @@ final class TypeRedirectTransform(
         val sources = scopeBySource.collect { case (k, v) if v == sc => k }.toSet
         mapping = fullMap.view.filterKeys(sources).toMap
         memberTwins = fullTwins.view.filterKeys(m => twinScope.get(m).contains(sc)).toMap
+        instanceTwins = fullInst.view.filterKeys(m => scoped.symbolOf(m).exists(s => sources(s.owner))).toMap
+        passScope = sc
         units = units.map(u => if inScope(sc, scoped, u.symbol) then StandardTraversal.mapClassDef(this, u) else u)
         symbols = StandardTraversal.mapSymbols(this, symbols, s => inScope(sc, scoped, s.id))
         if !sc.isUnrestricted then
@@ -340,6 +365,8 @@ final class TypeRedirectTransform(
       }
       mapping = fullMap
       memberTwins = fullTwins
+      instanceTwins = fullInst
+      passScope = RuleScope.everywhere
       scopeFired = fired
       program.rebuilt(units, symbols) // xref rebuilt by the Pipeline
 
@@ -453,10 +480,40 @@ final class TypeRedirectTransform(
     * putting qualifier and owner back in agreement.
     */
   override def transformSelect(t: Tree.Select)(using Program): Term =
-    if memberTwins.contains(t.sym) then t.copy(sym = memberTwins(t.sym)) else t
+    if memberTwins.contains(t.sym) then t.copy(sym = memberTwins(t.sym))
+    else if instanceTwins.contains(t.sym) && receiverMoved(t.qual) then t.copy(sym = instanceTwins(t.sym))
+    else t
 
   override def transformApply(t: Tree.Apply)(using Program): Term =
-    if memberTwins.contains(t.method) then t.copy(method = memberTwins(t.method)) else t
+    if memberTwins.contains(t.method) then t.copy(method = memberTwins(t.method))
+    else if instanceTwins.get(t.method).exists(tw => selected(t.fun).contains(tw)) then t.copy(method = instanceTwins(t.method))
+    else t
+
+  /** the member a call's function selects, seen through an explicit type application. */
+  private def selected(fun: Term): Option[SymId] = fun match
+    case Tree.Select(_, s, _, _)                          => Some(s)
+    case Tree.TypeApply(Tree.Select(_, s, _, _), _, _, _) => Some(s)
+    case _                                                => scala.None
+
+  /** Did this pass move the receiver's type? Read through the DECLARATION the receiver names — a local, parameter, field or call result whose declared type is a redirected source and which the pass's
+    * scope admits; `this`/`super` never (a subclass keeps the source's members). Any other receiver asks its own already-rewritten node type.
+    */
+  private def receiverMoved(q: Term)(using p: Program): Boolean =
+    def head(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s)         => Some(s)
+      case TypeRepr.AppliedType(tycon, _) => head(tycon)
+      case TypeRepr.OrType(l, r)          => head(l).orElse(head(r))
+      case TypeRepr.MethodType(_, res, _) => head(res)
+      case TypeRepr.PolyType(_, res)      => head(res)
+      case _                              => scala.None
+    def declared(s: SymId): Boolean =
+      p.symbolOf(s).exists(d => head(d.info).exists(mapping.contains) && inScope(passScope, p, s))
+    Tree.uncomment(q) match
+      case _: Tree.This | _: Tree.Super => false
+      case Tree.Ident(s, _, _)          => declared(s)
+      case Tree.Select(_, s, _, _)      => declared(s)
+      case Tree.Apply(_, _, m, _, _)    => declared(m)
+      case other                        => head(other.tpe).exists(mapping.values.toSet)
 
   /** A class literal names the type in its CONSTANT, which is where the printer reads it from, so `transformType` alone left `classOf[Old]` in the argument of a call whose SIGNATURE had already moved
     * (`convertValue(v, classOf[com.fasterxml.jackson.databind.JsonNode])` at a parameter of the replacement's own type). A REDIRECT may move it where a retyping may not: the declaration really is the

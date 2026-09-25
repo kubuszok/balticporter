@@ -91,6 +91,11 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   whole program, base included, so it must follow the base's published renames rather than its own
   re-detection. A `MethodBodyTransform` body is verbatim text and uses the
   base's emitted accessor names; adapt it when the base's surface changes.
+- The follow renames a SYMBOL, so it reaches every call of it: a call on a receiver a dependent's
+  SCOPED `type-redirect` moved must hold a TWIN under the target type (the redirect mints it), or the
+  base's `isEmpty -> empty` lands on a `BitSet` (engine mechanism, (b)). The target's arity is the
+  port's `externalParenless`. A dependent's `call-site-substitution` keyed on a base member needs a
+  `scoped` entry outside the base's claim, or it is a fatal intrusion (policy, (b)).
 - Primary-constructor decisions are whole-program, and a dependent's program differs from its base's
   (it contains more), so for a base class the dependent must adopt the base's PUBLISHED constructor
   decision rather than re-deriving its own.

@@ -4,53 +4,78 @@ import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRe
 import balticporter.tir.*
 
 /** Replaces a CALL with ready-made Scala naming the call's own receiver and arguments — the call-level twin of [[MethodBodyTransform]], used where a base drops a member a dependent still calls and
-  * only that one call, never the whole declaration, can be rewritten. A key is a [[MemberKey]] naming the resolved callee (exact — else arity-ambiguous); the value is a template with `{recv}`,
-  * `{arg0}`…`{argN}`, `{{`/`}}`, parsed once, spliced as a [[Tree.Opaque]] over terms. Mechanism universal, `calls` per-library; every refusal counted, not approximated.
+  * only that one call, never the whole declaration, can be rewritten. An entry is a [[MemberKey]] naming the resolved callee, a template with `{recv}`, `{arg0}`…`{argN}`, `{{`/`}}`, and the SCOPE of
+  * the declarations whose calls it rewrites. One callee may carry several entries: at each call the most specific scope admitting the enclosing declaration wins, and a tie is refused and counted.
   */
-final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.empty) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
+final class CallSiteSubstitutionTransform(val entries: List[CallSiteSubstitutionTransform.Entry]) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
+
+  /** one unscoped entry per key — the table every port wrote before an entry could be scoped. */
+  def this(calls: Map[String, String] = Map.empty) =
+    this(calls.toList.sorted.map((k, t) => CallSiteSubstitutionTransform.Entry(k, t)))
+
   def name: String = "call-site-substitution"
 
-  import CallSiteSubstitutionTransform.{ Bound as BoundCall, Setting, Template, receiverOf, siteFault }
+  import CallSiteSubstitutionTransform.{ Bound as BoundCall, Entry, Setting, Template, rankKeys, receiverOf, siteFault, ties }
+
+  /** callee key → its template, for the keys whose only entry is the unscoped default — what a port with no scoped entry reads. */
+  def calls: Map[String, String] = entries.filter(_.scope.isUnrestricted).map(e => e.call -> e.template).toMap
+
+  /** A call keyed on its callee is re-pointed before any phase can move that callee elsewhere — a redirect twins the member onto its target type and the key would then name no call.
+    */
+  override def runsBefore: Set[String] = Set("type-redirect")
 
   // -------------------------------------------------------------------------
   // BINDING — every question about what a key names is answered here, once
   // -------------------------------------------------------------------------
 
   private var bound:     Map[String, Binding[PolicyBinder.Hit]] = Map.empty
-  private var templates: Map[String, Either[String, Template]]  = Map.empty
+  private var templates: Map[Entry, Either[String, Template]]   = Map.empty
   private var records:   List[PolicyBinder.Record]              = Nil
 
-  /** callee symbol → everything a site needs. Built only from keys that bound exactly, whose template parsed, and whose holes fit the callee's arity.
+  /** callee symbol → every entry installed for it, each with what a site needs. Built only from keys that bound exactly, whose template parsed, and whose holes fit the callee's arity.
     */
-  private var bySym: Map[SymId, BoundCall] = Map.empty
+  private var bySym: Map[SymId, List[(Entry, BoundCall)]] = Map.empty
 
-  /** keys whose overload identity the engine cannot prove, and keys whose template does not fit the callee — both reported by [[policyReport]], neither installed.
-    */
-  private var faults: Map[String, (PolicyIssue, String)] = Map.empty
+  /** keys whose overload identity the engine cannot prove, templates that do not fit the callee, and entries tied with another at one scope — all reported by [[policyReport]]. */
+  private var faults: List[(String, PolicyIssue, String)] = Nil
 
   def bindPolicy(binder: PolicyBinder): Unit =
     // Ownership.Either: a callee is normally a member this module does not declare (JDK's or a
     // base module's); bound as Owned this would report its own correct rewrites as never-matched.
-    bound = calls.keys.toList.sorted.map(k => k -> binder.bindCallee(name, Setting, k)).toMap
+    bound = entries.map(_.call).distinct.sorted.map(k => k -> binder.bindCallee(name, Setting, k)).toMap
     records = binder.recordsFor(name)
-    templates = calls.map((k, t) => k -> Template.parse(t))
+    templates = entries.map(e => e -> Template.parse(e.template)).toMap
 
     val program = binder.program
-    val ok      = Map.newBuilder[SymId, BoundCall]
-    val bad     = Map.newBuilder[String, (PolicyIssue, String)]
-    bound.toList.sortBy(_._1).foreach { (key, b) =>
-      (b.toOption, templates(key)) match
-        case (Some(hit), Right(tmpl)) =>
-          val arity = arityOf(program, hit)
-          (exactnessFault(program, hit), arity.flatMap(a => templateFault(program, hit, tmpl, a))) match
-            case (Some(why), _) => bad += key -> (PolicyIssue.Unverifiable, why)
-            case (_, Some(why)) => bad += key -> (PolicyIssue.Malformed, why)
-            case _              =>
-              hit.sym.foreach(s => ok += s -> BoundCall(key, tmpl, arity.getOrElse(0), hit.dropped))
-        case _ => () // an unbound key or an unparseable template; both already have their finding
+    val ok      = collection.mutable.Map.empty[SymId, List[(Entry, BoundCall)]]
+    val bad     = List.newBuilder[(String, PolicyIssue, String)]
+    entries.groupBy(_.call).toList.sortBy(_._1).foreach { (key, es) =>
+      ties(es).foreach((e, f, at) =>
+        bad += ((
+          key,
+          PolicyIssue.Malformed,
+          s"""two entries rewrite this callee with different templates at the same scope ("$at"), so neither is more specific at a call there: """ +
+            s"`${e.template}` and `${f.template}`. Such a call is refused and left as upstream wrote it"
+        ))
+      )
+      bound.get(key).flatMap(_.toOption).foreach { hit =>
+        val arity = arityOf(program, hit)
+        exactnessFault(program, hit) match
+          case Some(why) => bad += ((key, PolicyIssue.Unverifiable, why))
+          case None      =>
+            es.foreach { e =>
+              templates(e) match
+                case Right(tmpl) =>
+                  arity.flatMap(a => templateFault(program, hit, tmpl, a)) match
+                    case Some(why) => bad += ((key, PolicyIssue.Malformed, why))
+                    case None      =>
+                      hit.sym.foreach(s => ok.update(s, ok.getOrElse(s, Nil) :+ (e -> BoundCall(key, tmpl, arity.getOrElse(0), hit.dropped))))
+                case Left(_) => () // an unparseable template already has its finding
+            }
+      }
     }
-    bySym = ok.result()
-    faults = bad.result()
+    bySym = ok.toMap
+    faults = bad.result().distinct
 
   /** the callee's declared parameter count, from the hit's key or else the symbol. `None` only where neither exists, which [[exactnessFault]] has already refused.
     */
@@ -84,28 +109,37 @@ final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.e
     else if t.usesRecv && hit.sym.flatMap(program.symbolOf).exists(_.flags.isStatic) then Some("the template names {recv} and the callee is STATIC, so there is no receiver to splice")
     else None
 
-  /** Two modules rewriting one shared call differently produce sites that cannot compile together, so the template is fingerprinted along with the key.
+  /** Two modules rewriting one shared call differently produce sites that cannot compile together, so the template is fingerprinted along with the key; an unscoped entry renders exactly as it did
+    * before an entry could carry a scope.
     */
   def surfaceFingerprint: String =
-    calls.toList.sorted.map((k, v) => s"$k=${v.hashCode.toHexString}").mkString(",")
+    entries.map(e => s"${e.call}=${e.template.hashCode.toHexString}" + (if e.scope.isUnrestricted then "" else s"@${e.scope.fingerprint}")).distinct.sorted.mkString(",")
 
-  /** Independent keys union; the same callee with a different template refuses (a conflict only a human can resolve); the same key with the same template is the one decision stated twice, accepted.
-    * The contract `MethodBodyTransform` carries, so a dependent's instance folds into the base's at the base's position instead of a fatal `SurfaceDivergence`.
+  /** Independent entries union; an entry both hold is the one decision stated twice; two entries for one callee with different templates at a common scope refuse (a conflict only a human can
+    * resolve). A dependent's instance folds into the base's at the base's position instead of a fatal `SurfaceDivergence`.
     */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: CallSiteSubstitutionTransform =>
-      val conflicts = for
-        (k, v) <- o.calls.toList.sorted
-        v2 <- calls.get(k)
-        if v != v2
-      yield s"$k: templates differ"
-      if conflicts.nonEmpty then Left(conflicts.mkString("; "))
+      val fresh     = o.entries.filterNot(entries.contains)
+      val conflicts = ties((entries ++ fresh).distinct).filter((e, f, _) => fresh.contains(e) || fresh.contains(f)).map((e, _, at) => s"${e.call}: templates differ at scope \"$at\"")
+      if conflicts.nonEmpty then Left(conflicts.distinct.sorted.mkString("; "))
       else
-        val added = o.calls.keySet -- calls.keySet
-        Right(MergeablePolicy.Merged(new CallSiteSubstitutionTransform(calls ++ o.calls), added.map(MergeablePolicy.subjectOf)))
+        Right(
+          MergeablePolicy.Merged(new CallSiteSubstitutionTransform(entries ++ fresh), fresh.map(e => MergeablePolicy.subjectOf(e.call)).toSet)
+        )
     case _ => Left(s"expected CallSiteSubstitutionTransform, got ${later.getClass.getSimpleName}")
 
-  def subjects: Set[String] = calls.keySet.map(MergeablePolicy.subjectOf)
+  def subjects: Set[String] = entries.map(e => MergeablePolicy.subjectOf(e.call)).toSet
+
+  /** Where this instance rewrites calls of one subject's members: unrestricted when any entry for it is, else the union of its entries' `Only` scopes — so a dependent rewriting a base type's calls
+    * only inside its own namespace is not an edit of the base's surface.
+    */
+  override def subjectScope(subject: String): RuleScope =
+    val mine = entries.filter(e => MergeablePolicy.subjectOf(e.call) == subject).map(_.scope)
+    if mine.isEmpty then RuleScope.everywhere
+    else
+      val only = mine.collect { case RuleScope.Only(inc) => inc }
+      if only.size == mine.size then RuleScope.Only(only.flatten.toSet) else RuleScope.everywhere
 
   // -------------------------------------------------------------------------
   // the run's own record
@@ -114,6 +148,15 @@ final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.e
   private val refused = collection.mutable.ListBuffer.empty[(String, String, Origin)]
   private val done    = collection.mutable.Map.empty[String, Int]
 
+  /** scope entries this run saw a rewritten call under — [[RuleScope.neverFired]]'s complement. */
+  private var firedScope: Set[String] = Set.empty
+
+  /** (callee, call site) → the entry the site's enclosing declaration selected, or why none could be. Read from the pre-rewrite xref. */
+  private var chosen: Map[(SymId, Origin), Either[String, (Entry, BoundCall)]] = Map.empty
+
+  /** (callee, call site) → the `Only` scope entry that admitted it, marked fired once the site is really rewritten. */
+  private var firedAt: Map[(SymId, Origin), String] = Map.empty
+
   /** call sites rewritten, by declared key, in a stable order. Reflects the last [[run]]. */
   def substituted: List[(String, Int)] = done.toList.sortBy(_._1)
 
@@ -121,23 +164,43 @@ final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.e
   def refusals: List[(String, String, Origin)] =
     refused.toList.distinct.sortBy((k, w, o) => (k, o.javaPath, o.line, w))
 
-  /** Never-fired keys, unparseable templates, unprovable overload identity, templates that do not fit their callee, and every refused site. The first four are complete once keys are bound, before
-    * [[run]]; refusals are properties of the run and empty before it.
+  /** Never-fired keys, unparseable templates, unprovable overload identity, templates that do not fit their callee, tied entries, scope entries no rewritten call sat under, and every refused site.
     */
   def policyReport: PolicyReport =
     def finding(k: String, issue: PolicyIssue, detail: String) =
       PolicyFinding(name, Setting, k, issue, detail)
     PolicyReport.fromBindings(records) ++ PolicyReport(
-      templates.toList.sortBy(_._1).collect { case (k, Left(why)) =>
-        finding(k, PolicyIssue.Malformed, why)
-      } ++
-        faults.toList.sortBy(_._1).map((k, f) => finding(k, f._1, f._2)) ++
+      templates.toList
+        .sortBy(_._1.call)
+        .collect { case (e, Left(why)) =>
+          finding(e.call, PolicyIssue.Malformed, why)
+        }
+        .distinct ++
+        faults.sortBy(_._1).map((k, i, d) => finding(k, i, d)) ++
         refusals.map((k, why, o) => finding(k, PolicyIssue.Unverifiable, s"$why — at ${o.javaPath}:${o.line}, the call is left as upstream wrote it")) ++
+        entries
+          .filter(e => !e.scope.isUnrestricted && bound.get(e.call).exists(_.isBound))
+          .flatMap(e =>
+            e.scope
+              .neverFired(firedScope)
+              .toList
+              .sorted
+              .map(s =>
+                PolicyFinding(
+                  name,
+                  "CallSiteSubstitutionTransform(scope)",
+                  s,
+                  PolicyIssue.NeverMatched,
+                  s"""no rewritten call of `${e.call}` sits under "$s", so this scope entry decided nothing"""
+                )
+              )
+          )
+          .distinct ++
         // a key that bound and rewrote nothing: either nothing calls it, or an EARLIER phase already
         // re-pointed those calls, so this phase's callee symbol occurs nowhere. Ordering is the
         // port's to fix; nothing else in the pipeline can see it.
-        bySym.values
-          .map(_.key)
+        bySym.values.flatten
+          .map(_._2.key)
           .toList
           .distinct
           .sorted
@@ -159,49 +222,106 @@ final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.e
   // the rewrite
   // -------------------------------------------------------------------------
 
+  /** The entry a call inside `encl` takes: the most specific scope admitting it — an `Only` entry by the length of the entry that names the declaration, above every unscoped one. `Left` when two
+    * entries with different templates are equally specific there, or when none admits it (`Right(None)`).
+    */
+  private def select(program: Program, cands: List[(Entry, BoundCall)], encl: Option[Symbol]): Either[String, Option[(Entry, BoundCall)]] =
+    def rank(sc: RuleScope): Option[Int] = sc match
+      case RuleScope.Only(_) => encl.flatMap(s => sc.entryFor(program, s)).map(_.length)
+      // an unresolvable enclosing declaration takes the conservative arm — IN for `Everywhere`
+      case RuleScope.Everywhere(_) => Option.when(encl.forall(s => sc.includes(program, s)))(-1)
+    val admitted = cands.flatMap(c => rank(c._1.scope).map(_ -> c))
+    admitted.map(_._1).maxOption match
+      case None      => Right(None)
+      case Some(top) =>
+        admitted.filter(_._1 == top).map(_._2).distinctBy(_._1.template) match
+          case List(one) => Right(Some(one))
+          case many      =>
+            Left(
+              s"entries with templates ${many.map(c => s"`${c._1.template}`").mkString(" and ")} are equally specific at this call's declaration, so neither is chosen"
+            )
+
   override def run(program: Program): Program =
     refused.clear()
     done.clear()
+    firedScope = Set.empty
+    chosen = Map.empty
+    firedAt = Map.empty
     if bySym.isEmpty then return program
 
-    // one decision row per (declaration, key), read from the pre-rewrite program. Held to
-    // declarations this phase will ACTUALLY rewrite via siteFault, the same predicate the
-    // traversal applies, so a row can never claim a substitution that was refused.
-    bySym.toList.sortBy((s, b) => (b.key, s.raw)).foreach { (callee, b) =>
-      val calleeFqn = program.symbolOf(callee).map(_.fullName).getOrElse(b.key)
-      val rewritten = program
-        .usages(callee)
-        .groupBy(_.enclosing)
-        .view
-        .mapValues(
-          _.count(u =>
-            u.site match
-              case a: Tree.Apply => siteFault(a, b).isEmpty
-              case _ => false
-          )
-        )
-        .toMap
-      Decision.declarationsUsing(program, callee).filter((encl, _) => rewritten.getOrElse(encl, 0) > 0).foreach { (encl, origin) =>
-        record(
-          Decision(
-            kind = Decision.Kind.SubstitutedCall,
-            subject = encl,
-            subjectFqn = Decision.fqnOf(program, encl, calleeFqn),
-            // key not repeated here: Reason.Configured already carries it.
-            detail = Map(
-              "sites" -> rewritten(encl).toString,
-              "to" -> calls(b.key),
-              "why" -> ("the port does not call this member: the call is replaced by " +
-                "ready-made Scala naming the same receiver and arguments, so everything around it " +
-                "keeps its type and only what runs is this port's rather than upstream's")
-            ) ++ Option.when(b.dropped)(
-              "callee" ->
-                "DROPPED by this port's Substitutions.dropMethods — there is no declaration to return to"
-            ),
-            reason = Reason.Configured(name, b.key),
-            origin = origin
-          )
-        )
+    // CLASSIFY every call site FIRST, through the DECLARATION the call is in (the xref's nearest
+    // enclosing definition), never through the call node — the traversal hooks cannot see it.
+    val sel    = collection.mutable.Map.empty[(SymId, Origin), Either[String, (Entry, BoundCall)]]
+    val fired  = collection.mutable.Map.empty[(SymId, Origin), String]
+    val byEncl = collection.mutable.Map.empty[(SymId, Entry), Int]
+    bySym.toList.sortBy(_._1.raw).foreach { (callee, cands) =>
+      program.usages(callee).foreach { u =>
+        u.site match
+          case a: Tree.Apply if a.method == callee =>
+            val encl = program.symbolOf(u.enclosing)
+            val pick: Option[Either[String, (Entry, BoundCall)]] =
+              select(program, cands, encl) match
+                case Left(why)      => Some(Left(why))
+                case Right(None)    => None
+                case Right(Some(c)) =>
+                  c._1.scope match
+                    case sc: RuleScope.Only => encl.flatMap(sc.entryFor(program, _)).foreach(s => fired.update((callee, a.origin), s))
+                    case _ => ()
+                  Some(Right(c))
+            pick.foreach { p =>
+              val at = (callee, a.origin)
+              sel.get(at) match
+                case Some(prev) if prev != p =>
+                  sel.update(at, Left("two calls of this callee share one source position and their declarations select different entries"))
+                case _ => sel.update(at, p)
+            }
+          case _ => ()
+      }
+    }
+    chosen = sel.toMap
+    firedAt = fired.toMap
+    // one decision row per (declaration, entry), read from the pre-rewrite program. Held to sites
+    // this phase will ACTUALLY rewrite via siteFault, the same predicate the traversal applies,
+    // so a row can never claim a substitution that was refused.
+    bySym.toList.sortBy(_._1.raw).foreach { (callee, _) =>
+      program.usages(callee).foreach { u =>
+        u.site match
+          case a: Tree.Apply if a.method == callee =>
+            chosen.get((callee, a.origin)).foreach {
+              case Right((e, b)) if siteFault(a, b).isEmpty => byEncl.update((u.enclosing, e), byEncl.getOrElse((u.enclosing, e), 0) + 1)
+              case _                                        => ()
+            }
+          case _ => ()
+      }
+    }
+    bySym.toList.sortBy((s, cs) => (cs.head._2.key, s.raw)).foreach { (callee, cands) =>
+      val key       = cands.head._2.key
+      val calleeFqn = program.symbolOf(callee).map(_.fullName).getOrElse(key)
+      Decision.declarationsUsing(program, callee).foreach { (encl, origin) =>
+        cands.map(_._1).distinct.foreach { e =>
+          byEncl.get((encl, e)).foreach { n =>
+            record(
+              Decision(
+                kind = Decision.Kind.SubstitutedCall,
+                subject = encl,
+                subjectFqn = Decision.fqnOf(program, encl, calleeFqn),
+                // key not repeated here: Reason.Configured already carries it.
+                detail = Map(
+                  "sites" -> n.toString,
+                  "to" -> e.template,
+                  "why" -> ("the port does not call this member: the call is replaced by " +
+                    "ready-made Scala naming the same receiver and arguments, so everything around it " +
+                    "keeps its type and only what runs is this port's rather than upstream's")
+                ) ++ Option.when(!e.scope.isUnrestricted)("scope" -> e.scope.fingerprint) ++ Option.when(cands.head._2.dropped)(
+                  "callee" ->
+                    "DROPPED by this port's Substitutions.dropMethods — there is no declaration to return to"
+                ),
+                reason = Reason.Configured(name, key),
+                origin = origin
+              )
+            )
+          }
+        }
       }
     }
 
@@ -209,21 +329,28 @@ final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.e
     val units     = program.units.map(u => StandardTraversal.mapClassDef(this, u))
     program.rebuilt(units) // xref rebuilt by the Pipeline
 
-  override def transformApply(t: Tree.Apply)(using Program): Term =
+  override def transformApply(t: Tree.Apply)(using p: Program): Term =
     bySym.get(t.method) match
-      case None    => t
-      case Some(b) =>
-        siteFault(t, b) match
-          case Some(why) => refused += ((b.key, why, t.origin)); t
-          case None      =>
-            done.update(b.key, done.getOrElse(b.key, 0) + 1)
-            b.template.splice(receiverOf(t), t.args, t.tpe, t.origin)
+      case None        => t
+      case Some(cands) =>
+        // a site the xref did not see is decided with no enclosing declaration: unscoped entries only
+        val pick = chosen.get((t.method, t.origin)).map(Some(_)).getOrElse(select(p, cands, None).fold(w => Some(Left(w)), _.map(Right(_))))
+        pick match
+          case None                => t
+          case Some(Left(why))     => refused += ((cands.head._2.key, why, t.origin)); t
+          case Some(Right((e, b))) =>
+            siteFault(t, b) match
+              case Some(why) => refused += ((b.key, why, t.origin)); t
+              case None      =>
+                done.update(b.key, done.getOrElse(b.key, 0) + 1)
+                firedAt.get((t.method, t.origin)).foreach(firedScope += _)
+                b.template.splice(receiverOf(t), t.args, t.tpe, t.origin)
 
   /** `Foo::bar` naming a substituted callee — no argument list to splice a template into. */
   override def transformTerm(t: Term)(using Program): Term =
     t match
       case mr: Tree.MethodRef if bySym.contains(mr.method) =>
-        refused += ((bySym(mr.method).key,
+        refused += ((bySym(mr.method).head._2.key,
                      "the callee is used as a METHOD VALUE (`::`), which has no argument list for a " +
                        "positional template to name",
                      mr.origin
@@ -236,6 +363,27 @@ object CallSiteSubstitutionTransform:
 
   /** the `setting` every finding this phase makes is filed under. */
   val Setting = "CallSiteSubstitutionTransform(calls)"
+
+  /** One rewrite: the callee key, its template, and the declarations whose calls it rewrites — unrestricted by default, the behaviour every entry had before it could be scoped.
+    */
+  final case class Entry(call: String, template: String, scope: RuleScope = RuleScope.everywhere)
+
+  /** The scope strings at which an entry competes: every unscoped entry competes at one shared place, an `Only` entry at each package, type or member it names. */
+  def rankKeys(sc: RuleScope): Set[String] = sc match
+    case RuleScope.Everywhere(_) => Set("*")
+    case RuleScope.Only(inc)     => inc
+
+  /** Pairs of entries for one callee that can meet at one call with DIFFERENT templates and equal specificity, with the scope string they share. */
+  def ties(es: List[Entry]): List[(Entry, Entry, String)] =
+    val v = es.distinct.toVector
+    for
+      i <- v.indices.toList
+      j <- (i + 1 until v.size).toList
+      e = v(i)
+      f = v(j)
+      if e.call == f.call && e.template != f.template
+      at <- (rankKeys(e.scope) & rankKeys(f.scope)).toList.sorted.headOption
+    yield (e, f, at)
 
   /** one installed key: what an individual call site needs, resolved once at bind time. */
   final case class Bound(key: String, template: Template, arity: Int, dropped: Boolean)

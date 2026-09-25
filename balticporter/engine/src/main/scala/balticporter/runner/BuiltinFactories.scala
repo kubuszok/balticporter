@@ -315,12 +315,18 @@ final class ThreadConfinedStaticsFactory extends TransformFactory:
 
 /** `{ transform = "call-site-substitution", calls { "a.B#m(int,String)" = "c.D.n({recv}, {arg0})" } }`
   *
-  * Key is resolved callee; value is expression template with `{recv}`, `{arg0}`...`{argN}`.
+  * Key is resolved callee; value is expression template with `{recv}`, `{arg0}`...`{argN}`. `scoped = [ { call = "a.B#m()", template = "…", scope { only = ["x.y"] } } ]` adds entries rewriting only
+  * the calls inside that scope; the most specific scope admitting a call's declaration wins over the unscoped `calls` entry.
   */
 final class CallSiteSubstitutionFactory extends TransformFactory:
   def name = "call-site-substitution"
   def fromConfig(config: ConfigView): Phase =
-    new CallSiteSubstitutionTransform(config.stringMap("calls").getOrElse(Map.empty))
+    val plain  = config.stringMap("calls").getOrElse(Map.empty).toList.sorted.map((k, t) => CallSiteSubstitutionTransform.Entry(k, t))
+    val scoped = config
+      .children("scoped")
+      .getOrElse(Nil)
+      .map(c => CallSiteSubstitutionTransform.Entry(c.requireString("call"), c.requireString("template"), TransformFactory.scopeOf(c, default = RuleScope.everywhere)))
+    new CallSiteSubstitutionTransform((plain ++ scoped).distinct)
 
 /** `{ transform = "port-map-migration", bases = ["base-core"] }`
   *

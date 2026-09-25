@@ -98,6 +98,12 @@ along the way:
 }
 ```
 
+An entry may carry a `scope { only = [...] }`: only declarations inside it are retyped. A call
+whose receiver such a scoped redirect moved binds to the TARGET type's member, so a base module's
+published rename of the source member does not reach it — only this entry's `memberRenames` do.
+The target's arity is yours to declare: list a parenless target member in `externalParenless`
+(`"scala.collection.mutable.BitSet#isEmpty"`).
+
 **`class-table`** re-points one reflective name lookup — `Class.forName`-shaped calls — at an
 explicit table you provide (`redirects { "a.B#forName" = "c.D#classFor" }`).
 
@@ -114,7 +120,27 @@ A forwarder entry with no `members` is refused outright — it can only ever be 
 
 **`call-site-substitution`** replaces one resolved call with a Scala expression template naming the
 call's own receiver and arguments (`{recv}`, `{arg0}` …), for the cases `method-body` below cannot
-reach because there is no single declaration to rewrite the body of.
+reach because there is no single declaration to rewrite the body of. A literal brace is `{{`/`}}`.
+Each hole is spliced where the template names it, so a template that needs the argument before the
+receiver binds the receiver first to keep java's evaluation order:
+
+```hocon
+{ transform = "call-site-substitution"
+  calls { "com.example.Err#<init>(String)" = "com.example.Errors.invalid({arg0})" }
+  scoped = [
+    { call = "com.example.Err#<init>(String)", template = "com.example.Errors.io({arg0})",
+      scope { only = ["com.example.io.Loader#load"] } }
+    { call = "com.example.Bits#containsAll(Bits)",
+      template = "{{ val bpThis = {recv}; {arg0}.subsetOf(bpThis) }}", scope { only = ["com.dep"] } }
+  ]
+}
+```
+
+A `scoped` entry rewrites only the calls whose enclosing declaration its scope admits. Several
+entries may name one callee; at each call the most specific scope wins (a member over its type
+over its package over the unscoped `calls` entry), and two equally specific entries with different
+templates are refused and reported. A dependent module may rewrite calls of a base module's member
+this way without editing the base's surface, as long as the scope stays outside the base's namespace.
 
 **`method-body`** keeps a method's translated signature but replaces its body verbatim:
 
