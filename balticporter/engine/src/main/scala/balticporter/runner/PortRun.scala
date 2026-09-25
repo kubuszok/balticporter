@@ -195,7 +195,18 @@ final case class PortRun(
     */
   private def injectedNames: Set[String] = manifest match
     case Some(m)    => m.policyChain.flatMap(_.injectedFqns).toSet
-    case scala.None => Substitutions.injectedSources(subs.inject ++ subs.providedSources).map(_._1).toSet
+    case scala.None =>
+      // the raw fields stated as a manifest, so both paths share `PortManifest.injectedFqns`'s one derivation
+      PortManifest(
+        "run",
+        dropTypes = subs.dropTypes,
+        packageRenames = packageRenames,
+        typeRenames = typeRenames,
+        subPackages = subPackages,
+        flattenNestedTypes = flattenNestedTypes,
+        inject = subs.inject,
+        providedSources = subs.providedSources
+      ).injectedFqns
 
   /** Upstream name translated to the emitted namespace. */
   private def emittedName(fqn: String): String = renamePhase.fold(fqn)(_.emittedName(fqn))

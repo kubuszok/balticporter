@@ -218,6 +218,21 @@ class PortRunSpec extends munit.FunSuite:
     assert(clue(e.getMessage).contains("fatal finding"))
   }
 
+  test("a provided tree supplies only its REPLACEMENTS: an unrelated file stands at no name the port answers for") {
+    val root = Files.createTempDirectory("portrun")
+    val hand = root.resolve("hand")
+    java(hand, "sge/Blob.scala", "package sge\nclass Blob")
+    java(hand, "sge/Ext.scala", "package sge\nobject Ext")
+    val drops    = Set("com.demo.Blob")
+    val renames  = Map("com.demo" -> "sge")
+    val provided = PortManifest("m", dropTypes = drops, packageRenames = renames, providedSources = List(hand))
+    assertEquals(provided.injectedFqns, Set("sge.Blob"))
+    assert(provided.shipsInjectionAt("com.demo.Blob") && !provided.shipsInjectionAt("com.demo.Ext"))
+    // the contrast: the same tree INJECTED is shipped whole, every file a name the port supplies
+    val injected = PortManifest("m", dropTypes = drops, packageRenames = renames, inject = List(hand))
+    assertEquals(injected.injectedFqns, Set("sge.Blob", "sge.Ext"))
+  }
+
   test("an EMPTY providedSources changes nothing: same emitted bytes, same published map") {
     val (root, src, replacement) = providedFixture()
     val inject                   = root.resolve("overrides")

@@ -283,11 +283,13 @@ final case class PortManifest(
 
   /** the EMITTED FQNs this module's own [[inject]] roots supply — one derivation, in [[Substitutions.injectedSources]], which the run's copy loop and `PortMap` read too.
     *
-    * `lazy`, because it walks the filesystem and the fold asks it once per screened subject. Own injections only, exactly as [[inject]] is declared per module. [[providedSources]] count too: a
-    * declaration the consumer compiles stands at its name as surely as a copied one.
+    * `lazy`, because it walks the filesystem and the fold asks it once per screened subject. Own injections only, exactly as [[inject]] is declared per module. A [[providedSources]] file counts only
+    * where it REPLACES a drop (its name is a dropped type's emitted name): the rest of the consumer's tree supplies nothing this port answers for.
     */
   lazy val injectedFqns: Set[String] =
-    Substitutions.injectedSources(inject ++ platformDirs.values.flatten.toList ++ providedSources).map(_._1).toSet
+    val replacements = effectiveDropTypes.map(renamed)
+    Substitutions.injectedSources(inject ++ platformDirs.values.flatten.toList).map(_._1).toSet ++
+      Substitutions.injectedSources(providedSources).map(_._1).filter(replacements).toSet
 
   /** does this module — or anything in its policy chain — ship ready-made Scala at `fqn`? `fqn` is upstream; asked through [[renamed]] since an injection root is in the port's own namespace and
     * comparing them directly would silently miss. Chain included: exactly one module in the base layer ships each replacement.

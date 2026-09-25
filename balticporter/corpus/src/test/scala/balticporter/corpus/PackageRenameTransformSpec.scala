@@ -1,6 +1,6 @@
 package balticporter.corpus
 
-import balticporter.core.PolicyIssue
+import balticporter.core.{ PolicyIssue, PortManifest }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, DecisionLog, Pipeline, Program }
@@ -505,6 +505,25 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   test("an injection at some OTHER name moves nothing — the set is matched, never approximated") {
     val after = Pipeline.run(resolvingExternal, List(new PackageRenameTransform(toSge, injected = Set("sge.ui.ext.Other"))))
     assert(names(after).contains(extFqn))
+  }
+
+  test("a PROVIDED tree supplies only the names that replace a drop: an unrelated file at the external's name moves nothing") {
+    val hand = java.nio.file.Files.createTempDirectory("provided")
+    def put(rel: String, src: String): Unit =
+      val p = hand.resolve(rel)
+      java.nio.file.Files.createDirectories(p.getParent)
+      java.nio.file.Files.writeString(p, src)
+    put("sge/ui/demo/Gone.scala", "package sge.ui.demo\nclass Gone")
+    put("sge/ui/ext/Loader.scala", "package sge.ui.ext\nobject Loader")
+    val drops    = Set("com.example.demo.Gone")
+    val provided = PortManifest("m", dropTypes = drops, packageRenames = toSge, providedSources = List(hand))
+    assertEquals(provided.injectedFqns, Set("sge.ui.demo.Gone"))
+    val kept = Pipeline.run(resolvingExternal, List(new PackageRenameTransform(toSge, injected = provided.injectedFqns)))
+    assert(names(kept).contains(extFqn), clue = "an unrelated provided file pulled a resolved external under the rename")
+    // the same tree INJECTED is shipped whole, so the external moves onto the file the port ships
+    val injected = PortManifest("m", dropTypes = drops, packageRenames = toSge, inject = List(hand))
+    val moved    = Pipeline.run(resolvingExternal, List(new PackageRenameTransform(toSge, injected = injected.injectedFqns)))
+    assert(names(moved).contains("sge.ui.ext.Loader") && !names(moved).contains(extFqn))
   }
 
   test("a MEMBER of a resolved external stays with its owner — resolution is the TYPE's fact") {
