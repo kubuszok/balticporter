@@ -39,7 +39,10 @@ class VisibilityNarrowSpec extends munit.FunSuite:
     val out   = emit(List("Iterating.java" -> base, "Sorted.java" -> sub, "Counting.java" -> other), phase)
     val decls = declLine(out, "processEntity")
     assertEquals(decls.size, 3, out)
-    assert(decls.forall(l => l.startsWith("protected def") || l.startsWith("protected override def") || l.startsWith("override protected def")), decls.mkString("\n"))
+    assert(
+      decls.forall(l => l.startsWith("protected def") || l.startsWith("protected override def") || l.startsWith("override protected def")),
+      decls.mkString("\n")
+    )
     assert(clue(declLine(out, "keep")).forall(_.startsWith("protected[sys]")), out)
     assert(out.contains("porter: narrowed-visibility"), out)
     assert(phase.policyReport.findings.isEmpty, phase.policyReport.findings.mkString("\n"))
