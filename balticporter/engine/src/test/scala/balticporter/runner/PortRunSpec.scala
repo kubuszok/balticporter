@@ -523,6 +523,22 @@ class PortRunSpec extends munit.FunSuite:
     assert(r.written == 2)
   }
 
+  test("a FROZEN derived-policy file owes no derivation lanes, and is published for a dependent to inherit") {
+    // With reports on, the run required the three derivation lanes although no derivation read a
+    // reference, and failed "produced no record"; with reports off the file never reached the run
+    // directory, so a dependent's inherited spellings came out empty.
+    val (root, src) = fixture()
+    val rep         = root.resolve("report")
+    val frozen      = root.resolve("derived-policy.tsv")
+    val row         = DerivedPolicy.Row(DerivedPolicy.Family.Parenless, "com.demo.Widget#label", "def label: String")
+    DerivedPolicy.write(frozen, DerivedPolicy(List(row)))
+    val m = PortManifest("demo", surface = List(new balticporter.transform.NullaryArityTransform(derive = true)), frozenDerivedPolicy = Some(frozen))
+    val r = withReport(rep)(run(root, src)(_.copy(manifest = Some(m))))
+    assertEquals(DerivedPolicy.read(rep.resolve("run-latest/derived-policy.tsv")).rows, List(row))
+    val widget = Files.readString(r.outDir.resolve("com/demo/Widget.scala"))
+    assert(clue(widget).contains("def label: java.lang.String"), "the frozen row still drives the spelling")
+  }
+
   test("expected failures are GENERATED from the manifest: dropped-types.tsv, not a hand-written list") {
     val (root, src) = fixture()
     val rep         = root.resolve("report")

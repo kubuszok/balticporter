@@ -1150,14 +1150,12 @@ final case class PortRun(
     println(RewriteCallSitesCheck.summary(rewriteFindings, translated.rewrites, program))
 
     // ---- API parity (when manifest.parity is declared; not inherited) ----
+    def publishDerived(p: DerivedPolicy): Unit =
+      if CheckReport.enabled then DerivedPolicy.write(CheckReport.runDir.resolve("derived-policy.tsv"), p)
+    lastFrozen.foreach(publishDerived)
     lastDerived.foreach { d =>
       ReferencePolicy.Lanes.foreach(l => CheckReport.record(l, d.findings.filter(_.check == l)))
-      if CheckReport.enabled then
-        Files.createDirectories(CheckReport.runDir)
-        Files.writeString(
-          CheckReport.runDir.resolve("derived-policy.tsv"),
-          (DerivedPolicy.Header :: d.policy.rows.sortBy(r => (r.family.toString, r.upstream)).map(_.tsv)).mkString("", "\n", "\n")
-        )
+      publishDerived(d.policy)
       say(
         s"DERIVED POLICY: ${d.policy.rows.size} row(s) from the reference port " +
           s"(opaque ${d.policy.rows.count(_.family == DerivedPolicy.Family.OpaqueSlot)}, " +
@@ -1669,7 +1667,7 @@ final case class PortRun(
       // API parity lanes (conditional on manifest.parity).
       (if manifest.exists(_.parity.exists(_.compare)) then ApiParityCheck.AllLanes else Set.empty) ++
       // reference-derived policy lanes (conditional on a deriving phase).
-      (if derivationRuns then ReferencePolicy.Lanes.toSet else Set.empty) ++
+      (if derivesFromReference then ReferencePolicy.Lanes.toSet else Set.empty) ++
       // Opaque boundary (conditional on pipeline).
       (if effectivePhases.exists(_.isInstanceOf[PrimitiveToOpaqueTransform]) then Set(OpaqueBoundaryCheck.Name) else Set.empty) ++
       // Element witness (conditional on a NON-EMPTY subject map — an empty
@@ -1962,6 +1960,12 @@ final case class PortRun(
   /** the last derivation, for the report (`derived(*)` lanes, `derived-policy.tsv`). */
   private var lastDerived: Option[ReferencePolicy.Result] = scala.None
 
+  /** the frozen file a run used in place of a derivation, published as the run's `derived-policy.tsv` so a dependent inherits it exactly as it would a derived one. */
+  private var lastFrozen: Option[DerivedPolicy] = scala.None
+
+  /** a derivation that READS the reference port: only it has ambiguous/unmatched findings, so only it owes the `derived(*)` lanes — a frozen file is the finished result. */
+  private def derivesFromReference: Boolean = derivationRuns && manifest.exists(_.parity.isDefined)
+
   /** a DEPENDENT inherits the base's deriving phases without a reference of its own: the base's derived spellings reach it through the base's PUBLISHED map, and its own units have no twin to read —
     * nothing to derive, nothing fatal, no lane. A frozen derived-policy file counts as having a source (the file IS the derivation).
     */
@@ -2022,7 +2026,9 @@ final case class PortRun(
         case scala.None =>
           // no reference: use the frozen file
           frozen match
-            case Some(fp)   => fp.resolved(parsed)
+            case Some(fp) =>
+              lastFrozen = Some(fp)
+              fp.resolved(parsed)
             case scala.None =>
               sys.error(s"[$label] a phase derives policy but the manifest has neither `parity` nor `frozenDerivedPolicy`")
 
