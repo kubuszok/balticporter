@@ -13,7 +13,8 @@
 #   full             verifyLocal — the consumer's own pre-push gate: its tests on every platform
 #
 # The consumers are checked in dependency order (lls is a library of sge and ssg), each against
-# the one published just before it.
+# the one published just before it. BP_<NAME>_DIR (e.g. BP_SGE_DIR) checks another checkout of a
+# consumer, such as a worktree on its master, when the sibling checkout is on another branch.
 set -u
 
 level="${1:-jvm}"
@@ -50,7 +51,9 @@ failed=0
 summary=""
 published=""
 for name in "${consumers[@]}"; do
-  src="$root/../$name"
+  # BP_<NAME>_DIR checks another checkout of that consumer (a worktree on its master) instead of the sibling
+  override="BP_$(printf '%s' "$name" | tr '[:lower:]-' '[:upper:]_')_DIR"
+  src="${!override:-$root/../$name}"
   if [ ! -d "$src/.git" ] && [ ! -f "$src/.git" ]; then
     summary+="$name\tskipped\tno checkout beside this repository\n"
     continue
