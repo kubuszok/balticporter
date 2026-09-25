@@ -54,8 +54,8 @@ object SubstitutionCheck:
   /** What [[scan]] found: code references (fatal) and comment-only mentions (one row per type and file). */
   final case class Scan(dangling: List[Finding], docMentions: List[Finding])
 
-  /** Every dropped, unreplaced type still named in the final tree. Run AFTER injection. `provided` says whether a `providedSources` root declares a drop's replacement; `emittedName` maps an upstream
-    * FQN to the name the port spells it with, and both names are searched at identifier boundaries.
+  /** Every dropped, unreplaced type still named in the final tree. Run AFTER injection. `provided` says whether a root outside `outDir` (a platform row, `providedSources`) declares a drop's
+    * replacement; `emittedName` maps an upstream FQN to the name the port spells it with, and both names are searched at identifier boundaries.
     */
   def scan(outDir: Path, subs: Substitutions, provided: String => Boolean = _ => false, emittedName: String => String = identity): Scan =
     def present(fqn: String): Boolean = Files.exists(outDir.resolve(fqn.replace('.', '/') + ".scala"))

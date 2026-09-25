@@ -1107,8 +1107,16 @@ final case class PortRun(
       refusedRemedies.foreach(a => println("  ! " + a.render))
 
     // CHECK 2 — over the FINAL tree.
-    val substitutionScan = SubstitutionCheck.scan(outDir, ownSubs, providedReplacements.contains, fqn => droppedEmittedNames.getOrElse(fqn, fqn))
-    val danglingSubs     = record(PortRun.SubstitutionDangling, substitutionScan.dangling)
+    // Names read live, after the rename phase bound its type renames; a replacement declared by a
+    // platform row or a provided root is not under `outDir` and still replaces the drop.
+    val declaredReplacements = replacementSurface.typeForms.keySet
+    val substitutionScan     = SubstitutionCheck.scan(
+      outDir,
+      ownSubs,
+      fqn => providedReplacements.contains(fqn) || declaredReplacements(emittedName(fqn).replace('$', '.')),
+      emittedName
+    )
+    val danglingSubs = record(PortRun.SubstitutionDangling, substitutionScan.dangling)
     // Not fatal, and kept out of the report's substitution list: upstream comments are copied verbatim.
     record(PortRun.SubstitutionDocMention, substitutionScan.docMentions)
     if substitutionScan.docMentions.nonEmpty then

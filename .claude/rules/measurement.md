@@ -44,6 +44,9 @@ registers. Why the families are split:
   and comments cannot be rewritten. Mask comments, literals and porter notes with the Scala 3
   tokenizer, match the upstream AND the emitted (renamed) FQN at identifier boundaries, and count a
   comment-only mention apart in the non-fatal `substitution(doc-mention)`, one row per type and file.
+  The emitted name is read AFTER the rename phase binds its type renames, and a replacement a
+  platform row or `providedSources` declares counts as present: read from the pre-binding
+  `droppedEmittedNames` and `outDir` alone, a consumer went 0 -> 4 false fatals.
 - `dependency-coverage` is the OTHER half of `portability`: a finding needs three conjuncts (usage
   fired, no declared dependency covers it, no `verdictOverrides` alternative), read THROUGH the
   overrides not as a second filter. `(all)` is the enumeration behind the residue filtered by
