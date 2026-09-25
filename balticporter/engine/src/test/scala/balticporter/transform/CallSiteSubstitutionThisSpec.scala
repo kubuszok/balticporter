@@ -6,8 +6,8 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 import balticporter.transform.CallSiteSubstitutionTransform.{ Entry, Hole, Template, ThisRefused }
 
-/** [[CallSiteSubstitutionTransform]]'s `{this}` hole: the instance of the nearest named class whose member encloses the call, rendered as a tree so the emitter qualifies it inside a nested class body;
-  * refused and counted wherever no such instance exists.
+/** [[CallSiteSubstitutionTransform]]'s `{this}` hole: the instance of the nearest named class whose member encloses the call, rendered as a tree so the emitter qualifies it inside a nested class
+  * body; refused and counted wherever no such instance exists.
   */
 class CallSiteSubstitutionThisSpec extends munit.FunSuite:
 
