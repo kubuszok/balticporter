@@ -576,7 +576,14 @@ private[emit] trait TirEmitterMembers:
         )
         .toMap // unbounded → `Any`
     val tps = if isCtor || d.tparams.isEmpty then "" else "[" + d.tparams.map(typeParam).mkString(", ") + "]"
-    val pss = d.paramss.map(paramClause).mkString
+    // an extension takes its FIRST parameter as the receiver; with nothing left it is parenless, as `a.m` calls it
+    val ext             = OpaqueSpec.OwnClassTag.isExtension(s) && d.paramss.headOption.exists(_.nonEmpty)
+    val (recv, clauses) =
+      if !ext then ("", d.paramss)
+      else
+        val rest = d.paramss.head.tail :: d.paramss.tail
+        (s"extension (${param(d.paramss.head.head)}) ", if rest.forall(_.isEmpty) then Nil else rest)
+    val pss = clauses.map(paramClause).mkString
     val ret = if isCtor then "" else s": ${tpe(d.returnTpt.tpe)}"
     // a Java `while(true){ … return … }` idiom: the loop never falls through, but Scala types
     // `while(true)` as Unit, so a non-Unit method needs an unreachable tail after it.
@@ -597,7 +604,9 @@ private[emit] trait TirEmitterMembers:
     // a JNI `native` method no FFI phase rewrote keeps java's own spelling: `@native`, bodiless
     // (`PanamaFfiTransform` clears the flag where it rewrites).
     val nativeAnn = if !isCtor && s.flags.isNative && d.rhs.isEmpty then s"${ind(i)}@scala.native\n" else ""
-    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}$ctorNowarn$nativeAnn${ind(i)}${mods(s, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
+    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}$ctorNowarn$nativeAnn${ind(i)}$recv${mods(s, privateQualifier(s.owner))}${
+        if OpaqueSpec.OwnClassTag.isInlineCoercion(s) then "inline " else ""
+      }def $name$tps$pss$ret$rhs"
 
   /** a secondary's own statements after its delegation head, minus the ones its delegation consumed. */
   private[emit] def ctorRest(plan: CtorFunnel.Plan, cdef: Tree.DefDef, stats: List[Statement], after: List[Statement], eaten: Int): List[Statement] =
@@ -1077,6 +1086,11 @@ private[emit] trait TirEmitterMembers:
         return s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${fs.name}"
       case None => ()
     v.rhs match
+      // a java constant at an OPAQUE type: scala refuses `inline val` there, and `inline def` is what
+      // still reads the literal without initialising the object (measured on scalac 3)
+      case Some(r) if OpaqueSpec.OwnClassTag.inlineConstantOf(s).isDefined =>
+        val u = OpaqueSpec.OwnClassTag.inlineConstantOf(s).get
+        s"${ind(i)}${mods(s).replace("final ", "")}inline def ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${constAt(r, u)}"
       case Some(r) if isJavaConstant(v, s) && !isAnonOwner(s.owner) =>
         // a java CONSTANT VARIABLE (JLS 4.12.4) is INLINED by javac, so reading it triggers no
         // class initialiser — a typed `val` would (the Vector3/Matrix4 cycle). `inline val`

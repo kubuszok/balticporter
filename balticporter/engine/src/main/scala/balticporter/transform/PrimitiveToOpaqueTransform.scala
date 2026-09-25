@@ -31,6 +31,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     val tgt    = spec.target match
       case OpaqueSpec.Target.Mint              => ""
       case OpaqueSpec.Target.Existing(t, w, u) => s";target=$t;wrap=$w;unwrap=$u"
+      case OpaqueSpec.Target.OwnClass(w, u)    => s";target=own-class;wrap=$w;unwrap=$u"
     // a deriving spec's surface is the REFERENCE's: the derived set's digest once bound, the
     // switch alone before
     val der = if spec.derive then ";derive=reference" else ""
@@ -42,7 +43,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     * subject is a hole exactly where the base/dependent surface screen exists.
     */
   def subjects: Set[String] =
-    (spec.hints ++ spec.extraHints ++ spec.scope.entries).map(MergeablePolicy.subjectOf)
+    (spec.hints ++ spec.extraHints ++ spec.scope.entries).map(MergeablePolicy.subjectOf) ++ (if spec.isOwnClass then Set(spec.fqn) else Set.empty)
 
   /** The merge contract for same-FQN opaque specs across a base/dependent chain: `fqn`, `target`, `underlying` must agree (the family's identity) or the merge refuses; `hints`/`extraHints` union;
     * `scope` composes as `NullabilityTransform`'s (`Everywhere`/`Only` union, mixed refuses). `added` is the subject side of what the later instance contributes.
@@ -160,7 +161,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     // the simple-name check is intentional: the port map descriptor uses the simple name.
     val opaqueSimple = spec.target match
       case OpaqueSpec.Target.Existing(fqn, _, _) => fqn.split('.').last
-      case OpaqueSpec.Target.Mint                => spec.fqn.split('.').last
+      case _                                     => spec.fqn.split('.').last
     baseRetypedMethods = binder.run.baseMemberUpstream.filter(u => u.contains(s"($opaqueSimple") || u.contains(s",$opaqueSimple")).map(u => u.takeWhile(_ != '(')).toSet
 
   /** the detected old→new type mapping: every primitive symbol retyped to the opaque type. Array seeds map to `Array[Opaque.T]` rather than `Opaque.T`.
@@ -203,7 +204,13 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     val hints = named.filter(s => fenced(s) && (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined)).map(_.id).toSet
     // the ones this mechanism cannot reach, before any early return — see reportUnreachable.
     reportUnreachable(program, named.filter(fenced))
-    if hints.isEmpty then return program
+    // an own-class target retypes nothing when the class refuses: there is no opaque type to move to
+    own = if spec.isOwnClass then planOwnClass(program) else None
+    if spec.isOwnClass && own.isEmpty then return program
+    if hints.isEmpty && own.isEmpty then return program
+    // the class's own constants and receivers are EXACT seeds: a flow into them is coerced at the
+    // call, never grown through, so one static taking an `int` does not type every caller's `int`
+    val ownSeeds = own.map(_.seeds).getOrElse(Set.empty)
     // spanning-hints/mint-ownership only apply when MINTING; an Existing target has no unit to collide on.
     if spec.isMint then refuseSpanningHints(program, hints)
     // a symbol in a unit this run does not EMIT is not a seed: its type is what the base
@@ -220,7 +227,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
       .symbolOf(id)
       .exists(s =>
         (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s)
-          && runScope.emits(unitOf(program, id)) && !isConstant(id)
+          && runScope.emits(unitOf(program, id)) && !isConstant(id) && !ownSeeds(id)
       )
     // a DERIVED slot in a unit this run does not emit is the BASE's published fact (read as a
     // value): retyping its symbol here coerces this module's calls into it, and emits nothing
@@ -233,7 +240,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     // …except under the OVERRIDE edge: an override keeps its parent's signature, and a java-only
     // intermediate (`InputAdapter`, absent from the reference) has no row of its own to say so
     seeds = FlowPropagation.grow(program, grownFrom, admissible) ++
-      FlowPropagation.grow(FlowPropagation.overrideEdges(program), derivedIds, admissibleDerived)
+      FlowPropagation.grow(FlowPropagation.overrideEdges(program), derivedIds, admissibleDerived) ++ ownSeeds
     refuseOverlap(program)
     if seeds.isEmpty then return program
 
@@ -330,6 +337,40 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
 
         None // no unit minted — the definition is the injected file
 
+      case OpaqueSpec.Target.OwnClass(wrapName, unwrapName) =>
+        // the CLASS is the companion (its statics already live in its object), so a coercion names it
+        // directly; the opaque type is a second symbol at the same FQN, as for an existing target
+        val cls = own.map(_.cls).getOrElse(SymId.None)
+        objSym = cls
+        opaqueSym = mint(spec.objectName, spec.fqn, Flags(isOpaque = true))
+        opaqueRef = TypeRepr.TypeRef(TypeRepr.NoType, opaqueSym)
+        val arrayTC = TypeRepr.TypeRef(TypeRepr.NoType, arraySym)
+        opaqueArrayRef = if arraySym == SymId.None then TypeRepr.NoType else TypeRepr.AppliedType(arrayTC, List(opaqueRef))
+        primArrayRef = if arraySym == SymId.None then TypeRepr.NoType else TypeRepr.AppliedType(arrayTC, List(primRef))
+        applySym = mint(wrapName, s"${spec.fqn}#$wrapName", Flags(isStatic = true), cls, TypeRepr.MethodType(List("v" -> primRef), opaqueRef))
+        // the unwrap is an extension too, so a caller outside the object reads `a.unwrap`
+        unwrapSym = mint(unwrapName, s"${spec.fqn}#$unwrapName", Flags(isStatic = true), cls, TypeRepr.MethodType(List("v" -> opaqueRef), primRef))
+        val o       = Origin.synthetic
+        val vWrap   = mint("v", "v", Flags(isParam = true), applySym, primRef)
+        val vUnwrap = mint("v", "v", Flags(isParam = true), unwrapSym, opaqueRef)
+        ownMembers = List(
+          Tree.DefDef(
+            applySym,
+            List(List(Tree.ValDef(vWrap, TypeTree(primRef, o), None, o))),
+            TypeTree(opaqueRef, o),
+            Some(Tree.Ident(vWrap, primRef, o)),
+            o
+          ),
+          Tree.DefDef(
+            unwrapSym,
+            List(List(Tree.ValDef(vUnwrap, TypeTree(opaqueRef, o), None, o))),
+            TypeTree(primRef, o),
+            Some(Tree.Ident(vUnwrap, opaqueRef, o)),
+            o
+          )
+        )
+        None // no unit minted — the class's own unit is re-shaped below
+
     // the carrier coercions: `w.map(v => Opaque(v))` / `w.map(v => Opaque.unwrap(v))` through the
     // carrier's own `map`, reused where the program declares it and minted as a phantom otherwise
     carrierMap = carrierSyms.toList.map { c =>
@@ -383,7 +424,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
           if next == mt then s else s.copy(info = TypeRepr.PolyType(tps, next))
         case _ => s
     }
-    val symbols   = SymbolTable(retyped ++ minted)
+    val symbols   = own.fold(SymbolTable(retyped ++ minted))(tagOwnClass(SymbolTable(retyped ++ minted), _))
     given Program = program.rebuilt(symbols = symbols)
 
     // one decision row per declaration whose signature became the opaque type. Reason.LibraryRule:
@@ -416,11 +457,129 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     // the mint is one module's (class doc explains why the test is on the
     // hints, not the grown seed set). Everything above this line runs in every inheriting module;
     // only the object write is fenced. For the Existing form there is no unit to mint at all.
-    val walked = program.units.map { u => currentUnit = u.symbol; StandardTraversal.mapClassDef(this, u) }
-    val units  = synthUnit match
+    own.foreach(recordOwnClass(program, _))
+    val walked = program.units.map { u =>
+      currentUnit = u.symbol
+      val w = StandardTraversal.mapClassDef(this, u)
+      // the class's constructors go (nothing constructs it) and the two coercions join its statics
+      own.filter(_.cls == u.symbol).fold(w)(pl => w.copy(body = w.body.filterNot { case d: Tree.DefDef => pl.ctors(d.symbol); case _ => false } ++ ownMembers))
+    }
+    val units = synthUnit match
       case Some(su) if mintsHere(program, hints) => walked :+ su
       case _                                     => walked
     program.rebuilt(units, symbols)
+
+  /** an own-class target's conversion, decided at the head of every run; `None` for the other targets and for a refused class. */
+  private var own:        Option[OpaqueOwnClass.Plan] = None
+  private var ownMembers: List[Tree.DefDef]           = Nil
+
+  /** the own-class plan, with every refusal and every declined extension counted in the lane. A class this program does not declare is a key that matched nothing. */
+  private def planOwnClass(p: Program): Option[OpaqueOwnClass.Plan] =
+    val target = spec.target.asInstanceOf[OpaqueSpec.Target.OwnClass]
+    p.units.find(u => p.symbolOf(u.symbol).exists(_.fullName == spec.fqn)) match
+      case None =>
+        unreachable += PolicyFinding(
+          name,
+          s"OpaqueSpec(${spec.fqn}).target(own-class)",
+          spec.fqn,
+          PolicyIssue.NeverMatched,
+          "no top-level class of this name is in the program, so nothing was re-emitted as an opaque type [port policy: name the java constants class exactly]"
+        )
+        None
+      case Some(cls) =>
+        val home    = runScope.emits(cls.symbol)
+        val outcome = OpaqueOwnClass.plan(p, cls, target, isPrim, u => u == SymId.None || runScope.emits(unitOf(p, u)) == home)
+        (outcome.refusals ++ outcome.foreign).foreach { r =>
+          boundaryIssues += OpaqueBoundaryCheck.Finding(
+            OpaqueBoundaryCheck.Issue.OwnClassRefused,
+            spec.fqn,
+            s"guard=${r.guard} at ${r.subject}: ${r.detail}",
+            r.origin,
+            unitOf(p, r.unit)
+          )
+        }
+        outcome.plan.foreach { pl =>
+          pl.declined.foreach { (m, why) =>
+            boundaryIssues += OpaqueBoundaryCheck.Finding(
+              OpaqueBoundaryCheck.Issue.ExtensionDeclined,
+              p.symbolOf(m).map(_.fullName).getOrElse(spec.fqn),
+              s"stays a plain member of the object: $why",
+              p.definitionOf(m).map(_.origin).getOrElse(cls.origin),
+              cls.symbol
+            )
+          }
+          pl.patternConstants.foreach { (c, at) =>
+            boundaryIssues += OpaqueBoundaryCheck.Finding(
+              OpaqueBoundaryCheck.Issue.ConstantInitialises,
+              p.symbolOf(c).map(_.fullName).getOrElse(spec.fqn),
+              "a case label names this literal constant, so it is a `final val` and not an `inline def`",
+              at,
+              cls.symbol
+            )
+          }
+        }
+        outcome.plan
+
+  /** the marks the emitter renders the conversion from: the class's opaque header, its extensions (the minted unwrap among them), its inlined constants. */
+  private def tagOwnClass(t: SymbolTable, pl: OpaqueOwnClass.Plan): SymbolTable =
+    val withCls = t.withTag(pl.cls, OpaqueSpec.OwnClassTag.Opaque(primRef))
+    val withExt = (pl.extensions + unwrapSym).foldLeft(withCls)((acc, m) => acc.withTag(m, OpaqueSpec.OwnClassTag.Extension))
+    val withInl = List(applySym, unwrapSym).foldLeft(withExt)((acc, m) => acc.withTag(m, OpaqueSpec.OwnClassTag.InlineCoercion))
+    pl.inlineConstants.foldLeft(withInl)((acc, c) => acc.withTag(c, OpaqueSpec.OwnClassTag.InlineConstant(primRef)))
+
+  /** one row for the class's new kind, one per extension, and one per declaration whose calls now read `a.m(…)` — the call-site rewrite, counted where it happened. */
+  private def recordOwnClass(p: Program, pl: OpaqueOwnClass.Plan): Unit =
+    val clsFqn = p.symbolOf(pl.cls).map(_.fullName).getOrElse(spec.fqn)
+    record(
+      Decision(
+        kind = Decision.Kind.RetypedSignature,
+        subject = pl.cls,
+        subjectFqn = clsFqn,
+        detail = Map(
+          "from" -> s"class $clsFqn",
+          "to" -> s"opaque type $clsFqn = ${spec.underlyingFqn}",
+          "key" -> spec.fqn,
+          "why" -> "a class of nothing but primitive constants and statics over them is a domain type, so the port names the type the class named"
+        ),
+        reason = Reason.LibraryRule(name),
+        origin = Decision.originOf(p, pl.cls)
+      )
+    )
+    pl.extensions.toList.sortBy(_.raw).foreach { m =>
+      val mFqn = p.symbolOf(m).map(_.fullName).getOrElse(clsFqn)
+      record(
+        Decision(
+          kind = Decision.Kind.RetypedSignature,
+          subject = m,
+          subjectFqn = mFqn,
+          detail = Map(
+            "from" -> s"static $mFqn",
+            "to" -> s"extension on $clsFqn",
+            "key" -> spec.fqn,
+            "why" -> "its first parameter carries the type, so it is a method OF the type"
+          ),
+          reason = Reason.LibraryRule(name),
+          origin = Decision.originOf(p, m)
+        )
+      )
+      Decision.declarationsUsing(p, m).foreach { (encl, origin) =>
+        record(
+          Decision(
+            kind = Decision.Kind.RedirectedCall,
+            subject = encl,
+            subjectFqn = Decision.fqnOf(p, encl, mFqn),
+            detail = Map(
+              "from" -> s"$mFqn(a, …)",
+              "to" -> "a.m(…)",
+              "key" -> spec.fqn,
+              "why" -> "the static became an extension on its first argument's type"
+            ),
+            reason = Reason.LibraryRule(name),
+            origin = origin
+          )
+        )
+      }
+    }
 
   /** Does this module own the declarations the spec named? Read through [[RunScope.emits]]; `true` whenever there is no run scope ([[RunScope.whole]]). `exists` is safe only because
     * [[refuseSpanningHints]] has already run and guaranteed the bound hints are all this module's or none of them are — read on its own, `exists` is the more dangerous quantifier.
@@ -560,7 +719,9 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   // a declaration is the boundary on both sides of the if: a seed declaration wraps whatever
   // arrives, and a declaration that kept the primitive unwraps whatever seed arrives.
   override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef =
-    if seeds(v.symbol) then
+    // a literal constant stays the LITERAL: it renders `inline def c: N = 1`, where the object sees through `N`
+    if own.exists(_.inlineConstants(v.symbol)) then v.copy(tpt = TypeTree(opaqueRef, v.origin))
+    else if seeds(v.symbol) then
       val ref = seedTypeRef(v.tpt.tpe)
       v.copy(tpt = TypeTree(ref, v.origin), rhs = v.rhs.map(e => wrapFor(e, v.tpt.tpe)))
     else v.copy(rhs = v.rhs.map(unwrapIfOpaque))
@@ -664,7 +825,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
           )
           t.copy(
             args = t.args.zip(params).map { (arg, param) =>
-              if seeds(param.symbol) && (calleeEmitted || baseRetyped) then wrapFor(arg, p.symbolOf(param.symbol).map(_.info).getOrElse(TypeRepr.NoType))
+              // an own-class receiver is retyped identically in every module, so it is always opaque
+              if seeds(param.symbol) && (calleeEmitted || baseRetyped || own.exists(_.receivers(param.symbol))) then wrapFor(arg, p.symbolOf(param.symbol).map(_.info).getOrElse(TypeRepr.NoType))
               else unwrapIfOpaque(arg)
             }
           )

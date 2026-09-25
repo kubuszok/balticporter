@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** One opaque type a port wants — minted by the phase, or targeting an existing/injected type — as a value. Mint (default): synthesises `<fqn>.T` with `apply`/`unwrap`. Existing: retargets to a type
-  * `Substitutions` already ships, via a companion `apply`/unwrap contract. `hints`/`extraHints` are exact FQN seeds; `scope` fences propagation — an `extraHints` entry outside it is reported, never
-  * silent.
+/** One opaque type a port wants — minted by the phase, targeting an existing/injected type, or re-emitting a java constants class at its own name — as a value. Mint (default): synthesises `<fqn>.T`
+  * with `apply`/`unwrap`. Existing: retargets to a type `Substitutions` already ships, via a companion `apply`/unwrap contract. OwnClass: the class `fqn` becomes `opaque type` + `object`.
+  * `hints`/`extraHints` are exact FQN seeds; `scope` fences propagation — an `extraHints` entry outside it is reported, never silent.
   */
 final case class OpaqueSpec(
   /** the generated `object`'s fully-qualified name (Mint) or the java class being replaced (Existing). Used as the phase name key and fingerprint identifier in both forms.
@@ -17,7 +17,7 @@ final case class OpaqueSpec(
   /** where seeding and propagation may reach. `Everywhere()` fences nothing. */
   scope: RuleScope = RuleScope.Everywhere(),
   /** whether the phase mints a new opaque type or targets an existing/injected one. `Mint` (default) synthesises the companion; `Existing(typeFqn, wrapName, unwrapName)` retypes against a type that
-    * already exists.
+    * already exists; `OwnClass(wrapName, unwrapName)` turns the java class `fqn` itself into the opaque type.
     */
   target: OpaqueSpec.Target = OpaqueSpec.Target.Mint,
   /** also seed from the run's [[DerivedPolicy]] — the slots the reference port spells at this spec's target type (`RunScope.derived`). Off is the no-op.
@@ -39,38 +39,43 @@ final case class OpaqueSpec(
   require(!fqn.startsWith(".") && !fqn.endsWith(".") && !fqn.contains(".."), s"OpaqueSpec.fqn is not a valid path: '$fqn'")
   require(!fqn.split('.').exists(_.isEmpty), s"OpaqueSpec.fqn has an empty segment: '$fqn'")
   // The Mint form mints a TOP-LEVEL unit, so `#`/`$` in the FQN would claim a nesting the mint
-  // cannot produce. The Existing form has no such constraint — the target is whatever the injected
-  // file declares, and nested FQNs like `sge.Input.Key` are legitimate.
+  // cannot produce; the OwnClass form re-emits a top-level class as a top-level opaque type, and a
+  // nested opaque type has no home. The Existing form has no such constraint — the target is
+  // whatever the injected file declares, and nested FQNs like `sge.Input.Key` are legitimate.
   target match
-    case OpaqueSpec.Target.Mint =>
+    case OpaqueSpec.Target.Mint | _: OpaqueSpec.Target.OwnClass =>
       require(
         !fqn.contains('#') && !fqn.contains('$'),
-        s"OpaqueSpec.fqn must name a TOP-LEVEL object, not a nested type or a member: '$fqn'"
+        s"OpaqueSpec.fqn must name a TOP-LEVEL type, not a nested type or a member: '$fqn'"
       )
     case _ => ()
 
   /** whether this spec mints its own companion (true) or targets an existing type (false). */
   def isMint: Boolean = target == OpaqueSpec.Target.Mint
 
-  /** the generated object's simple name. For Mint, derived from `fqn`; for Existing, from the target's type FQN.
+  /** whether this spec re-emits the java class `fqn` itself as the opaque type. */
+  def isOwnClass: Boolean = target.isInstanceOf[OpaqueSpec.Target.OwnClass]
+
+  /** the generated object's simple name. For Mint and OwnClass, derived from `fqn`; for Existing, from the target's type FQN.
     */
   def objectName: String = target match
-    case OpaqueSpec.Target.Mint              => fqn.substring(fqn.lastIndexOf('.') + 1)
     case OpaqueSpec.Target.Existing(t, _, _) => t.substring(t.lastIndexOf('.') + 1)
+    case _                                   => fqn.substring(fqn.lastIndexOf('.') + 1)
 
-  /** the package the object lives in — `""` for the default package. For Mint, derived from `fqn`; for Existing, from the target's type FQN.
+  /** the package the object lives in — `""` for the default package. For Mint and OwnClass, derived from `fqn`; for Existing, from the target's type FQN.
     */
   def packageName: String =
     val n = target match
-      case OpaqueSpec.Target.Mint              => fqn
       case OpaqueSpec.Target.Existing(t, _, _) => t
+      case _                                   => fqn
     if n.contains('.') then n.substring(0, n.lastIndexOf('.')) else ""
 
-  /** the opaque type's fully-qualified name. For Mint, `<fqn>.T`; for Existing, the target's own FQN (the type IS the name, not a member called `T`).
+  /** the opaque type's fully-qualified name. For Mint, `<fqn>.T`; for Existing, the target's own FQN; for OwnClass, the class's own FQN (the type IS the name, not a member called `T`).
     */
   def typeFqn: String = target match
     case OpaqueSpec.Target.Mint              => s"$fqn.T"
     case OpaqueSpec.Target.Existing(t, _, _) => t
+    case _: OpaqueSpec.Target.OwnClass => fqn
 
   /** the underlying primitive's Scala FQN, e.g. `scala.Int`. */
   def underlyingFqn: String = underlying.scalaFqn
@@ -108,6 +113,36 @@ object OpaqueSpec:
       /** the companion object's FQN — the last `.`-separated segment is the type, so the companion shares the same FQN (Scala's companion is at the same path as the type).
         */
       def companionFqn: String = typeFqn
+
+    /** The java CONSTANTS CLASS `fqn` itself becomes the opaque type, at its own name: `opaque type N = Prim` plus `object N` holding its statics. Its `static final` primitives are typed `N`; a
+      * static method taking the primitive FIRST becomes an extension on `N`, its calls rewritten `a.m(…)`. Refused and counted when the class has instance members, is constructed, subclassed or named
+      * as a type; the coercions are two members minted into the object under these names.
+      */
+    final case class OwnClass(wrapName: String = "apply", unwrapName: String = "unwrap") extends Target:
+      require(
+        wrapName.nonEmpty && unwrapName.nonEmpty && wrapName != unwrapName,
+        s"OpaqueSpec.Target.OwnClass needs two distinct, non-empty member names: '$wrapName', '$unwrapName'"
+      )
+
+  /** What a `Target.OwnClass` conversion leaves on the symbols it re-shapes, for the emitter to render. */
+  enum OwnClassTag extends SymTag:
+    /** on the class: emitted as `opaque type N = underlying` plus `object N` with the class's statics. */
+    case Opaque(underlying: TypeRepr)
+
+    /** on a static method: its first parameter is the receiver of an `extension`; calls outside the object read `a.m(…)`. */
+    case Extension
+
+    /** on a constant: `inline def c: N = <literal at underlying>`, so reading it runs no initialiser, as javac's inlining does. */
+    case InlineConstant(underlying: TypeRepr)
+
+    /** on the two minted coercions: `inline def`, so wrapping or unwrapping a constant does not initialise the object either. */
+    case InlineCoercion
+
+  object OwnClassTag:
+    def opaqueOf(s:         Symbol): Option[TypeRepr] = s.tags.collectFirst { case Opaque(u) => u }
+    def isExtension(s:      Symbol): Boolean          = s.tags.contains(Extension)
+    def inlineConstantOf(s: Symbol): Option[TypeRepr] = s.tags.collectFirst { case InlineConstant(u) => u }
+    def isInlineCoercion(s: Symbol): Boolean          = s.tags.contains(InlineCoercion)
 
   /** The primitives an opaque type can be a view of. A CLOSED enum, so "cannot work" is unrepresentable rather than a runtime check — all eight of Scala's value types work (mechanism is
     * `opaque type T = P` + `apply`/`unwrap`, indifferent to `P`). `Unit` is deliberately absent (one inhabitant is not a domain value). [[fromScalaName]] is the loud door for a caller holding a

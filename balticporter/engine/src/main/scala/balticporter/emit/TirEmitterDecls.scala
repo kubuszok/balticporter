@@ -235,6 +235,9 @@ private[emit] trait TirEmitterDecls:
 
   private[emit] def classDef1(cd: Tree.ClassDef, i: Int): String =
     val s = sym(cd.symbol)
+    OpaqueSpec.OwnClassTag.opaqueOf(s) match
+      case Some(u) => return ownClassOpaque(cd, s, u, i)
+      case None    => ()
     // A NESTED type carries its own notes at its `class` keyword; the TOP-LEVEL one's are the
     // file's (`unitNotes`) and must not be printed twice.
     val plan = if s.flags.isModule then CtorFunnel.Plan.none else plans(cd)
@@ -494,6 +497,20 @@ private[emit] trait TirEmitterDecls:
         orderBody(statics, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
         recStatics).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
+
+  /** a java constants class re-emitted as `opaque type N = Prim` plus `object N` holding every static (`OpaqueSpec.Target.OwnClass`): the object is the opaque type's companion, so it sees through `N`
+    * and its members need no coercion.
+    */
+  private[emit] def ownClassOpaque(cd: Tree.ClassDef, s: Symbol, underlying: TypeRepr, i: Int): String =
+    val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
+    val ob0     = classBodyStats(orderBody(members, cd.symbol), CtorFunnel.Plan.none, i + 1).filter(_.nonEmpty).mkString("\n")
+    val bnote   = bodyNotes(cd.symbol, i + 1)
+    val ob      = if bnote.isEmpty then ob0 else s"$bnote\n$ob0"
+    val statics = members.collect { case d: Definition => esc(sym(d.symbol).name) }.distinct
+    recordTypeShape(cd, "opaque", CtorFunnel.Plan.none, companion = true, statics = statics)
+    val cnote = if cd.symbol == currentTopLevelSym then "" else declNotes(cd.symbol, i)
+    val v     = vis(s, privateQualifier(s.owner))
+    s"${leading(cd.leading, i)}$cnote${ind(i)}${v}opaque type ${esc(s.name)} = ${tpe(underlying)}\n${ind(i)}${v}object ${esc(s.name)} {\n$ob\n${ind(i)}}"
 
   /** `this.x = x` — the NAME assigned, when the assignment is a field taking its own same-named source and nothing else. Both sides must resolve to the same simple name and the right-hand side must
     * be a bare identifier, so `this.up = new Vector3(upX, …)` and `this.a = b` are not this shape and are not touched.

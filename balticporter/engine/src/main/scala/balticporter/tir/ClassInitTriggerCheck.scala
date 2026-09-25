@@ -99,7 +99,7 @@ object ClassInitTriggerCheck:
     val reentrant = reentrantBearers(program, clinitBearers)
 
     // forms that have no `new` trigger: object, enum (constants ARE companion members), trait/annotation
-    val notInstantiable = Set("object", "enum-class", "enum", "trait", "annotation")
+    val notInstantiable = Set("object", "enum-class", "enum", "trait", "annotation", "opaque")
     val unforced        = clinitBearers.toList.collect {
       case (s, cd) if mine(s) && !forced(s -> Instantiation) && !formOf(fqn(s)).exists(notInstantiable) =>
         val cyclic = reentrant.get(s)
@@ -214,16 +214,17 @@ object ClassInitTriggerCheck:
       case _ => false
     }
 
-  /** JLS 4.12.4 constant variable: `static final`, primitive or String, literal initialiser. Shared with the emitter's `inline val` arm.
+  /** JLS 4.12.4 constant variable: `static final`, primitive or String, literal initialiser. Shared with the emitter's `inline val` arm; a constant an own-class opaque conversion retyped (its
+    * `inline def` arm) is still one.
     */
   def constantVariable(v: Tree.ValDef, s: Symbol)(using program: Program): Boolean =
     s.flags.isStatic && s.flags.isFinal && !s.flags.isMutable &&
       (v.rhs match { case Some(_: Tree.Literal) => true; case _ => false }) &&
-      (v.tpt.tpe match
+      (OpaqueSpec.OwnClassTag.inlineConstantOf(s).isDefined || (v.tpt.tpe match
         case TypeRepr.TypeRef(_, x) =>
           val n = program.symbolOf(x).map(_.fullName).getOrElse("")
           CtorFunnel.primitiveTypeNames(n) || n == "java.lang.String"
-        case _ => false)
+        case _ => false))
 
   private def parentSyms(cd: Tree.ClassDef): List[SymId] =
     def headSym(t: TypeRepr): Option[SymId] = t match

@@ -22,6 +22,15 @@ object OpaqueBoundaryCheck:
     /** a BOXED-PRIMITIVE value where the wrapping could not fire — no auto-unbox node in the TIR. */
     case BoxedPrimitive
 
+    /** an `OwnClass` target whose class cannot become an opaque type; the detail names the guard and the site. The class is emitted as java wrote it. */
+    case OwnClassRefused
+
+    /** a static taking the primitive first that stays a plain member of the object instead of an extension; the detail names why. */
+    case ExtensionDeclined
+
+    /** a literal constant a `switch` names as a case label: a pattern needs a stable `final val`, and reading one initialises the object where javac's inlined constant did not. */
+    case ConstantInitialises
+
   object Issue:
     /** which of the three kinds — engine, port policy, or library-specific — the fix is. */
     def classification(i: Issue): String = i match
@@ -41,6 +50,22 @@ object OpaqueBoundaryCheck:
           "a slot where the opaque type is expected, and no auto-unbox exists in the TIR. The " +
           "boxed-primitive coercion (wave 2.6) handles the commonest shape; this residue is what " +
           "it could not reach."
+      case OwnClassRefused =>
+        "port policy: the class is not a pure constants class at this site (instance members, a " +
+          "construction, a subclass, a use as a TYPE, or a shape an opaque type cannot take), so the " +
+          "`own-class` target leaves it a class and retypes nothing. Change the usage, or target a " +
+          "minted or existing opaque type instead."
+      case ExtensionDeclined =>
+        "engine refusal, loud by count: an extension named like a member every value has " +
+          "(`toString`, `equals`, `hashCode`, …) is never selected — `a.toString` calls the " +
+          "primitive's own — and a method REFERENCE has no extension form. The static stays " +
+          "`Owner.m(a, …)`, which behaves as java's. Port policy may rename it (`member-rename`, " +
+          "ordered before this phase) to get the extension under another name."
+      case ConstantInitialises =>
+        "engine limit, counted: scala forbids an `inline val` at an opaque type and a case pattern " +
+          "needs a stable value, so this constant is a `final val` and reading it initialises the " +
+          "object, which javac's inlined constant does not (JLS 12.4.1). Harmless unless the " +
+          "object's initialiser has effects or joins a cycle."
 
   /** one boundary site. `unit` is the top-level symbol for ownership filtering. */
   final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId = SymId.None):

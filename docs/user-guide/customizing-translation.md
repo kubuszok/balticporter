@@ -353,6 +353,31 @@ one-type-parameter wrapper types (a nullability wrapper, for instance) whose ele
 primitive, so a value typed `Carrier[Int]` retypes to `Carrier[EntityId]` one level deep.
 `derive = true` also seeds from wherever a reference hand port spells the same slot at an opaque type.
 
+When the primitive's meaning already has a home — a Java *constants class* such as
+`class Align { static final int center = 1; … static boolean isLeft(int align) { … } }` — set
+`target = "own-class"` and point `fqn` at that class. The class itself becomes the type, at its own
+name: `opaque type Align = Int` plus `object Align` holding its statics. Its `static final int`
+constants are typed `Align` (a literal one becomes an `inline def`, so reading it still initialises
+nothing, as javac's inlined constant did; a computed one stays a `final val`), and each static whose
+FIRST parameter is the primitive becomes an extension, so `Align.isLeft(a)` is emitted as
+`a.isLeft`. Two coercions are added to the object, `apply` and an `unwrap` extension (rename them with
+`wrapName`/`unwrapName`, for example `unwrapName = "toInt"`). Every other `int` slot is typed `Align`
+only where `hints` or `derive` say so. The class is left alone, and the `opaque-boundary` findings
+say why, when it has instance members, is constructed, subclassed, or named as a type anywhere
+(`Align a;`, `Align.class`); a static named like a member every value has (`toString`, `equals`, …)
+or named by a method reference stays a plain member of the object, counted, because an extension
+`a.toString` would silently call the primitive's own. Rename such a member with `member-rename`
+ordered before this phase if you want it as an extension under another name.
+
+```hocon
+{ transform = "primitive-to-opaque"
+  fqn        = "com.example.Align"
+  target     = "own-class"
+  unwrapName = "toInt"
+  derive     = true
+}
+```
+
 ### `nullability` — moving a nullability fact into the type
 
 ```hocon

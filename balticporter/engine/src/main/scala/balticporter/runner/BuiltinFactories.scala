@@ -381,11 +381,14 @@ final class PortMapMigrationFactory extends TransformFactory:
     )
 
 /** `.conf` shape for `primitive-to-opaque`: `fqn`, `underlying`, `hints`/`extraHints` (exact FQN seeds, both reach the surface fingerprint), `scope`, `carriers` (one-type-parameter wrapper FQNs whose
-  * element may be the primitive; empty = none).
+  * element may be the primitive; empty = none), `target` (`mint`, the default, or `own-class`: the java class `fqn` itself becomes the opaque type, its coercions named by `wrapName`/`unwrapName`).
   */
 final class PrimitiveToOpaqueFactory extends TransformFactory:
   def name = "primitive-to-opaque"
   def fromConfig(config: ConfigView): Phase =
+    val target = config.enumerated("target", Map("mint" -> "mint", "own-class" -> "own-class")).getOrElse("mint") match
+      case "own-class" => OpaqueSpec.Target.OwnClass(config.string("wrapName").getOrElse("apply"), config.string("unwrapName").getOrElse("unwrap"))
+      case _           => OpaqueSpec.Target.Mint
     new PrimitiveToOpaqueTransform(
       OpaqueSpec(
         fqn = config.requireString("fqn"),
@@ -394,7 +397,8 @@ final class PrimitiveToOpaqueFactory extends TransformFactory:
         extraHints = config.strings("extraHints").getOrElse(Nil).toSet,
         scope = TransformFactory.scopeOf(config),
         derive = config.bool("derive").getOrElse(false),
-        carriers = config.strings("carriers").getOrElse(Nil).toSet
+        carriers = config.strings("carriers").getOrElse(Nil).toSet,
+        target = target
       )
     )
 

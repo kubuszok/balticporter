@@ -643,6 +643,14 @@ private[emit] trait TirEmitterExprs:
     case Tree.Select(recv, m, _, _) if sym(m).name == "<init>" =>
       val kw = recv match { case _: Tree.Super => "super"; case _ => "this" }
       s"$kw(${args.map(term(_, i)).mkString(", ")})"
+    // an EXTENSION (an own-class opaque conversion's static taking the type first): `a.m(rest)`
+    // outside the object; inside it the type IS the primitive, whose own members would win, so the
+    // prefix form `N.m(a)(rest)` there. Parenless when the declaration has nothing after the receiver.
+    case Tree.Select(_, m, _, _) if args.nonEmpty && OpaqueSpec.OwnClassTag.isExtension(sym(m)) =>
+      val rest = if args.tail.isEmpty then "" else s"(${args.tail.map(term(_, i)).mkString(", ")})"
+      val own  = sym(m).owner
+      if classStack.contains(own) then s"${typeValue(own)}.${local(m)}(${term(args.head, i)})$rest"
+      else s"${operand(args.head, i)}.${local(m)}$rest"
     // JAVA PERMITS A STATIC MEMBER CALLED THROUGH AN INSTANCE (`family.one(…)`, `one` static);
     // scala's static emits into the companion, unreachable from an instance. Java evaluates and
     // DISCARDS the receiver, so an effectful receiver is evaluated first in a block and an

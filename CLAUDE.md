@@ -25,7 +25,7 @@ Same mechanics for every library; WHICH attributes/types/references get modified
 parameter. **An empty/default parameter must make the phase a no-op.** Current phases (the full
 mechanism/policy table is in `.claude/rules/phases.md`, loaded with the transform files):
 `ClassTableTransform`, `StaticForwarderTransform`, `Substitutions`, `CollectionsTransform`,
-`PrimitiveToOpaqueTransform` (`OpaqueSpec`: seeds, `derive`, `carriers`), `PortabilityCheck`,
+`PrimitiveToOpaqueTransform` (`OpaqueSpec`: seeds, `derive`, `carriers`, an `OwnClass` target), `PortabilityCheck`,
 `ApiParityCheck`, `MemberRenameTransform`, `NullabilityTransform`, `BeanPropertyTransform`,
 `NullaryArityTransform`, `ClassToTraitTransform`, `ClassTagParamsTransform`, `TypeClassParamsTransform`, `VisibilityTransform`,
 `ThreadConfinedStaticsTransform`, `AddMembersTransform`, `RegistryTransform`, `ElementWitnessTransform`,

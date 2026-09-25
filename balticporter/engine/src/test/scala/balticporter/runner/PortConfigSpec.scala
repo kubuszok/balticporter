@@ -1130,6 +1130,17 @@ class PortConfigSpec extends munit.FunSuite:
     assert(clue(e.getMessage).contains("expected a list"))
   }
 
+  test("`primitive-to-opaque` reads `target = own-class` and its coercion names; absent, the target is the mint") {
+    def spec(entry: String) =
+      val conf = Minimal.replace("""manifest { name = "demo" }""", s"""manifest { name = "demo", surface = [ $entry ] }""")
+      PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collect { case p: balticporter.transform.PrimitiveToOpaqueTransform => p.spec.target }
+    assertEquals(
+      spec("""{ transform = "primitive-to-opaque", fqn = "com.demo.Gadget", target = "own-class", unwrapName = "toInt" }"""),
+      List(balticporter.tir.OpaqueSpec.Target.OwnClass("apply", "toInt"))
+    )
+    assertEquals(spec("""{ transform = "primitive-to-opaque", fqn = "port.Handle" }"""), List(balticporter.tir.OpaqueSpec.Target.Mint))
+  }
+
   test("a scope declaring both directions is refused") {
     val f = fixture(
       Minimal.replace(
