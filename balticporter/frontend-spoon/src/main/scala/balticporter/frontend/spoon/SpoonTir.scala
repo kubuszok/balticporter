@@ -70,9 +70,10 @@ object SpoonTir:
       cfg.resolutionRoots.foreach(r => addResolutionRoot(launcher, r, cfg.resolutionExcludes))
       // declared inputs: an absent one is fatal with a named diagnostic
       val covered = cfg.resolutionRoots.map(r => RealPath.ofExisting(r, "resolution root"))
+      // a declared file under an EXCLUDED part of a root was never added by that root
       cfg.files
         .map(f => RealPath.ofExisting(cfg.sourceRoot.resolve(f), s"declared source file $f"))
-        .filterNot(abs => covered.exists(abs.startsWith))
+        .filterNot(abs => covered.exists(r => abs.startsWith(r) && !excluded(r.relativize(abs).toString, cfg.resolutionExcludes)))
         .foreach(abs => launcher.addInputResource(abs.toString))
     else cfg.files.foreach(f => launcher.addInputResource(cfg.sourceRoot.resolve(f).toString))
     launcher.buildModel().getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
@@ -83,18 +84,12 @@ object SpoonTir:
   private def addResolutionRoot(launcher: Launcher, root: Path, excludes: List[String]): Unit =
     if excludes.isEmpty then launcher.addInputResource(root.toString)
     else
-      val rr   = RealPath.ofExisting(root, "resolution root")
-      val cuts = excludes.map(_.stripSuffix("/"))
-      Files
-        .walk(rr)
-        .iterator
-        .asScala
-        .filter(p => p.toString.endsWith(".java"))
-        .filterNot { p =>
-          val rel = rr.relativize(p).toString
-          cuts.exists(c => rel == c || rel.startsWith(c + "/"))
-        }
-        .foreach(p => launcher.addInputResource(p.toString))
+      val rr = RealPath.ofExisting(root, "resolution root")
+      Files.walk(rr).iterator.asScala.filter(p => p.toString.endsWith(".java")).filterNot(p => excluded(rr.relativize(p).toString, excludes)).foreach(p => launcher.addInputResource(p.toString))
+
+  /** is a root-relative path under one of the exclusions — matched at a path separator, never a substring. */
+  private def excluded(rel: String, excludes: List[String]): Boolean =
+    excludes.map(_.stripSuffix("/")).exists(c => rel == c || rel.startsWith(c + "/"))
 
   /** Translate each top-level type in ISOLATION (fresh symbol space), returning per-type success (symbol count) or the failure. Used to MEASURE corpus coverage — which constructs still hit
     * `Unsupported` — without one bad file sinking the batch.

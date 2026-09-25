@@ -724,6 +724,61 @@ class PortConfigSpec extends munit.FunSuite:
     assertEquals(PortConfig.load(f).manifest.get.platformDirs, Map.empty[String, List[Path]])
   }
 
+  test("`rowSources` reads each row's upstream trees, root conf-relative and files as written") {
+    val f = fixture(
+      """label = "demo"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest {
+        |  name = "demo"
+        |  rowSources { js = [ { root = "emu", files = ["com/demo/Clock.java", "com/demo/util/*.java"] }, { root = "emu2" } ] }
+        |}
+        |""".stripMargin
+    )
+    val m = PortConfig.load(f).manifest.get
+    assertEquals(
+      m.rowSources,
+      Map(
+        "js" -> List(
+          balticporter.core.RowSource(f.getParent.resolve("emu").normalize, List("com/demo/Clock.java", "com/demo/util/*.java")),
+          balticporter.core.RowSource(f.getParent.resolve("emu2").normalize, Nil)
+        )
+      )
+    )
+  }
+
+  test("a `rowSources` row nobody compiles is refused by name at load") {
+    val f = fixture(
+      """label = "demo"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest { name = "demo", rowSources { browser = [ { root = "emu" } ] } }
+        |""".stripMargin
+    )
+    val e = intercept[balticporter.tir.ConfigError](PortConfig.load(f))
+    assert(clue(e.getMessage).contains("browser"))
+    assert(clue(e.getMessage).contains("js, jvm, native"))
+  }
+
+  test("`rowSources` is absent by default and NOT inherited — it is this module's build") {
+    val base =
+      """label = "base"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest { name = "base", rowSources { js = [ { root = "emu" } ] } }
+        |""".stripMargin
+    val f = fixture(
+      """label = "dependent"
+        |base  = "base.conf"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest { name = "dep" }
+        |""".stripMargin,
+      Map("base.conf" -> base)
+    )
+    assertEquals(PortConfig.load(f).manifest.get.rowSources, Map.empty[String, List[balticporter.core.RowSource]])
+  }
+
   test("a base cycle is refused by name") {
     val f = fixture(
       """label = "a"

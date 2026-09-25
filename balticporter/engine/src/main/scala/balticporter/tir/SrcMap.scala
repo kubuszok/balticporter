@@ -1,6 +1,7 @@
 package balticporter.tir
 
 import java.nio.file.{ Files, Path }
+import scala.jdk.CollectionConverters.*
 
 /** Member-level source map: `srcmap.tsv` (positional, build product) and `members.tsv` (digest-only baseline). Joins compiler/test output back to (member, Java origin). Java paths are derived from
   * [[sourceRootOf]], not from `balticporter.reportPathRoot`.
@@ -18,7 +19,9 @@ object SrcMap:
     javaLine: Int,
     digest:   String,
     /** `main` or `test`. Set when loaded, not when written. */
-    scope: String = "main"
+    scope: String = "main",
+    /** the platform row whose own upstream file this entry describes (`rows/<row>/srcmap.tsv`); empty for the shared map. Set when loaded. */
+    row: String = ""
   ):
     def tsv:       String = s"$unit\t$member\t$kind\t$start\t$end\t$javaPath\t$javaLine\t$digest"
     def memberTsv: String = s"$unit\t$member\t$kind\t$digest"
@@ -36,9 +39,18 @@ object SrcMap:
           Some(Entry(u, m, k, s.toIntOption.getOrElse(0), e.toIntOption.getOrElse(0), jp, jl.toIntOption.getOrElse(0), d))
         case _ => scala.None
 
-  def parseAll(p: Path, scope: String = "main"): List[Entry] =
+  def parseAll(p: Path, scope: String = "main", row: String = ""): List[Entry] =
     if !Files.isRegularFile(p) then Nil
-    else Files.readAllLines(p).toArray(Array.empty[String]).toList.flatMap(parse).map(_.copy(scope = scope))
+    else Files.readAllLines(p).toArray(Array.empty[String]).toList.flatMap(parse).map(_.copy(scope = scope, row = row))
+
+  /** the per-row maps written beside one `srcmap.tsv` (`rows/<row>/srcmap.tsv`), each loaded with its row. */
+  def parseRows(srcmap: Path, scope: String): List[Entry] =
+    val dir = Option(srcmap.getParent).map(_.resolve("rows")).filter(Files.isDirectory(_))
+    dir.toList.flatMap { d =>
+      val ls = Files.list(d)
+      try ls.iterator.asScala.toList.sortBy(_.getFileName.toString).flatMap(r => parseAll(r.resolve("srcmap.tsv"), scope, r.getFileName.toString))
+      finally ls.close()
+    }
 
   /** member digests only, keyed by `unit\tmember` — the baseline form. */
   def parseMembers(p: Path): Map[String, String] =
@@ -118,9 +130,17 @@ object SrcMap:
   /** Resolves a compiler path or stack-frame class name to an emitted member. Uses suffix/prefix matching against known units — no output directory needed.
     */
   final class Index(val entries: List[Entry]):
-    val byUnit:             Map[String, List[Entry]] = entries.groupBy(_.unit)
-    val units:              Set[String]              = byUnit.keySet
-    private val byPathForm: Map[String, String]      = units.iterator.map(u => u.replace('.', '/') -> u).toMap
+    val byUnit: Map[String, List[Entry]] = entries.filter(_.row.isEmpty).groupBy(_.unit)
+
+    /** (row, unit) → the entries of a type that row translated from its own upstream file. */
+    private val byRow:      Map[(String, String), List[Entry]] = entries.filter(_.row.nonEmpty).groupBy(e => (e.row, e.unit))
+    val units:              Set[String]                        = entries.iterator.map(_.unit).toSet
+    private val byPathForm: Map[String, String]                = units.iterator.map(u => u.replace('.', '/') -> u).toMap
+
+    /** the row a compiler path lies in — `…/src_managed/<row>/scala/…` — when that row has its own entries. */
+    private def rowOf(file: String): Option[String] =
+      val n = file.replace('\\', '/')
+      byRow.keysIterator.map(_._1).toList.distinct.find(r => n.contains(s"src_managed/$r/scala/"))
 
     def isEmpty: Boolean = entries.isEmpty
 
@@ -147,8 +167,13 @@ object SrcMap:
         if in.isEmpty then scala.None else Some(in.maxBy(e => (e.start, -e.end)))
       }
 
+    /** a file in a row's tree resolves against that row's own entries first, since its text came from another upstream file. */
     def resolveFile(file: String, line: Int): Option[Entry] =
-      unitForFile(file).flatMap(u => at(u, line).orElse(unitEntry(u)))
+      unitForFile(file).flatMap { u =>
+        rowOf(file).flatMap(r => byRow.get((r, u))) match
+          case Some(es) => new Index(es.map(_.copy(row = ""))).resolveFile(file, line)
+          case _        => at(u, line).orElse(unitEntry(u))
+      }
 
     def resolveFrame(className: String, line: Int): Option[Entry] =
       unitForClass(className).flatMap(u => at(u, line).orElse(unitEntry(u)))

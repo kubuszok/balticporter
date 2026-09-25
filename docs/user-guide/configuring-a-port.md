@@ -210,6 +210,29 @@ manifest {
   load with the list of the ones that exist. Two rows may name the same directory. Absent, or `{}`,
   is the no-op. Like `inject`, it is a **build artefact and is not inherited** — a dependent that
   inherited it would emit the same fully-qualified name twice.
+- **`rowSources`** is for an upstream that ships **two Java sources for one class** — the core one and
+  a platform emulation of it (a browser backend's own `Executor` beside the core one). Each row names
+  upstream trees whose files replace the main source set's file at the same package path, on that
+  row only:
+
+  ```hocon
+  rowSources {
+    js = [ { root = "@upstream/backends/web/src/emu", files = ["com/example/mylib/async/*.java"] } ]
+  }
+  ```
+
+  `root` is resolved like every path; `files` are paths or globs relative to it (absent means every
+  `.java` under it). A replaced type is translated twice, through the same phases and policy — once
+  as the main set declares it, once over the program with the row's file in its place — and is
+  emitted per row into `src_managed/<row>/scala`, never into `main`: the row that names the tree gets
+  its translation, every other row the port targets gets the main one. The shared code compiles once
+  against every row, so the run **refuses** (counted in the `row-source` lane, and fatal): a row the
+  port does not build, an entry that matches no file, a row file declaring a type the main set does
+  not have at that path, and two emitted surfaces that differ — every member code outside the type
+  can reach (anything not plain `private`), compared without parameter names or bodies, each
+  differing member named. Each row's header names its own upstream file; its source map is
+  `rows/<row>/srcmap.tsv` beside the shared one, which `correlate` reads for a path under that row's
+  directory. Absent, or `{}`, is the no-op; not inherited (this module's build, like `platformDirs`).
 - **`providedSources`** is for a replacement your own build already compiles from its own sources
   (`providedSources = ["../mylib/src/main/scala"]`). The engine reads these files exactly as it
   reads `inject`: calls follow the replacement's property spellings and companion `apply`

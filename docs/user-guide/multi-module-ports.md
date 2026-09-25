@@ -23,7 +23,7 @@ base  = "main.conf"
 | inherited from the base | not inherited — this module's own build |
 |---|---|
 | `dropTypes`, `dropMethods`, `packageRenames`, `typeRenames`, `subPackages`, `flattenNestedTypes`, `allowPackageSplit`, `surface`, per-location remedy selections | `sourceSet`, `input`, `provenance`, `runtimeMode`, `supportSources`, `project` |
-| | `inject`, `platformDirs`, `providedSources`, `targets`, `dependencies`, `externalParenless`, `parity` |
+| | `inject`, `platformDirs`, `rowSources`, `providedSources`, `targets`, `dependencies`, `externalParenless`, `parity` |
 
 The two columns follow one rule: what is inherited is a fact about **the shared surface** — the
 Java types and members both modules see, and what the first module already did to them. What is not

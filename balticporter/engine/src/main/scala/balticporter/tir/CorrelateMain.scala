@@ -58,7 +58,8 @@ object CorrelateRun:
     val missing = (req.srcmaps.map(_._2) ++ req.scalac ++ req.tests ++ req.markers).filterNot(Files.isRegularFile(_))
     if missing.nonEmpty then throw MissingInput(missing)
 
-    val entries = req.srcmaps.flatMap((scope, p) => SrcMap.parseAll(p, scope))
+    // each map's per-row maps beside it resolve the files a row translated from its own upstream
+    val entries = req.srcmaps.flatMap((scope, p) => SrcMap.parseAll(p, scope) ++ SrcMap.parseRows(p, scope))
     val idx     = SrcMap.Index.of(entries)
     if idx.isEmpty then
       System.err.println("[correlate] the source map is EMPTY — every diagnostic will be unattributable.")
@@ -75,7 +76,7 @@ object CorrelateRun:
     val portDirs    = req.srcmaps.map(_._2).flatMap(p => Option(p.getParent).flatMap(x => Option(x.getParent)))
     val baseMembers = portDirs.flatMap(port => SrcMap.parseMembers(port.resolve("baseline/members.tsv"))).toMap ++
       SrcMap.parseMembers(base.resolve("members.tsv"))
-    val nowMembers = entries.map(e => s"${e.unit}\t${e.member}" -> e.digest).toMap
+    val nowMembers = entries.filter(_.row.isEmpty).map(e => s"${e.unit}\t${e.member}" -> e.digest).toMap
     // no baseline ⇒ no claim — every member would diff against nothing
     val changed = if baseMembers.isEmpty then Set.empty[String] else Correlate.changedMembers(baseMembers, nowMembers)
 

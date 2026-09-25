@@ -200,6 +200,8 @@ object PortConfig:
       inject = m.strings("inject").getOrElse(Nil).map(resolvePath(dir, _)),
       // Ready-made Scala for ONE platform row. Not inherited; absent or `{}` = no-op.
       platformDirs = readPlatformDirs(dir, m),
+      // Upstream java that shadows the main set's types on ONE row. Not inherited; absent or `{}` = no-op.
+      rowSources = readRowSources(dir, m),
       // Replacements the consumer compiles itself: read for surface, never copied. Not inherited; empty = no-op.
       providedSources = m.strings("providedSources").getOrElse(Nil).map(resolvePath(dir, _)),
       // SPI descriptors copied with both namespaces renamed. Not inherited; missing = fatal.
@@ -304,6 +306,20 @@ object PortConfig:
               s"'$row' is not a platform row; one of ${PortManifest.PlatformRows.keys.toList.sorted.mkString(", ")}"
             )
           row -> rowsView.strings(row).getOrElse(Nil).map(resolvePath(dir, _))
+        }.toMap
+
+  /** Parse `rowSources { <row> = [ { root = "…", files = [globs…] } ] }`. Row names as in [[readPlatformDirs]], refused by name when unknown; `root` is conf-relative, `files` relative to it. */
+  private def readRowSources(dir: Anchor, m: ConfigView): Map[String, List[balticporter.core.RowSource]] =
+    m.child("rowSources") match
+      case scala.None     => Map.empty
+      case Some(rowsView) =>
+        rowsView.keys.map { row =>
+          if !PortManifest.PlatformRows.contains(row) then
+            throw ConfigError(
+              rowsView.at(row),
+              s"'$row' is not a platform row; one of ${PortManifest.PlatformRows.keys.toList.sorted.mkString(", ")}"
+            )
+          row -> rowsView.children(row).getOrElse(Nil).map(e => balticporter.core.RowSource(resolvePath(dir, e.requireString("root")), e.strings("files").getOrElse(Nil)))
         }.toMap
 
   /** Parse platform names from a `.conf`. */

@@ -375,6 +375,8 @@ lazy val corpus = project
     name := "balticporter-corpus",
     publish / skip := true,
     libraryDependencies += munit,
+    // an end-to-end spec compiles an emission whose trees cannot share one build (one FQN per row)
+    libraryDependencies += "org.scala-lang" %% "scala3-compiler" % scalaV % Test,
     Compile / run / fork := true,
     Compile / run / javaOptions += s"-Dbalticporter.root=${(ThisBuild / baseDirectory).value}",
     Test / javaOptions += s"-Dbalticporter.root=${(ThisBuild / baseDirectory).value}",

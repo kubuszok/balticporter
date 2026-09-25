@@ -257,6 +257,9 @@ final case class PortRun(
           "move the entry to the base's manifest.]"
       )
 
+    // ---- per-row upstream sources: refused before any phase runs when a row or a file is wrong ----
+    refuseRowSources(rowPlan._2, Nil)
+
     val roots = if frontend.resolutionRoots.isEmpty then "" else s" (resolving against ${frontend.resolutionRoots.size} extra root(s))"
     say(s"building model over ${frontend.files.size} file(s)$roots…")
 
@@ -680,8 +683,21 @@ final case class PortRun(
           "A port that ships an approximation it cannot name is the failure this gate exists for."
       )
 
+    // ---- per-row upstream sources: each row translated with its files in place of the main ones ----
+    val rows      = translateRows(translated, injectedSources, plan)
+    val shadowed  = rowPlan._1.shadowedMain.map(f => PortRun.real(frontend.sourceRoot.resolve(f)))
+    val buildRows = RowOverrides.declaredRows(targets).toList.sorted
+    // the rows a shadowed main unit still ships to: every declared row that does not replace its file
+    def mainRowsOf(u: Tree.ClassDef): List[String] =
+      val at = PortRun.real(Path.of(u.origin.javaPath))
+      buildRows.filterNot(r => rowPlan._1.rows.getOrElse(r, Nil).exists(s => PortRun.real(frontend.sourceRoot.resolve(s.main)) == at))
+
     // ---- emission ----
     wipe(emitDir)
+    // every row tree this run writes into is wiped ONCE, before anything lands there
+    val rowRoots: Map[String, List[Path]] =
+      if sourceSet.configName == "main" then manifest.map(_.platformDirs).getOrElse(Map.empty) else Map.empty
+    (rowRoots.keySet ++ (if rows.isEmpty then Nil else buildRows)).toList.sorted.foreach(r => wipe(SbtGen.managedDir(portRoot, r)))
     // Wipe the resource tree too so stale resources are not left on the classpath.
     wipe(SbtGen.managedResources(portRoot, sourceSet.configName))
     Files.createDirectories(emitDir)
@@ -709,11 +725,22 @@ final case class PortRun(
       if isDropped(program, u) then dropped += 1
       else
         val text = translated.sourceOf(u)
-        write(emitDir.resolve(full.replace('.', '/') + ".scala"), text)
-        shipped += TriviaCheck.Unit(PortRun.real(Path.of(u.origin.javaPath)), text)
-        writtenTexts += (full -> text)
-        PortRun.declaredSymbols(u, emittedSubjects)(using program)
-        written += 1
+        val rel  = full.replace('.', '/') + ".scala"
+        // a type a row replaces is emitted per row, never into the shared tree
+        val dirs = if shadowed(PortRun.real(Path.of(u.origin.javaPath))) then mainRowsOf(u).map(SbtGen.managedDir(portRoot, _)) else List(emitDir)
+        dirs.foreach(d => write(d.resolve(rel), text))
+        if dirs.nonEmpty then
+          shipped += TriviaCheck.Unit(PortRun.real(Path.of(u.origin.javaPath)), text)
+          writtenTexts += (full -> text)
+          PortRun.declaredSymbols(u, emittedSubjects)(using program)
+        written += dirs.size
+    }
+    rows.foreach { r =>
+      r.units.foreach((full, text) => write(SbtGen.managedDir(portRoot, r.row).resolve(full.replace('.', '/') + ".scala"), text))
+      written += r.units.size
+      say(
+        s"row `${r.row}`: ${r.units.size} type(s) translated from its own upstream file(s) -> ${SbtGen.managedDir(portRoot, r.row)}"
+      )
     }
     // ---- upstream notice files (not gated on artifact layer) ----
     val notices = provenance.map(_.notices).getOrElse(Nil)
@@ -796,7 +823,20 @@ final case class PortRun(
     supportSources.foreach { (fqn, src) => write(emitDir.resolve(fqn.replace('.', '/') + ".scala"), src); written += 1 }
 
     // Member-level source map, from the emitter's own recording (per-emitter, not process-global).
-    writeSrcMap(translated.emitter.srcMap)
+    // a shadowed type every row replaces is on disk nowhere, so the main map must not describe it
+    val nowhere = translated.emitOrder.filter(u => shadowed(PortRun.real(Path.of(u.origin.javaPath))) && mainRowsOf(u).isEmpty).flatMap(u => program.symbolOf(u.symbol).map(_.fullName)).toSet
+    writeSrcMap(translated.emitter.srcMap, nowhere)
+    // …and one per row with its own upstream files, naming THOSE files: `rows/<row>/srcmap.tsv`
+    if CheckReport.enabled then
+      rows.foreach { r =>
+        val mine  = r.units.map(_._1).toSet
+        val shown = rowPlan._1.rows.getOrElse(r.row, Nil).map(s => s.rel -> RowOverrides.shownPath(provenance, s)).toMap
+        val rec   = r.translated.emitter.srcMap
+        SrcMap.write(
+          CheckReport.runDir.resolve("rows").resolve(r.row),
+          rec.copy(entries = rec.entries.filter(e => mine(e.unit)).map(e => e.copy(javaPath = shown.getOrElse(e.javaPath, e.javaPath))))
+        )
+      }
 
     // ---- trivia check: three lanes (lost / recovered / deliberate) ----
     val shippedUnits  = shipped.toList
@@ -830,13 +870,10 @@ final case class PortRun(
       }
     }
     // ---- platform rows: a hand port's per-platform layer, copied to src_managed/<row>/scala ----
-    // (main source set only; a row's own portability is declared by the row, so no scan)
-    val rowRoots: Map[String, List[Path]] =
-      if sourceSet.configName == "main" then manifest.map(_.platformDirs).getOrElse(Map.empty) else Map.empty
+    // (main source set only; a row's own portability is declared by the row, so no scan; wiped at emission start)
     rowRoots.toList.sortBy(_._1).foreach { (row, roots) =>
       val rowDir = SbtGen.managedDir(portRoot, row)
-      wipe(rowDir)
-      var n = 0
+      var n      = 0
       roots.filter(Files.exists(_)).foreach { root =>
         Files.walk(root).iterator().asScala.filter(p => PortRun.injectSource(root, p)).toList.sorted.foreach { src =>
           val rel = root.relativize(src).toString.replace('\\', '/')
@@ -1289,12 +1326,12 @@ final case class PortRun(
       val provenance = s"#units-served-from-cache\t$fromCache"
       Files.writeString(dir.resolve("catalog.tsv"), (provenance :: CatalogCheck.TsvHeader :: CatalogCheck.tsv(log)).mkString("", "\n", "\n"))
 
-  private def writeSrcMap(rec: balticporter.tir.SrcMap.Recording): Unit =
+  private def writeSrcMap(rec: balticporter.tir.SrcMap.Recording, absent: Set[String] = Set.empty): Unit =
     if CheckReport.enabled then
       val dir = CheckReport.runDir
       // Exclude dropped units: the map must describe what is on disk.
       val droppedEmitted = policySubs.dropTypes.map(emittedName)
-      SrcMap.write(dir, rec.copy(entries = rec.entries.filterNot(e => droppedEmitted(e.unit))))
+      SrcMap.write(dir, rec.copy(entries = rec.entries.filterNot(e => droppedEmitted(e.unit) || absent(e.unit))))
       Files.createDirectories(dir)
       val drops = policySubs.dropTypes.toList.sorted.map(fqn => Correlate.Dropped(fqn, emittedName(fqn)).tsv)
       Files.writeString(dir.resolve("dropped-types.tsv"), (Correlate.DroppedHeader :: drops).mkString("", "\n", "\n"))
@@ -1735,6 +1772,62 @@ final case class PortRun(
   private def effectivePhases: List[Phase] =
     idiomPhases(declaredPhases) ++ PortRun.remedyPhases ++ PortRun.derivedPhases ++ injectedFollowPhase ++ renamePhase
 
+  /** `PortManifest.rowSources`, main source set only, matched against the main files, with the refusals the match found. */
+  private lazy val rowPlan: (RowOverrides.Plan, List[CheckReport.Finding]) =
+    if !rowSourcesDeclared then (RowOverrides.Plan.empty, Nil)
+    else RowOverrides.plan(manifest.map(_.rowSources).getOrElse(Map.empty), frontend, RowOverrides.declaredRows(targets))
+
+  private def rowSourcesDeclared: Boolean = sourceSet.configName == "main" && manifest.exists(_.rowSources.nonEmpty)
+
+  /** Counts the row-source lane (only for a port that declares row sources) and stops on any refusal, removing the trees named so no stale one compiles. */
+  private def refuseRowSources(fs: List[CheckReport.Finding], wipeRows: List[String]): Unit =
+    if rowSourcesDeclared then CheckReport.record(RowOverrides.Name, fs)
+    if fs.nonEmpty then
+      if wipeRows.nonEmpty then (outDir :: wipeRows.map(SbtGen.managedDir(portRoot, _))).foreach(wipe)
+      sys.error(
+        s"[$label] ${fs.size} row-source refusal(s):\n" + fs.map("  " + _.render).mkString("\n") +
+          "\n  [a row's upstream file replaces a main type on that row only, so it must declare exactly the types the main file declares, with the same " +
+          "surface: shared code compiles once against every row. Fix `rowSources`, or drop the type and inject a replacement per row.]"
+      )
+
+  /** Each row with its own upstream files, translated through the same phases and policy over the program with those files in place of the main ones, and checked against the main translation.
+    */
+  private def translateRows(main: PortRun.Translated, injectedSources: List[(String, String)], plan: RuntimePlan): List[PortRun.RowTranslation] =
+    val rp = rowPlan._1
+    if rp.isEmpty then Nil
+    else
+      val findings = List.newBuilder[CheckReport.Finding]
+      def at(u:    Tree.ClassDef):             String = PortRun.real(Path.of(u.origin.javaPath))
+      def named(p: Program, u: Tree.ClassDef): String = p.symbolOf(u.symbol).map(_.fullName).getOrElse("")
+      val out = rp.rows.toList.sortBy(_._1).map { (row, shadows) =>
+        val sub = copy(
+          frontend = RowOverrides.frontendFor(frontend, shadows),
+          determinism = Determinism.Off,
+          cache = scala.None,
+          provenance = provenance.map(RowOverrides.provenanceFor(_, shadows))
+        )
+        sub.derivedForRows = derivedBound
+        say(s"row `$row`: translating ${shadows.size} upstream file(s) in place of the main ones…")
+        val t = sub.translateOnce()
+        sub.recordRunDecisions(t, injectedSources, plan)
+        val units = shadows.flatMap { s =>
+          val rowBy  = t.emitOrder.filter(u => at(u) == PortRun.real(s.file) && !isDropped(t.program, u)).map(u => named(t.program, u) -> u).toMap
+          val mainAt = PortRun.real(frontend.sourceRoot.resolve(s.main))
+          val mainBy = main.emitOrder.filter(u => at(u) == mainAt && !isDropped(main.program, u)).map(u => named(main.program, u) -> u).toMap
+          // the emission gate, for the units only this translation emits
+          if !bestEffort then
+            MarkerCheck.openMarkers(t.program, rowBy.values.toList).foreach { m =>
+              findings += RowOverrides.finding("open-marker", row, s.rel, s"${m.ownerFqn} — ${m.marker.kind.label}: ${m.marker.what}")
+            }
+          val rowText = rowBy.toList.sortBy(_._1).map((n, u) => n -> t.sourceOf(u))
+          findings ++= RowOverrides.compare(s, mainBy.map((n, u) => n -> main.sourceOf(u)), rowText.toMap)
+          rowText
+        }
+        PortRun.RowTranslation(row, t, units)
+      }
+      refuseRowSources(findings.result(), RowOverrides.declaredRows(targets).toList.sorted)
+      out
+
   /** the platform rows' injection roots (`PortManifest.platformDirs`), main source set. */
   private def injectedRowRoots: List[Path] =
     manifest.map(_.platformDirs.values.flatten.toList).getOrElse(Nil)
@@ -2031,9 +2124,22 @@ final case class PortRun(
         .flatMap(p => DerivedPolicy.read(p.path.getParent.resolve("derived-policy.tsv")).rows)
       if rows.nonEmpty then say(s"DERIVED POLICY (inherited from ${baseNames.toList.sorted.mkString(",")}): ${rows.distinct.size} row(s)")
       DerivedPolicy(rows.distinct)
+
+  /** the derived policy this translation binds; a row translation binds the MAIN translation's, never a derivation of its own, since the policy is one and only the program differs. */
   private def derivedPolicy(parsed: Program, emitted: Set[SymId]): DerivedPolicy =
+    val dp = derivedForRows.getOrElse(derivedPolicyUnresolved(parsed, emitted))
+    derivedBound = Some(dp)
+    dp.resolved(parsed)
+
+  /** set on a row translation's run: the main translation's derived policy. */
+  private var derivedForRows: Option[DerivedPolicy] = scala.None
+
+  /** the derived policy the last translation bound, unresolved. */
+  private var derivedBound: Option[DerivedPolicy] = scala.None
+
+  private def derivedPolicyUnresolved(parsed: Program, emitted: Set[SymId]): DerivedPolicy =
     if !anyPhaseDerives then DerivedPolicy.empty
-    else if !derivationRuns then inheritedDerived.resolved(parsed)
+    else if !derivationRuns then inheritedDerived
     else
       val m      = manifest.get
       val frozen = m.frozenDerivedPolicy.map { p =>
@@ -2069,13 +2175,13 @@ final case class PortRun(
                   (if diffs.size > 10 then s"\n  … and ${diffs.size - 10} more" else "")
               )
           }
-          r.policy.resolved(parsed)
+          r.policy
         case scala.None =>
           // no reference: use the frozen file
           frozen match
             case Some(fp) =>
               lastFrozen = Some(fp)
-              fp.resolved(parsed)
+              fp
             case scala.None =>
               sys.error(s"[$label] a phase derives policy but the manifest has neither `parity` nor `frozenDerivedPolicy`")
 
@@ -2358,6 +2464,9 @@ object PortRun:
     UnusedRefused
     // Collection/nullability/opaque/test-framework lanes are conditionally required (see requiredChecks).
   )
+
+  /** one row's own translation and the units it emits there, as (emitted FQN, text). */
+  final case class RowTranslation(row: String, translated: Translated, units: List[(String, String)])
 
   /** One translation. `sourceOf` is memoised through an optional `ActionCache` (advisory). */
   final class Translated(

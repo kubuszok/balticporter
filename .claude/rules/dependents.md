@@ -43,6 +43,14 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   A type named in the SHARED row must exist on every platform — `java.util.Calendar` is not in the
   Scala.js javalib, and naming it there costs a `portability(injected)` row for a case the port's own
   service provider already answers.
+- **An upstream that ships TWO java sources for one class (core + a platform emulation) is a
+  `rowSources` row, not two hand-written copies** (reusable mechanism, per-port policy): the row's
+  file shadows the main one in a second translation of the same program with the same phases, the
+  type goes to `src_managed/<row>/scala` for every targeted row and never to `main`, and the emitted
+  surfaces must agree — shared code compiles once against every row, so a differing reachable
+  member, a type the main file does not declare, or an undeclared row is a fatal `row-source`
+  finding. It is NOT a licence to shadow a class whose emulation needs context the java class does
+  not take (see the row-shadowing dead end in `phases.md`). Not inherited, like `platformDirs`.
 - **Emission identity is (`portRoot`, `sourceSet`)**; `PortRun` opens with an unconditional
   `wipe(emitDir)`, so a second run at the same pair DELETES the first. N maven modules under one
   package root are ONE port with a glob list. A batch is a SCOPE edit (one glob, one denominator

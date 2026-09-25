@@ -148,6 +148,9 @@ manifest {
   # name it in both `flattenNestedTypes` and `subPackages` (`Files$FileType` -> `files.FileType`)
   inject         = ["../../mylib-overrides"]
   platformDirs   = { jvm = ["../../mylib-overrides-jvm"] }   # a hand port's scalajvm/scaladesktop layer; js/native rows likewise
+  # upstream's OWN per-platform java (a browser emulation of a core class): translated for that row only,
+  # the other rows get the main translation; the emitted surfaces must agree or the run refuses
+  rowSources     = { js = [ { root = "@upstream/backends/web/src/emu", files = ["com/example/mylib/async/*.java"] } ] }
   surface = [
     { transform = "collections" },
     { transform = "mutable-params" },

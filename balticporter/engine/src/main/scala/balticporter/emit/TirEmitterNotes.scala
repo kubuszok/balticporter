@@ -259,12 +259,26 @@ private[emit] trait TirEmitterNotes:
         if marker.nonEmpty && raw.contains(marker + "/") then Some(raw.substring(raw.indexOf(marker + "/") + marker.length + 1))
         else scala.None
       }
-      rel2 match
-        case Some(r) if marker.nonEmpty                       => s"$marker/$r"
-        case Some(r)                                          => r
-        case scala.None if new java.io.File(raw).isAbsolute() =>
+      // an origin outside the main root: the first further root holding it, under ITS prefix
+      val extra = if rel.isDefined then scala.None
+      else
+        p.extraRoots.iterator
+          .flatMap { (r, prefix) =>
+            val rraw = realOrNormal(raw)
+            val rr   = realOrNormal(r)
+            Option.when(rraw.startsWith(rr)) {
+              val sub = rr.relativize(rraw).toString.replace('\\', '/')
+              if prefix.isEmpty then sub else s"${prefix.stripSuffix("/")}/$sub"
+            }
+          }
+          .nextOption()
+      (extra, rel2) match
+        case (Some(e), _)                            => e
+        case (_, Some(r)) if marker.nonEmpty         => s"$marker/$r"
+        case (_, Some(r))                            => r
+        case _ if new java.io.File(raw).isAbsolute() =>
           s"$raw  (path as recorded — set Provenance.sourceRoot to relativise it)"
-        case scala.None => raw // already relative: reproducible as it stands
+        case _ => raw // already relative: reproducible as it stands
 
   /** Every class at any depth, via `StandardTraversal.allClassDefs`. */
   private[emit] lazy val allDeclaredClasses: List[Tree.ClassDef] =

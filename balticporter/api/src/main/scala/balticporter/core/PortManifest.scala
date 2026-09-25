@@ -16,6 +16,11 @@ import java.nio.file.Path
   */
 final case class ResourceTree(root: Path, files: List[String])
 
+/** One upstream java tree whose types REPLACE the main source set's same-FQN types on one platform row — a browser emulation of a core class, say. `files` are paths or globs relative to `root`, each
+  * at its package path; empty means every `.java` under `root`. A declared entry matching no file is fatal.
+  */
+final case class RowSource(root: Path, files: List[String] = Nil)
+
 final case class PortManifest(
   /** for reports — the module this policy belongs to. */
   name: String,
@@ -53,6 +58,11 @@ final case class PortManifest(
     * inherited (a build artefact, like `inject`).
     */
   platformDirs: Map[String, List[Path]] = Map.empty,
+  /** upstream java per platform row — a row name → trees whose types SHADOW the main set's same-FQN types on that row. Such a type is translated once per tree, through the same phases, and emitted
+    * per row (`src_managed/<row>/scala`) instead of into `main`; the rows with no override get the main translation. The two emitted surfaces must agree. Not inherited (this module's build, like
+    * [[platformDirs]]); empty is the no-op.
+    */
+  rowSources: Map[String, List[RowSource]] = Map.empty,
   /** Scala the consumer's own build compiles from its own sources — typically where the replacement of a dropped type lives. Read like [[inject]] (the replacement's members, factories and property
     * spellings, and "something stands at this name") but never copied into `src_managed`, since a second copy would drift from the one that compiles. Not inherited (a build fact, like `inject`);
     * empty is the no-op.

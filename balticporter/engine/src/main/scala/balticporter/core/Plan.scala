@@ -15,7 +15,11 @@ final case class Provenance(
   sourceRoot: String = "",
   /** Upstream files (LICENSE, NOTICE) copied beside emitted code. Empty = no-op by default. A missing declared file is FATAL.
     */
-  notices: List[Path] = Nil
+  notices: List[Path] = Nil,
+  /** Further absolute roots, each with the prefix its files are shown under — a unit whose origin is outside [[sourceRoot]] (a per-row upstream tree) is named relative to the first that holds it.
+    * Empty is the default and the no-op.
+    */
+  extraRoots: List[(String, String)] = Nil
 )
 
 /** M0 subset of a port configuration: one module, explicit file list. */
