@@ -614,6 +614,32 @@ class PortConfigSpec extends munit.FunSuite:
     assertEquals(m.substitutions.inject, Nil)
   }
 
+  test("`providedSources` resolves like `inject`, reaches the substitutions, and is not inherited") {
+    val base =
+      """label = "base"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest { name = "base", dropTypes = ["com.demo.Gone"], providedSources = ["hand/src"] }
+        |""".stripMargin
+    val f = fixture(
+      """label = "dependent"
+        |base  = "base.conf"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "test" }
+        |manifest { name = "dep", providedSources = ["dep/src"] }
+        |""".stripMargin,
+      Map("base.conf" -> base)
+    )
+    val m   = PortConfig.load(f).manifest.get
+    val own = List(f.getParent.resolve("dep/src").normalize)
+    assertEquals(m.providedSources, own)
+    assertEquals(m.substitutions.providedSources, own)
+    assertEquals(m.ownDrops.providedSources, own)
+    assertEquals(m.baseChain.map(_.providedSources), List(List(f.getParent.resolve("hand/src").normalize)))
+    // absent is the no-op
+    assertEquals(PortManifest("x").providedSources, Nil)
+  }
+
   // platform rows: ready-made Scala exactly one row compiles, for a replacement whose ANSWER
   // differs per platform
 

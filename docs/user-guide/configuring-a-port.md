@@ -153,6 +153,7 @@ manifest {
   typeRenames    { "com.example.mylib.Utils$Helper" = "Helper" }
   inject         = ["overrides/mylib"]
   platformDirs   = { jvm = ["overrides/mylib-jvm"] }
+  providedSources = []
   surface = [
     { transform = "collections" },
     { transform = "mutable-params" },
@@ -209,6 +210,15 @@ manifest {
   load with the list of the ones that exist. Two rows may name the same directory. Absent, or `{}`,
   is the no-op. Like `inject`, it is a **build artefact and is not inherited** — a dependent that
   inherited it would emit the same fully-qualified name twice.
+- **`providedSources`** is for a replacement your own build already compiles from its own sources
+  (`providedSources = ["../mylib/src/main/scala"]`). The engine reads these files exactly as it
+  reads `inject`: calls follow the replacement's property spellings and companion `apply`
+  factories, overrides follow its parameter types, the dangling-substitution check accepts the
+  replacement as present, and the published port map lists it as `Substituted`. But nothing is
+  copied into `src_managed/`, so there is no second copy to drift from the one that compiles, and no
+  generated-file header or portability scan applies to it. Point it at the whole source tree if
+  that is simpler — only types that replace something in `dropTypes` are published, and the rest are
+  read and ignored. Empty (the default) changes nothing. Like `inject`, it is **not inherited**.
 - **`resources`** copies classpath resources verbatim, at the upstream paths the emitted code already
   names:
 

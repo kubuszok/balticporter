@@ -200,6 +200,8 @@ object PortConfig:
       inject = m.strings("inject").getOrElse(Nil).map(resolvePath(dir, _)),
       // Ready-made Scala for ONE platform row. Not inherited; absent or `{}` = no-op.
       platformDirs = readPlatformDirs(dir, m),
+      // Replacements the consumer compiles itself: read for surface, never copied. Not inherited; empty = no-op.
+      providedSources = m.strings("providedSources").getOrElse(Nil).map(resolvePath(dir, _)),
       // SPI descriptors copied with both namespaces renamed. Not inherited; missing = fatal.
       serviceProviders = m.strings("serviceProviders").getOrElse(Nil).map(resolvePath(dir, _)),
       // Classpath resources copied verbatim. Not inherited; missing = fatal.

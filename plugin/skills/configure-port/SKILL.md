@@ -168,6 +168,11 @@ manifest {
   file; a dependent that copied the list would emit a second definition of the same FQN. This
   asymmetry between a drop and its replacement is the single thing about the manifest most worth
   getting right (`CLAUDE.md` §1.5).
+- **`providedSources` is `inject` without the copy.** When the replacement already lives in the
+  consumer's own compiled tree (`providedSources = ["../../mylib/src/main/scala"]`), point here
+  instead of keeping a second copy under `overrides/` to inject: the engine reads its surface
+  (property spellings, companion `apply`, override types, "the replacement exists") and writes
+  nothing to `src_managed`. Not inherited; empty is the no-op.
 - **`packageRenames` is DATA, not a transform.** It must run after every other phase — all of their
   policy is written in the UPSTREAM namespace — and `runsAfter` cannot say "after everything", so
   `PortRun` appends it last and verifies it. Writing it as a surface entry is refused BY NAME rather
@@ -284,7 +289,7 @@ about the BASE's build and is ignored here.
 
 | inherited — the SHARED SURFACE | not inherited — THIS module's build |
 |---|---|
-| `dropTypes`, `dropMethods`, `packageRenames`, `surface` | `sourceSet`, `frontend`/`input`, `provenance`, `runtimeMode`, `supportSources`, `project`, **`inject`** |
+| `dropTypes`, `dropMethods`, `packageRenames`, `surface` | `sourceSet`, `frontend`/`input`, `provenance`, `runtimeMode`, `supportSources`, `project`, **`inject`**, `providedSources` |
 
 `PortRun` runs `ManifestAgreement` on every port and refuses:
 

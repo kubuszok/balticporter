@@ -105,7 +105,8 @@ manifest {
 `InjectedSurface` then reads the injected file's member surface with scalameta: overrides adopt
 the injected parameter types and calls follow the injected arity and parameter spelling, read from
 the injected source rather than the dropped java declaration. No additional
-configuration needed.
+configuration needed. A replacement your own build compiles is read the same way from
+`providedSources`, without being copied.
 
 ### The `retarget` and `retargetRewrites` `.conf` spelling
 
@@ -193,7 +194,9 @@ would be two homes for one policy.
 
 ### The other (b) surfaces, which are manifest DATA rather than phases
 
-`dropTypes` + `inject` (do not emit this type; here is the Scala that supplies its FQN),
+`dropTypes` + `inject` (do not emit this type; here is the Scala that supplies its FQN) or
+`dropTypes` + `providedSources` (the same, when your own build already compiles that Scala — read,
+never copied),
 `dropMethods`, `packageRenames`, `supportSources`, `externalParenless`. See **`configure-port`** §4.
 Remember the asymmetry: a **drop** is inherited by a dependent, an **injection** is not.
 

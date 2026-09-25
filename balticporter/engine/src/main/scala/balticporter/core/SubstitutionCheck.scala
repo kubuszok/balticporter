@@ -32,13 +32,15 @@ object SubstitutionCheck:
   def emittedDroppedTypes(outDir: Path, subs: Substitutions): List[Finding] =
     subs.dropTypes.toList.sorted.filter(fqn => Files.exists(outDir.resolve(fqn.replace('.', '/') + ".scala"))).map(Finding(Kind.Emitted, _, 0))
 
-  /** CHECK 2 -- dropped, unreplaced, still referenced. Run AFTER injection over the final tree. */
-  def dangling(outDir: Path, subs: Substitutions): List[Finding] =
+  /** CHECK 2 -- dropped, unreplaced, still referenced. Run AFTER injection over the final tree. `provided` answers, per dropped upstream FQN, whether a `providedSources` root declares its replacement
+    * — the consumer compiles it, so nothing of it is in `outDir`.
+    */
+  def dangling(outDir: Path, subs: Substitutions, provided: String => Boolean = _ => false): List[Finding] =
     if subs.dropTypes.isEmpty then Nil
     else
       val sources = scalaSources(outDir).map(p => withoutPorterNotes(Files.readString(p)))
       subs.dropTypes.toList.sorted.flatMap { fqn =>
-        if Files.exists(outDir.resolve(fqn.replace('.', '/') + ".scala")) then None // replaced
+        if Files.exists(outDir.resolve(fqn.replace('.', '/') + ".scala")) || provided(fqn) then None // replaced
         else
           val refs = sources.count(_.contains(fqn))
           if refs == 0 then None else Some(Finding(Kind.Dangling, fqn, refs)) // rewritten away vs. dangling

@@ -11,7 +11,9 @@ import java.nio.file.{ Files, Path }
 final case class Substitutions(
   dropTypes:   Set[String] = Set.empty,
   dropMethods: Set[String] = Set.empty,
-  inject:      List[Path] = Nil
+  inject:      List[Path] = Nil,
+  /** Scala the consumer's own build already compiles: read for the replacements' surface exactly as [[inject]] is, never copied. Empty is the no-op. */
+  providedSources: List[Path] = Nil
 ):
 
   /** does policy drop this TYPE? PURE — see [[dropsMethod]]. */

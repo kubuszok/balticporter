@@ -102,3 +102,11 @@ class SubstitutionCheckSpec extends munit.FunSuite:
     bothAgree(dir, subs)
     assertEquals(SubstitutionCheck.dangling(dir, subs).map(_.fqn), List("com.x.Aaa", "com.x.Bbb"))
   }
+
+  test("a replacement the consumer PROVIDES counts as present; a type provided nowhere still dangles") {
+    val dir  = tree("com/x/Ref.scala" -> "package com.x\nclass Ref { def a: com.x.Aaa = ???; def b: com.x.Bbb = ??? }")
+    val subs = Substitutions(dropTypes = Set("com.x.Aaa", "com.x.Bbb"))
+    assertEquals(SubstitutionCheck.dangling(dir, subs, Set("com.x.Aaa")).map(_.fqn), List("com.x.Bbb"))
+    // nothing provided is exactly the check without the parameter
+    assertEquals(SubstitutionCheck.dangling(dir, subs, _ => false), SubstitutionCheck.dangling(dir, subs))
+  }

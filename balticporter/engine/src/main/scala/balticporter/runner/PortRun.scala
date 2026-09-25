@@ -195,7 +195,7 @@ final case class PortRun(
     */
   private def injectedNames: Set[String] = manifest match
     case Some(m)    => m.policyChain.flatMap(_.injectedFqns).toSet
-    case scala.None => Substitutions.injectedSources(subs.inject).map(_._1).toSet
+    case scala.None => Substitutions.injectedSources(subs.inject ++ subs.providedSources).map(_._1).toSet
 
   /** Upstream name translated to the emitted namespace. */
   private def emittedName(fqn: String): String = renamePhase.fold(fqn)(_.emittedName(fqn))
@@ -806,6 +806,8 @@ final case class PortRun(
     val leaked = record(PortRun.SubstitutionEmitted, SubstitutionCheck.emittedDroppedTypes(outDir, policySubs))
 
     // ---- injection: hand-written Scala copied verbatim, porter notes prepended ----
+    // `inject` only: `providedSources` is compiled by the consumer from where it lives, so nothing
+    // of it is written here and it owes no provenance banner.
     var injected = 0
     ownSubs.inject.filter(Files.exists(_)).foreach { root =>
       Files.walk(root).iterator().asScala.filter(p => PortRun.injectSource(root, p)).toList.sorted.foreach { src =>
@@ -835,7 +837,8 @@ final case class PortRun(
       }
       say(s"platform row `$row`: $n injected file(s) -> $rowDir")
     }
-    // Scan injected text for portability violations.
+    // Scan injected text for portability violations. Not `providedSources`: the port ships none of it,
+    // and the consumer's own build is what compiles it for each platform row.
     val injectedViolations = ownSubs.inject.filter(Files.exists(_)).flatMap { root =>
       SubstitutionCheck.scalaSources(root).flatMap { src =>
         PortabilityCheck.inInjectedSource(root.relativize(src).toString, Files.readString(src), portabilityRules)
@@ -850,13 +853,19 @@ final case class PortRun(
       injectedViolations.foreach(v => println("  " + v.render))
 
     // ---- port map: published for dependents (written after injection) ----
-    val injectedFqns = injectedSources.map(_._1).toSet ++ plan.sources.keySet ++ plan.required ++ supportSources.keySet
+    // A provided replacement publishes as Substituted like an injected one; the consumer's other
+    // sources replace no drop and are not this port's to publish.
+    val injectedFqns =
+      injectedSources.map(_._1).toSet ++ plan.sources.keySet ++ plan.required ++ supportSources.keySet ++ providedReplacements.values
     val bodyKeys: Set[String] =
       effectivePhases.collect { case m: MethodBodyTransform => m.substituted }.flatten.toSet
     val shapes = translated.emitter.emittedShapes
     // Injected type shapes fill the map for dropped+injected types.
     val injectedTypeShapes: Map[String, String] =
-      balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ rowRoots.values.flatten.toList).renderedTypeShapes
+      balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ rowRoots.values.flatten.toList).renderedTypeShapes ++ {
+        val provided = providedSurface.renderedTypeShapes
+        providedReplacements.values.flatMap(at => provided.get(at.replace('$', '.')).map(at -> _)).toMap
+      }
     // Include nested types in the map (schema 3+). Use `allClassDefs` not `cd.body` recursion.
     def emittedFqns(cd: Tree.ClassDef): List[String] =
       StandardTraversal.allClassDefs(cd)(using program).flatMap(c => program.symbolOf(c.symbol).map(_.fullName))
@@ -1087,7 +1096,7 @@ final case class PortRun(
       refusedRemedies.foreach(a => println("  ! " + a.render))
 
     // CHECK 2 — over the FINAL tree.
-    val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs))
+    val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs, providedReplacements.contains))
     if ownSubs.dropTypes.nonEmpty && danglingSubs.isEmpty then say(s"substitutions: ${ownSubs.dropTypes.size} dropped types verified removed from the final code")
 
     // ---- policy: this module's own declared keys only (inherited keys checked by ManifestAgreement) ----
@@ -1287,7 +1296,7 @@ final case class PortRun(
       case Determinism.Off      => ()
       case Determinism.Emission =>
         // Second emitter: same Surface and decisions, but NOT the catalog log (would double counts).
-        val injSurf = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ injectedRowRoots).withAliases(droppedEmittedNames)
+        val injSurf = replacementSurface.withAliases(droppedEmittedNames)
         val extP    = manifest.map(_.externalParenless).getOrElse(Set.empty)
         val again   = new TirEmitter(
           once.program,
@@ -1706,14 +1715,24 @@ final case class PortRun(
   private lazy val droppedEmittedNames: Map[String, String] =
     policySubs.dropTypes.toList.map(fqn => fqn -> emittedName(fqn)).toMap
 
+  /** the surface of `providedSources`: replacements the consumer compiles itself, read and never copied. */
+  private lazy val providedSurface: balticporter.emit.InjectedSurface.Surface =
+    balticporter.emit.InjectedSurface.fromRoots(ownSubs.providedSources)
+
+  /** every replacement this run reads a surface from — injected, per platform row, and provided — parsed once. */
+  private lazy val replacementSurface: balticporter.emit.InjectedSurface.Surface =
+    balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ injectedRowRoots) ++ providedSurface
+
+  /** dropped upstream FQN -> emitted FQN, for each drop whose replacement a `providedSources` root declares (nested types compared at `.`). */
+  private lazy val providedReplacements: Map[String, String] =
+    val declared = providedSurface.typeForms.keySet
+    droppedEmittedNames.filter((_, at) => declared(at.replace('$', '.')))
+
   /** calls into a dropped+injected type follow the injected file's spelling. */
   private lazy val injectedFollowPhase: List[Phase] =
-    val roots = ownSubs.inject ++ injectedRowRoots
+    val roots = ownSubs.inject ++ injectedRowRoots ++ ownSubs.providedSources
     if roots.isEmpty || droppedEmittedNames.isEmpty then Nil
-    else
-      List(
-        new balticporter.transform.InjectedSurfaceFollowTransform(balticporter.emit.InjectedSurface.fromRoots(roots), droppedEmittedNames)
-      )
+    else List(new balticporter.transform.InjectedSurfaceFollowTransform(replacementSurface, droppedEmittedNames))
 
   /** Remedies derived from what this run holds (phases + checks), never listed. */
   private def activeRemedies: RemedyVocabulary =
@@ -1855,7 +1874,7 @@ final case class PortRun(
     // the published-surface view, built before the emitter (funnel's fixpoint must not span the base).
     val surface = new balticporter.core.PublishedSurface(program, mine, basePorts.flatMap(b => b.map.map(b.name -> _)))
     // Emitter reads decisions, catalog, injected surface, and external parenless members.
-    val injSurface   = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ injectedRowRoots).withAliases(droppedEmittedNames)
+    val injSurface   = replacementSurface.withAliases(droppedEmittedNames)
     val extParenless = manifest.map(_.externalParenless).getOrElse(Set.empty)
     val emitter      = new TirEmitter(
       program,

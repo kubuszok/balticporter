@@ -36,9 +36,18 @@ object InjectedSurface:
       */
     aliases: Map[String, String] = Map.empty
   ):
-    def isEmpty:                                  Boolean      = members.isEmpty
-    def withAliases(a:      Map[String, String]): Surface      = copy(aliases = aliases ++ a)
-    private def owners(fqn: String):              List[String] = fqn :: aliases.get(fqn).toList
+    def isEmpty:                             Boolean = members.isEmpty
+    def withAliases(a: Map[String, String]): Surface = copy(aliases = aliases ++ a)
+
+    /** both surfaces, as [[fromRoots]] over both root lists reads them: members concatenated per key, `that` winning a per-type entry. */
+    def ++(that: Surface): Surface =
+      Surface(
+        (members.keySet ++ that.members.keySet).iterator.map(k => k -> (members.getOrElse(k, Nil) ++ that.members.getOrElse(k, Nil))).toMap,
+        typeParams ++ that.typeParams,
+        typeForms ++ that.typeForms,
+        aliases ++ that.aliases
+      )
+    private def owners(fqn: String): List[String] = fqn :: aliases.get(fqn).toList
 
     /** Renders a minimal `form=` payload per injected type for port-map type-shape rows. */
     def renderedTypeShapes: Map[String, String] =

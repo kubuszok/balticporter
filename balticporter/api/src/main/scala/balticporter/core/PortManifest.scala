@@ -53,6 +53,11 @@ final case class PortManifest(
     * inherited (a build artefact, like `inject`).
     */
   platformDirs: Map[String, List[Path]] = Map.empty,
+  /** Scala the consumer's own build compiles from its own sources — typically where the replacement of a dropped type lives. Read like [[inject]] (the replacement's members, factories and property
+    * spellings, and "something stands at this name") but never copied into `src_managed`, since a second copy would drift from the one that compiles. Not inherited (a build fact, like `inject`);
+    * empty is the no-op.
+    */
+  providedSources: List[Path] = Nil,
   /** Upstream `META-INF/services/<interface FQN>` files this module ships — the SPI half of the deliverable no phase can carry. Missing it means `ServiceLoader.load` finds zero providers, silently,
     * with no compile error or check count. A declaration, not a scan: which resources are descriptors is per-library knowledge. Not inherited — a build artefact, exactly one module ships each; the
     * drops that affect it are inherited.
@@ -208,7 +213,7 @@ final case class PortManifest(
     * be read off the same instance the frontend was given.
     */
   lazy val substitutions: Substitutions =
-    Substitutions(effectiveDropTypes, effectiveDropMethods, inject)
+    Substitutions(effectiveDropTypes, effectiveDropMethods, inject, providedSources)
 
   /** What this module's own drops did — never an inherited key, since a finding names a key to fix and an inherited one lives in the base's manifest. The inherited half is checked separately and more
     * precisely, as [[ManifestAgreement.Kind.InheritedKeyNeverFired]].
@@ -237,7 +242,7 @@ final case class PortManifest(
     */
   def ownDrops: Substitutions =
     val baseKeys = baseChain.flatMap(b => b.dropTypes ++ b.dropMethods).toSet
-    Substitutions(dropTypes -- baseKeys, dropMethods -- baseKeys, inject)
+    Substitutions(dropTypes -- baseKeys, dropMethods -- baseKeys, inject, providedSources)
 
   /** the same manifest with every phase in the chain removed — for a structural-only re-emit. */
   def withoutSurface: PortManifest =
@@ -278,10 +283,11 @@ final case class PortManifest(
 
   /** the EMITTED FQNs this module's own [[inject]] roots supply — one derivation, in [[Substitutions.injectedSources]], which the run's copy loop and `PortMap` read too.
     *
-    * `lazy`, because it walks the filesystem and the fold asks it once per screened subject. Own injections only, exactly as [[inject]] is declared per module.
+    * `lazy`, because it walks the filesystem and the fold asks it once per screened subject. Own injections only, exactly as [[inject]] is declared per module. [[providedSources]] count too: a
+    * declaration the consumer compiles stands at its name as surely as a copied one.
     */
   lazy val injectedFqns: Set[String] =
-    Substitutions.injectedSources(inject ++ platformDirs.values.flatten.toList).map(_._1).toSet
+    Substitutions.injectedSources(inject ++ platformDirs.values.flatten.toList ++ providedSources).map(_._1).toSet
 
   /** does this module — or anything in its policy chain — ship ready-made Scala at `fqn`? `fqn` is upstream; asked through [[renamed]] since an injection root is in the port's own namespace and
     * comparing them directly would silently miss. Chain included: exactly one module in the base layer ships each replacement.

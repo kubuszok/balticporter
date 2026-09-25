@@ -146,6 +146,93 @@ class PortRunSpec extends munit.FunSuite:
     assert(clue(e.getMessage).contains("fatal finding"))
   }
 
+  // providedSources: a replacement the consumer compiles from its own tree, read and never copied
+
+  /** a dropped `Blob` whose callers use a getter and a nested constructor, and a Scala replacement spelling them as a property and a companion `apply`. */
+  private def providedFixture(): (Path, Path, String) =
+    val (root, src) = fixture()
+    java(
+      src,
+      "com/demo/Blob.java",
+      """package com.demo;
+        |public class Blob {
+        |  public int getWidth() { return 1; }
+        |  public static class Data { public Data(String file) { } }
+        |}""".stripMargin
+    )
+    java(
+      src,
+      "com/demo/User.java",
+      """package com.demo;
+        |public class User {
+        |  public int w(Blob b) { return b.getWidth(); }
+        |  public Blob.Data d() { return new Blob.Data("f"); }
+        |}""".stripMargin
+    )
+    val replacement =
+      """package com.demo
+        |class Blob { def width: Int = 1 }
+        |object Blob {
+        |  class Data private (val n: Int)
+        |  object Data { def apply(file: String): Data = new Data(file.length) }
+        |}""".stripMargin
+    (root, src, replacement)
+
+  private val providedFiles = List("com/demo/Blob.java", "com/demo/User.java")
+
+  test("a PROVIDED replacement is followed exactly as an injected one, and nothing of it is copied") {
+    val (root, src, replacement) = providedFixture()
+    val inject                   = root.resolve("overrides")
+    val hand                     = root.resolve("hand/src")
+    java(inject, "com/demo/Blob.scala", replacement)
+    java(hand, "com/demo/Blob.scala", replacement)
+    java(hand, "com/demo/Unrelated.scala", "package com.demo\nclass Unrelated")
+    val injRep       = root.resolve("report-inject")
+    val injected     = withReport(injRep)(run(root, src, providedFiles)(_.copy(subs = Substitutions(dropTypes = Set("com.demo.Blob"), inject = List(inject)))))
+    val injectedUser = Files.readString(injected.outDir.resolve("com/demo/User.scala"))
+    val provRep      = root.resolve("report-provided")
+    val provided     = withReport(provRep)(run(root, src, providedFiles)(_.copy(subs = Substitutions(dropTypes = Set("com.demo.Blob"), providedSources = List(hand)))))
+    val providedUser = Files.readString(provided.outDir.resolve("com/demo/User.scala"))
+    // the companion factory and the property spelling, read off the provided surface
+    assert(clue(providedUser).contains("com.demo.Blob.Data("), "the nested construction goes to the companion `apply`")
+    assert(!providedUser.contains("new com.demo.Blob.Data"), providedUser)
+    assert(providedUser.contains(".width") && !providedUser.contains("getWidth"), providedUser)
+    assertEquals(providedUser, injectedUser)
+    // nothing copied: not the replacement, not the consumer's other sources
+    assertEquals(provided.injected, 0)
+    assertEquals(emitted(provided.outDir), List("com/demo/User.scala"))
+    // published as the same Substituted type an injected replacement is, and nothing else Added
+    def blob(rep: Path) =
+      PortMap.read(rep.resolve("run-latest/port-map.tsv")).toOption.get.entries.filter(e => e.kind == "type" && (e.upstream == "com.demo.Blob" || e.disposition == PortMap.Disposition.Added))
+    assertEquals(blob(provRep).map(e => (e.upstream, e.disposition)), List("com.demo.Blob" -> PortMap.Disposition.Substituted))
+    assertEquals(blob(provRep), blob(injRep))
+  }
+
+  test("a dropped type NO provided root declares is still a FATAL dangling substitution") {
+    val (root, src, _) = providedFixture()
+    val hand           = root.resolve("hand/src")
+    java(hand, "com/demo/Unrelated.scala", "package com.demo\nclass Unrelated")
+    val e = intercept[RuntimeException] {
+      run(root, src, providedFiles)(_.copy(subs = Substitutions(dropTypes = Set("com.demo.Blob"), providedSources = List(hand))))
+    }
+    assert(clue(e.getMessage).contains("fatal finding"))
+  }
+
+  test("an EMPTY providedSources changes nothing: same emitted bytes, same published map") {
+    val (root, src, replacement) = providedFixture()
+    val inject                   = root.resolve("overrides")
+    java(inject, "com/demo/Blob.scala", replacement)
+    def outputs(rep: Path, provided: List[Path]): (Map[String, String], String) =
+      val r = withReport(rep)(
+        run(root, src, providedFiles)(_.copy(subs = Substitutions(dropTypes = Set("com.demo.Blob"), inject = List(inject), providedSources = provided)))
+      )
+      (emitted(r.outDir).map(f => f -> Files.readString(r.outDir.resolve(f))).toMap, Files.readString(rep.resolve("run-latest/port-map.tsv")))
+    val before = outputs(root.resolve("report-a"), Nil)
+    assertEquals(outputs(root.resolve("report-b"), Nil), before)
+    // a declared root that does not exist reads as nothing, like an absent `inject` root
+    assertEquals(outputs(root.resolve("report-c"), List(root.resolve("absent"))), before)
+  }
+
   test("PackageRenameTransform may not be passed as a phase — PortRun owns its ordering") {
     val (root, src) = fixture()
     val e           = intercept[IllegalArgumentException] {
