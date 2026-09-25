@@ -37,12 +37,12 @@ class OpaqueOwnClassSpec extends munit.FunSuite:
   private def spec(target: OpaqueSpec.Target = OpaqueSpec.Target.OwnClass(), hints: Set[String] = Set("demo.Label#align")) =
     OpaqueSpec(fqn = "demo.Align", hints = hints, target = target)
 
-  private final case class Run(out: String, findings: List[OpaqueBoundaryCheck.Finding], decisions: List[Decision])
+  final private case class Run(out: String, findings: List[OpaqueBoundaryCheck.Finding], decisions: List[Decision])
 
   private def run(src: String, s: OpaqueSpec = spec(), extra: List[balticporter.tir.Phase] = Nil): Run =
-    val ph         = new PrimitiveToOpaqueTransform(s)
-    val (p, log)   = Pipeline.runTraced(SpoonTir.fromSource(src), ph :: extra)
-    val out        = new TirEmitter(p).emit
+    val ph       = new PrimitiveToOpaqueTransform(s)
+    val (p, log) = Pipeline.runTraced(SpoonTir.fromSource(src), ph :: extra)
+    val out      = new TirEmitter(p).emit
     Run(out, ph.boundary(p.units), log.all)
 
   private lazy val base = run(align + label)
@@ -55,10 +55,14 @@ class OpaqueOwnClassSpec extends munit.FunSuite:
     // the two coercions the conversion mints, inline so a coercion does not initialise the object
     assert(out.contains("inline def apply(v: scala.Int): demo.Align = v"))
     assert(out.contains("extension (v: demo.Align) inline def unwrap: scala.Int = v"))
-    assert(base.decisions.exists(d => d.kind == Decision.Kind.RetypedSignature && d.subjectFqn == "demo.Align" && d.detail("to").startsWith("opaque type")))
+    assert(
+      base.decisions.exists(d => d.kind == Decision.Kind.RetypedSignature && d.subjectFqn == "demo.Align" && d.detail("to").startsWith("opaque type"))
+    )
   }
 
-  test("constants: typed at the opaque type; a literal one is an `inline def`, reading no initialiser; a computed one stays the `final val` it was") {
+  test(
+    "constants: typed at the opaque type; a literal one is an `inline def`, reading no initialiser; a computed one stays the `final val` it was"
+  ) {
     val out = base.out
     assert(clue(out).contains("inline def center: demo.Align = 1"))
     assert(out.contains("final val top: demo.Align = Align(1 << 1)"))
@@ -69,7 +73,9 @@ class OpaqueOwnClassSpec extends munit.FunSuite:
     assert(out.contains("def of(l: scala.Boolean): scala.Int"))
   }
 
-  test("statics taking the primitive first become extensions, and their calls read `a.m(…)` outside the object and `N.m(a)(…)` inside it") {
+  test(
+    "statics taking the primitive first become extensions, and their calls read `a.m(…)` outside the object and `N.m(a)(…)` inside it"
+  ) {
     val out = base.out
     assert(clue(out).contains("extension (align: demo.Align) def isLeft: scala.Boolean"))
     assert(out.contains("extension (align: demo.Align) def has(other: scala.Int): scala.Boolean"))
@@ -81,7 +87,9 @@ class OpaqueOwnClassSpec extends munit.FunSuite:
     assert(clue(redirected) == Set("demo.Label#isLeftTop", "demo.Align#toString"))
   }
 
-  test("a static named like a member every value has stays a plain member of the object, counted — an extension `toString` is never selected") {
+  test(
+    "a static named like a member every value has stays a plain member of the object, counted — an extension `toString` is never selected"
+  ) {
     val out = base.out
     assert(clue(out).contains("def toString(align: demo.Align): java.lang.String"))
     assert(!out.contains("def toString: "))
@@ -96,8 +104,13 @@ class OpaqueOwnClassSpec extends munit.FunSuite:
     assert(r.findings.exists(f => f.issue == OpaqueBoundaryCheck.Issue.ExtensionDeclined && f.subject == "demo.Align#isLeft"))
   }
 
-  test("a literal constant a case label names is a `final val` (a pattern needs a stable value), counted as the initialiser it now triggers") {
-    val r = run(align + "class Sw { int pick(int a) { switch (a) { case Align.center: return 1; default: return 0; } } }\n", spec(hints = Set.empty))
+  test(
+    "a literal constant a case label names is a `final val` (a pattern needs a stable value), counted as the initialiser it now triggers"
+  ) {
+    val r = run(
+      align + "class Sw { int pick(int a) { switch (a) { case Align.center: return 1; default: return 0; } } }\n",
+      spec(hints = Set.empty)
+    )
     assert(clue(r.out).contains("final val center: demo.Align = Align(1)"))
     assert(r.out.contains("case demo.Align.center =>"))
     assert(r.findings.exists(f => f.issue == OpaqueBoundaryCheck.Issue.ConstantInitialises && f.subject == "demo.Align#center"))
@@ -156,7 +169,9 @@ class OpaqueOwnClassSpec extends munit.FunSuite:
     assert(clue(own.surfaceFingerprint).contains(";target=own-class;wrap=apply;unwrap=unwrap"))
     assert(!mint.surfaceFingerprint.contains("target="))
     assert(own.subjects.contains("demo.Align"))
-    assert(own.surfaceFingerprint != new PrimitiveToOpaqueTransform(spec(target = OpaqueSpec.Target.OwnClass(unwrapName = "toInt"))).surfaceFingerprint)
+    assert(
+      own.surfaceFingerprint != new PrimitiveToOpaqueTransform(spec(target = OpaqueSpec.Target.OwnClass(unwrapName = "toInt"))).surfaceFingerprint
+    )
   }
 
   test("no-op: without the own-class target the constants class is emitted exactly as before") {

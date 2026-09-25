@@ -43,17 +43,20 @@ class OpaqueOwnClassEndToEndSpec extends munit.FunSuite:
       |""".stripMargin
 
   private lazy val compiled: Path =
-    val ph  = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "demo.Align", hints = Set("demo.Use#align"), target = OpaqueSpec.Target.OwnClass()))
-    val p   = Pipeline.run(SpoonTir.fromSource(src), List(ph))
-    val em  = new TirEmitter(p)
-    val dir = Files.createTempDirectory("own-class-e2e-src")
+    val ph    = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "demo.Align", hints = Set("demo.Use#align"), target = OpaqueSpec.Target.OwnClass()))
+    val p     = Pipeline.run(SpoonTir.fromSource(src), List(ph))
+    val em    = new TirEmitter(p)
+    val dir   = Files.createTempDirectory("own-class-e2e-src")
     val files = p.units.zipWithIndex.map { (u, n) =>
       val f = dir.resolve(s"U$n.scala"); Files.writeString(f, em.emitUnit(u)); f.toString
     }
     val out      = Files.createTempDirectory("own-class-e2e-out")
     val stdlib   = List(classOf[scala.Option[?]], classOf[scala.deriving.Mirror]).map(c => Path.of(c.getProtectionDomain.getCodeSource.getLocation.toURI).toString).distinct
     val reporter = dotty.tools.dotc.Main.process(("-classpath" :: stdlib.mkString(java.io.File.pathSeparator) :: "-d" :: out.toString :: files).toArray)
-    assert(!reporter.hasErrors, s"the emission does not compile:\n${reporter.allErrors.map(_.msg.message).mkString("\n")}\n${files.map(f => Files.readString(Path.of(f))).mkString("\n")}")
+    assert(
+      !reporter.hasErrors,
+      s"the emission does not compile:\n${reporter.allErrors.map(_.msg.message).mkString("\n")}\n${files.map(f => Files.readString(Path.of(f))).mkString("\n")}"
+    )
     out
 
   test("the emitted opaque type, its object and its caller compile, and run with java's answers") {

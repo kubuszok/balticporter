@@ -10,7 +10,25 @@ object OpaqueOwnClass:
   /** members every value has, so an extension of that name is never selected (`a.toString` calls the primitive's own); measured on scalac: the call compiles and answers the primitive's `toString`.
     */
   val UniversalNames: Set[String] =
-    Set("toString", "hashCode", "equals", "getClass", "isInstanceOf", "asInstanceOf", "==", "!=", "##", "eq", "ne", "synchronized", "wait", "notify", "notifyAll", "clone", "finalize")
+    Set(
+      "toString",
+      "hashCode",
+      "equals",
+      "getClass",
+      "isInstanceOf",
+      "asInstanceOf",
+      "==",
+      "!=",
+      "##",
+      "eq",
+      "ne",
+      "synchronized",
+      "wait",
+      "notify",
+      "notifyAll",
+      "clone",
+      "finalize"
+    )
 
   /** one site that stops the conversion; `guard` is the refusal's name in the lane. */
   final case class Refusal(guard: String, subject: String, detail: String, origin: Origin, unit: SymId)
@@ -36,17 +54,17 @@ object OpaqueOwnClass:
   def plan(p: Program, cls: Tree.ClassDef, target: OpaqueSpec.Target.OwnClass, isPrim: TypeRepr => Boolean, sameModule: SymId => Boolean): Outcome =
     given Program = p
     val s         = p.symbolOf(cls.symbol).get
-    def fqn(id: SymId): String = p.symbolOf(id).map(_.fullName).getOrElse(id.toString)
-    def unitOf(id: SymId, fuel: Int = 64): SymId =
+    def fqn(id: SymId):                    String = p.symbolOf(id).map(_.fullName).getOrElse(id.toString)
+    def unitOf(id: SymId, fuel: Int = 64): SymId  =
       p.symbolOf(id) match
         case Some(x) if x.owner != SymId.None && fuel > 0 => unitOf(x.owner, fuel - 1)
         case _                                            => id
     def refuse(guard: String, subject: SymId, why: String, origin: Origin): Refusal =
       Refusal(guard, fqn(subject), why, origin, unitOf(subject))
-    def isCtor(d: Tree.DefDef) = p.symbolOf(d.symbol).exists(_.name == "<init>")
-    def static(id: SymId)      = p.symbolOf(id).exists(_.flags.isStatic)
-    val refusals               = List.newBuilder[Refusal]
-    val foreign                = List.newBuilder[Refusal]
+    def isCtor(d:  Tree.DefDef) = p.symbolOf(d.symbol).exists(_.name == "<init>")
+    def static(id: SymId)       = p.symbolOf(id).exists(_.flags.isStatic)
+    val refusals                = List.newBuilder[Refusal]
+    val foreign                 = List.newBuilder[Refusal]
 
     // the SHAPE: a plain, non-generic class whose only parent is `Object`
     val f            = s.flags
@@ -68,20 +86,20 @@ object OpaqueOwnClass:
       case d: Tree.DefDef if !isCtor(d) && !static(d.symbol) => refusals += refuse("instance-member", d.symbol, "an instance method has no home in an opaque type's companion", d.origin)
       case v: Tree.ValDef if !static(v.symbol)               => refusals += refuse("instance-member", v.symbol, "an instance field has no home in an opaque type's companion", v.origin)
       case c: Tree.ClassDef if !static(c.symbol)             => refusals += refuse("instance-member", c.symbol, "an inner class needs an enclosing instance", c.origin)
-      case _                                                 => ()
+      case _ => ()
     }
 
     // every use of the class that is not a static-member qualifier; a method reference's `Align::m`
     // records its qualifier as a type position, matched by node identity off the member's own usages
-    val refQualifiers = cls.body.collect { case d: Definition => d.symbol }.flatMap(p.usages).collect { case Usage(_, Tree.MethodRef(Left(q), _, _, _, _), _) => q }
+    val refQualifiers         = cls.body.collect { case d: Definition => d.symbol }.flatMap(p.usages).collect { case Usage(_, Tree.MethodRef(Left(q), _, _, _, _), _) => q }
     def qualifier(site: Tree) = refQualifiers.exists(_ eq site)
     p.usages(cls.symbol).foreach { u =>
       val guard = u.kind match
-        case _ if qualifier(u.site)                                => None
-        case UsageKind.TermRef | UsageKind.Call                    => None
-        case UsageKind.Instantiate                                 => Some("constructed" -> "the class is instantiated, and an opaque type has no constructor")
+        case _ if qualifier(u.site)                                   => None
+        case UsageKind.TermRef | UsageKind.Call                       => None
+        case UsageKind.Instantiate                                    => Some("constructed" -> "the class is instantiated, and an opaque type has no constructor")
         case UsageKind.Extends | UsageKind.Mixin | UsageKind.SelfType => Some("subclassed" -> "the class is extended, and an opaque type cannot be")
-        case _                                                     => Some("used-as-type" -> "the class is named as a type, which would silently mean the primitive")
+        case _                                                        => Some("used-as-type" -> "the class is named as a type, which would silently mean the primitive")
       guard.foreach { (g, why) =>
         val r = refuse(g, u.enclosing, why, u.site.origin)
         if sameModule(unitOf(u.enclosing)) then refusals += r else foreign += r
@@ -100,7 +118,7 @@ object OpaqueOwnClass:
         StandardTraversal.scanClassDef(u, List.empty[(SymId, Origin)]) { (acc, t) =>
           t match
             case m: Tree.Match => acc ++ m.cases.flatMap(_.labels).flatMap(l => refOf(l).map(_ -> l.origin))
-            case _             => acc
+            case _ => acc
         }
       }
       val literal                    = constants.filter(_.rhs.exists(r => Tree.uncomment(r).isInstanceOf[Tree.Literal]))
@@ -110,7 +128,7 @@ object OpaqueOwnClass:
         StandardTraversal.scanClassDef(u, List.empty[SymId]) { (acc, t) =>
           t match
             case r: Tree.MethodRef => r.method :: acc
-            case _                 => acc
+            case _ => acc
         }
       }.toSet
       val primFirst = cls.body.collect {
