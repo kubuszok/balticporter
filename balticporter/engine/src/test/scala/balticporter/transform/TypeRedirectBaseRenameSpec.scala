@@ -41,7 +41,9 @@ class TypeRedirectBaseRenameSpec extends munit.FunSuite:
   private val baseMap = PortMap.Map0(
     "base",
     engine = "test",
-    entries = List(PortMap.Entry("member", "com.base.Bits#isEmpty()", "com.base.Bits#empty", PortMap.Disposition.Renamed, shape = "form=parenless"))
+    entries = List(
+      PortMap.Entry("member", "com.base.Bits#isEmpty()", "com.base.Bits#empty", PortMap.Disposition.Renamed, shape = "form=parenless")
+    )
   )
 
   private def redirect(scope: RuleScope) = new TypeRedirectTransform(

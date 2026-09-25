@@ -7,8 +7,8 @@ import balticporter.runner.{ CallSiteSubstitutionFactory, HoconView }
 import balticporter.tir.{ Pipeline, RuleScope }
 import balticporter.transform.CallSiteSubstitutionTransform.Entry
 
-/** [[CallSiteSubstitutionTransform]]'s per-entry SCOPE: an entry rewrites only the calls whose enclosing declaration its scope admits, several entries may share one callee, and the most specific scope
-  * wins at each call — so a dependent can rewrite its own calls of a base member without editing the base's surface, and a port can give one callee different replacements in different places.
+/** [[CallSiteSubstitutionTransform]]'s per-entry SCOPE: an entry rewrites only the calls whose enclosing declaration its scope admits, several entries may share one callee, and the most specific
+  * scope wins at each call — so a dependent can rewrite its own calls of a base member without editing the base's surface, and a port can give one callee different replacements in different places.
   */
 class CallSiteSubstitutionScopeSpec extends munit.FunSuite:
 
@@ -88,7 +88,10 @@ class CallSiteSubstitutionScopeSpec extends munit.FunSuite:
 
   test("a default with ONE member-scoped override of the same callee — the override only where it names") {
     val phase = new CallSiteSubstitutionTransform(
-      List(Entry(ctor, "demo.Errors.invalid({arg0})"), Entry(ctor, "demo.Errors.serial({arg0})", RuleScope.Only(Set("dep.Loader#load"))))
+      List(
+        Entry(ctor, "demo.Errors.invalid({arg0})"),
+        Entry(ctor, "demo.Errors.serial({arg0})", RuleScope.Only(Set("dep.Loader#load")))
+      )
     )
     val out = emit(phase)
     assert(clue(out).contains("""demo.Errors.serial("load")"""))
@@ -98,7 +101,10 @@ class CallSiteSubstitutionScopeSpec extends munit.FunSuite:
 
   test("two EQUALLY specific entries with different templates are REFUSED — at bind time and at every call they meet") {
     val phase = new CallSiteSubstitutionTransform(
-      List(Entry(ctor, "demo.Errors.a({arg0})", RuleScope.Only(Set("dep"))), Entry(ctor, "demo.Errors.b({arg0})", RuleScope.Only(Set("dep"))))
+      List(
+        Entry(ctor, "demo.Errors.a({arg0})", RuleScope.Only(Set("dep"))),
+        Entry(ctor, "demo.Errors.b({arg0})", RuleScope.Only(Set("dep")))
+      )
     )
     val out = emit(phase)
     assert(!out.contains("demo.Errors.a(") && !out.contains("demo.Errors.b("), out)
@@ -132,7 +138,7 @@ class CallSiteSubstitutionScopeSpec extends munit.FunSuite:
     val out   = emit(phase)
     assertEquals(phase.policyReport.findings, Nil)
     assert(clue(out).contains("{ val bpThis = "))
-    val at    = out.indexOf("val bpThis = ")
+    val at = out.indexOf("val bpThis = ")
     assert(at >= 0, out)
     val line = out.substring(at, out.indexOf('\n', at))
     assert(clue(line).indexOf("mk()") < line.indexOf("other()"))
@@ -167,20 +173,25 @@ class CallSiteSubstitutionScopeSpec extends munit.FunSuite:
   }
 
   test("MERGE: a dependent's scoped entry joins the base's default for one callee; an equal-scope rival refuses") {
-    val base = new CallSiteSubstitutionTransform(Map(ctor -> "demo.Errors.invalid({arg0})"))
-    val dep  = new CallSiteSubstitutionTransform(List(Entry(ctor, "demo.Errors.serial({arg0})", RuleScope.Only(Set("dep.Loader#load")))))
+    val base   = new CallSiteSubstitutionTransform(Map(ctor -> "demo.Errors.invalid({arg0})"))
+    val dep    = new CallSiteSubstitutionTransform(List(Entry(ctor, "demo.Errors.serial({arg0})", RuleScope.Only(Set("dep.Loader#load")))))
     val merged = base.mergedWith(dep)
     assert(clue(merged).isRight)
     assertEquals(merged.toOption.get.phase.asInstanceOf[CallSiteSubstitutionTransform].entries.size, 2)
     assertEquals(merged.toOption.get.added, Set("demo.Err"))
     // restating the base's own entry is agreement, not a contribution
-    assertEquals(base.mergedWith(new CallSiteSubstitutionTransform(Map(ctor -> "demo.Errors.invalid({arg0})"))).toOption.get.added, Set.empty[String])
+    assertEquals(
+      base.mergedWith(new CallSiteSubstitutionTransform(Map(ctor -> "demo.Errors.invalid({arg0})"))).toOption.get.added,
+      Set.empty[String]
+    )
     // a second unscoped template for the same callee competes with the base's default
     assert(clue(base.mergedWith(new CallSiteSubstitutionTransform(Map(ctor -> "demo.Errors.other({arg0})")))).isLeft)
   }
 
   test("`subjectScope` is the union of a subject's `Only` entries, and unrestricted when any entry is") {
-    val scoped = new CallSiteSubstitutionTransform(List(Entry(length, "a", RuleScope.Only(Set("dep"))), Entry("demo.Bits#containsAll(Bits)", "b", RuleScope.Only(Set("dep2")))))
+    val scoped = new CallSiteSubstitutionTransform(
+      List(Entry(length, "a", RuleScope.Only(Set("dep"))), Entry("demo.Bits#containsAll(Bits)", "b", RuleScope.Only(Set("dep2"))))
+    )
     assertEquals(scoped.subjectScope("demo.Bits"), RuleScope.Only(Set("dep", "dep2")))
     val mixed = new CallSiteSubstitutionTransform(List(Entry(length, "a", RuleScope.Only(Set("dep"))), Entry(length, "b")))
     assertEquals(mixed.subjectScope("demo.Bits"), RuleScope.everywhere)
@@ -192,7 +203,10 @@ class CallSiteSubstitutionScopeSpec extends munit.FunSuite:
   test("INTRUSION screen: an unscoped entry on a base type fires; one scoped outside the base's claim passes") {
     val unscoped = dependentOf(new CallSiteSubstitutionTransform(Map(length -> "{recv}.size")))
     assertEquals(unscoped.surfaceFold.intrusions.map(_.subject), List("demo.Bits"))
-    assertEquals(ManifestAgreement.check(Some(unscoped), Nil, foreignRoots = true).map(_.kind), List(ManifestAgreement.Kind.SurfaceIntrusion))
+    assertEquals(
+      ManifestAgreement.check(Some(unscoped), Nil, foreignRoots = true).map(_.kind),
+      List(ManifestAgreement.Kind.SurfaceIntrusion)
+    )
 
     val outside = dependentOf(new CallSiteSubstitutionTransform(List(Entry(length, "{recv}.size", RuleScope.Only(Set("dep"))))))
     assertEquals(outside.surfaceFold.intrusions, Nil)
@@ -212,7 +226,10 @@ class CallSiteSubstitutionScopeSpec extends munit.FunSuite:
     val phase = new CallSiteSubstitutionFactory().fromConfig(HoconView.root(conf)).asInstanceOf[CallSiteSubstitutionTransform]
     assertEquals(
       phase.entries.toSet,
-      Set(Entry(ctor, "demo.Errors.invalid({arg0})"), Entry(ctor, "demo.Errors.serial({arg0})", RuleScope.Only(Set("dep.Loader#load"))))
+      Set(
+        Entry(ctor, "demo.Errors.invalid({arg0})"),
+        Entry(ctor, "demo.Errors.serial({arg0})", RuleScope.Only(Set("dep.Loader#load")))
+      )
     )
     assertEquals(phase.calls, Map(ctor -> "demo.Errors.invalid({arg0})"))
   }
