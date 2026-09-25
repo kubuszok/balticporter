@@ -31,7 +31,7 @@ object ReferenceDeclarations:
   /** The declarations of one source, or the parser's message when it does not parse. */
   def read(fileName: String, source: String): Either[String, List[Declaration]] =
     dialects.Scala3(Input.VirtualFile(fileName, source)).parse[Source] match
-      case e: Parsed.Error      => Left(s"$fileName: ${e.message}")
+      case e: Parsed.Error => Left(s"$fileName: ${e.message}")
       case Parsed.Success(tree) =>
         val out = List.newBuilder[Declaration]
 
@@ -39,7 +39,7 @@ object ReferenceDeclarations:
           mods.exists {
             case p: Mod.Private   => p.within.syntax.isEmpty || p.within.is[Term.This]
             case p: Mod.Protected => p.within.syntax.isEmpty || p.within.is[Term.This]
-            case _                => false
+            case _ => false
           }
 
         def child(owner: String, name: String): String = if owner.isEmpty then name else s"$owner.$name"
@@ -58,18 +58,18 @@ object ReferenceDeclarations:
         def template(t: Template, owner: String, isObj: Boolean): Unit = t.body.stats.foreach(member(_, owner, isObj))
 
         def member(t: Tree, owner: String, isObj: Boolean): Unit = t match
-          case p: Pkg                 => p.stats.foreach(member(_, "", true))
-          case p: Pkg.Object          => template(p.templ, "", true)
-          case d: Defn.Object         =>
+          case p: Pkg         => p.stats.foreach(member(_, "", true))
+          case p: Pkg.Object  => template(p.templ, "", true)
+          case d: Defn.Object =>
             add(owner, isObj, d.name, Kind.Object, d.mods)
             template(d.templ, child(owner, d.name.value), isObj)
-          case d: Defn.Class          =>
+          case d: Defn.Class =>
             add(owner, isObj, d.name, Kind.Class, d.mods)
             template(d.templ, child(owner, d.name.value), false)
-          case d: Defn.Trait          =>
+          case d: Defn.Trait =>
             add(owner, isObj, d.name, Kind.Trait, d.mods)
             template(d.templ, child(owner, d.name.value), false)
-          case d: Defn.Enum           =>
+          case d: Defn.Enum =>
             add(owner, isObj, d.name, Kind.Enum, d.mods)
             template(d.templ, child(owner, d.name.value), false)
           case d: Defn.Given          => template(d.templ, child(owner, d.name.value), false)
