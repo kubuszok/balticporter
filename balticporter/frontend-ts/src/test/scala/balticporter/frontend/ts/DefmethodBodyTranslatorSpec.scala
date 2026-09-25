@@ -1016,3 +1016,46 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       !result.refusalReasons.exists(_.startsWith("argument-type-mismatch:")),
       s"matching type should not refuse: ${result.refusalReasons}"
     )
+
+  // ---- unresolved-reference refusal ----
+
+  test("property access on known skeleton object whose member is absent refuses with unresolved-reference"):
+    // Obj has 'reset' but not 'frequency' -- accessing Obj.frequency must refuse
+    val ci     = ReferenceSignatures.CalleeIndex(Map("reset" -> List("Obj")))
+    val body   = block(ret(propAccess(ident("Obj"), "frequency")))
+    val result = translate(body, calleeIndex = ci)
+    assert(
+      result.refusalReasons.contains("unresolved-reference"),
+      s"should refuse unresolved member: ${result.refusalReasons}"
+    )
+
+  test("property access on known skeleton object whose member is present does not refuse"):
+    val ci     = ReferenceSignatures.CalleeIndex(Map("reset" -> List("Obj"), "frequency" -> List("Obj")))
+    val body   = block(ret(propAccess(ident("Obj"), "frequency")))
+    val result = translate(body, calleeIndex = ci)
+    assert(
+      !result.refusalReasons.contains("unresolved-reference"),
+      s"member is present, should not refuse: ${result.refusalReasons}"
+    )
+
+  test("unqualified reference to a parameter translates without unresolved-reference"):
+    val entry  = DefmethodEntry("_free_", "test", List("data"), block(ret(ident("data"))))
+    val ci     = ReferenceSignatures.CalleeIndex(Map("reset" -> List("Obj")))
+    val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ", calleeIndex = ci)
+    assert(
+      !result.refusalReasons.contains("unresolved-reference"),
+      s"parameter should not refuse: ${result.refusalReasons}"
+    )
+
+  test("property access on unknown receiver still refuses with receiver-type-unknown"):
+    val ci     = ReferenceSignatures.CalleeIndex(Map("reset" -> List("Obj")))
+    val body   = block(ret(propAccess(ident("Unknown"), "field")))
+    val result = translate(body, calleeIndex = ci)
+    assert(
+      result.refusalReasons.contains("receiver-type-unknown"),
+      s"unknown receiver should refuse receiver-type-unknown: ${result.refusalReasons}"
+    )
+    assert(
+      !result.refusalReasons.contains("unresolved-reference"),
+      s"unknown receiver should not refuse unresolved-reference: ${result.refusalReasons}"
+    )

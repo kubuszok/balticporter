@@ -63,6 +63,14 @@ object ReferenceSignatures:
         case Some(enclosing :: Nil) => Right(s"$enclosing.$simpleName")
         case Some(multiple)         => Left("callee-ambiguous")
 
+    /** All object names that appear as enclosing containers in this index. */
+    lazy val knownObjects: Set[String] =
+      byName.values.flatten.toSet
+
+    /** The member names known to belong to `objectName`. */
+    def membersOf(objectName: String): Set[String] =
+      byName.collect { case (name, objects) if objects.contains(objectName) => name }.toSet
+
   object CalleeIndex:
     val empty: CalleeIndex = CalleeIndex(Map.empty)
 

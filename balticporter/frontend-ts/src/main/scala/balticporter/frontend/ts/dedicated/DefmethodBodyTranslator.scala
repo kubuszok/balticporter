@@ -78,6 +78,7 @@ object DefmethodBodyTranslator:
   ): TranslationResult =
     val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle)
     ctx.translateBlock(entry.bodyNode)
+    ctx.checkUnresolvedReferences()
     TranslationResult(
       scalaBody = ctx.result(),
       isComplete = ctx.refusals.isEmpty,
@@ -303,6 +304,9 @@ object DefmethodBodyTranslator:
     private val localTypes = mutable.Map.empty[String, String]
     // All locally declared variable names (even when the type is unknown)
     private val localNames = mutable.Set.empty[String]
+    // Qualified references emitted via the callee index: (objectName, memberName) pairs
+    // that must be validated after translation completes.
+    private val emittedQualifiedRefs = mutable.Set.empty[(String, String)]
     // Identifiers currently in a guarded scope where they have been tested
     // for truthiness and should be unwrapped (Nullable -> .get)
     private val unwrappedIds = mutable.Set.empty[String]
@@ -468,6 +472,19 @@ object DefmethodBodyTranslator:
         case None     => translateExpr(node)
 
     def result(): String = sb.toString
+
+    /** Check every qualified reference emitted through the callee index or
+      * recorded from a property access on a known skeleton object. A reference
+      * `X.m` where `X` is a known object but `m` is not a declared member
+      * produces an `unresolved-reference` refusal. Unknown receiver types are
+      * left alone -- the translator does not guess. */
+    def checkUnresolvedReferences(): Unit =
+      for (obj, member) <- emittedQualifiedRefs do
+        val inCalleeIndex = calleeIndex.byName.get(member).exists(_.contains(obj))
+        val inMemberIndex = memberIndex.hasMember(obj, member)
+        val inOracle      = oracle.get(obj, member).isDefined
+        if !inCalleeIndex && !inMemberIndex && !inOracle then
+          refuse("unresolved-reference")
 
     def translateBlock(block: RastNode): Unit =
       // Pre-check: if the body uses `this` and the member index has data but
@@ -1041,8 +1058,11 @@ object DefmethodBodyTranslator:
              !n.startsWith("AST_") && scName == snakeToCamel(n) &&
              n.head.isLower then
             calleeIndex.resolve(scName) match
-              case Right(qualified) => qualified
-              case Left(_)         => scName
+              case Right(qualified) =>
+                val dotIdx = qualified.indexOf('.')
+                if dotIdx >= 0 then emittedQualifiedRefs += ((qualified.substring(0, dotIdx), qualified.substring(dotIdx + 1)))
+                qualified
+              case Left(_) => scName
           else scName
       // When this identifier was tested for Nullable truthiness in an
       // enclosing && guard, it has been unwrapped and must be read as .get
@@ -1135,9 +1155,13 @@ object DefmethodBodyTranslator:
               val objName = obj.text.getOrElse("")
               val scObjName = snakeToCamel(objName)
               if !apiLookup.contains(objName) && !entry.params.contains(objName) &&
-                 !localNames.contains(scObjName) && !localTypes.contains(scObjName) &&
-                 calleeIndex.resolve(scObjName).isLeft then
-                refuse("receiver-type-unknown")
+                 !localNames.contains(scObjName) && !localTypes.contains(scObjName) then
+                if calleeIndex.knownObjects.contains(scObjName) then
+                  // The receiver is a known skeleton object: record the access
+                  // for post-translation validation.
+                  emittedQualifiedRefs += ((scObjName, effectiveProp))
+                else if calleeIndex.resolve(scObjName).isLeft then
+                  refuse("receiver-type-unknown")
         val objExpr = translateExpr(obj)
         if renamedProp.isDefined then s"$objExpr.${renamedProp.get}"
         else translatePropOnExpr(objExpr, prop)
@@ -1508,7 +1532,10 @@ object DefmethodBodyTranslator:
                 if !apiLookup.contains(name) && !entry.params.contains(name) &&
                    !name.startsWith("AST_") && scalaName == snakeToCamel(name) then
                   calleeIndex.resolve(scalaName) match
-                    case Right(qualified) => qualified
+                    case Right(qualified) =>
+                      val dotIdx = qualified.indexOf('.')
+                      if dotIdx >= 0 then emittedQualifiedRefs += ((qualified.substring(0, dotIdx), qualified.substring(dotIdx + 1)))
+                      qualified
                     case Left("callee-ambiguous") =>
                       refuse("callee-ambiguous")
                       scalaName
