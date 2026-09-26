@@ -85,3 +85,28 @@ class PortMapFollowSpec extends munit.FunSuite:
     val row    = shapes.collectFirst { case (k, v) if k.endsWith("Node#leaf()") => v }
     assert(row.exists(_.contains("form=parenless")), shapes.toString)
   }
+
+  test("a renamed nilary overload moves alone: the overload the base kept keeps its name at the call") {
+    val base = """package com.base;
+                 |public class Net<V> {
+                 |  public java.util.List<V> getLinks () { return null; }
+                 |  public java.util.List<V> getLinks (V v) { return null; }
+                 |}
+                 |""".stripMargin
+    val demo = """package com.demo;
+                 |class Use { int go (com.base.Net<String> n) { return n.getLinks("a").size() + n.getLinks().size(); } }
+                 |""".stripMargin
+    val before = SpoonTir.fromSources(List("Net.java" -> base, "Use.java" -> demo))
+    val map    = PortMap.Map0(
+      "base",
+      engine = "test",
+      entries = List(
+        PortMap.Entry("member", "com.base.Net#getLinks()", "com.base.Net#links", PortMap.Disposition.Renamed, shape = "form=parenless"),
+        PortMap.Entry("member", "com.base.Net#getLinks(V)", "com.base.Net#getLinks(V)", PortMap.Disposition.Renamed)
+      )
+    )
+    val out = new TirEmitter(new PortMapTransform(List(map)).run(before)).emit
+    assert(out.contains("n.getLinks(\"a\")"), out)
+    assert(!out.contains("n.links(\"a\")"), out)
+    assert(out.contains("n.links.size()"), out)
+  }

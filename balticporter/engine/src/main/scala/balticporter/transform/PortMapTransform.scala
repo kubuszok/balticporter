@@ -286,17 +286,33 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     // symbols are lazily interned and each call site may hold its own SymId for the same method.
     // Guard by KIND: a field and a method may share a fullName (Java allows it, Scala does not),
     // so the rename must not spill from the field to the method or vice versa.
-    val byFqnToRename: Map[String, (String, Boolean)] = allDirect.flatMap { fe =>
-      val emitFqn    = fe.sym.fullName
-      val upBare     = PortMapTransform.bareKey(fe.entry.upstream)
-      val wantMethod = fe.entry.upstream.endsWith(")")
-      List(emitFqn -> (fe.newName, wantMethod), upBare -> (fe.newName, wantMethod))
-    }.toMap
+    // Overloads share a fullName too: each symbol takes the name of the row ITS OWN signature
+    // selects (`rowOf`), so `getEdges(V)` is not renamed with `getEdges()`.
+    val byFqnToRename: Map[String, List[FollowEntry]] = allDirect
+      .flatMap { fe =>
+        List(fe.sym.fullName -> fe, PortMapTransform.bareKey(fe.entry.upstream) -> fe)
+      }
+      .groupMap(_._1)(_._2)
+      .view
+      .mapValues(_.distinct)
+      .toMap
+    val rowsByBare: Map[String, List[PortMap.Entry]] =
+      maps.flatMap(_.members).filter(_.upstream.nonEmpty).groupBy(e => PortMapTransform.bareKey(e.upstream))
     val directTable = program.symbols.all.foldLeft(program.symbols) { (t, s) =>
-      byFqnToRename.get(s.fullName) match
-        case Some((nn, wantMethod)) if s.name != nn && PolicyBinder.isExecutable(s.info) == wantMethod =>
-          t.updated(s.copy(name = nn))
-        case _ => t
+      val follows = byFqnToRename.getOrElse(s.fullName, Nil).filter(fe => PolicyBinder.isExecutable(s.info) == fe.entry.upstream.endsWith(")"))
+      val chosen  = follows match
+        case Nil       => scala.None
+        case List(one) =>
+          val rows = rowsByBare.getOrElse(PortMapTransform.bareKey(one.entry.upstream), Nil)
+          PortMapTransform.rowOf(program, s, rows) match
+            case Some(row)  => Option.when(row == one.entry)(one)
+            case scala.None => Some(one) // no row separates the overloads: the only follow row applies
+        case many =>
+          val rows = rowsByBare.getOrElse(PortMapTransform.bareKey(many.head.entry.upstream), Nil)
+          PortMapTransform.rowOf(program, s, rows).flatMap(row => many.find(_.entry == row))
+      chosen match
+        case Some(fe) if s.name != fe.newName => t.updated(s.copy(name = fe.newName))
+        case _                                => t
     }
     val program1 = if allDirect.isEmpty then program else program.rebuilt(symbols = directTable)
 
@@ -530,6 +546,31 @@ object PortMapTransform:
       // all parameters resolve, or none — a partial key would match the wrong overload.
       names <- ps.foldLeft(Option(List.empty[String]))((acc, p) => acc.zip(simple(p)).map(_ :+ _))
     yield s"${sym.fullName}(${names.mkString(",")})"
+
+  /** The one row of `rows` (one member name's rows) that describes `sym`: its own parameter list, else its arity; `scala.None` when neither separates the overloads, since a guess would rename one the
+    * base kept.
+    */
+  def rowOf(program: Program, sym: Symbol, rows: List[PortMap.Entry]): Option[PortMap.Entry] =
+    val isMethod = PolicyBinder.isExecutable(sym.info)
+    val kinded   = rows.filter(_.upstream.endsWith(")") == isMethod)
+    def paramsOf(key: String): String = key.substring(key.indexOf('('))
+    val exact = preciseKey(program, sym)
+      .map(paramsOf)
+      .flatMap(ps =>
+        kinded.filter(r => paramsOf(r.upstream) == ps) match
+          case List(one) => Some(one)
+          case _         => scala.None
+      )
+    exact.orElse {
+      val arity = sym.info match
+        case TypeRepr.MethodType(ps, _, _)                       => Some(ps.size)
+        case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => Some(ps.size)
+        case _                                                   => scala.None
+      val byArity = if isMethod then kinded.filter(r => arity.exists(a => arityOf(r.upstream).contains(a))) else kinded
+      byArity match
+        case List(one) => Some(one)
+        case _         => scala.None
+    }
 
   /** `owner#name` out of `owner#name(P1,P2)` — the form a TIR symbol's `fullName` takes, since a symbol carries no parameter list.
     */

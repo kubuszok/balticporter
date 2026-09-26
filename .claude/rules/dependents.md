@@ -108,7 +108,10 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   rename via `MemberRenamer` — a dependent re-detects bean-property and nullary-method pairs over the
   whole program, base included, so it must follow the base's published renames rather than its own
   re-detection. A `MethodBodyTransform` body is verbatim text and uses the
-  base's emitted accessor names; adapt it when the base's surface changes.
+  base's emitted accessor names; adapt it when the base's surface changes. Overloads share one
+  `fullName`, so each symbol takes the row ITS OWN parameter list (else arity) selects
+  (`PortMapTransform.rowOf`): renamed by bare name, `getEdges(V)` followed `getEdges()` to `edges`
+  in a dependent's test tree while the base kept it (2 `does not take parameters`). Kind (a).
 - **A dependent's derived policy is its bases' PUBLISHED rows PLUS its own** (engine mechanism,
   (b)): a frozen file or a reference derivation of its own ADDS to the bases' `derived-policy.tsv`,
   never replaces it — replaced, every base spelling vanished at the dependent's calls (`getWidth()`
