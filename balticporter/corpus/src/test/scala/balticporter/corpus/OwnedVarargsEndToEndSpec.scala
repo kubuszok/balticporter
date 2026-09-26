@@ -38,7 +38,33 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
       |  final int n;
       |  public Tex(String... paths) { n = paths.length; }
       |  public Tex(Integer... ids) { n = 100 + ids.length; }
-      |  static int of(String[] ps) { return new Tex(ps).n + new Tex("a").n + new Tex(1, 2).n; }
+      |  static int of(String[] ps) { return new Tex(ps).n + new Tex("a").n + new Tex(1, 2).n + new Tex("b", "c") { }.n; }
+      |}
+      |public class Coll {
+      |  static final Class<?>[] K = { String.class };
+      |  final int n;
+      |  public Coll(Class<?>... cs) { n = cs.length; }
+      |  static Class<?>[] cat(Class<?>[] a, Class<?>[] b) { Class<?>[] r = new Class<?>[a.length + b.length]; System.arraycopy(a, 0, r, 0, a.length); System.arraycopy(b, 0, r, a.length, b.length); return r; }
+      |}
+      |public abstract class Infl {
+      |  public List<String> ms;
+      |  public Infl() { ms = new ArrayList<>(); }
+      |  public Infl(String... ms) { this.ms = new ArrayList<>(); for (String m : ms) this.ms.add(m); }
+      |  public Infl(Infl o) { this(copy(o.ms)); }
+      |  static String[] copy(List<String> l) { String[] r = new String[l.size()]; for (int i = 0; i < r.length; i++) r[i] = l.get(i); return r; }
+      |}
+      |public class Single extends Infl {
+      |  public Single() { super(); }
+      |  public Single(String... ms) { super(ms); }
+      |}
+      |public class TA {
+      |  final int n;
+      |  public TA(String... paths) { this(handles(paths)); }
+      |  public TA(Integer... ids) { n = ids.length; }
+      |  static Integer[] handles(String... ps) { Integer[] r = new Integer[ps.length]; for (int i = 0; i < ps.length; i++) r[i] = i; return r; }
+      |}
+      |public class SubColl extends Coll {
+      |  public SubColl(Class<?>... cs) { super(cs.length == 0 ? K : cat(K, cs)); }
       |}
       |public class Run {
       |  public static String run() {
@@ -54,7 +80,8 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
       |    Rooms.fill("z", slots);
       |    return r.types + "," + Rooms.sum(nums) + "," + Rooms.sum(4, 5) + "," + Rooms.last("p", "q") + "," +
       |      slots[0] + slots[1] + "," + Rooms.count(nums) + "," + Rooms.count(1, 2) + "," + Rooms.count((Object[]) null) + "," +
-      |      new Pair("h", "i", "j").size() + "," + Kind.A.n() + Kind.B.n() + "," + sink.take("u", "v") + "," + Tex.of(new String[] { "p", "q" });
+      |      new Pair("h", "i", "j").size() + "," + Kind.A.n() + Kind.B.n() + "," + sink.take("u", "v") + "," + Tex.of(new String[] { "p", "q" }) + "," + new SubColl().n + new SubColl(Integer.class).n + "," +
+      |      new Single("a", "b").ms.size() + new TA("p", "q", "r").n;
       |  }
       |}
       |""".stripMargin
@@ -95,5 +122,5 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
     assert(!rep.hasErrors, s"the emission does not compile:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${ported.out}")
     val loader = new java.net.URLClassLoader(Array(out.toUri.toURL), getClass.getClassLoader)
     val got    = loader.loadClass("va.Run").getMethod("run").invoke(null).asInstanceOf[String]
-    assertEquals(got, "[a, b, c],6,9,q,zz,1,2,-1,3,20,12,105")
+    assertEquals(got, "[a, b, c],6,9,q,zz,1,2,-1,3,20,12,107,12,23")
   }

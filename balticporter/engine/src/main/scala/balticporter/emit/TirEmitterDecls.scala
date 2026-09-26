@@ -173,8 +173,9 @@ private[emit] trait TirEmitterDecls:
       Some(
         args.zip(ps).map { (a, v) =>
           overrideAlign.get(v.symbol).filter(_ != a.tpe) match
-            case Some(t) => s"${operand(a, i)}.asInstanceOf[${tpe(t)}]"
-            case None    => term(a, i)
+            case Some(_) if a.isInstanceOf[Tree.Spread] || a.isInstanceOf[Tree.Repeated] => term(a, i)
+            case Some(t)                                                                 => s"${operand(a, i)}.asInstanceOf[${tpe(t)}]"
+            case None                                                                    => term(a, i)
         }
       )
 

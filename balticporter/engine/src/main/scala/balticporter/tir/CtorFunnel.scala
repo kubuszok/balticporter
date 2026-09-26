@@ -754,7 +754,7 @@ object CtorFunnel:
         given Program = program
         val ph        = new Phase:
           def name = "ctor-replay-subst"
-          override def transformIdent(t: Tree.Ident)(using Program): Term = m.getOrElse(t.sym, t)
+          override def transformIdent(t: Tree.Ident)(using Program): Term = m.get(t.sym).map(argValue).getOrElse(t)
         stats.map(StandardTraversal.mapStat(ph, _))
 
     /** Statements a constructor runs (delegation chain inlined), with the class deferred to. */
@@ -861,6 +861,7 @@ object CtorFunnel:
     case Tree.Select(q, _, _, _)                        => simple(q)
     case Tree.Typed(e, _, _, _)                         => simple(e)
     case Tree.ArrayLength(a, _, _)                      => simple(a)
+    case Tree.Spread(e, _, _)                           => simple(e) // the array passed through a vararg slot
     case _                                              => false
 
   /** Simplify `if (nullExpr != null)` to the else branch when the condition is always false. Avoids a Scala 3 parser issue with `null.asInstanceOf[T] != null` in `this(...)` arguments where the true
@@ -986,6 +987,16 @@ object CtorFunnel:
       case TypeRepr.AppliedType(tc, _) => head(tc)
       case _                           => scala.None
     cd.parents.flatMap { case tt: TypeTree => head(tt.tpe); case t: Term => head(t.tpe) }
+
+  /** An argument as the VALUE its parameter holds, for substituting it where the parameter is read: a vararg call's repeated tail is the array java built, a spread array is that array. */
+  def argValue(a: Term): Term = a match
+    case Tree.Spread(e, _, _)     => e
+    case Tree.Repeated(es, at, o) =>
+      val el = at match
+        case TypeRepr.AppliedType(_, List(e)) => e
+        case other                            => other
+      Tree.NewArray(TypeTree(el, o), Nil, Some(es), at, o)
+    case other => other
 
   /** Constructor body as a statement list, seen through `Tree.Commented` wrappers. A comment on the body's first statement is re-attached, never discarded.
     */
@@ -1512,7 +1523,7 @@ object CtorFunnel:
                     given Program = program
                     val substPh   = new Phase:
                       def name = "ctor-rootargs-subst"
-                      override def transformIdent(t: Tree.Ident)(using Program): Term = subst.getOrElse(t.sym, t)
+                      override def transformIdent(t: Tree.Ident)(using Program): Term = subst.get(t.sym).map(argValue).getOrElse(t)
                     Some(targetArgs.map(a => StandardTraversal.mapStat(substPh, a).asInstanceOf[Term]))
                 }
               }
@@ -1870,7 +1881,7 @@ object CtorFunnel:
             val substPh   = new Phase:
               def name = "ctor-parent-plan-subst"
               override def transformIdent(t: Tree.Ident)(using Program): Term =
-                subst.getOrElse(t.sym, t)
+                subst.get(t.sym).map(argValue).getOrElse(t)
             val effectiveArgs = superDelegArgs.map(a => StandardTraversal.mapStat(substPh, a).asInstanceOf[Term])
             Some((childRoot.symbol, effectiveArgs))
         }
@@ -2002,7 +2013,7 @@ object CtorFunnel:
           given Program = program
           val substPh   = new Phase:
             def name = "ctor-inline-subst"
-            override def transformIdent(t: Tree.Ident)(using Program): Term = subst.getOrElse(t.sym, t)
+            override def transformIdent(t: Tree.Ident)(using Program): Term = subst.get(t.sym).map(argValue).getOrElse(t)
           // usability: refuse `super.m()` and `return` in the post-body
           if postBody.nonEmpty then
             var usable = true

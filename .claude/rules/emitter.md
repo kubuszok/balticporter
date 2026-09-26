@@ -245,7 +245,10 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   that is a MEMBER (a superseded enum field) keeps `Array[T]`, and so does a member beside an
   overload differing ONLY in the vararg's element (`C(String...)`/`C(FileHandle...)`: both `T*`
   erase to one `Seq`, E120) and a member of a DROPPED type (its hand-written replacement states the
-  slot) — their calls pass java's array (`arrayVarargArgs`); an anonymous class implementing a
+  slot, where the call still binds at that type's own name) — their calls, a `this(...)` and an
+  anonymous class's superclass call pass java's array (`arrayVarargArgs`). A constructor REPLAY
+  substitutes an argument as the VALUE the parameter holds (`CtorFunnel.argValue`: a spread is its
+  array, a repeated tail the array java built), or `super(ms)` replays `new X(ms*)`; an anonymous class implementing a
   `T...` method stays a class (`sam-anon->lambda` guard `RepeatedParam`: a function literal cannot
   declare `T*`); an owned override of an external NON-vararg `T[]` member, and a java LAMBDA at an
   owned `T...` SAM, are loud untested edges. Kind (a).

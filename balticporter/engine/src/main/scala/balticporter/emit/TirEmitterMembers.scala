@@ -41,7 +41,12 @@ private[emit] trait TirEmitterMembers:
     * under its actual instantiation when available (matches a named type parameter exactly); fall back to the isolated wildcard elimination only when the parent cannot be seen into.
     */
   private[emit] def superArg(parent: TypeRepr, a: Term, n: Int, i: Int): String =
-    if !hasWildcardArg(a.tpe) then term(a, i)
+    // a spread array is cast INSIDE the spread: `*` must stay the argument's outermost
+    if a.isInstanceOf[Tree.Spread] then
+      val inner = a.asInstanceOf[Tree.Spread].expr
+      val cast  = superArg(parent, inner, n, i)
+      if cast == term(inner, i) then term(a, i) else s"($cast)*"
+    else if !hasWildcardArg(a.tpe) then term(a, i)
     else
       val target = superFormal(parent, n).filterNot(hasWildcardArg).map(tpe).getOrElse(deWildcarded(a.tpe, named = false))
       s"${term(a, i)}.asInstanceOf[$target]"
@@ -961,10 +966,10 @@ private[emit] trait TirEmitterMembers:
         s"this(${(as ++ extra).mkString(", ")})"
       case None =>
         CtorFunnel.headStmt(cdef) match
-          case Some(Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) if sym(m).name == "<init>" =>
+          case Some(Tree.Apply(sel @ Tree.Select(r, m, _, _), args, _, _, _)) if sym(m).name == "<init>" =>
             r match
               case _: Tree.Super => superDelegation(args, i + 1)
-              case _ => s"this(${args.map(term(_, i + 1)).mkString(", ")})"
+              case _ => s"this(${arrayVarargArgs(sel, m, args).map(term(_, i + 1)).mkString(", ")})"
           case _ => "this()"
     // a CONSUMED `this.f = e` does not disappear from the file, so its comment rides THIS
     // secondary's delegation, the one place a reader will find it.
@@ -1091,8 +1096,33 @@ private[emit] trait TirEmitterMembers:
     program.definitionOf(m).exists(_.isInstanceOf[Tree.DefDef]) && climb(m, 16)
 
   /** a call's arguments where the callee keeps java's `Array[T]` (see [[varargErasureClash]]): the repeated tail is packed back into java's array and a spread array is passed whole. */
-  private[emit] def arrayVarargArgs(m: SymId, args: List[Term]): List[Term] =
-    if !varargErasureClash(m) && !substitutedDecl(m) then args
+  private[emit] def arrayVarargArgs(fun: Term, m: SymId, args: List[Term]): List[Term] =
+    // an anonymous class's constructor is the SUPERCLASS's (JLS 15.9.5.1): ask its vararg constructors
+    def viaAnonParent: Boolean = fun match
+      case Tree.New(tpt, _, _, Some(_)) =>
+        headSymOf(tpt.tpe).exists { h =>
+          program.definitionOf(h).collect { case c: Tree.ClassDef => c }.exists { c =>
+            c.body.exists {
+              case d: Tree.DefDef =>
+                sym(d.symbol).name == "<init>" && d.paramss.flatten.count(v => !sym(v.symbol).flags.isGiven) == args.size &&
+                (varargErasureClash(d.symbol) || substitutedDecl(d.symbol))
+              case _ => false
+            }
+          }
+        }
+      case _ => false
+    // a DROPPED type's member keeps java's array only where the call still binds at that type's own
+    // name (the hand-written replacement); a receiver a phase retyped onto another type binds there
+    def boundAtDropped: Boolean =
+      substitutedDecl(m) && {
+        val at = fun match
+          case Tree.Select(q, _, _, _) => headSymOf(q.tpe)
+          case Tree.New(tpt, _, _, _)  => headSymOf(tpt.tpe)
+          case _                       => Some(sym(m).owner)
+        at.exists(h => h == sym(m).owner || sym(h).fullName == sym(sym(m).owner).fullName)
+      }
+    if !args.exists(a => a.isInstanceOf[Tree.Repeated] || a.isInstanceOf[Tree.Spread]) then args
+    else if !varargErasureClash(m) && !boundAtDropped && !viaAnonParent then args
     else
       args.map {
         case Tree.Repeated(es, at, o) =>
