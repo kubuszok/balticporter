@@ -155,6 +155,19 @@ object DerivedPolicy:
       (Header :: dp.rows.sortBy(r => (r.family.toString, r.upstream)).map(_.tsv)).mkString("", "\n", "\n")
     )
 
+  /** a dependent's own row refused because it names a BASE member the base's published rows do not spell that way; `base` is what the bases published at that key. */
+  final case class RefusedRow(row: Row, base: List[Row])
+
+  /** A dependent's effective derived policy: the base chain's published rows PLUS its own. The base's rows govern its own members, so an own row naming a base member (`baseMember`, asked of the row's
+    * key) that is not one of the base's rows is refused and returned; an own row for its own members is kept. Duplicates collapse.
+    */
+  def inheriting(published: List[Row], own: DerivedPolicy, baseMember: String => Boolean): (DerivedPolicy, List[RefusedRow]) =
+    val baseRows       = published.distinct
+    val baseSet        = baseRows.toSet
+    val byKey          = baseRows.groupBy(_.upstream)
+    val (kept, reject) = own.rows.partition(r => baseSet(r) || !baseMember(r.upstream))
+    (DerivedPolicy((baseRows ++ kept).distinct), reject.distinct.map(r => RefusedRow(r, byKey.getOrElse(r.upstream, Nil))))
+
   /** The rows that differ between two policies, for a stale-file diagnostic. Each triple is (family, upstream, which side has it or how it differs).
     */
   def diff(a: DerivedPolicy, b: DerivedPolicy): List[(String, String, String)] =

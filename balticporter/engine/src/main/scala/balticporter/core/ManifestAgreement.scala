@@ -163,6 +163,17 @@ object ManifestAgreement:
             "surface) drop it there."
         )
 
+    /** a dependent's own derived-policy row names a BASE member the base's published rows do not spell that way; the row is refused and the base's spelling binds. */
+    case DerivedIntrusion
+        extends Kind(
+          false,
+          "port policy: this module's own derived-policy rows (its reference derivation or its " +
+            "frozen file) spell a member its BASE emits differently from the rows the base published, " +
+            "so applying them would re-shape the SHARED surface from the dependent's side. The row was " +
+            "refused and the base's spelling binds. Remove the row from this module's frozen file, or " +
+            "change the spelling in the base's policy."
+        )
+
     /** a base this module depends on claims NO namespace, which switches off the intrusion screen that protects its surface from this module. Not fatal: nothing has gone wrong YET, and the base's own
       * author is the one who must act. Loud, because the alternative is a screen that reports nothing whether it passed or was never asked.
       */

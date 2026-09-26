@@ -103,6 +103,12 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   whole program, base included, so it must follow the base's published renames rather than its own
   re-detection. A `MethodBodyTransform` body is verbatim text and uses the
   base's emitted accessor names; adapt it when the base's surface changes.
+- **A dependent's derived policy is its bases' PUBLISHED rows PLUS its own** (engine mechanism,
+  (b)): a frozen file or a reference derivation of its own ADDS to the bases' `derived-policy.tsv`,
+  never replaces it — replaced, every base spelling vanished at the dependent's calls (`getWidth()`
+  where the base emits `width`, `Int` where it emits an opaque). An own row naming a BASE member
+  that the base did not publish identically is refused, the base's spelling binds, and it is a
+  non-fatal `DerivedIntrusion` manifest finding (port policy: drop the row, or move it to the base).
 - The follow renames a SYMBOL, so it reaches every call of it: a call on a receiver a dependent's
   SCOPED `type-redirect` moved must hold a TWIN under the target type (the redirect mints it), or the
   base's `isEmpty -> empty` lands on a `BitSet` (engine mechanism, (b)). The target's arity is the

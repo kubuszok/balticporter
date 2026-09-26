@@ -73,7 +73,10 @@ class SynchronizedMethodEndToEndSpec extends munit.FunSuite:
     val stdlib = List(classOf[scala.Option[?]], classOf[scala.deriving.Mirror]).map(c => Path.of(c.getProtectionDomain.getCodeSource.getLocation.toURI).toString).distinct
     val args   = "-Werror" :: "-classpath" :: stdlib.mkString(java.io.File.pathSeparator) :: "-d" :: out.toString :: files
     val rep    = dotty.tools.dotc.Main.process(args.toArray)
-    assert(!rep.hasErrors, s"the emission does not compile:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${emitted.mkString("\n")}")
+    assert(
+      !rep.hasErrors,
+      s"the emission does not compile:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${emitted.mkString("\n")}"
+    )
     out
 
   test("an instance method locks `this` and a static one the companion object, around the whole body") {

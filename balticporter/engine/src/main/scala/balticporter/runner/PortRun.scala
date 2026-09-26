@@ -408,7 +408,7 @@ final case class PortRun(
 
     // ---- manifest agreement (runs on every port) ----
     val firedKeys = translated.binder.bindings.filter(_.binding.isBound).map(_.entry).toSet
-    val agreement = ManifestAgreement.check(manifest, sharedSurface(program, translated.foreign), foreignRoots, basePorts, firedKeys)
+    val agreement = ManifestAgreement.check(manifest, sharedSurface(program, translated.foreign), foreignRoots, basePorts, firedKeys) ++ derivedIntrusions
     CheckReport.record(PortRun.Manifest,
                        agreement.map { f =>
                          CheckReport.Finding(PortRun.Manifest, f.kind.toString, f.subject, "", 0, f.render)
@@ -2150,6 +2150,30 @@ final case class PortRun(
       if rows.nonEmpty then say(s"DERIVED POLICY (inherited from ${baseNames.toList.sorted.mkString(",")}): ${rows.distinct.size} row(s)")
       DerivedPolicy(rows.distinct)
 
+  /** own rows refused by [[withInherited]], reported with the manifest agreement. */
+  private var derivedIntrusions: List[ManifestAgreement.Finding] = Nil
+
+  /** a dependent that derives (or freezes) its own policy still binds the rows its bases published; an own row naming a BASE member the base does not spell that way is refused and counted.
+    */
+  private def withInherited(parsed: Program, emitted: Set[SymId], own: DerivedPolicy): DerivedPolicy =
+    if inheritedDerived.isEmpty then own
+    else
+      val ids               = own.resolved(parsed).ids
+      val scope             = RunScope.of(emitted, Map.empty)
+      val (merged, refused) = DerivedPolicy.inheriting(inheritedDerived.rows, own, key => ids.get(key).exists(id => !scope.emitsSymbol(parsed, id)))
+      val baseNames         = manifest.map(_.bases.map(_.name).sorted.mkString("+")).getOrElse("-")
+      derivedIntrusions = refused.map { r =>
+        val theirs = if r.base.isEmpty then "the base published no row at this key" else r.base.map(b => s"${b.family} `${b.reference}`").mkString("the base published ", ", ", "")
+        ManifestAgreement.Finding(
+          ManifestAgreement.Kind.DerivedIntrusion,
+          baseNames,
+          r.row.upstream,
+          s"own row ${r.row.family} `${r.row.reference}` refused; $theirs"
+        )
+      }
+      say(s"DERIVED POLICY (own + inherited): ${merged.rows.size} row(s), ${refused.size} own row(s) refused at a base member")
+      merged
+
   /** the derived policy this translation binds; a row translation binds the MAIN translation's, never a derivation of its own, since the policy is one and only the program differs. */
   private def derivedPolicy(parsed: Program, emitted: Set[SymId]): DerivedPolicy =
     val dp = derivedForRows.getOrElse(derivedPolicyUnresolved(parsed, emitted))
@@ -2163,52 +2187,56 @@ final case class PortRun(
   private var derivedBound: Option[DerivedPolicy] = scala.None
 
   private def derivedPolicyUnresolved(parsed: Program, emitted: Set[SymId]): DerivedPolicy =
+    derivedIntrusions = Nil
     if !anyPhaseDerives then DerivedPolicy.empty
     else if !derivationRuns then inheritedDerived
-    else
-      val m      = manifest.get
-      val frozen = m.frozenDerivedPolicy.map { p =>
-        val dp = DerivedPolicy.read(p)
-        if dp.isEmpty then sys.error(s"[$label] frozenDerivedPolicy at $p is empty or unreadable")
-        say(s"DERIVED POLICY (frozen file): ${dp.rows.size} row(s) from $p")
-        dp
-      }
-      referenceSurface match
-        case Some(refSurface) =>
-          // derive from the reference as before
-          val memberRenames  = effectivePhases.collect { case mr: balticporter.transform.MemberRenameTransform => mr.renames }.flatten.toMap
-          val retargetSimple = effectivePhases.collect { case c: balticporter.transform.CollectionsTransform => c.retarget }.flatten.map((j, s) => j -> s.split('.').last).toMap
-          val r              = ReferencePolicy.derive(
-            parsed,
-            refSurface,
-            emitted,
-            retargetSimple ++ m.effectiveTypeRenames,
-            m.effectiveFlattenNestedTypes,
-            derivingOpaqueTargets,
-            m.effectivePackageRenames,
-            memberRenames,
-            opaqueCarriers = derivingOpaqueCarriers
-          )
-          lastDerived = Some(r)
-          // when BOTH reference and frozen file are given, fail if they differ
-          frozen.foreach { fp =>
-            val diffs = DerivedPolicy.diff(fp, r.policy)
-            if diffs.nonEmpty then
-              val sample = diffs.take(10).map((fam, up, side) => s"  $fam\t$up\t($side)").mkString("\n")
-              sys.error(
-                s"[$label] frozenDerivedPolicy disagrees with the reference derivation (${diffs.size} row(s) differ):\n$sample" +
-                  (if diffs.size > 10 then s"\n  … and ${diffs.size - 10} more" else "")
-              )
-          }
-          r.policy
-        case scala.None =>
-          // no reference: use the frozen file
-          frozen match
-            case Some(fp) =>
-              lastFrozen = Some(fp)
-              fp
-            case scala.None =>
-              sys.error(s"[$label] a phase derives policy but the manifest has neither `parity` nor `frozenDerivedPolicy`")
+    else withInherited(parsed, emitted, ownDerivedPolicy(parsed, emitted))
+
+  /** this module's own rows: a derivation from its reference, or its frozen file (both, compared). */
+  private def ownDerivedPolicy(parsed: Program, emitted: Set[SymId]): DerivedPolicy =
+    val m      = manifest.get
+    val frozen = m.frozenDerivedPolicy.map { p =>
+      val dp = DerivedPolicy.read(p)
+      if dp.isEmpty then sys.error(s"[$label] frozenDerivedPolicy at $p is empty or unreadable")
+      say(s"DERIVED POLICY (frozen file): ${dp.rows.size} row(s) from $p")
+      dp
+    }
+    referenceSurface match
+      case Some(refSurface) =>
+        // derive from the reference as before
+        val memberRenames  = effectivePhases.collect { case mr: balticporter.transform.MemberRenameTransform => mr.renames }.flatten.toMap
+        val retargetSimple = effectivePhases.collect { case c: balticporter.transform.CollectionsTransform => c.retarget }.flatten.map((j, s) => j -> s.split('.').last).toMap
+        val r              = ReferencePolicy.derive(
+          parsed,
+          refSurface,
+          emitted,
+          retargetSimple ++ m.effectiveTypeRenames,
+          m.effectiveFlattenNestedTypes,
+          derivingOpaqueTargets,
+          m.effectivePackageRenames,
+          memberRenames,
+          opaqueCarriers = derivingOpaqueCarriers
+        )
+        lastDerived = Some(r)
+        // when BOTH reference and frozen file are given, fail if they differ
+        frozen.foreach { fp =>
+          val diffs = DerivedPolicy.diff(fp, r.policy)
+          if diffs.nonEmpty then
+            val sample = diffs.take(10).map((fam, up, side) => s"  $fam\t$up\t($side)").mkString("\n")
+            sys.error(
+              s"[$label] frozenDerivedPolicy disagrees with the reference derivation (${diffs.size} row(s) differ):\n$sample" +
+                (if diffs.size > 10 then s"\n  … and ${diffs.size - 10} more" else "")
+            )
+        }
+        r.policy
+      case scala.None =>
+        // no reference: use the frozen file
+        frozen match
+          case Some(fp) =>
+            lastFrozen = Some(fp)
+            fp
+          case scala.None =>
+            sys.error(s"[$label] a phase derives policy but the manifest has neither `parity` nor `frozenDerivedPolicy`")
 
   private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
     if frontend.resolutionRoots.isEmpty then (program.units, Nil)
