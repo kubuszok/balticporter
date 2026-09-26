@@ -1222,23 +1222,24 @@ object Differences:
       ),
       Universal,
       "TirEmitter.scalaEnumDef writes none of the four (the parent and the desugaring have them) and " +
-        "applyStr0 drops the parens at a `values()` call; sealedEnumDef's nameM, values and valueOf " +
-        "supply all four for an enum EnumShape refuses",
+        "applyStr0 drops the parens at a `values()` call on either shape; sealedEnumDef's nameM, a " +
+        "parenless values and valueOf supply all four for an enum EnumShape refuses",
       Rendered("ClassDef")
     ),
     Difference(
       cId(38),
       "a promoted enum constructor parameter IS a member, and `name` collides with `Enum.name()`",
       "JLS 8.9.2",
-      "UNCITED — a constructor parameter becomes a class member",
+      "UNCITED — a constructor parameter that stands for a field becomes a class member",
       Loud,
       Handled,
       measured(
-        "A promoted enum constructor parameter becomes a class member and can collide with the name method every enum inherits, or with a declared accessor of the same name."
+        "An enum constructor parameter that stands for a field (or is reassigned) becomes a class member and can collide with the name method every enum inherits; any other parameter is emitted plain, as java's is no member."
       ),
       Universal,
-      "TirEmitter.sealedEnumDef's hasName, and EnumShape.Reserved — which is the same collision read " +
-        "at the PARENT, where java.lang.Enum's final members make it a refusal rather than a skip",
+      "EnumShape.memberParams decides which parameters are members; TirEmitter.sealedEnumDef's hasName, " +
+        "and EnumShape.Reserved — which is the same collision read at the PARENT, where java.lang.Enum's " +
+        "final members make it a refusal rather than a skip",
       Rendered("ClassDef")
     ),
     Difference(

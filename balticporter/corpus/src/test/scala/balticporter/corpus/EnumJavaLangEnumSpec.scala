@@ -46,7 +46,7 @@ class EnumJavaLangEnumSpec extends PortSuite:
     assertEquals(clue(fs), Nil)
   }
 
-  test("java's `X.values()` loses its parens — and ONLY on an enum this emitter conformed") {
+  test("java's `X.values()` loses its parens on BOTH enum shapes — and on nothing that is not an enum") {
     val (out, _) = emit(
       """package en2;
         |enum Kind { A, B }
@@ -64,12 +64,12 @@ class EnumJavaLangEnumSpec extends PortSuite:
         |""".stripMargin
     )
     assert(clue(out).contains("en2.Kind.values.length"))
-    // the REFUSED enum still emits `def values(): Array[Bodied]`, so its call site keeps java's own
-    // shape. One rule, asked of the enum's own declaration, answering differently for two enums in
-    // one file is the whole point of reading `EnumShape` rather than the name.
-    assert(out.contains("en2.Bodied.values()"))
+    // the REFUSED enum spells its synthesised `values` the scala 3 enum's way too, so a caller never
+    // learns which shape an enum took.
+    assert(out.contains("en2.Bodied.values.length"))
+    assert(out.contains("def values: scala.Array[Bodied]"))
     // and a `values()` that is not an enum's at all is untouched.
-    assert(out.contains(".values()"))
+    assert(out.contains("m.values()"))
   }
 
   test("REFUSED — a constant with a class body keeps the sealed shape, and is COUNTED") {

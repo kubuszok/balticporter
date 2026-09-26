@@ -24,9 +24,9 @@ class EnumCtorBodySpec extends PortSuite:
     // the computed field, which the old lowering dropped entirely
     assertEmits(p, "this.label = ")
     assertEmits(p, "this.x = ax")
-    // …and the parameters are still promoted, so `case object UP extends Side(0f, 1f)` has somewhere
-    // to pass its arguments.
-    assertEmits(p, "enum Side(var ax: scala.Float, var ay: scala.Float) extends java.lang.Enum[Side]")
+    // …and the parameters are the primary's, so `case UP extends Side(0f, 1f)` has somewhere to pass
+    // its arguments — plain parameters, since java's are not members.
+    assertEmits(p, "enum Side(ax: scala.Float, ay: scala.Float) extends java.lang.Enum[Side]")
     assertEmits(p, "case UP extends Side(")
   }
 
@@ -48,9 +48,9 @@ class EnumCtorBodySpec extends PortSuite:
     assertNotEmits(p, "this.glEnum = glEnum")
   }
 
-  test("a constructor parameter named `name` suppresses the synthesised `Enum.name()`") {
+  test("a constructor parameter named `name` is a plain parameter, and the enum keeps `java.lang.Enum`'s `name()`") {
     // Java never has to choose: `Enum.name()` is FINAL there and a parameter is not a member at
-    // all. Scala gets both from the promotion, and E120 "Conflicting definitions" is the result.
+    // all. Emitted as a plain parameter it is not one in scala either, so nothing collides.
     val p = port(
       """package p;
         |enum Algo {
@@ -61,10 +61,8 @@ class EnumCtorBodySpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    // …and it is now the SHAPE that the collision decides, not just the synthesis: a member named
-    // `name` cannot coexist with `java.lang.Enum`'s final `name()` at all, so this enum keeps the
-    // sealed lowering and is counted (`EnumShape.Reserved`).
-    assertEmits(p, "sealed abstract class Algo(var name: java.lang.String)")
+    assertEmits(p, "enum Algo(name: java.lang.String) extends java.lang.Enum[Algo]")
+    assertNotEmits(p, "sealed abstract class Algo")
     assertNotEmits(p, "def name(): java.lang.String")
     assertEmits(p, "this.legibleName = name")
   }

@@ -550,7 +550,9 @@ private[emit] trait TirEmitterDecls:
     val primaryCtor = CtorFunnel.enumPrimaryCtor(program, cd)
     val ctorParams  = primaryCtor.map(CtorFunnel.valueParams(program, _)).getOrElse(Nil)
     checkClause(cd, rendered = false, form = "enum")
-    val paramNames = ctorParams.map(v => sym(v.symbol).name).toSet
+    // only a parameter the class HOLDS is a member name; java's plain parameter is not one
+    val memberParams = balticporter.tir.EnumShape.memberParams(program, cd)
+    val paramNames   = ctorParams.filter(v => memberParams(v.symbol)).map(v => sym(v.symbol).name).toSet
     // WHICH field a parameter supersedes is `CtorFunnel`'s to answer, matched on the name AND the
     // TYPE: java's two variable scopes let a constructor parameter name a field it is not and then
     // COMPUTE that field from it, and a name test drops the field and emits the parameter's type in
@@ -584,7 +586,8 @@ private[emit] trait TirEmitterDecls:
     // so its access level, `private[Enum]` qualification (java's private reaches the whole
     // top-level enclosure; scala's bare `private` on a class param does not) and `val`-vs-`var`
     // (decided by whether the body still writes it) all carry over from the field, never from the
-    // parameter (which has none of them — JLS 8.8.1). A parameter superseding nothing keeps `var`.
+    // parameter (which has none of them — JLS 8.8.1). A parameter superseding nothing is java's
+    // plain constructor parameter and is emitted as one; `private var` where the body reassigns it.
     val standsFor: Map[SymId, SymId] =
       val dropped = instance0.collect { case v: Tree.ValDef if superseded(v.symbol) => v.symbol }.toSet
       CtorFunnel.enumSupersededBy(program, cd).filter((_, f) => dropped(f))
@@ -620,7 +623,8 @@ private[emit] trait TirEmitterDecls:
             then "var"
             else "val"
           s"${vis(fs, enumPrivateIn)}$kw $nm: $ty"
-        case None => s"var $nm: $ty"
+        case None if memberParams(v.symbol) => s"private var $nm: $ty"
+        case None                           => s"$nm: $ty"
     val eprimary = if ctorParams.isEmpty then "" else s"(${ctorParams.map(enumParam).mkString(", ")})"
     EnumParts(ctorParams, paramNames, instance, ctorStats, statics, eprimary)
 
@@ -668,8 +672,9 @@ private[emit] trait TirEmitterDecls:
       val body = if stats.isEmpty then "" else s" {\n${stats.mkString("\n")}\n${ind(i + 1)}}"
       s"${leading(ec.leading, i + 1)}${ind(i + 1)}case object $cn extends $name$args$body"
     }
-    // `def` (not `val`) so Java's `E.values()` call site type-checks; also a no-paren read works.
-    val values = s"${ind(i + 1)}def values(): scala.Array[$name] = scala.Array(${cd.enumCases.map(ec => esc(sym(ec.symbol).name)).mkString(", ")})"
+    // PARENLESS, the scala 3 enum's own spelling, so both shapes publish one surface and a caller
+    // never learns which one an enum took; `def`, so each read is a fresh array as java's is.
+    val values = s"${ind(i + 1)}def values: scala.Array[$name] =scala.Array(${cd.enumCases.map(ec => esc(sym(ec.symbol).name)).mkString(", ")})"
     // Java's `Enum.valueOf(String)` — resolve a constant by name (throws like the JDK on no match).
     val vArms   = cd.enumCases.map(ec => esc(sym(ec.symbol).name)).map(n => s"""${ind(i + 2)}case "$n" => $n""").mkString("\n")
     val valueOf = s"${ind(i + 1)}def valueOf(name: java.lang.String): $name = name match {\n$vArms\n${ind(i + 2)}case _ => throw new java.lang.IllegalArgumentException(name)\n${ind(i + 1)}}"

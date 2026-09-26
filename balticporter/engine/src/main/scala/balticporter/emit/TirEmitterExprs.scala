@@ -660,11 +660,11 @@ private[emit] trait TirEmitterExprs:
       if effectFree(recv) then call else s"{ ${term(recv, i)}; $call }"
     case Tree.Select(recv, m, _, _) if numericOverloadAscription(recv, m).isDefined =>
       s"(${term(fun, i)}: ${numericOverloadAscription(recv, m).get})(${args.map(term(_, i)).mkString(", ")})"
-    // `X.values()` on an enum this emitter renders as a scala 3 enum: the desugaring's values is
-    // PARENLESS, so the parens come off here. Asked of the ENUM'S OWN DECLARATION (EnumShape), not
-    // the callee symbol — the frontend interns an enum's synthesised values under an anonymous
-    // owner, but the QUALIFIER's class symbol is exact.
-    case Tree.Select(qual, m, _, _) if args.isEmpty && sym(m).name == "values" && scalaEnumQualifier(qual) =>
+    // `X.values()` on an enum this program declares: both enum shapes spell `values` PARENLESS, so
+    // the parens come off here. Asked of the ENUM'S OWN DECLARATION, not the callee symbol — the
+    // frontend interns an enum's synthesised values under an anonymous owner, but the QUALIFIER's
+    // class symbol is exact.
+    case Tree.Select(qual, m, _, _) if args.isEmpty && sym(m).name == "values" && enumQualifier(qual) =>
       term(fun, i)
     // an `@interface`'s elements become constructor parameters: java's element is both the write-name
     // and the read-accessor, but the emitted class keeps java's name at the constructor parameter
@@ -688,15 +688,15 @@ private[emit] trait TirEmitterExprs:
       val as = callee(fun).flatMap(alignedArgs(_, args, i)).getOrElse(args.map(term(_, i)))
       s"${term(fun, i)}(${as.mkString(", ")})"
 
-  /** does this qualifier NAME a type this emitter renders as a scala 3 `enum`? A TYPE and never a value: a `Select` is admitted beside an `Ident` for a NESTED enum's `Outer.Inner`, and the answer
-    * comes from `EnumShape`, so a value of enum type (`l.values()`) cannot be mistaken — its symbol is a local, not a class.
+  /** does this qualifier NAME an enum this program declares (either shape)? A TYPE and never a value: a `Select` is admitted beside an `Ident` for a NESTED enum's `Outer.Inner`, so a value of enum
+    * type (`l.values()`) cannot be mistaken — its symbol is a local, not a class.
     */
-  private[emit] def scalaEnumQualifier(qual: Term): Boolean =
+  private[emit] def enumQualifier(qual: Term): Boolean =
     val s = qual match
       case Tree.Ident(s, _, _)     => s
       case Tree.Select(_, s, _, _) => s
       case _                       => SymId.None
-    program.definitionOf(s).collect { case cd: Tree.ClassDef => cd }.exists(balticporter.tir.EnumShape.isScalaEnum(program, _))
+    program.definitionOf(s).collect { case cd: Tree.ClassDef => cd }.exists(cd => sym(cd.symbol).flags.isEnum)
 
   /** is this callee an ELEMENT of an `@interface` THIS PROGRAM DECLARES — a constructor parameter `classDef1`'s annotation arm emitted? Three structural conjuncts, none a name: owner is
     * program-OWNED, owner's flag says java wrote @interface, and callee takes no parameters (JLS 9.6 admits only elements, constants and member types).

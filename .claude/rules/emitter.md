@@ -237,6 +237,12 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 
 ## More rules (one line each)
 
+- An enum constructor parameter is a MEMBER only where it stands for a field it supersedes or the
+  body reassigns it (`EnumShape.memberParams`); any other is emitted plain, as java's is no member.
+  Emitted `var`, a parameter named `name` pushed anim8's `DitherAlgorithm` into the sealed shape
+  (no `java.lang.Enum`, `name()` answering the parameter) and `values` kept its parens; `values` is
+  now parenless on BOTH shapes, one surface whichever shape an enum took. Kind (a).
+
 - A check over EMITTED code is scoped to the units the run WRITES, not to the whole model: a dropped
   type's body stays in the program (the drop removes the declaration from emission, not the tree),
   so the signature check reported 5 orphaned calls inside a dropped visitor — calls whose text is

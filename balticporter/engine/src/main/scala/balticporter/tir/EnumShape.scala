@@ -35,12 +35,32 @@ object EnumShape:
         // scala 3 enum case has no template body
         if bodied.nonEmpty then Some(s"constant(s) ${bodied.mkString(", ")} carry a class body, which a scala 3 enum case cannot")
         else
-          val params  = CtorFunnel.enumPrimaryCtor(program, cd).toList.flatMap(CtorFunnel.valueParams(program, _)).map(v => nameOf(v.symbol))
+          // only a parameter that BECOMES a member is screened; one java kept a plain parameter is
+          // emitted as one, where a reserved name is legal
+          val params  = memberParams(program, cd).toList.map(nameOf).sorted
           val members = cd.body.collect { case d: Definition => nameOf(d.symbol) }
-          // promoted parameters are members too, so both lists are screened
           (params ++ members).find(Reserved).map { n =>
             s"`$n` collides with a member java.lang.Enum declares final (or with the scala 3 enum's own companion)"
           }
+
+  /** The primary constructor's parameters the emitted class must hold as MEMBERS: one standing for a field it supersedes, or one the constructor body reassigns. Every other parameter is java's plain
+    * constructor parameter, visible to the constructor alone, and is emitted without `val`/`var`.
+    */
+  def memberParams(program: Program, cd: Tree.ClassDef): Set[SymId] =
+    CtorFunnel.enumPrimaryCtor(program, cd) match
+      case scala.None => Set.empty
+      case Some(ctor) =>
+        val params  = CtorFunnel.valueParams(program, ctor).map(_.symbol).toSet
+        val written = collection.mutable.Set.empty[SymId]
+        val scan    = new Phase:
+          def name:                                           String = "enum-shape/written-params"
+          override def transformTerm(t: Term)(using Program): Term   =
+            t match
+              case Tree.Assign(Tree.Ident(s, _, _), _, _, _, _) if params(s) => written += s
+              case _                                                         => ()
+            t
+        CtorFunnel.stmtsOf(ctor).foreach { case t: Term => StandardTraversal.mapTerm(scan, t)(using program); case _ => () }
+        CtorFunnel.enumSupersededBy(program, cd).keySet.intersect(params) ++ written
 
   /** True when the emitter renders this class as a scala 3 `enum`. */
   def isScalaEnum(program: Program, cd: Tree.ClassDef): Boolean =
