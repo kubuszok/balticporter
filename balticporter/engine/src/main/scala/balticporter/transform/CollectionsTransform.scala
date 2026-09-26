@@ -676,6 +676,24 @@ final class CollectionsTransform(
       }
     remap = fullRemap // restore for signature processing, recordings, and checks
 
+    // a retarget of a type a BASE drops reaches this run's own declarations the scope held back:
+    // the dropped name has nothing left to declare it. Over those retarget entries alone.
+    val dropSources = inheritedDropSources(summon[Program], fullRemap)
+    inheritedDropHeld = if dropSources.isEmpty then Set.empty else heldForInheritedDrops(summon[Program])
+    def overDropsOnly[A](body: => A): A =
+      val savedByName = remapByFullName
+      val dropNames   = dropSources.flatMap(summon[Program].symbolOf).map(_.fullName)
+      remap = fullRemap.view.filterKeys(dropSources).toMap
+      remapByFullName = savedByName.view.filterKeys(dropNames).toMap
+      try body
+      finally
+        remap = fullRemap
+        remapByFullName = savedByName
+    if inheritedDropHeld.nonEmpty then
+      overDropsOnly {
+        units = units.map(u => if boundRun.emits(u.symbol) then spliceHeld(u, StandardTraversal.mapClassDef(this, u), inheritedDropHeld) else u)
+      }
+
     // collect post-pass: standalone keys()/values() calls the main pass left for retargetForEach's
     // for-each consumption; whatever remains here is a standalone call.
     if retargetRewrites.values.exists(_.values.exists(_.isInstanceOf[CollectionsTransform.RetargetRewrite.Collect])) ||
@@ -686,7 +704,7 @@ final class CollectionsTransform(
       collectPassActive = false
 
     // Signature pass — also multi-pass when family scopes exist.
-    val symbols2 =
+    val symbols2a =
       if scopedFamilyIds.isEmpty then mapSignatures(symbols) // unchanged code path
       else
         // Pass 1: JDK + everywhere families
@@ -704,6 +722,13 @@ final class CollectionsTransform(
         }
         remap = fullRemap
         tbl
+    // …and the held declarations' signatures, over the same entries as their trees
+    val symbols2 =
+      if inheritedDropHeld.isEmpty then symbols2a
+      else
+        overDropsOnly {
+          inheritedDropHeld.foldLeft(symbols2a)((t, id) => t.get(id).fold(t)(s => t.updated(s.copy(info = StandardTraversal.mapType(this, s.info)))))
+        }
     // the modifier the re-parenting invalidated; applied here rather than inside
     // mapSignatures, whose contract is about types, not flags.
     val stripped = strippedOverrides(symbols2)
@@ -714,7 +739,7 @@ final class CollectionsTransform(
           if stripped(s.id) then t.updated(s.copy(flags = s.flags.copy(isOverride = false))) else t
         }
     recordRetypings(symbols, symbols3)
-    recordScopedOut(symbols)
+    recordScopedOut(symbols, symbols3)
     recordRetainedSignatures(symbols)
     recordStrippedOverrides(stripped, symbols2)
     recordSuperDefaults

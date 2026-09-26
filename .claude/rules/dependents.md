@@ -90,6 +90,12 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   derivation sees it. So the `RuleScope` goes on the ENTRY — because retyping inside base
   declarations changes what the run derives and makes it disagree with the base's published surface
   (one FATAL `base-surface` at 0 errors).
+- **A replacement for an INHERITED drop is inherited with it, whatever its scope** (engine
+  mechanism, (b)): a `retarget` or `type-redirect` entry whose source a BASE manifest drops
+  (`RunScope.inheritedDrops`) also reaches every declaration THIS run emits — over that entry
+  alone, the rest of the phase keeps the base's scope. Scoped to the base's package, a dependent's
+  field of the dropped type was emitted under the dropped name, which nothing declares (over 100
+  `E008` in one extension).
 - **A DERIVED surface escapes the merge contract at an EQUAL fingerprint.** `BeanCollapse` nominates
   a pair and derives the shape from the run's descendants, override closure and writes; one subclass
   in the dependent flips `Refuse`, emitting `def getW()` where the base emitted `var w`. Publish the

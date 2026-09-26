@@ -2079,6 +2079,7 @@ final case class PortRun(
         referenceSources
       )
       .renaming(declaredName)
+      .inheritingDrops(manifest.map(_.baseChain.flatMap(_.dropTypes).toSet).getOrElse(Set.empty))
 
   // ---- reference-derived spelling policy ----------------------------
   /** the opaque targets of the deriving specs; empty when no phase derives. */

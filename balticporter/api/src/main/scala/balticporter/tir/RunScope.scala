@@ -48,6 +48,11 @@ trait RunScope:
     */
   def emittedName(upstreamFqn: String): String = upstreamFqn
 
+  /** types a BASE manifest drops, by upstream FQN. A phase's replacement for one is inherited with the drop, so it reaches this run's own declarations whatever the phase's scope: the dropped name has
+    * no declaration left to keep. Empty for a port with no base.
+    */
+  def inheritedDrops: Set[String] = Set.empty
+
   /** this scope, answering [[emittedName]] through `rename`. */
   final def renaming(rename: String => String): RunScope =
     val self = this
@@ -60,7 +65,23 @@ trait RunScope:
       override def baseMemberUpstream:                   Set[String]                            = self.baseMemberUpstream
       override def derived:                              DerivedPolicy                          = self.derived
       override def referenceSource:                      Option[RunScope.ReferenceSourceLookup] = self.referenceSource
+      override def inheritedDrops:                       Set[String]                            = self.inheritedDrops
       override def emittedName(upstreamFqn: String):     String                                 = rename(upstreamFqn)
+
+  /** this scope, answering [[inheritedDrops]] with `types`. */
+  final def inheritingDrops(types: Set[String]): RunScope =
+    val self = this
+    new RunScope:
+      def emits(unit:                       SymId):      Boolean                                = self.emits(unit)
+      def contributed(phase:                String):     Option[Set[String]]                    = self.contributed(phase)
+      override def platform:                             RunScope.PlatformPolicy                = self.platform
+      override def baseSubstitutedOwners:                Set[String]                            = self.baseSubstitutedOwners
+      override def ownSubstitutedOwners:                 Set[String]                            = self.ownSubstitutedOwners
+      override def baseMemberUpstream:                   Set[String]                            = self.baseMemberUpstream
+      override def derived:                              DerivedPolicy                          = self.derived
+      override def referenceSource:                      Option[RunScope.ReferenceSourceLookup] = self.referenceSource
+      override def inheritedDrops:                       Set[String]                            = types
+      override def emittedName(upstreamFqn: String):     String                                 = self.emittedName(upstreamFqn)
 
   /** …the SAME question asked of a MEMBER, which is what a phase actually holds. [[emits]] takes a top-level unit (the run's classification granularity); every caller climbs the owner chain to it.
     * Written once here since the climb is fuel-bounded and a caller's own would be free to choose a different bound or stop short of a unit.

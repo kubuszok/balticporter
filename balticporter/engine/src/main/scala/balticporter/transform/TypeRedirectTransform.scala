@@ -86,6 +86,17 @@ final class TypeRedirectTransform(
     }
     ownFindings = bad.toList
     records = binder.recordsFor(name)
+    boundRun = binder.run
+
+  /** the run this phase was bound in: which units it emits and which types its bases drop. */
+  private var boundRun: RunScope = RunScope.whole
+
+  /** a redirect of a type a BASE drops is inherited with the drop: this run's own declarations take it whatever the entry's scope, since the dropped name has nothing left to declare it. */
+  private def inherited(from: String): Boolean = boundRun.inheritedDrops(from)
+
+  /** [[inScope]], plus — for an inherited drop's redirect — every declaration this run emits. */
+  private def admits(sc: RuleScope, dropped: Boolean, program: Program, id: SymId): Boolean =
+    inScope(sc, program, id) || (dropped && !sc.isUnrestricted && boundRun.emitsSymbol(program, id))
 
   /** Re-pointing a type changes emitted signatures, so it is shared surface; a member rename moves the signature too and is rendered here, while an entry with no renames spells exactly what it always
     * did so old configs still compare equal.
@@ -172,6 +183,7 @@ final class TypeRedirectTransform(
     */
   private var instanceTwins: Map[SymId, SymId] = Map.empty
   private var passScope:     RuleScope         = RuleScope.everywhere
+  private var passDropped:   Boolean           = false
 
   /** Refusals this run made — reset at the head of every run, since a phase instance is reused across two translations.
     */
@@ -307,7 +319,7 @@ final class TypeRedirectTransform(
           // …SCOPED, exactly as the rewrite is. A row for a declaration the scope held back would
           // claim a signature change that did not happen, and a porter note claiming one is worse
           // than none (`NoteCoverageCheck` fails a run either way).
-          .filter((encl, _) => inScope(scopeOf(from), program, encl))
+          .filter((encl, _) => admits(scopeOf(from), inherited(from), program, encl))
           .groupBy(_._1)
           .toList
           .flatMap((encl, os) => os.map(_._2).minByOption(o => (o.javaPath, o.line)).map(encl -> _))
@@ -344,19 +356,23 @@ final class TypeRedirectTransform(
       val scoped    = summon[Program]
       val fullMap   = mapping
       val fullTwins = memberTwins
-      val twinScope = fullTwins.keys.flatMap(m => scoped.symbolOf(m).flatMap(s => scopeBySource.get(s.owner)).map(m -> _)).toMap
+      // a pass per (scope, inherited drop): an inherited drop's redirect also reaches this run's own units
+      val passOf    = scopeBySource.map((k, sc) => k -> (sc, entryBySource.get(k).exists(inherited)))
+      val twinScope = fullTwins.keys.flatMap(m => scoped.symbolOf(m).flatMap(s => passOf.get(s.owner)).map(m -> _)).toMap
       val fullInst  = instanceTwins
       var units     = program.units
       var symbols   = table
       var fired     = Map.empty[String, Set[String]]
-      scopeBySource.values.toList.distinct.foreach { sc =>
-        val sources = scopeBySource.collect { case (k, v) if v == sc => k }.toSet
+      passOf.values.toList.distinct.foreach { pass =>
+        val (sc, dropped) = pass
+        val sources       = passOf.collect { case (k, v) if v == pass => k }.toSet
         mapping = fullMap.view.filterKeys(sources).toMap
-        memberTwins = fullTwins.view.filterKeys(m => twinScope.get(m).contains(sc)).toMap
+        memberTwins = fullTwins.view.filterKeys(m => twinScope.get(m).contains(pass)).toMap
         instanceTwins = fullInst.view.filterKeys(m => scoped.symbolOf(m).exists(s => sources(s.owner))).toMap
         passScope = sc
-        units = units.map(u => if inScope(sc, scoped, u.symbol) then StandardTraversal.mapClassDef(this, u) else u)
-        symbols = StandardTraversal.mapSymbols(this, symbols, s => inScope(sc, scoped, s.id))
+        passDropped = dropped
+        units = units.map(u => if admits(sc, dropped, scoped, u.symbol) then StandardTraversal.mapClassDef(this, u) else u)
+        symbols = StandardTraversal.mapSymbols(this, symbols, s => admits(sc, dropped, scoped, s.id))
         if !sc.isUnrestricted then
           sources.flatMap(entryBySource.get).foreach { entry =>
             val hits = program.units.flatMap(u => scoped.symbolOf(u.symbol).flatMap(sc.entryFor(scoped, _))).toSet
@@ -367,6 +383,7 @@ final class TypeRedirectTransform(
       memberTwins = fullTwins
       instanceTwins = fullInst
       passScope = RuleScope.everywhere
+      passDropped = false
       scopeFired = fired
       program.rebuilt(units, symbols) // xref rebuilt by the Pipeline
 
@@ -507,7 +524,7 @@ final class TypeRedirectTransform(
       case TypeRepr.PolyType(_, res)      => head(res)
       case _                              => scala.None
     def declared(s: SymId): Boolean =
-      p.symbolOf(s).exists(d => head(d.info).exists(mapping.contains) && inScope(passScope, p, s))
+      p.symbolOf(s).exists(d => head(d.info).exists(mapping.contains) && admits(passScope, passDropped, p, s))
     Tree.uncomment(q) match
       case _: Tree.This | _: Tree.Super => false
       case Tree.Ident(s, _, _)          => declared(s)

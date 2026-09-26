@@ -41,6 +41,37 @@ private[transform] trait CollectionsPolicy:
     boundSinks = reflectiveSinks.toList.sorted.map(k => k -> binder.bindType(name, SinkSetting, k, Ownership.Either)).toMap
     boundFamilies = families.keys.toList.sorted.map(k => k -> binder.bindType(name, FamilySetting, k, Ownership.Either)).toMap
     substitutedOwners = binder.run.baseSubstitutedOwners ++ binder.run.ownSubstitutedOwners
+    boundRun = binder.run
+
+  /** the run this phase was bound in: which units it emits and which types its bases drop. */
+  private[transform] var boundRun: RunScope = RunScope.whole
+
+  /** own declarations the scope held back that a retarget of an INHERITED drop still reaches — the dropped name has no declaration left to keep, so the base's replacement is inherited with the drop.
+    * Empty without a base drop that is also a retarget source, which is what keeps it a no-op.
+    */
+  private[transform] var inheritedDropHeld: Set[SymId] = Set.empty
+
+  /** the remap entries whose source is a retarget key a base drops. */
+  private[transform] def inheritedDropSources(p: Program, full: Map[SymId, SymId]): Set[SymId] =
+    val drops = boundRun.inheritedDrops.filter(effectiveRetarget.contains)
+    if drops.isEmpty then Set.empty else full.keySet.filter(id => p.symbolOf(id).exists(s => drops(s.fullName)))
+
+  /** the held-back declarations of this run's own units the inherited-drop pass re-maps; a member held because it overrides a class file stays literal. */
+  private[transform] def heldForInheritedDrops(p: Program): Set[SymId] =
+    excluded.filter(id => !retainedOverrides(id) && !retainedOwners(id) && p.owns(id) && boundRun.emitsSymbol(p, id))
+
+  /** `mapped` for the declarations in `held`, `prev` for every other member — the inverse of [[restoreExcluded]], over the same spine. */
+  private[transform] def spliceHeld(prev: Tree.ClassDef, mapped: Tree.ClassDef, held: Set[SymId]): Tree.ClassDef =
+    val body = CollectionsTransform.spine(prev.body, mapped.body, prev.symbol).map {
+      case (o: Tree.ClassDef, m: Tree.ClassDef) => spliceHeld(o, m, held)
+      case (o: Tree.DefDef, m: Tree.DefDef)     => if held(o.symbol) then m else o
+      case (o: Tree.ValDef, m: Tree.ValDef)     => if held(o.symbol) then m else o
+      case (o, _)                               => o
+    }
+    val own =
+      if !held(prev.symbol) then prev
+      else prev.copy(parents = mapped.parents, selfType = mapped.selfType, tparams = mapped.tparams, enumCases = mapped.enumCases)
+    own.copy(body = body)
 
   /** Fingerprint covering scope, mapping table, retargets, carriers and families. Segments omitted when their parameter is empty, so no baseline moves.
     */
@@ -498,12 +529,14 @@ private[transform] trait CollectionsPolicy:
   /** One decision row per declaration the scope held back that the mapping would otherwise have moved — without it, the `Everywhere(except)` direction is invisible in `decisions.tsv`. Only
     * declarations, and only ones a retyping would actually have reached.
     */
-  private[transform] def recordScopedOut(before: SymbolTable)(using p: Program): Unit =
+  private[transform] def recordScopedOut(before: SymbolTable, after: SymbolTable)(using p: Program): Unit =
     if excluded.isEmpty then return
+    // a held declaration the inherited-drop pass retyped and left nothing mappable in is not kept
+    def movedByDrop(s: Symbol) = inheritedDropHeld(s.id) && after.get(s.id).exists(a => !collectionValued(p, a.info))
     scope match
       case RuleScope.Everywhere(_) =>
         before.all.foreach { s =>
-          if excluded(s.id) && collectionValued(p, s.info) && Decision.isDeclaration(p, s) then
+          if excluded(s.id) && collectionValued(p, s.info) && Decision.isDeclaration(p, s) && !movedByDrop(s) then
             scope.entryFor(p, s).foreach { entry =>
               record(
                 Decision(
