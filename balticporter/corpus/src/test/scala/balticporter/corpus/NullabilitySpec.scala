@@ -58,9 +58,11 @@ class NullabilitySpec extends PortSuite:
     // baseline — `find`, `pick`, `count`, `parent` — and not five: the emitter renders a class's, a
     // method's and (since wave 3.1ad, `TirEmitter.valDef` calling `annots`) a field's annotations,
     // and not a parameter's, so `spread`'s is invisible in the output whatever this phase does.
+    // A REFUSED site (`count`, a primitive) loses its marker too: a consumed annotation names a
+    // class the port's build does not carry, and the refusal is counted instead.
     def markers(s: String) = s.linesIterator.count(_.trim == "@demo.Null")
     assertEquals(markers(port(java).out), 4)
-    assertEquals(markers(port(java, phase()).out), 1)
+    assertEquals(markers(port(java, phase()).out), 0)
   }
 
   test("a GENERIC return retires the `null.asInstanceOf[T]` placeholder — the floor's one real win") {
@@ -131,10 +133,13 @@ class NullabilitySpec extends PortSuite:
     assertEquals(issuesOf(ph, after).get(Issue.AnnotationArguments).map(_.size), Some(1))
   }
 
-  test("a REFUSED site keeps its annotation AND its signature — nothing is half-done") {
+  test("a REFUSED site keeps its signature, loses the consumed annotation, and is counted") {
     val p = port(java, phase())
-    assertEmits(p, "@demo.Null")
+    assert(!clue(p.out).contains("@demo.Null"))
     assertEmits(p, "def count(): scala.Int")
+    val ph         = phase()
+    val (after, _) = run(ph)
+    assert(clue(issuesOf(ph, after)).get(Issue.PrimitiveType).exists(_.contains("demo.Group#count")))
     // …and a refused PARAMETER is invisible in the output whatever happens, because the emitter
     // renders no parameter annotation at all. That asymmetry is exactly why the refusal has to be
     // a COUNTED finding and not "the annotation is still there, look": for `spread` there is

@@ -282,6 +282,10 @@ sees the kind); the screen is *would a reader act differently*.
   is a derivation input, not a compared surface; a package-private java FIELD the reference ships public
   derives a `Public` row.
 - The bean fold's `setterOnly` guard reads an INHERITED getter as in scope (`graph.ancestorsOf`).
+- A nullability annotation the policy BINDS is stripped from every owned declaration, retyped or
+  not; a declined retype (an override of an external `Iterator#next`, a primitive, a scoped-out
+  member) is COUNTED instead. Left on the refused override, it named a class the port's build does
+  not carry (`value jspecify is not a member of org`). Kind (a).
 - An override anchor on a JDK parent is read off the RUNNING JDK (`ExternalSurface.jdkReflected`),
   never left unknown: `nullary-arity` anchored every nilary member of a class implementing
   `Comparator` on a `size()` the JDK never declared (jbump's `Collisions`, 2 frozen `Parenless` rows

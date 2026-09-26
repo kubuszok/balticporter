@@ -428,7 +428,12 @@ final class NullabilityTransform(
     val kept = if target == Target.Union then plan.toList else refuseErasureClashes(program, plan.toList)
     plan.clear(); plan ++= kept
     scopedOutParents(program, plan.toList)
-    if plan.isEmpty then return program
+    // a bound annotation is CONSUMED everywhere this program owns it, retyped or not: the refusal
+    // is counted above, and the annotation class is no dependency of the port's build
+    def unannotated(s: Symbol): Symbol =
+      if !program.owns(s.id) || !s.annotations.exists(a => headSym(a.tpe).exists(boundAnnots.contains)) then s
+      else s.copy(annotations = s.annotations.filterNot(a => headSym(a.tpe).exists(boundAnnots.contains)))
+    if plan.isEmpty then return program.rebuilt(symbols = SymbolTable(program.symbols.all.map(unannotated)))
 
     newTypes = plan.iterator.map(p => p.sym.id -> nullable(p.was)).toMap
     if target != Target.Union then wrapped = newTypes
@@ -456,8 +461,8 @@ final class NullabilityTransform(
       TypeRepr.MethodType(mt.params.zipWithIndex.map((nt, i) => nt._1 -> ps.getOrElse(i, nt._2)), newTypes.getOrElse(id, mt.result), mt.isImplicit)
 
     val retyped = table.all.map { s =>
-      // consumed annotation is stripped (the type now states the fact); a refused site keeps it.
-      val s1   = consumed.get(s.id).map(as => s.copy(annotations = s.annotations.filterNot(as.contains))).getOrElse(s)
+      // consumed annotation is stripped (the type now states the fact), and so is one on a refused site
+      val s1   = unannotated(consumed.get(s.id).map(as => s.copy(annotations = s.annotations.filterNot(as.contains))).getOrElse(s))
       val info = s1.info match
         case mt: TypeRepr.MethodType => methodType(s.id, mt)
         case TypeRepr.PolyType(tps, mt: TypeRepr.MethodType) => TypeRepr.PolyType(tps, methodType(s.id, mt))
