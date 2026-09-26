@@ -158,9 +158,8 @@ object OpaqueOwnClass:
         foreign.result()
       )
 
-  private def isObject(p: Program, t: TypeRepr): Boolean = t match
-    case TypeRepr.TypeRef(_, s) => p.symbolOf(s).exists(_.fullName == "java.lang.Object")
-    case _                      => false
+  /** the root every class inherits, asked through the one shared test for it. */
+  private def isObject(p: Program, t: TypeRepr): Boolean = ElementWitnessTransform.isObjectType(p, t)
 
   private def refOf(t: Term): Option[SymId] = Tree.uncomment(t) match
     case Tree.Ident(s, _, _)     => Some(s)

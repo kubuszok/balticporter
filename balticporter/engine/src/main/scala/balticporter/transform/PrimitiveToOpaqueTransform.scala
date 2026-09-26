@@ -347,9 +347,21 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
         val arrayTC = TypeRepr.TypeRef(TypeRepr.NoType, arraySym)
         opaqueArrayRef = if arraySym == SymId.None then TypeRepr.NoType else TypeRepr.AppliedType(arrayTC, List(opaqueRef))
         primArrayRef = if arraySym == SymId.None then TypeRepr.NoType else TypeRepr.AppliedType(arrayTC, List(primRef))
-        applySym = mint(wrapName, s"${spec.fqn}#$wrapName", Flags(isStatic = true), cls, TypeRepr.MethodType(List("v" -> primRef), opaqueRef))
+        applySym = mint(
+          wrapName,
+          MemberKey(spec.fqn, wrapName).render,
+          Flags(isStatic = true),
+          cls,
+          TypeRepr.MethodType(List("v" -> primRef), opaqueRef)
+        )
         // the unwrap is an extension too, so a caller outside the object reads `a.unwrap`
-        unwrapSym = mint(unwrapName, s"${spec.fqn}#$unwrapName", Flags(isStatic = true), cls, TypeRepr.MethodType(List("v" -> opaqueRef), primRef))
+        unwrapSym = mint(
+          unwrapName,
+          MemberKey(spec.fqn, unwrapName).render,
+          Flags(isStatic = true),
+          cls,
+          TypeRepr.MethodType(List("v" -> opaqueRef), primRef)
+        )
         val o       = Origin.synthetic
         val vWrap   = mint("v", "v", Flags(isParam = true), applySym, primRef)
         val vUnwrap = mint("v", "v", Flags(isParam = true), unwrapSym, opaqueRef)
