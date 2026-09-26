@@ -1150,7 +1150,11 @@ private[emit] trait TirEmitterMembers:
       case TypeRepr.TypeRef(_, x)                                                                     => sym(x).info.isInstanceOf[TypeRepr.TypeBounds]
       case TypeRepr.AppliedType(TypeRepr.TypeRef(_, a), List(el)) if sym(a).fullName == "scala.Array" => untagged(el)
       case _                                                                                          => false
-    val copy = if untagged(e) then s"s$$.toArray[scala.Any].asInstanceOf[scala.Array[$et]]" else s"s$$.toArray[$et]"
+    val made = sym(s).tags.collectFirst { case VarargArrayFactory(f) => f.replace("{n}", "s$.length") }
+    val copy = made match
+      case Some(m)          => s"{ val c$$: scala.Array[$et] = $m; s$$.copyToArray(c$$); c$$ }"
+      case _ if untagged(e) => s"s$$.toArray[scala.Any].asInstanceOf[scala.Array[$et]]"
+      case _                => s"s$$.toArray[$et]"
     s"($n match { case null => null; case a$$: scala.collection.immutable.ArraySeq[?] => a$$.unsafeArray.asInstanceOf[scala.Array[$et]]; case s$$ => $copy })"
 
   private def references(body: Term, p: SymId): Boolean =

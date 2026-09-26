@@ -32,6 +32,9 @@ object ElementWitnessCheck:
       */
     case RawConversion
 
+    /** a repeated parameter at an element type whose bound was dropped, with no witness in scope to build the array a caller's non-array `Seq` is copied into. */
+    case VarargCopy
+
   object Issue:
     /** whether the fix is universal, configured, or library-specific. */
     def classification(i: Issue): String = i match
@@ -72,6 +75,13 @@ object ElementWitnessCheck:
           "where java's raw type accepted any instantiation, so the phase emits java's own unchecked " +
           "conversion at the site: `arg.asInstanceOf[C[java.lang.Object]]`. Sound under erasure " +
           "(the JVM sees one class); a row is a place to give the declaration its type argument."
+      case VarargCopy =>
+        "engine (true of every Java program), and IT COMPILES: a caller's repeated arguments that " +
+          "do not arrive as an array wrapper (every literal vararg on Scala.js) are copied into a " +
+          "new array, and with no witness in scope that array is `Object[]`. Correct for a " +
+          "reference element; for a primitive one the copy is boxed and the first store into a " +
+          "primitive backing array throws. Thread the witness to this declaration (a `subjectTypes` " +
+          "entry naming it) or keep its element type's `Object` bound."
       case ErasedArrayCast =>
         "port policy, and IT COMPILES: java wrote a RAW receiver here, so javac's own erased " +
           "view of the call presents this element-typed array as `Object[]`, and the port emits " +

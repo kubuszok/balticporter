@@ -88,6 +88,11 @@ final case class Flags(
 /** Open, extensible domain semantics attached to symbols by transforms. */
 trait SymTag
 
+/** On a repeated parameter: the Scala expression that makes the array a caller's non-array `Seq` is copied into, `{n}` its length — set by the phase that knows the element's runtime representation,
+  * since `toArray[Any]` makes boxes a primitive backing array rejects.
+  */
+final case class VarargArrayFactory(expr: String) extends SymTag
+
 // ---------------------------------------------------------------------------
 // Trivia — the ORIGINAL COMMENTS, carried through the port.
 // ---------------------------------------------------------------------------

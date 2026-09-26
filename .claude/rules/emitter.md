@@ -252,6 +252,13 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   `T...` method stays a class (`sam-anon->lambda` guard `RepeatedParam`: a function literal cannot
   declare `T*`); an owned override of an external NON-vararg `T[]` member, and a java LAMBDA at an
   owned `T...` SAM, are loud untested edges. Kind (a).
+- The `x$arr` binding's fallback COPIES a caller's `Seq` that is not an `ArraySeq` — every literal
+  vararg on Scala.js arrives as a JS-array-backed `Seq`. At an element whose `Object` bound the
+  witness phase dropped, `toArray[Any]` builds boxes, and `System.arraycopy` into the `int[]`
+  backing store throws (lls `DynamicArray` "addAll from plain array" on JS; on the JVM only a
+  non-array `Seq` spread reaches it). The phase that knows the representation tags the parameter
+  (`VarargArrayFactory`, the witness's `create`) and the copy goes through it; no witness in scope is
+  `witness` lane `VarargCopy`. Kind (a).
 
 - A method reference's lowered call reads the member's DECLARATION for its arity (`parenlessDecl`:
   a `def` with no clause, or a collapsed field), never the symbol's java `MethodType`; a BOUND

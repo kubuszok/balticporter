@@ -361,6 +361,9 @@ final class ElementWitnessTransform(
 
     val mint = new WitnessMinter(program0)
 
+    /** repeated parameter -> the witness expression that makes its array, `{n}` the length. */
+    val varargFactories = collection.mutable.LinkedHashMap.empty[SymId, String]
+
     /** `Object[] local = <element-typed array>` — java's raw view of its own array (the frontend's covariance cast). Once the element may be a PRIMITIVE the view is a run-time `ClassCastException`
       * (an `int[]` is no `Object[]`), so such a LOCAL keeps the element type and the cast goes; a view this phase cannot repair stays counted (`ErasedArrayCast`).
       */
@@ -695,6 +698,25 @@ final class ElementWitnessTransform(
 
     def unitOf(cd: Tree.ClassDef): SymId = cd.symbol
 
+    /** A repeated parameter at an element type whose bound this phase dropped: a caller's `Seq` that is not an array wrapper (a literal vararg on Scala.js) is copied into an array the WITNESS makes,
+      * since `toArray[Any]` builds boxes an `int[]` backing store rejects. Without a witness in scope the copy stays boxed, counted.
+      */
+    def varargCopies(d: Tree.DefDef, witnessed: Set[SymId], unbound: Set[SymId], owner: String, unit: SymId): Unit =
+      d.paramss.flatten.filter(v => program0.symbolOf(v.symbol).exists(_.flags.isVararg)).foreach { v =>
+        v.tpt.tpe match
+          case TypeRepr.AppliedType(TypeRepr.TypeRef(_, arr), List(TypeRepr.TypeRef(_, e))) if program0.symbolOf(arr).exists(_.fullName == "scala.Array") =>
+            if witnessed(e) then varargFactories(v.symbol) = s"${summonOf(e)}.${members.create}({n})"
+            else if unbound(e) then
+              refuse(
+                ElementWitnessCheck.Issue.VarargCopy,
+                owner,
+                s"`${program0.symbolOf(d.symbol).map(_.name).getOrElse("?")}` takes `${program0.symbolOf(e).map(_.name).getOrElse("?")}...` and no witness is in scope to build its array",
+                d.origin,
+                unit
+              )
+          case _ => ()
+      }
+
     def rewriteClass(cd: Tree.ClassDef, unit: SymId): Tree.ClassDef =
       val fqn = program0.symbolOf(cd.symbol).map(_.fullName).getOrElse("")
       // this class's OWN element parameters, when it is a subject the scope admits.
@@ -767,7 +789,8 @@ final class ElementWitnessTransform(
         )
         val elems   = classElems ++ threaded.map(td => td.symbol -> TypeRepr.TypeRef(TypeRepr.NoPrefix, td.symbol)).toMap
         val tparams = d.tparams.map(td => if unboundHere.exists(_.symbol == td.symbol) then dropUpperBound(td) else td)
-        val body    = d.rhs.map(r =>
+        varargCopies(d, elems.keySet, unboundClassTparams ++ unboundHere.map(_.symbol), owner, unit)
+        val body = d.rhs.map(r =>
           StandardTraversal.mapTerm(
             new BodyRewrite(elems, owner, unit, unboundClassTparams ++ unboundHere.map(_.symbol), home, ownTps, threadedHere || threaded.nonEmpty),
             r
@@ -838,7 +861,9 @@ final class ElementWitnessTransform(
         case _ => t
 
     val units2   = units1.map(u => StandardTraversal.mapClassDef(wildcardFill, u)(using program0))
-    val symbols2 = StandardTraversal.mapSymbols(wildcardFill, SymbolTable(symbols1b.all ++ mint.minted))(using program0)
+    val symbols2 = varargFactories.foldLeft(StandardTraversal.mapSymbols(wildcardFill, SymbolTable(symbols1b.all ++ mint.minted))(using program0)) { case (tbl, (p, f)) =>
+      if tbl.get(p).isDefined then tbl.withTag(p, VarargArrayFactory(f)) else tbl
+    }
 
     // ---- what the fill OWES: a class literal's payload, and java's unchecked conversion ---------
     // `mapClassDef` maps a literal's TYPE but not the type a class literal CARRIES (a reified
