@@ -26,15 +26,15 @@ object RepeatedForwardCheck:
         (if i == UnspreadArray then "(`arr*`) — java passed the array AS the varargs array." else "(`xs*`) — the text was written before the parameter became repeated.")
 
   final case class Finding(issue: Issue, file: String, line: Int, enclosing: String, param: String, callee: String):
-    def detail: String = s"`$param` passed to `$callee`'s repeated `Object` slot without `*`: the callee receives one element holding it — write `$param*`"
-    def render: String = s"$issue $enclosing: $detail  ($file:$line)"
+    def detail: String              = s"`$param` passed to `$callee`'s repeated `Object` slot without `*`: the callee receives one element holding it — write `$param*`"
+    def render: String              = s"$issue $enclosing: $detail  ($file:$line)"
     def report: CheckReport.Finding = CheckReport.Finding(Name, issue.toString, enclosing, file, line, detail)
 
   private val Universal = Set("Object", "java.lang.Object", "AnyRef", "scala.AnyRef", "Any", "scala.Any")
   private val Primitive = Set("Int", "Long", "Short", "Byte", "Char", "Float", "Double", "Boolean").flatMap(n => Set(n, s"scala.$n"))
 
   /** one callee shape: its parameter count, and whether the last one is a repeated `Object`-like slot. */
-  private final case class Shape(params: Int, repeated: Boolean, universal: Boolean)
+  final private case class Shape(params: Int, repeated: Boolean, universal: Boolean)
 
   /** @param sources (label, text) — a label is what a finding names as its file */
   def check(sources: List[(String, String)]): List[Finding] =
@@ -59,19 +59,19 @@ object RepeatedForwardCheck:
           c.templ.body.stats.foreach {
             case d: Defn.Def => shapes(d.name.value) = shapeOf(valueParams(d), cls ++ unbounded(d.paramClauseGroups.flatMap(_.tparamClause.values))) :: shapes(d.name.value)
             case d: Decl.Def => shapes(d.name.value) = shapeOf(valueParams(d), cls ++ unbounded(d.paramClauseGroups.flatMap(_.tparamClause.values))) :: shapes(d.name.value)
-            case _           => ()
+            case _ => ()
           }
         case o: Defn.Object =>
           o.templ.body.stats.foreach {
             case d: Defn.Def => shapes(d.name.value) = shapeOf(valueParams(d), unbounded(d.paramClauseGroups.flatMap(_.tparamClause.values))) :: shapes(d.name.value)
-            case _           => ()
+            case _ => ()
           }
         case t: Defn.Trait =>
           val cls = unbounded(t.tparamClause.values)
           t.templ.body.stats.foreach {
             case d: Defn.Def => shapes(d.name.value) = shapeOf(valueParams(d), cls ++ unbounded(d.paramClauseGroups.flatMap(_.tparamClause.values))) :: shapes(d.name.value)
             case d: Decl.Def => shapes(d.name.value) = shapeOf(valueParams(d), cls ++ unbounded(d.paramClauseGroups.flatMap(_.tparamClause.values))) :: shapes(d.name.value)
-            case _           => ()
+            case _ => ()
           }
       }
     }
@@ -81,10 +81,10 @@ object RepeatedForwardCheck:
       val fits = shapes(callee).filter(s => if s.repeated then argc >= s.params - 1 else argc == s.params)
       fits.nonEmpty && fits.forall(s => s.repeated && s.universal && at >= s.params - 1)
     def calleeName(fun: Term): Option[String] = fun match
-      case Term.Name(n)                => Some(n)
+      case Term.Name(n)                 => Some(n)
       case Term.Select(_, Term.Name(n)) => Some(n)
-      case Term.ApplyType(f, _)        => calleeName(f)
-      case _                           => scala.None
+      case Term.ApplyType(f, _)         => calleeName(f)
+      case _                            => scala.None
     val out = List.newBuilder[Finding]
     parsed.foreach { (label, tree) =>
       tree.traverse { case d: Defn.Def =>
@@ -98,8 +98,8 @@ object RepeatedForwardCheck:
         // a name bound again inside the body is not provably the parameter
         val rebound = collection.mutable.Set.empty[String]
         d.body.traverse {
-          case Pat.Var(n)     => rebound += n.value
-          case p: Term.Param  => rebound += p.name.value
+          case Pat.Var(n) => rebound += n.value
+          case p:  Term.Param => rebound += p.name.value
           case dd: Defn.Def   => rebound += dd.name.value
         }
         val live = forwardable -- rebound
