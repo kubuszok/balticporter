@@ -395,3 +395,20 @@ class NullabilityWrapperSpec extends PortSuite:
     // wherever the slot is, so the arm declines structurally rather than asking about scope.
     List(ported, port(overrideChain, phase), portAll(castSources, phase)).foreach(p => assertNotEmits(p, "empty.asInstanceOf"))
   }
+
+  test("a wrapped ARRAY spread through a vararg slot is unwrapped INSIDE the spread — java's slot takes a null array") {
+    val p = port(
+      """package demo;
+        |import java.lang.annotation.*;
+        |@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+        |@interface Null {}
+        |class Snap {
+        |  @Null float[] values;
+        |  void set(float t, float... vs) {}
+        |  void call() { set(1f, values); }
+        |}
+        |""".stripMargin,
+      phase
+    )
+    assertEmits(p, "this.set(1.0f, this.values.orNull*)")
+  }

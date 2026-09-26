@@ -1008,7 +1008,9 @@ final class NullabilityTransform(
         case _                                 => TypeRepr.NoType
       n.copy(init = n.init.map(_.map(coerceTo(elemWant, _))))
     case a: Tree.ArrayLength if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
-    case a: Tree.ArrayAccess if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
+    // an array passed WHOLE through a vararg slot: java's slot takes a null array, so `.orNull`
+    case sp: Tree.Spread if isWrapper && isWrapped(sp.expr)      => sp.copy(expr = unwrapOrNull(sp.expr))
+    case a:  Tree.ArrayAccess if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
     // java's `x instanceof T` is false for null: test the unwrapped value, never the wrapper
     case io: Tree.InstanceOf if isWrapper && isWrapped(io.expr) => io.copy(expr = unwrapOrNull(io.expr))
     case other => other
