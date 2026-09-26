@@ -94,6 +94,35 @@ ThisBuild / Test / fork := true
 
 val munit = "org.scalameta" %% "munit" % "1.2.0" % Test
 
+// A test resource naming source directories a spec reads as FILES at run time.
+def sourceRootsResource(name: String, roots: Seq[File], base: File): File = {
+  val f = base / "balticporter" / s"$name.txt"
+  IO.write(f, roots.map(_.getAbsolutePath).mkString("", "\n", "\n"))
+  f
+}
+
+// Every production `src/main/scala` the engine ships — what the engine's source-reading specs scan.
+// Used from the engine's own settings, so the unscoped `Compile / scalaSource` is the engine's.
+lazy val productionRoots: Def.Initialize[Seq[File]] = Def.setting(
+  Seq(
+    (api / Compile / scalaSource).value,
+    (Compile / scalaSource).value,
+    (`frontend-spoon` / Compile / scalaSource).value,
+    (runtimeJvmRow / Compile / scalaSource).value,
+  )
+)
+
+// One digest over every file under `roots`, path and content, for `Test / extraTestDigests`.
+// sbt 2's `test` skips a suite whose classes' digest is unchanged, and a file read at run time is
+// not in it — nor is a generated resource's content, measured — so a lint over main sources passed
+// from the cache after an edit that breaks it. Uncached: its inputs are the files, not the paths.
+def sourceTreeDigest(roots: Seq[File]): sbt.util.Digest = {
+  val entries = roots.zipWithIndex.flatMap { case (root, i) =>
+    (root ** "*").get().filter(_.isFile).map(f => s"$i/${IO.relativize(root, f).getOrElse(f.getName)}" -> f)
+  }.sortBy(_._1)
+  sbt.util.Digest.sha256Hash(entries.map { case (rel, f) => s"$rel ${Hash.toHex(Hash(f))}" }.mkString("\n").getBytes("UTF-8"))
+}
+
 // ---------------------------------------------------------------------------------------------
 // `balticporter-runtime` — the support types EMITTED CODE links against.
 //
@@ -248,33 +277,22 @@ lazy val engine = project
       IO.write(index, srcs.map(_.getName).mkString("", "\n", "\n"))
       copied :+ index
     }.taskValue,
-    // …and the path back to the originals, for the test that proves the copy IS a copy.
+    // …and the source roots specs read as FILES at run time: the runtime originals, for the test
+    // that proves the vendored copy IS a copy (and `MintedShimSurfaceDerivationSpec`, which reads
+    // the copy); the engine's own root, for `PolicyKeyLintSpec` and
+    // `CollectionsHandledDerivationSpec`, whose subject is the TEXT of the transform package; and
+    // EVERY production root, for `RealPathSpec`'s duplication scan over the whole shipped engine.
     Test / resourceGenerators += Def.task {
-      val f = (Test / resourceManaged).value / "balticporter" / "runtime-source-dir.txt"
-      IO.write(f, (runtimeJvmRow / Compile / scalaSource).value.getAbsolutePath)
-      Seq(f)
-    }.taskValue,
-    // …and the engine's own source root, for `PolicyKeyLintSpec` — a check whose subject is the
-    // TEXT of the transform package, so it must find those files wherever the suite is run from.
-    Test / resourceGenerators += Def.task {
-      val f = (Test / resourceManaged).value / "balticporter" / "engine-source-dir.txt"
-      IO.write(f, (Compile / scalaSource).value.getAbsolutePath)
-      Seq(f)
-    }.taskValue,
-    // …and EVERY production source root, one per line, for `RealPathSpec`'s duplication scan. The
-    // subject there is not one package but the whole shipped engine: §5.4's helper was reimplemented
-    // four times in three modules, which is precisely the failure a single-module scan cannot see.
-    Test / resourceGenerators += Def.task {
-      val f = (Test / resourceManaged).value / "balticporter" / "production-source-dirs.txt"
-      val roots = Seq(
-        (api / Compile / scalaSource).value,
-        (Compile / scalaSource).value,
-        (`frontend-spoon` / Compile / scalaSource).value,
-        (runtimeJvmRow / Compile / scalaSource).value,
+      val base    = (Test / resourceManaged).value
+      val runtime = (runtimeJvmRow / Compile / scalaSource).value
+      Seq(
+        sourceRootsResource("runtime-source-dir", Seq(runtime), base),
+        sourceRootsResource("engine-source-dir", Seq((Compile / scalaSource).value), base),
+        sourceRootsResource("production-source-dirs", productionRoots.value, base),
       )
-      IO.write(f, roots.map(_.getAbsolutePath).mkString("", "\n", "\n"))
-      Seq(f)
     }.taskValue,
+    // …declared as INPUTS of those specs, so an edit under any of them reruns them under `test`.
+    Test / extraTestDigests += Def.uncached(sourceTreeDigest(productionRoots.value)),
   )
 
 // The ONLY module that sees Spoon types. It depends on `api` alone for the TIR path; the BIR path

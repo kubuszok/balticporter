@@ -149,7 +149,13 @@ never a DEFECT (a residue cited as *measured worse*, a LOSS, a WORK ITEM). The a
   `test-frame`).
 - Engine specs gate on nothing: `PortMapAcceptanceSpec` asserted 8 while the answer had been 7,
   `assume`d on an artifact a fresh worktree lacks. `sbt test` is `testQuick`; the full suite is
-  `testOnly *`, run AFTER `measure-all`.
+  `testFull`, run AFTER `measure-all`, and it is the engine's pre-push gate.
+- **A spec that reads repository files at run time declares them as INPUTS, or sbt 2's `test`
+  replays its cached pass** (universal, a build fix): `test` reruns a suite only when the digest of
+  the classes it links changes, and neither a file read through a path nor a generated resource's
+  content is in it. `PolicyKeyLintSpec` passed from the cache after a main-source edit that broke it
+  and reached master green. The engine folds every production source into `Test / extraTestDigests`
+  (`sourceTreeDigest`, uncached); a scratch violation went skipped -> failing under `test`.
 - `decisions.tsv`: `Reason` is `Universal(rule)` / `Configured(phase, key)` / `LibraryRule(rule)`;
   `Configured`'s KEY is the manifest entry verbatim. One row per DECLARATION; scoped to this
   module's declarations (libgdx-test: 961 of 1240 would otherwise be the base's).
