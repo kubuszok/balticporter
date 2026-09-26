@@ -243,21 +243,27 @@ class BeanPropertySpec extends munit.FunSuite:
     assert(clue(r.refusals.mkString("\n")).contains("nothing to put on an LHS"))
   }
 
-  test("a VALUE-POSITION accessor reference refuses — an eta-expanded accessor is not the SAM") {
+  test("a METHOD REFERENCE to an accessor is no refusal — it is lowered to a lambda over the property's final spelling") {
     val r = run(
       """
-      import java.util.function.Supplier;
+      import java.util.function.*;
       class Thing {
         private int w;
         public int getW() { return w; }
         public void setW(int v) { this.w = v; }
         Supplier<Integer> read() { return this::getW; }
+        Function<Thing, Integer> unbound() { return Thing::getW; }
+        BiConsumer<Thing, Integer> write() { return Thing::setW; }
       }
       """,
       "Thing#w" -> "getW/setW"
     )
-    assertUntouched(r, "Thing#getW", "getW")
-    assert(clue(r.refusals.mkString("\n")).contains("VALUE position"))
+    assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
+    assertEquals(nameOf(r, "Thing#getW"), "w")
+    assert(clue(r.out).contains("{ val recv$ = this; (() => recv$.w) }"))
+    assert(r.out.contains("self$.w)"))
+    assert(r.out.contains("self$.w_=(a0$)"))
+    assert(!r.out.contains("getW"))
   }
 
   test("a STATIC accessor refuses — a companion property is out of scope (v1)") {

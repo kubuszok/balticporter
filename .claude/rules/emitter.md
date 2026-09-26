@@ -237,6 +237,12 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 
 ## More rules (one line each)
 
+- A method reference's lowered call reads the member's DECLARATION for its arity (`parenlessDecl`:
+  a `def` with no clause, or a collapsed field), never the symbol's java `MethodType`; a BOUND
+  reference to a parenless member binds the receiver once and wraps it in a lambda. So a method
+  reference is no reason for the bean phase to refuse a pair: simple-graphs' `Edge::getWeight`
+  rendered `self$.getWeight()` on a parenless getter and froze the `weight` rename. Kind (a).
+
 - An enum constructor parameter is a MEMBER only where it stands for a field it supersedes or the
   body reassigns it (`EnumShape.memberParams`); any other is emitted plain, as java's is no member.
   Emitted `var`, a parameter named `name` pushed anim8's `DitherAlgorithm` into the sealed shape

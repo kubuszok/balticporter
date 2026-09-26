@@ -249,9 +249,10 @@ final class BeanPropertyTransform(
               program.usages(s).forall {
                 case Usage(UsageKind.Call, a: Tree.Apply, _) =>
                   a.args.sizeIs == ar && receiverOf(a.fun).isDefined
-                case Usage(UsageKind.Call, _, _)    => false
-                case Usage(UsageKind.TermRef, _, _) => false
-                case _                              => true
+                case Usage(UsageKind.Call, mr: Tree.MethodRef, _) => BeanPropertyTransform.instanceRef(mr, ar)
+                case Usage(UsageKind.Call, _, _)                  => false
+                case Usage(UsageKind.TermRef, _, _)               => false
+                case _                                            => true
               }
             ),
           this
@@ -503,9 +504,11 @@ final class BeanPropertyTransform(
         p.usages(s).forall {
           case Usage(UsageKind.Call, a: Tree.Apply, _) =>
             a.args.sizeIs == arity && receiverOf(a.fun).isDefined
-          case Usage(UsageKind.Call, _, _)    => false // a `MethodRef` — a method VALUE
-          case Usage(UsageKind.TermRef, _, _) => false // a bare `Select`/`Ident` of the method
-          case _                              => true
+          // a method REFERENCE is lowered by the emitter to a lambda calling the member's final spelling
+          case Usage(UsageKind.Call, mr: Tree.MethodRef, _) => BeanPropertyTransform.instanceRef(mr, arity)
+          case Usage(UsageKind.Call, _, _)                  => false
+          case Usage(UsageKind.TermRef, _, _)               => false // a bare `Select`/`Ident` of the method
+          case _                                            => true
         }
       )
 
@@ -544,8 +547,8 @@ final class BeanPropertyTransform(
             else if !callsAreRewritable(gComp, 0) then
               refuse(
                 e,
-                s"`${e.getterName}` is referenced in VALUE position (a method reference or " +
-                  "a bare selection); an eta-expanded accessor is not the SAM java saw"
+                s"`${e.getterName}` is referenced in VALUE position (a bare selection); an " +
+                  "eta-expanded accessor is not the SAM java saw"
               )
             else
               e.setterName match
@@ -837,6 +840,9 @@ object BeanPropertyTransform:
         case _                           => true
       }
     )
+
+  /** an INSTANCE method reference taking java's accessor arity: the emitter lowers it to a lambda over the member's final name and arity, so it is no reason to keep the java accessor. */
+  def instanceRef(mr: Tree.MethodRef, arity: Int): Boolean = mr.referent == Referent.Instance(arity)
 
   def propertyNameOf(methodName: String): Option[String] =
     if methodName.startsWith("get") && methodName.length > 3 && methodName.charAt(3).isUpper then Some(decapitalize(methodName.substring(3)))

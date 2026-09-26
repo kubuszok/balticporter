@@ -335,7 +335,7 @@ private[emit] trait TirEmitterExprs:
         // not a function at all — scala 3 refuses to eta-expand a nullary method — so a nilary
         // static reference takes the lambda form; every other arity keeps the name.
         case Left(tt) if isStaticRef && referent == Referent.Static(0) =>
-          samAscribed(s"(() => ${tpe(tt.tpe)}.${local(s)}())", mrT, tt.tpe)
+          samAscribed(s"(() => ${tpe(tt.tpe)}.${local(s)}${callParens(s, "")})", mrT, tt.tpe)
         // a static method reference at NON-ZERO arity: bare name where the target SAM type carries
         // @FunctionalInterface (eta-expansion is warning-free), else an explicit lambda to avoid
         // the -Werror'd eta-expansion warning. An unreadable annotation set is treated as
@@ -366,7 +366,11 @@ private[emit] trait TirEmitterExprs:
           val recvT = if named then s": ${tpe(tt.tpe)}" else ""
           val extra = (0 until arity).toList.map(k => if named then s"a$k$$: ${tpe(formals(k))}" else s"a$k$$")
           val ps    = (s"$self$recvT" :: extra).mkString(", ")
-          samAscribed(s"(($ps) => $self.${local(s)}($as))", mrT, tt.tpe)
+          samAscribed(s"(($ps) => $self.${local(s)}${callParens(s, as)})", mrT, tt.tpe)
+        // a BOUND reference to a member declared PARENLESS has no method to eta-expand: a lambda
+        // over the receiver, evaluated ONCE where java evaluated it (JLS 15.13.3)
+        case Right(e) if referent == Referent.Instance(0) && parenlessDecl(s) =>
+          samAscribed(s"{ val recv$$ = ${term(e, i)}; (() => recv$$.${local(s)}) }", mrT, TypeRepr.NoType)
         case Right(e) => s"${term(e, i)}.${local(s)}"
     // Java's break leaves the loop; scala.util.boundary/break is the faithful shape. A
     // LABELLED break reaches it through Tree.Labeled or the loop's own label field.
@@ -547,6 +551,20 @@ private[emit] trait TirEmitterExprs:
           case TypeRepr.TypeRef(_, a) => sym(a).fullName == "java.lang.FunctionalInterface"
           case _                      => false)
       )
+
+  /** does the member's DECLARATION in this program take no parameter clause — a `def` a phase made parenless, or a property collapsed into a field? Read off the declaration, never the symbol's info,
+    * which keeps java's `MethodType(Nil, R)`.
+    */
+  private[emit] def parenlessDecl(s: SymId): Boolean =
+    program.definitionOf(s).exists {
+      case d: Tree.DefDef => d.paramss.isEmpty
+      case _: Tree.ValDef => true
+      case _ => false
+    }
+
+  /** the argument list a method reference's lowered call writes after the member: none for a parenless declaration with no arguments, else java's own. */
+  private[emit] def callParens(s: SymId, args: String): String =
+    if args.isEmpty && parenlessDecl(s) then "" else s"($args)"
 
   private[emit] def samAscribed(fn: String, target: TypeRepr, ctor: TypeRepr): String =
     def headOf(t: TypeRepr): Option[SymId] = t match
