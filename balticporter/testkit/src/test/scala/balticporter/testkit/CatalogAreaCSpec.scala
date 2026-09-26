@@ -748,6 +748,27 @@ class CatalogAreaCSpec extends PortSuite:
     assertConsults(p, JS.C(29))
   }
 
+  // -- JS-C55: a `synchronized` METHOD holds a monitor for its whole body -------------------------------------
+
+  test("JS-C55 — an instance synchronized method locks `this`, a static one the companion") {
+    val p = port(
+      """public class A {
+        |  int n;
+        |  synchronized int f() { return n; }
+        |  static synchronized void g() { }
+        |}""".stripMargin
+    )
+    assertConsults(p, JS.C(55), fired = true)
+    assertEmits(p, "def f(): scala.Int = this.synchronized {")
+    assertEmits(p, "def g(): scala.Unit = A.synchronized {")
+  }
+
+  test("JS-C55 — a method without the modifier is asked and stays unlocked") {
+    val p = port("public class A { int n; int f() { return n; } }")
+    assertConsults(p, JS.C(55))
+    assertNotEmits(p, "synchronized")
+  }
+
   // -- the partition, asserted rather than left to a reader ---------------------------------------------------
 
   test("every JS-C row is wired, declared unmechanised, or owes nothing — and the residue is NAMED") {

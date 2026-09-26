@@ -477,7 +477,7 @@ object Tree:
   /** `do body while (cond)`. `tpe` is Unit. */
   final case class DoWhile(body: Term, cond: Term, tpe: TypeRepr, origin: Origin, label: Option[String] = None) extends Term
 
-  /** `synchronized (lock) body`. `tpe` is Unit. */
+  /** `synchronized (lock) body`. `tpe` is Unit for the statement, and the method's result type where it is a `synchronized` method's whole body. */
   final case class Synchronized(lock: Term, body: Term, tpe: TypeRepr, origin: Origin) extends Term
 
   /** A construct with no faithful Scala image, recorded IN the tree per-site rather than failing the whole unit. `Open` is never shipped in deliverable mode; best-effort renders [[inner]] in comment

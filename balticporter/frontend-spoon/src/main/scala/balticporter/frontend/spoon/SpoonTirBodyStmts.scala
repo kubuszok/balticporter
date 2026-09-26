@@ -24,6 +24,24 @@ private[spoon] trait SpoonTirBodyStmts:
 
   private[spoon] def methodBody(b: CtBlock[?]): Term = blockOf(b.getStatements.asScala.toList, b)
 
+  /** A `synchronized` METHOD (JLS 8.4.3.6) holds a monitor for its whole body, so the body becomes the statement form's node carrying the method's value. An instance method locks `this`; a static one
+    * locks the companion object, the one value every static of the class shares. A bodiless (`native`) method has nothing to wrap and keeps its body absent.
+    */
+  private[spoon] def lockedBody(m: CtExecutable[?], owner: SymId, body: Option[Term], ret: TypeRepr): Option[Term] = m match
+    case mm: CtMethod[?] =>
+      Lowering.of(SpoonKinds.nameOf(mm.getClass), Dispatch.Declaration, originOf(mm), mm) {
+        val locked = Obligations.consult(JS.C(55), originOf(mm))(Option.when(mm.hasModifier(ModifierKind.SYNCHRONIZED))(()))
+        (locked, body) match
+          case (Some(_), Some(b)) =>
+            val lock =
+              if mm.hasModifier(ModifierKind.STATIC) then Tree.Ident(owner, TypeRef(NoPrefix, owner), originOf(mm))
+              else if anonSelf != SymId.None then Tree.This(anonSelf, TypeRef(NoPrefix, anonSelf), originOf(mm))
+              else thisTerm(mm)
+            Some(Tree.Synchronized(lock, b, ret, originOf(mm)))
+          case _ => body
+      }
+    case _ => body
+
   /** a statement list and the element it came from → a TIR `Block`, trailing comments kept in `trailing`. The ONE place a `Tree.Block` is built out of `stmts` (three callers, one derivation).
     */
   private[spoon] def blockOf(ss: List[CtStatement], el: CtElement): Tree.Block =

@@ -888,6 +888,7 @@ private[emit] trait TirEmitterMembers:
     // synthetic `throw` after it is reached on every exit.
     case Tree.While(Tree.Literal(Constant.BoolC(true), _, _), b, _, _, _) => !breaksOut(b)
     case Tree.For(_, None, b, _, _, _, _)                                 => !breaksOut(b)
+    case Tree.Synchronized(_, b, _, _)                                    => endsInInfiniteLoop(b)
     case Tree.Block(stats, e, _, _, _)                                    =>
       endsInInfiniteLoop(e) || (e match {
         case Tree.Literal(Constant.UnitC, _, _) => stats.lastOption.collect { case x: Term => x }.exists(endsInInfiniteLoop)

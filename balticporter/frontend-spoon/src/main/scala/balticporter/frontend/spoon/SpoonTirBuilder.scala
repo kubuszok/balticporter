@@ -1780,7 +1780,7 @@ final private[spoon] class Builder(
     // translate the body — makes Call/field-ref usages and `callersOf` real; abstract/interface
     // methods have none. An ANNOTATION TYPE ELEMENT also has none, but carries JLS 9.6.2's DEFAULT
     // off `getDefaultExpression` (a parser-hierarchy hazard: `CtAnnotationMethod extends CtMethod`)
-    val body = Option(m.getBody).map(b => bt.methodBody(b)).orElse(annotationDefault(m, bt))
+    val body = bt.lockedBody(m, owner, Option(m.getBody).map(b => bt.methodBody(b)), ret).orElse(annotationDefault(m, bt))
     tpScopes.remove(0); tpIsExec.remove(0); tpDecls.remove(0); tpAccessible.remove(0); tpExecNames.remove(0)
     tpErased.remove(0)
     inOverridingMember = savedOverriding

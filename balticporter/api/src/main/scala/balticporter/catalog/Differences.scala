@@ -1468,6 +1468,18 @@ object Differences:
       Universal,
       "ReflectionVisibilityCheck — counted at every reflective instantiation site whose target is resolvable and private, or whose target is dynamic",
       Cited("reflection-visibility")
+    ),
+    Difference(
+      cId(55),
+      "a `synchronized` METHOD modifier holds a monitor for the whole body; scala has no such modifier",
+      "JLS 8.4.3.6 — an instance method locks `this`, a static one the class",
+      "UNCITED — scala has only `.synchronized`; a dropped modifier runs the method unlocked and a race shows only under load",
+      Silent,
+      Handled,
+      Rule44,
+      Universal,
+      "SpoonTir.lockedBody -> the body wrapped in Tree.Synchronized carrying the method's value: `this` for an instance method, the companion object for a static (not java's Class object, so a `synchronized (C.class)` statement in the same port takes another monitor; a bodiless `native` method has nothing to wrap)",
+      Lowered("CtMethod", Dispatch.Declaration)
     )
   )
 
