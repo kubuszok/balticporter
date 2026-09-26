@@ -110,3 +110,33 @@ class PortMapFollowSpec extends munit.FunSuite:
     assert(!out.contains("n.links(\"a\")"), out)
     assert(out.contains("n.links.size()"), out)
   }
+
+  test("a renamed setter overload moves alone: the four-argument sibling keeps java's name at the call") {
+    val base = """package com.base;
+                 |public class Tint { public float r; }
+                 |public class Pen {
+                 |  public void setColor (Tint t) {}
+                 |  public void setColor (float r, float g, float b, float a) {}
+                 |}
+                 |""".stripMargin
+    val demo = """package com.demo;
+                 |class Use { void go (com.base.Pen p, com.base.Tint t) { p.setColor(t); p.setColor(t.r, t.r, t.r, 1f); } }
+                 |""".stripMargin
+    val before = SpoonTir.fromSources(List("Pen.java" -> base, "Use.java" -> demo))
+    val map    = PortMap.Map0(
+      "base",
+      engine = "test",
+      entries = List(
+        PortMap.Entry("member", "com.base.Pen#setColor(Tint)", "com.base.Pen#color_=", PortMap.Disposition.Renamed),
+        PortMap.Entry(
+          "member",
+          "com.base.Pen#setColor(float,float,float,float)",
+          "com.base.Pen#setColor(float,float,float,float)",
+          PortMap.Disposition.Renamed
+        )
+      )
+    )
+    val out = new TirEmitter(new PortMapTransform(List(map)).run(before)).emit
+    assert(clue(out).contains("p.setColor(t.r, t.r, t.r, 1"), out)
+    assert(!out.contains("color_=(t.r"), out)
+  }
