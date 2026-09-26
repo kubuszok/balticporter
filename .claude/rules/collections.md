@@ -168,5 +168,9 @@ alone" refusal emitted `c.isEmpty()` against a parenless declaration at every re
 `java.util.Collection` parameter — 4 typer errors on one port and 2 more on another, both of them
 baselined at 0 because the runtime moved after the baselines were promoted, and the consumer build
 was deleting the parens from the generated text with a regular expression. The drop fires only where
-the call binds to a member the program does NOT declare: a class of its own implementing the java
-interface keeps java's parens, because its own emitted arity decides and not the parent it inherits.
+the call binds to a member the program does NOT declare. **An owned OVERRIDE of such a member takes
+the PARENT's arity**, read off the support types' declared table (`RuntimeArtifact.concreteMembers`,
+`TirEmitter.supportParenless`), and so does every call and method reference binding to it: kept at
+java's `isEmpty()` beside `JavaCollection`'s `def isEmpty`, a class re-parented from
+`AbstractCollection` failed `incompatible type` at RefChecks, and a policy `force` could move only
+the calls. Kind (a).

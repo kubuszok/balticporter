@@ -28,7 +28,9 @@ class ShimParenlessCallSpec extends PortSuite:
     assert(!o.contains("c.isEmpty()"), o)
   }
 
-  test("a member this program DECLARES keeps java's parens — its own emitted arity decides") {
+  test(
+    "a member this program DECLARES decides its call's arity — and an override of the shim's parenless member is parenless"
+  ) {
     val o = out(
       """package demo;
         |import java.util.Collection;
@@ -39,7 +41,8 @@ class ShimParenlessCallSpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    assert(o.contains("other.isEmpty()"), o)
+    assert(o.contains("override def isEmpty: scala.Boolean"), o)
+    assert(o.contains("other.isEmpty\n"), o)
   }
 
   test("size() is NOT on the list — the shim declares it with java's parens") {

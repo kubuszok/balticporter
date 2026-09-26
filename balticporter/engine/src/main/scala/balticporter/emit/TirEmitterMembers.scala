@@ -557,6 +557,32 @@ private[emit] trait TirEmitterMembers:
   /** JS-S25 — java REJECTS unreachable code, Scala allows it, composed with `break`. A body ending in java's `while(true){ … return … }` never falls through, but Scala types `while(true)` as `Unit`,
     * so a non-Unit method needs a tail java did not have. One function since the dispatch consults it and `defDef` renders from it — a rule needed at two sites must be one shared function.
     */
+  /** does this owned nilary method override a member a runtime SUPPORT parent declares PARENLESS (`externalConcrete`, the support types' declared table)? An override takes its parent's arity, so the
+    * declaration and every call of it drop java's `()`; the parent is found through the emitted parents, owned classes climbed.
+    */
+  private[emit] def supportParenless(m: SymId): Boolean =
+    supportParenlessCache.getOrElseUpdate(
+      m, {
+        val s = sym(m)
+        !s.flags.isStatic && s.name != "<init>" &&
+        program.definitionOf(m).exists { case d: Tree.DefDef => d.paramss == List(Nil); case _ => false } &&
+        inheritsParenless(s.owner, s.name, Set.empty)
+      }
+    )
+
+  private val supportParenlessCache = collection.mutable.Map.empty[SymId, Boolean]
+
+  private def inheritsParenless(cls: SymId, name: String, seen: Set[SymId]): Boolean =
+    program.definitionOf(cls).collect { case c: Tree.ClassDef => c }.exists { c =>
+      c.parents.exists { p =>
+        headSymOf(p match { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }).exists { h =>
+          program.definitionOf(h) match
+            case Some(_: Tree.ClassDef) => !seen(h) && inheritsParenless(h, name, seen + cls)
+            case _                      => externalConcrete.getOrElse(sym(h).fullName, Set.empty).contains((name, Nil))
+        }
+      }
+    }
+
   private[emit] def needsUnreachableTail(d: Tree.DefDef): Boolean =
     sym(d.symbol).name != "<init>" && !isUnitType(d.returnTpt.tpe) && d.rhs.exists(endsInInfiniteLoop)
 
@@ -579,7 +605,7 @@ private[emit] trait TirEmitterMembers:
     // an extension takes its FIRST parameter as the receiver; with nothing left it is parenless, as `a.m` calls it
     val ext             = OpaqueSpec.OwnClassTag.isExtension(s) && d.paramss.headOption.exists(_.nonEmpty)
     val (recv, clauses) =
-      if !ext then ("", d.paramss)
+      if !ext then ("", if supportParenless(d.symbol) then Nil else d.paramss)
       else
         val rest = d.paramss.head.tail :: d.paramss.tail
         (s"extension (${param(d.paramss.head.head)}) ", if rest.forall(_.isEmpty) then Nil else rest)

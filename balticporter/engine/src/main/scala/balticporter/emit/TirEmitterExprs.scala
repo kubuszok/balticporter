@@ -560,7 +560,7 @@ private[emit] trait TirEmitterExprs:
       case d: Tree.DefDef => d.paramss.isEmpty
       case _: Tree.ValDef => true
       case _ => false
-    }
+    } || supportParenless(s)
 
   /** the argument list a method reference's lowered call writes after the member: none for a parenless declaration with no arguments, else java's own. */
   private[emit] def callParens(s: SymId, args: String): String =
@@ -684,6 +684,10 @@ private[emit] trait TirEmitterExprs:
     // class symbol is exact.
     case Tree.Select(qual, m, _, _) if args.isEmpty && sym(m).name == "values" && enumQualifier(qual) =>
       term(fun, i)
+    // an owned override of a member a runtime support parent declares parenless is emitted
+    // parenless (`supportParenless`), so its calls are too
+    case Tree.Select(_, m, _, _) if args.isEmpty && supportParenless(m) => term(fun, i)
+    case Tree.Ident(m, _, _) if args.isEmpty && supportParenless(m)     => term(fun, i)
     // an `@interface`'s elements become constructor parameters: java's element is both the write-name
     // and the read-accessor, but the emitted class keeps java's name at the constructor parameter
     // only, so the read is a field selection and the parens come off. Asked of the callee's OWNER

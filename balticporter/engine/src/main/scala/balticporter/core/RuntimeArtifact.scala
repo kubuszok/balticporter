@@ -81,8 +81,8 @@ object RuntimeArtifact:
       if next.subsetOf(acc) then acc else step(acc ++ next)
     step(fqns.filter(known.contains)) ++ fqns.filterNot(known.contains)
 
-  /** Concrete instance members each support type brings, as `(name, param counts per list)`. Used by `TirEmitter.externalConcrete` for diamond detection. Declared, not derived;
-    * `RuntimeMembersDerivationSpec` asserts agreement with the sources.
+  /** Concrete instance members each support type brings, as `(name, param counts per list)`. Used by `TirEmitter.externalConcrete` for diamond detection and for an override's arity (`Nil` is
+    * parenless). Declared, not derived; `RuntimeMembersDerivationSpec` asserts agreement with the sources.
     */
   val concreteMembers: Map[String, Set[(String, List[Int])]] = Map(
     s"$Package.JavaIterator" -> Set(("remove", List(0))),
