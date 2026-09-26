@@ -259,6 +259,15 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   non-array `Seq` spread reaches it). The phase that knows the representation tags the parameter
   (`VarargArrayFactory`, the witness's `create`) and the copy goes through it; no witness in scope is
   `witness` lane `VarargCopy`. Kind (a).
+- **An `ArraySeq`'s backing array is taken only at the RUNTIME class the element needs** (the
+  component against the element's `ClassTag`, or the witness's own array's class), a copy otherwise:
+  an empty `ArraySeq`'s backing array is `Object[]`/`Nothing$[]`, and the unchecked cast threw on JS
+  (ashley `Family.all(...)` over `Class[? <: Component]*`, 17 sge-ecs failures). A GENERIC element
+  nothing builds an array of is built by the java CALLER at its static type and spread
+  (`new Anim[String](0.1f, Array[String]("a", "b")*)`, as javac passes `String[]`); a hand-written
+  scala caller passing plain elements still gets an erased `Object[]` — `heap-pollution` lane
+  `UnreifiedCopy`, one row per declaration. A java `f(null)` at such a slot is already a null
+  ARRAY (`null*`, `varargHoldsArray`). Kind (a).
 
 - A method reference's lowered call reads the member's DECLARATION for its arity (`parenlessDecl`:
   a `def` with no clause, or a collapsed field), never the symbol's java `MethodType`; a BOUND

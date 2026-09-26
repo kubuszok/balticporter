@@ -27,7 +27,8 @@ class HeapPollutionRemedySpec extends munit.FunSuite:
     (Pipeline.runTraced(p, List(new HeapPollutionCheck.Apply), binder)._1, binder)
 
   private def lane(p: Program, plan: ResolutionPlan = ResolutionPlan.empty): List[String] =
-    HeapPollutionCheck.check(p, p.units, plan).map(f => s"${f.issue} ${f.owner}")
+    // the acknowledgement half only: `UnreifiedCopy` rows sit beside it and no remedy here drains them
+    HeapPollutionCheck.check(p, p.units, plan).filterNot(_.issue == HeapPollutionCheck.Issue.UnreifiedCopy).map(f => s"${f.issue} ${f.owner}")
 
   // -------------------------------------------------------------------------------------------
   // the menu itself

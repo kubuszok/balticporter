@@ -851,7 +851,10 @@ class CatalogAreaGSpec extends PortSuite:
   test("JS-G41 — a vararg whose component is a TYPE VARIABLE fires, and it is UNACKNOWLEDGED") {
     val p = port("public class A { @SafeVarargs final <T> void f(T... xs) { } void g(String s) { } }")
     assertConsults(p, JS.G(41), fired = true)
-    val fs = HeapPollutionCheck.check(p.after, p.after.units)
+    val all = HeapPollutionCheck.check(p.after, p.after.units)
+    // …and, beside it, the array nothing in the callee can build at `T`
+    assertEquals(clue(all).map(_.issue).filter(_ == HeapPollutionCheck.Issue.UnreifiedCopy).size, 1)
+    val fs = all.filterNot(_.issue == HeapPollutionCheck.Issue.UnreifiedCopy)
     assertEquals(clue(fs).map(_.issue), List(HeapPollutionCheck.Issue.Acknowledged))
     assertEquals(fs.head.param, "xs")
   }

@@ -1140,22 +1140,54 @@ private[emit] trait TirEmitterMembers:
   /** a method body's local binding of a repeated parameter's array, by parameter symbol, while that body renders. */
   private[emit] var repeatedAlias: Map[SymId, String] = Map.empty
 
-  /** the ARRAY a repeated parameter holds: the caller's own array where it spread one (scala wraps it, sharing it, as java passed it), a copy of any other `Seq`; `null` stays `null`. */
+  /** no `ClassTag` for a type parameter, nor for an array of one (`Array[H]`) */
+  private[emit] def untaggedElem(t: TypeRepr): Boolean = t match
+    case TypeRepr.TypeRef(_, x)                                                                     => sym(x).info.isInstanceOf[TypeRepr.TypeBounds]
+    case TypeRepr.AppliedType(TypeRepr.TypeRef(_, a), List(el)) if sym(a).fullName == "scala.Array" => untaggedElem(el)
+    case _                                                                                          => false
+
+  /** the ARRAY a repeated parameter holds: the caller's own array where it spread one of the RUNTIME class the element needs (scala wraps it, sharing it, as java passed it), else a copy made at that
+    * class — by the element's `ClassTag`, or the witness a phase tagged the parameter with. An `ArraySeq`'s backing array is never trusted unchecked: an empty one, or a JS literal's, has another
+    * component. An element type parameter with neither keeps java's erased `Object[]`, counted by `heap-pollution`. `null` stays `null`.
+    */
   private[emit] def varargArray(s: SymId): String =
-    val n  = esc(sym(s).name)
-    val e  = repeatedParams(s)
-    val et = tpe(e)
-    // no `ClassTag` for a type parameter, nor for an array of one (`Array[H]`)
-    def untagged(t: TypeRepr): Boolean = t match
-      case TypeRepr.TypeRef(_, x)                                                                     => sym(x).info.isInstanceOf[TypeRepr.TypeBounds]
-      case TypeRepr.AppliedType(TypeRepr.TypeRef(_, a), List(el)) if sym(a).fullName == "scala.Array" => untagged(el)
-      case _                                                                                          => false
-    val made = sym(s).tags.collectFirst { case VarargArrayFactory(f) => f.replace("{n}", "s$.length") }
-    val copy = made match
-      case Some(m)          => s"{ val c$$: scala.Array[$et] = $m; s$$.copyToArray(c$$); c$$ }"
-      case _ if untagged(e) => s"s$$.toArray[scala.Any].asInstanceOf[scala.Array[$et]]"
-      case _                => s"s$$.toArray[$et]"
-    s"($n match { case null => null; case a$$: scala.collection.immutable.ArraySeq[?] => a$$.unsafeArray.asInstanceOf[scala.Array[$et]]; case s$$ => $copy })"
+    val n             = esc(sym(s).name)
+    val e             = repeatedParams(s)
+    val et            = tpe(e)
+    val made          = sym(s).tags.collectFirst { case VarargArrayFactory(f) => f }
+    val same          = "a$.unsafeArray.getClass"
+    val (guard, copy) = made match
+      case Some(m) =>
+        (s" if $same eq ${m.replace("{n}", "0")}.getClass", s"{ val c$$: scala.Array[$et] = ${m.replace("{n}", "s$.length")}; s$$.copyToArray(c$$); c$$ }")
+      case _ if untaggedElem(e) => ("", s"s$$.toArray[scala.Any].asInstanceOf[scala.Array[$et]]")
+      case _                    => (s" if $same.getComponentType eq scala.reflect.classTag[$et].runtimeClass", s"s$$.toArray[$et]")
+    s"($n match { case null => null; case a$$: scala.collection.immutable.ArraySeq[?]$guard => a$$.unsafeArray.asInstanceOf[scala.Array[$et]]; case s$$ => $copy })"
+
+  /** A REPEATED tail at an owned callee whose element is a type parameter nothing can build an array of: java's CALLER made the array, at its own static element type, so the call builds it and
+    * spreads it — the only place that type is known.
+    */
+  private[emit] def reifiedVarargArgs(m: SymId, args: List[Term]): List[Term] =
+    def classElem(t: TypeRepr): Boolean = t match
+      case TypeRepr.TypeRef(_, x) =>
+        !sym(x).info.isInstanceOf[TypeRepr.TypeBounds] && !sym(x).flags.isOpaque && program.symbolOf(x).isDefined
+      case TypeRepr.AppliedType(tc @ TypeRepr.TypeRef(_, a), as) =>
+        if sym(a).fullName == "scala.Array" then as.forall(classElem) else classElem(tc)
+      case _ => false
+    def unreified: Boolean =
+      program.definitionOf(m).collect { case d: Tree.DefDef => d }.exists { d =>
+        d.paramss.flatten.filterNot(v => sym(v.symbol).flags.isGiven).lastOption.exists { v =>
+          sym(v.symbol).flags.isVararg && !sym(v.symbol).tags.exists(_.isInstanceOf[VarargArrayFactory]) && (v.tpt.tpe match
+            case TypeRepr.AppliedType(_, List(el)) => untaggedElem(el)
+            case _                                 => false)
+        }
+      }
+    if !args.exists(_.isInstanceOf[Tree.Repeated]) || !unreified then args
+    else
+      args.map {
+        case Tree.Repeated(es, at @ TypeRepr.AppliedType(_, List(el)), o) if classElem(el) =>
+          Tree.Spread(Tree.NewArray(TypeTree(el, o), Nil, Some(es), at, o), at, o)
+        case a => a
+      }
 
   private def references(body: Term, p: SymId): Boolean =
     StandardTraversal.scanTerm(body, false) {

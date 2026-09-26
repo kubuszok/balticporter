@@ -96,7 +96,7 @@ private[emit] trait TirEmitterExprs:
       // pack becomes the tail of the argument list. HERE because argTerms flattens the Tree.Repeated
       // node before the dispatch would ever see it, so an arm there could never be consulted.
       Obligations.consult(JS.G(39), a.origin)(Option.when(args.exists(_.isInstanceOf[Tree.Repeated]))(()))
-      applyStr(fun, arrayVarargArgs(fun, a.method, args), i)
+      applyStr(fun, reifiedVarargArgs(a.method, arrayVarargArgs(fun, a.method, args)), i)
     case Tree.TypeApply(fun, targs, _, _)    => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
     case Tree.Assign(l, r, _, _, compoundOp) =>
       // JLS 15.26.2: a COMPOUND ASSIGNMENT evaluates the lvalue ONCE; the

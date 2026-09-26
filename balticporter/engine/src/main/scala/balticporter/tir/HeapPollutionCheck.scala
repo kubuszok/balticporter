@@ -20,8 +20,18 @@ object HeapPollutionCheck extends RemedySource:
     /** Javac warned and the author did not annotate; nothing warns in scala. */
     case Unacknowledged
 
+    /** the component is a type parameter no witness builds: a caller's elements that do not arrive as an array are copied into an erased `Object[]`, where java's caller built its own type's array. */
+    case UnreifiedCopy
+
   object Issue:
     def classification(i: Issue): String = i match
+      case UnreifiedCopy =>
+        "engine (true of every Java program), REFUSED and counted, and IT COMPILES: java's CALLER builds a " +
+          "generic vararg's array at its own static type (`new Anim<String>(\"a\")` passes a `String[]`). " +
+          "A generated caller does the same (the elements become a typed array, spread); a hand-written " +
+          "scala caller passing plain elements reaches a copy that can only be `Object[]`, and reading " +
+          "it back as `Array[String]` throws `ClassCastException`. Spread a typed array at such a " +
+          "caller, or give the declaration a witness (`ElementWitnessTransform`) or a `ClassTag`."
       case Acknowledged =>
         "engine (true of every Java program), and DELIBERATELY NOT FIXED: the port reproduces java's heap pollution " +
           "exactly, so there is nothing to translate — what has no Scala image is the " +
@@ -62,10 +72,14 @@ object HeapPollutionCheck extends RemedySource:
     */
   final case class Finding(issue: Issue, owner: String, param: String, component: String, origin: Origin):
     def detail: String =
-      s"vararg `$param` has component `$component`, which JLS 4.7 does not make reifiable: java " +
-        (if issue == Issue.Acknowledged then "warned here and the author wrote `@SafeVarargs`"
-         else "WARNED here and the author did not annotate it") +
-        ", and scala has neither the warning nor the annotation — the unsoundness crosses unmarked"
+      if issue == Issue.UnreifiedCopy then
+        s"vararg `$param` has component `$component`, a type parameter nothing builds an array of: a caller's elements " +
+          "that do not arrive as an array are copied into an erased `Object[]`"
+      else
+        s"vararg `$param` has component `$component`, which JLS 4.7 does not make reifiable: java " +
+          (if issue == Issue.Acknowledged then "warned here and the author wrote `@SafeVarargs`"
+           else "WARNED here and the author did not annotate it") +
+          ", and scala has neither the warning nor the annotation — the unsoundness crosses unmarked"
     def render: String              = s"$issue $owner: $param: $component  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
       CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
@@ -84,6 +98,16 @@ object HeapPollutionCheck extends RemedySource:
           render(componentOf(v.tpt.tpe)),
           d.origin
         )
+    }
+
+  /** the declaration's vararg whose component is a bare type parameter no phase gave an array factory — see [[Issue.UnreifiedCopy]]. */
+  def unreifiedCopy(d: Tree.DefDef)(using p: Program): Option[Finding] =
+    val owner = p.symbolOf(d.symbol).map(_.fullName).getOrElse("?")
+    d.paramss.flatten.collectFirst {
+      case v
+          if p.symbolOf(v.symbol).exists(s => s.flags.isVararg && !s.tags.exists(_.isInstanceOf[VarargArrayFactory])) &&
+            (componentOf(v.tpt.tpe) match { case TypeRepr.TypeRef(_, s) => isTypeVariable(s); case _ => false }) =>
+        Finding(Issue.UnreifiedCopy, owner, p.symbolOf(v.symbol).map(_.name).getOrElse("?"), render(componentOf(v.tpt.tpe)), d.origin)
     }
 
   /** The array element type, or the type itself if no longer `scala.Array`. */
@@ -130,6 +154,7 @@ object HeapPollutionCheck extends RemedySource:
       def name:                                                    String      = "heap-pollution/scan"
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
         uncheckedVararg(d).filterNot(f => resolutions.appliedAt(d.symbol, Name, f.issue.toString, f.origin)).foreach(out += _)
+        unreifiedCopy(d).foreach(out += _)
         d
     units.foreach(u => StandardTraversal.mapClassDef(scan, u))
     out.toList.sortBy(f => (f.issue.toString, f.origin.javaPath, f.origin.line, f.param))

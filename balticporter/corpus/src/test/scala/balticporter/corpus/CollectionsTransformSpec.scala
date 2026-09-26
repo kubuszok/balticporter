@@ -652,7 +652,8 @@ class CollectionsTransformSpec extends PortSuite:
   test("an IN-PROGRAM vararg method is repeated too, and receives java's elements — one convention for both callees") {
     val p = port(asList, new CollectionsTransform)
     assertEmits(p, "def pack[T <: java.lang.Object](xs: T*)")
-    assertEmits(p, "A.pack(a, b)")
+    // the generic element's array is java's CALLER's, at its own static type
+    assertEmits(p, "A.pack(scala.Array[java.lang.String](a, b)*)")
   }
 
   test("a downcast FROM a type the phase does not retype is KEPT, retargeted at the shim") {
