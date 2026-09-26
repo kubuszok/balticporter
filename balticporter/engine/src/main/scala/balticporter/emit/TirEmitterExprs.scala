@@ -96,7 +96,7 @@ private[emit] trait TirEmitterExprs:
       // pack becomes the tail of the argument list. HERE because argTerms flattens the Tree.Repeated
       // node before the dispatch would ever see it, so an arm there could never be consulted.
       Obligations.consult(JS.G(39), a.origin)(Option.when(args.exists(_.isInstanceOf[Tree.Repeated]))(()))
-      applyStr(fun, args, i)
+      applyStr(fun, arrayVarargArgs(a.method, args), i)
     case Tree.TypeApply(fun, targs, _, _)    => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
     case Tree.Assign(l, r, _, _, compoundOp) =>
       // JLS 15.26.2: a COMPOUND ASSIGNMENT evaluates the lvalue ONCE; the
@@ -141,6 +141,8 @@ private[emit] trait TirEmitterExprs:
     // elaborates to `Function0` first and throws. `operand` parenthesises the lambda. A
     // METHOD-VALUE ASCRIPTION (`(recv.m: (A, B) => R)`) pins which overload scala binds
     // (`OverloadRiskCheck.AscribeJavacChoice`) — unambiguous since JAVA HAS NO METHOD TYPES.
+    // a cast a later step put AROUND a spread argument casts the array: `*` must stay outermost
+    case Tree.Typed(sp @ Tree.Spread(inner, _, _), tpt, tp, o)                      => term(sp.copy(expr = Tree.Typed(inner, tpt, tp, o)), i)
     case ty @ Tree.Typed(e, tpt, _, _) if tpt.tpe.isInstanceOf[TypeRepr.MethodType] =>
       // discharged NOT FIRED: this node is neither JS-G34's intersection cast nor JS-E06's
       // unboxing conversion, so both answers are facts rather than defaults (catalog(undischarged)).

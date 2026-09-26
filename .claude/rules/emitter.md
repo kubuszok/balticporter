@@ -242,7 +242,10 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   call passes a REPEATED tail or SPREADS java's array (`SpoonTir.varargPack`, one path for owned and
   external callees); a method body binds `x$arr` once from `ArraySeq.unsafeArray` (the caller's
   array, so a write through it is seen, as in java) and a constructor reads it in place. A parameter
-  that is a MEMBER (a superseded enum field) keeps `Array[T]`; an anonymous class implementing a
+  that is a MEMBER (a superseded enum field) keeps `Array[T]`, and so does a member beside an
+  overload differing ONLY in the vararg's element (`C(String...)`/`C(FileHandle...)`: both `T*`
+  erase to one `Seq`, E120) and a member of a DROPPED type (its hand-written replacement states the
+  slot) — their calls pass java's array (`arrayVarargArgs`); an anonymous class implementing a
   `T...` method stays a class (`sam-anon->lambda` guard `RepeatedParam`: a function literal cannot
   declare `T*`); an owned override of an external NON-vararg `T[]` member, and a java LAMBDA at an
   owned `T...` SAM, are loud untested edges. Kind (a).

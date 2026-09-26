@@ -752,7 +752,9 @@ class CatalogAreaGSpec extends PortSuite:
     // nothing at all —
     // mis-aligned, this emitted `override def conv(c: scala.Array[java.lang.String])` beside a
     // trait that still read `A.Cell[?]`. The parameter NAME is what separates the pair.
-    assertEmits(p, "override def conv(c: A.Cell[?]*)")
+    // (the two overloads differ only in the vararg's element, so both keep java's array: repeated,
+    // they would erase to one `Seq`)
+    assertEmits(p, "override def conv(c: scala.Array[A.Cell[?]])")
     // …and the OTHER reader of the same map. `alignedArgs` casts every argument reaching a
     // re-rendered parameter, so the mis-alignment put an `asInstanceOf` the java never wrote at the
     // call in `go` — which is how the defect reached emitted code that could not compile.

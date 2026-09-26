@@ -1055,11 +1055,54 @@ private[emit] trait TirEmitterMembers:
 
   /** the element a java `T...` parameter of a METHOD or CONSTRUCTOR repeats, where it is emitted `E*` — `None` for any other parameter (a lambda's, or one not typed as an array). */
   private[emit] def varargElem(v: Tree.ValDef, t: TypeRepr): Option[TypeRepr] =
-    if !sym(v.symbol).flags.isVararg || !program.definitionOf(sym(v.symbol).owner).exists(_.isInstanceOf[Tree.DefDef]) then scala.None
+    if !sym(v.symbol).flags.isVararg || !program.definitionOf(sym(v.symbol).owner).exists(_.isInstanceOf[Tree.DefDef]) || varargErasureClash(sym(v.symbol).owner)
+    then scala.None
     else
       t match
         case TypeRepr.AppliedType(TypeRepr.TypeRef(_, a), List(el)) if sym(a).fullName == "scala.Array" => Some(el)
         case _                                                                                          => scala.None
+
+  /** does this vararg member share its owner with an overload that differs from it ONLY in the vararg's element type (`C(String...)` beside `C(FileHandle...)`)? Java tells the two apart by the array
+    * type; both repeated they erase to one `Seq` signature, so such a member keeps java's `Array[T]` and its calls the array.
+    */
+  private[emit] def varargErasureClash(m: SymId): Boolean =
+    varargClashCache.getOrElseUpdate(
+      m, {
+        def shape(d: Tree.DefDef): Option[List[Option[SymId]]] =
+          val ps = d.paramss.flatten.filterNot(v => sym(v.symbol).flags.isGiven)
+          Option.when(ps.lastOption.exists(v => sym(v.symbol).flags.isVararg))(ps.init.map(v => headSymOf(v.tpt.tpe)))
+        (for
+          d <- program.definitionOf(m).collect { case d: Tree.DefDef => d }
+          own <- shape(d)
+          owner <- program.definitionOf(sym(m).owner).collect { case c: Tree.ClassDef => c }
+        yield owner.body.exists {
+          case o: Tree.DefDef => o.symbol != m && sym(o.symbol).name == sym(m).name && shape(o).contains(own)
+          case _ => false
+        }).getOrElse(false)
+      }
+    )
+
+  private val varargClashCache = collection.mutable.Map.empty[SymId, Boolean]
+
+  /** is this member declared under a type the port DROPS for a hand-written replacement? The replacement states its own signature, java's `Array[T]` included, so a call keeps java's array. */
+  private[emit] def substitutedDecl(m: SymId): Boolean =
+    def climb(x: SymId, fuel: Int): Boolean =
+      fuel > 0 && x != SymId.None && program.symbolOf(x).exists(s => s.tags.exists(_.isInstanceOf[balticporter.core.Substituted]) || climb(s.owner, fuel - 1))
+    program.definitionOf(m).exists(_.isInstanceOf[Tree.DefDef]) && climb(m, 16)
+
+  /** a call's arguments where the callee keeps java's `Array[T]` (see [[varargErasureClash]]): the repeated tail is packed back into java's array and a spread array is passed whole. */
+  private[emit] def arrayVarargArgs(m: SymId, args: List[Term]): List[Term] =
+    if !varargErasureClash(m) && !substitutedDecl(m) then args
+    else
+      args.map {
+        case Tree.Repeated(es, at, o) =>
+          val el = at match
+            case TypeRepr.AppliedType(_, List(e)) => e
+            case other                            => other
+          Tree.NewArray(TypeTree(el, o), Nil, Some(es), at, o)
+        case Tree.Spread(e, _, _) => e
+        case other                => other
+      }
 
   /** vararg parameters emitted `E*`, by symbol, with their element — recorded as the signature renders, read by every reference to the parameter. */
   private[emit] val repeatedParams = collection.mutable.Map.empty[SymId, TypeRepr]
@@ -1069,13 +1112,15 @@ private[emit] trait TirEmitterMembers:
 
   /** the ARRAY a repeated parameter holds: the caller's own array where it spread one (scala wraps it, sharing it, as java passed it), a copy of any other `Seq`; `null` stays `null`. */
   private[emit] def varargArray(s: SymId): String =
-    val n    = esc(sym(s).name)
-    val e    = repeatedParams(s)
-    val et   = tpe(e)
-    val bare = e match
-      case TypeRepr.TypeRef(_, x) => sym(x).info.isInstanceOf[TypeRepr.TypeBounds]
-      case _                      => false
-    val copy = if bare then s"s$$.toArray[scala.Any].asInstanceOf[scala.Array[$et]]" else s"s$$.toArray[$et]"
+    val n  = esc(sym(s).name)
+    val e  = repeatedParams(s)
+    val et = tpe(e)
+    // no `ClassTag` for a type parameter, nor for an array of one (`Array[H]`)
+    def untagged(t: TypeRepr): Boolean = t match
+      case TypeRepr.TypeRef(_, x)                                                                     => sym(x).info.isInstanceOf[TypeRepr.TypeBounds]
+      case TypeRepr.AppliedType(TypeRepr.TypeRef(_, a), List(el)) if sym(a).fullName == "scala.Array" => untagged(el)
+      case _                                                                                          => false
+    val copy = if untagged(e) then s"s$$.toArray[scala.Any].asInstanceOf[scala.Array[$et]]" else s"s$$.toArray[$et]"
     s"($n match { case null => null; case a$$: scala.collection.immutable.ArraySeq[?] => a$$.unsafeArray.asInstanceOf[scala.Array[$et]]; case s$$ => $copy })"
 
   private def references(body: Term, p: SymId): Boolean =

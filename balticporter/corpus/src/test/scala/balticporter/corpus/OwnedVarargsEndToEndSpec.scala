@@ -34,6 +34,12 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
       |  int n() { return n; }
       |}
       |public interface Sink { int take(String... xs); }
+      |public class Tex {
+      |  final int n;
+      |  public Tex(String... paths) { n = paths.length; }
+      |  public Tex(Integer... ids) { n = 100 + ids.length; }
+      |  static int of(String[] ps) { return new Tex(ps).n + new Tex("a").n + new Tex(1, 2).n; }
+      |}
       |public class Run {
       |  public static String run() {
       |    final int base = 10;
@@ -48,7 +54,7 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
       |    Rooms.fill("z", slots);
       |    return r.types + "," + Rooms.sum(nums) + "," + Rooms.sum(4, 5) + "," + Rooms.last("p", "q") + "," +
       |      slots[0] + slots[1] + "," + Rooms.count(nums) + "," + Rooms.count(1, 2) + "," + Rooms.count((Object[]) null) + "," +
-      |      new Pair("h", "i", "j").size() + "," + Kind.A.n() + Kind.B.n() + "," + sink.take("u", "v");
+      |      new Pair("h", "i", "j").size() + "," + Kind.A.n() + Kind.B.n() + "," + sink.take("u", "v") + "," + Tex.of(new String[] { "p", "q" });
       |  }
       |}
       |""".stripMargin
@@ -67,6 +73,12 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
     assertEmits(ported, "enum Kind(names: java.lang.String*)")
   }
 
+  test("overloads told apart only by the vararg's element type keep java's arrays — repeated, both erase to one `Seq`") {
+    assertEmits(ported, "def this(paths: scala.Array[java.lang.String])")
+    assertEmits(ported, "new Tex(scala.Array[java.lang.String](\"a\"))")
+    assertEmits(ported, "new Tex(ps)")
+  }
+
   test("an anonymous implementation of a repeated SAM stays a class — a function literal cannot declare `T*`") {
     assertIdiomRefuses(ported, IdiomKind.SamLambda, "RepeatedParam")
     assertEmits(ported, "override def take(xs: java.lang.String*): scala.Int")
@@ -83,5 +95,5 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
     assert(!rep.hasErrors, s"the emission does not compile:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${ported.out}")
     val loader = new java.net.URLClassLoader(Array(out.toUri.toURL), getClass.getClassLoader)
     val got    = loader.loadClass("va.Run").getMethod("run").invoke(null).asInstanceOf[String]
-    assertEquals(got, "[a, b, c],6,9,q,zz,1,2,-1,3,20,12")
+    assertEquals(got, "[a, b, c],6,9,q,zz,1,2,-1,3,20,12,105")
   }
