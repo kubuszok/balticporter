@@ -32,8 +32,13 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     val jvmNative = Set(Platform.Jvm, Platform.ScalaNative)
     // over the PORTABILITY lane alone: the `Verdict.Depend` rules narrow by target too, and their
     // narrowing is `DependencyCoverageSpec`'s to assert.
-    val dropped = (PortabilityCheck.rulesFor(All).map(_.api).toSet --
+    // the concurrency types Scala.js's javalib lacks and Native's ships are one family, checked below
+    val concurrent = (t: String) => t.startsWith("java.util.concurrent.")
+    val droppedAll = (PortabilityCheck.rulesFor(All).map(_.api).toSet --
       PortabilityCheck.rulesFor(jvmNative).map(_.api).toSet).toList.sorted
+    assert(droppedAll.contains("java.util.concurrent.ExecutorService"), droppedAll)
+    assert(!PortabilityCheck.rulesFor(jvmNative).exists(r => r.api == "java.util.concurrent.ExecutorService"))
+    val dropped = (droppedAll.filterNot(concurrent) :+ "java.util.concurrent.").sorted
     assertEquals(
       dropped,
       List(
@@ -167,6 +172,21 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     val row = ApiRows.byId(PortabilityCheck.all.find(_.api == "java.nio.file.").flatMap(_.at).get)
     assertEquals(row.verdict(Platform.ScalaNative), Verdict.Keep)
     assertEquals(row.verdict(Platform.ScalaJs).actionable, true)
+  }
+
+  test("java.util.concurrent is judged type by type: TimeUnit ships on Scala.js, ExecutorService does not") {
+    val src = """package demo;
+                |import java.util.concurrent.*;
+                |class Use {
+                |  long ms (long s) { return TimeUnit.SECONDS.toMillis(s); }
+                |  void run (ExecutorService e) { e.shutdown(); }
+                |}
+                |""".stripMargin
+    val program = balticporter.frontend.spoon.SpoonTir.fromSource(src)
+    val apis    = PortabilityCheck.check(program, PortabilityCheck.rulesFor(All)).map(_.api).toSet
+    assert(clue(apis).contains("java.util.concurrent.ExecutorService"))
+    assert(!apis.exists(_.contains("TimeUnit")), apis)
+    assertEquals(PortabilityCheck.check(program, PortabilityCheck.rulesFor(Set(Platform.Jvm, Platform.ScalaNative))), Nil)
   }
 
   test("a prefix rule cuts at a SEPARATOR — java.lang.Thread is not java.lang.ThreadLocal") {

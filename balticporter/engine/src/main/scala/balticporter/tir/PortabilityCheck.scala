@@ -76,6 +76,86 @@ object PortabilityCheck extends RemedySource:
   private def p(n: Int) = Some(DiffId(balticporter.catalog.Area.P, n))
   private def l(n: Int) = Some(DiffId(balticporter.catalog.Area.L, n))
 
+  /** `java.util.concurrent` type by type, read off the javalib jars (Scala.js 1.22.0, Scala Native 0.5.12) against the JDK's public types: Scala.js ships `Callable`, `ConcurrentHashMap`, `Executor`,
+    * `Semaphore`, `ThreadLocalRandom`, `TimeUnit`, `ReentrantLock`, the common atomics and a few more, so the package is no refusal as a whole.
+    */
+  private val concurrentRules: List[Rule] =
+    // Native 0.5.12 also lacks the four collection/preview types listed after `TransferQueue`; the
+    // catalog row cited here records Native as complete, so that half is not claimed here
+    List(
+      "AbstractExecutorService",
+      "ArrayBlockingQueue",
+      "BlockingDeque",
+      "BlockingQueue",
+      "BrokenBarrierException",
+      "CompletableFuture",
+      "CompletionException",
+      "CompletionService",
+      "CompletionStage",
+      "ConcurrentLinkedDeque",
+      "ConcurrentNavigableMap",
+      "CountDownLatch",
+      "CountedCompleter",
+      "CyclicBarrier",
+      "DelayQueue",
+      "Delayed",
+      "Exchanger",
+      "ExecutorCompletionService",
+      "ExecutorService",
+      "Executors",
+      "ForkJoinPool",
+      "ForkJoinTask",
+      "ForkJoinWorkerThread",
+      "Future",
+      "FutureTask",
+      "LinkedBlockingDeque",
+      "LinkedBlockingQueue",
+      "LinkedTransferQueue",
+      "Phaser",
+      "PriorityBlockingQueue",
+      "RecursiveAction",
+      "RecursiveTask",
+      "RejectedExecutionHandler",
+      "RunnableFuture",
+      "RunnableScheduledFuture",
+      "ScheduledExecutorService",
+      "ScheduledFuture",
+      "ScheduledThreadPoolExecutor",
+      "SubmissionPublisher",
+      "SynchronousQueue",
+      "ThreadPoolExecutor",
+      "TransferQueue",
+      "ConcurrentSkipListMap",
+      "CopyOnWriteArraySet",
+      "StructuredTaskScope",
+      "StructureViolationException",
+      "locks.AbstractOwnableSynchronizer",
+      "locks.AbstractQueuedLongSynchronizer",
+      "locks.AbstractQueuedSynchronizer",
+      "locks.Condition",
+      "locks.LockSupport",
+      "locks.ReadWriteLock",
+      "locks.ReentrantReadWriteLock",
+      "locks.StampedLock",
+      "atomic.AtomicIntegerArray",
+      "atomic.AtomicIntegerFieldUpdater",
+      "atomic.AtomicLongFieldUpdater",
+      "atomic.AtomicMarkableReference",
+      "atomic.AtomicReferenceFieldUpdater",
+      "atomic.AtomicStampedReference",
+      "atomic.DoubleAccumulator",
+      "atomic.DoubleAdder",
+      "atomic.LongAccumulator"
+    ).map { n =>
+      Rule(
+        s"java.util.concurrent.$n",
+        "Scala.js is single-threaded and its javalib does not ship this type — the reference port's answer is one concurrency trait with a " +
+          "per-backend implementation; Scala Native has the JSR-166 port for real",
+        on = Rule.JsOnly,
+        at = p(15)
+      )
+    }
+
   /** APIs a non-JVM backend cannot provide as they stand, each with the backends it is about.
     *
     * Read [[rulesFor]] rather than this list: a port's rule set is this filtered by its declared targets, and the SIZE of that filtered set is what a run states.
@@ -135,15 +215,8 @@ object PortabilityCheck extends RemedySource:
         "javalib; Scala Native implements Path/Files/WatchService/DirectoryStream and an spi package",
       on = Rule.JsOnly,
       at = p(10)
-    ),
-    Rule(
-      "java.util.concurrent.",
-      "Scala.js is single-threaded and ships no ExecutorService " +
-        "family — the reference port's answer is one concurrency trait with a per-backend " +
-        "implementation; Scala Native has the JSR-166 ports for real",
-      on = Rule.JsOnly,
-      at = p(15)
-    ),
+    )
+  ) ++ concurrentRules ++ List(
     Rule(
       "java.lang.Thread",
       "Scala.js's Thread is a private-constructor singleton — getId is " +
