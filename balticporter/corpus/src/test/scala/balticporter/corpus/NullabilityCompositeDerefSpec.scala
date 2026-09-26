@@ -38,6 +38,11 @@ class NullabilityCompositeDerefSpec extends PortSuite:
       |    boolean set = (p.cur = new Floats(5)) != null;
       |    return a.length + ":" + n + ":" + set + ":" + p.cur.items.length;
       |  }
+      |  public static String pick(Palette p, Floats other, boolean flag) {
+      |    int w = (flag ? other : p.cur).ensure(1).length;
+      |    int v = (p.cur == null ? other : p.cur).items.length;
+      |    return w + ":" + v;
+      |  }
       |}
       |""".stripMargin
 
@@ -57,11 +62,21 @@ class NullabilityCompositeDerefSpec extends PortSuite:
 
   private val driver =
     """package dep
-      |object Drive { def run(): String = Dither.run(new base.Palette()) }
+      |object Drive {
+      |  def run(): String = {
+      |    val p = new base.Palette()
+      |    val first = Dither.run(p)
+      |    val npe = try { Dither.pick(new base.Palette(), new base.Floats(2), false); "no" } catch { case _: NullPointerException => "npe" }
+      |    s"$first|${Dither.pick(p, new base.Floats(2), true)}|${Dither.pick(new base.Palette(), new base.Floats(2), true)}|$npe"
+      |  }
+      |}
       |""".stripMargin
 
   private lazy val ported =
-    portAll(List("base/Palette.java" -> baseUnit, "dep/Dither.java" -> dependentUnit), new NullabilityTransform(Set("base.Null"), Target.Named(W)))
+    portAll(
+      List("base/Palette.java" -> baseUnit, "dep/Dither.java" -> dependentUnit),
+      new NullabilityTransform(Set("base.Null"), Target.Named(W))
+    )
 
   private def compileAndRun(): String =
     val dir   = Files.createTempDirectory("nullable-composite-src")
@@ -84,6 +99,11 @@ class NullabilityCompositeDerefSpec extends PortSuite:
     assertEmits(ported, "p.cur.isEmpty")
   }
 
-  test("the port compiles and runs as java did") {
-    assertEquals(compileAndRun(), "3:4:true:5")
+  test("a conditional with one wrapped branch is dereferenced through `.get` on that branch alone") {
+    assertEmits(ported, "(if (flag) other else p.cur.get).ensure(1)")
+    assertEmits(ported, "(if (p.cur.isEmpty) other else p.cur.get).items")
+  }
+
+  test("the port compiles and runs as java did — a null branch still throws where java dereferences it") {
+    assertEquals(compileAndRun(), "3:4:true:5|2:5|2:2|npe")
   }

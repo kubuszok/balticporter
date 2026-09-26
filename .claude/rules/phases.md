@@ -234,7 +234,10 @@ sees the kind); the screen is *would a reader act differently*.
   never only the composite's node type: an assignment used as a value (`(f = new X(n)).items`) is a
   block whose tail reads the wrapped field while the block keeps java's type, so `.items` landed on
   the wrapper (anim8 276 `not a member of Nullable` errors). `.get` goes on the LEAF
-  (`NullabilityTransform.atLeaves`), java's own NPE. Kind (a).
+  (`NullabilityTransform.atLeaves`), java's own NPE. A CONDITIONAL with one wrapped branch is the
+  same shape — scala lubs `X | Nullable[X]`, java typed it `X` (anim8's `writeString` on a picked
+  `FileHandle`) — so only the wrapped branch takes `.get`; a null test answers at the leaves only where
+  EVERY leaf is wrapped. Kind (a).
 - A dependent module may add context-threading policy for its own types (`globals-to-implicits`),
   while the shared part of that policy is inherited from the base and may not be restated.
 - A class for which no primary constructor is promoted or synthesised still needs a primary that

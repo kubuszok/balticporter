@@ -1026,10 +1026,19 @@ final class NullabilityTransform(
   private def isWrapperMember(s: SymId):    Boolean = Set(applySym, emptySym, getSym, orNullSym, isEmptySym).contains(s)
 
   /** Does a DEREFERENCE of `t` reach a wrapped value? `t` itself, or the value a composite yields whose own node type is still java's — an assignment used as a value is a block whose tail reads the
-    * assigned field.
+    * assigned field, and a conditional with one wrapped branch keeps java's type while scala's lub is the union.
     */
   private def derefsWrapped(t: Term): Boolean = isWrapped(t) || (t match
     case x: Tree.Block => derefsWrapped(x.expr)
+    case x: Tree.If    => derefsWrapped(x.thenp) || derefsWrapped(x.elsep)
+    case x: Tree.Match => x.cases.exists(c => derefsWrapped(c.body))
+    case _ => false)
+
+  /** every value a composite may yield is wrapped — the precondition for answering a null test at the leaves, where a plain leaf has no `isEmpty`. */
+  private def wrappedEverywhere(t: Term): Boolean = isWrapped(t) || (t match
+    case x: Tree.Block => wrappedEverywhere(x.expr)
+    case x: Tree.If    => wrappedEverywhere(x.thenp) && wrappedEverywhere(x.elsep)
+    case x: Tree.Match => x.cases.forall(c => wrappedEverywhere(c.body))
     case _ => false)
 
   /** `f` at every wrapped value a dereference of `t` reaches ([[derefsWrapped]]), so java's own dereference of that value is what throws on null. */
@@ -1040,6 +1049,8 @@ final class NullabilityTransform(
         case x: Tree.Block =>
           val e = atLeaves(x.expr)(f)
           x.copy(expr = e, tpe = e.tpe)
+        case x: Tree.If    => x.copy(thenp = atLeaves(x.thenp)(f), elsep = atLeaves(x.elsep)(f))
+        case x: Tree.Match => x.copy(cases = x.cases.map(c => c.copy(body = atLeaves(c.body)(f))))
         case other => other
 
   private def elementOf(t: TypeRepr): TypeRepr = t match
@@ -1252,8 +1263,8 @@ final class NullabilityTransform(
       val opName             = p.symbolOf(op).filter(s => OperatorOwners(ownerNameOf(s))).map(_.name)
       def isNullLit(e: Term) = e match { case Tree.Literal(Constant.NullC, _, _) => true; case _ => false }
       (opName, t.args) match
-        case (Some("==" | "eq"), List(a)) if derefsWrapped(recv) && isNullLit(a) => Some(atLeaves(recv)(isEmpty(_, o)))
-        case (Some("!=" | "ne"), List(a)) if derefsWrapped(recv) && isNullLit(a) => Some(negate(atLeaves(recv)(isEmpty(_, o)), o))
+        case (Some("==" | "eq"), List(a)) if wrappedEverywhere(recv) && isNullLit(a) => Some(atLeaves(recv)(isEmpty(_, o)))
+        case (Some("!=" | "ne"), List(a)) if wrappedEverywhere(recv) && isNullLit(a) => Some(negate(atLeaves(recv)(isEmpty(_, o)), o))
         // `boxed == 1` / `1 == boxed`: java UNBOXES the wrapped side ONLY against a PRIMITIVE
         // operand (JLS 15.21.1, NPE on null) — `.get` is that dereference. Against a reference
         // (`obj == this` in an `equals`) java compares references and null is a legal operand, so
