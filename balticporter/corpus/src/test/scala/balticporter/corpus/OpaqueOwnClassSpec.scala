@@ -163,6 +163,22 @@ class OpaqueOwnClassSpec extends munit.FunSuite:
     assert(!r.out.contains("demo.Align"))
   }
 
+  test("derived seeds spelled at the EMITTED name are found through the run's package rename") {
+    import balticporter.tir.{ DerivedPolicy, PolicyBinder, RunScope }
+    val parsed = SpoonTir.fromSource(align + label)
+    def seeded(target: String): String =
+      val derived = DerivedPolicy(List(DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, "demo.Label#align", "Align", target))).resolved(parsed)
+      val renames = Map("demo" -> "port")
+      val scope   = RunScope.of(parsed.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived).renaming(PackageRenameTransform.renamed(_, renames))
+      val ph      = new PrimitiveToOpaqueTransform(spec(hints = Set.empty).copy(derive = true))
+      val phases  = List(ph, new PackageRenameTransform(renames = renames))
+      new TirEmitter(Pipeline.runTraced(parsed, phases, new PolicyBinder(parsed, parsed.members, scope))._1).emit
+    // a frozen policy names the slot's type as the reference writes it: after the rename
+    assert(clue(seeded("port.Align")).contains("private val align: port.Align = port.Align.center"))
+    // the upstream name is not the name a reference spells, so it seeds nothing
+    assert(clue(seeded("demo.Align")).contains("private val align: scala.Int = port.Align.center.unwrap"))
+  }
+
   test("surface: the target reaches the fingerprint and the subjects; the default target contributes no segment") {
     val own  = new PrimitiveToOpaqueTransform(spec())
     val mint = new PrimitiveToOpaqueTransform(spec(target = OpaqueSpec.Target.Mint))

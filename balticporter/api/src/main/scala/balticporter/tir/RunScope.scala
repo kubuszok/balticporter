@@ -43,6 +43,25 @@ trait RunScope:
   /** the reference tree's members by java type, for verbatim splicing; `None` without a reference. */
   def referenceSource: Option[RunScope.ReferenceSourceLookup] = scala.None
 
+  /** the name an upstream type FQN is emitted under, through the run's declared renames — what a phase needs to meet an artifact spelled in the emitted namespace ([[derived]]). The identity without
+    * renames.
+    */
+  def emittedName(upstreamFqn: String): String = upstreamFqn
+
+  /** this scope, answering [[emittedName]] through `rename`. */
+  final def renaming(rename: String => String): RunScope =
+    val self = this
+    new RunScope:
+      def emits(unit:                       SymId):      Boolean                                = self.emits(unit)
+      def contributed(phase:                String):     Option[Set[String]]                    = self.contributed(phase)
+      override def platform:                             RunScope.PlatformPolicy                = self.platform
+      override def baseSubstitutedOwners:                Set[String]                            = self.baseSubstitutedOwners
+      override def ownSubstitutedOwners:                 Set[String]                            = self.ownSubstitutedOwners
+      override def baseMemberUpstream:                   Set[String]                            = self.baseMemberUpstream
+      override def derived:                              DerivedPolicy                          = self.derived
+      override def referenceSource:                      Option[RunScope.ReferenceSourceLookup] = self.referenceSource
+      override def emittedName(upstreamFqn: String):     String                                 = rename(upstreamFqn)
+
   /** …the SAME question asked of a MEMBER, which is what a phase actually holds. [[emits]] takes a top-level unit (the run's classification granularity); every caller climbs the owner chain to it.
     * Written once here since the climb is fuel-bounded and a caller's own would be free to choose a different bound or stop short of a unit.
     */

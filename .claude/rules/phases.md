@@ -250,6 +250,11 @@ sees the kind); the screen is *would a reader act differently*.
   compiles and is never selected (`a.toString` answered the Int's), so such a static stays a plain
   member, counted (`ExtensionDeclined`); inside the object the opaque IS the primitive, so calls
   there keep the prefix form `N.m(a)(rest)`. A case label needs a stable `final val` (counted).
+- A derived policy spells an opaque target as the reference WRITES it, the EMITTED name: an
+  `OwnClass` target is the java class, so both the derivation and the seed lookup go through
+  `OpaqueSpec.derivedTarget(RunScope.emittedName)` — keyed on the java FQN, a package rename left
+  0 of sge's 69 frozen `Align` slots matched. The (b) phase's own lookup, read off the run, never
+  string surgery.
 - A derived seed is exact, so a java STATIC whose reference twin is `extension (a: T) def m`
   derives its slot from `SurfaceDecl.receiver` as parameter 0 (`slotTypes`); never for an instance method.
 - A member rename on an EXTERNAL redirected type: hits are the owned overrides whose closure is

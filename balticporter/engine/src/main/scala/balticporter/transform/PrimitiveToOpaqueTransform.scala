@@ -154,8 +154,9 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   def bindPolicy(binder: PolicyBinder): Unit =
     runScope = binder.run
     if spec.derive then
-      derivedHints = binder.run.derived.opaqueSeeds(spec.typeFqn)
-      derivedIdSet = binder.run.derived.opaqueSeedIds(spec.typeFqn)
+      val target = spec.derivedTarget(binder.run.emittedName)
+      derivedHints = binder.run.derived.opaqueSeeds(target)
+      derivedIdSet = binder.run.derived.opaqueSeedIds(target)
     // method fullNames whose base port-map upstream descriptor mentions this spec's opaque FQN —
     // such a callee had its parameter retyped by the base, so coerceArgs must not unwrap.
     // the simple-name check is intentional: the port map descriptor uses the simple name.

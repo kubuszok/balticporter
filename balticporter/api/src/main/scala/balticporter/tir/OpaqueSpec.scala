@@ -77,6 +77,13 @@ final case class OpaqueSpec(
     case OpaqueSpec.Target.Existing(t, _, _) => t
     case _: OpaqueSpec.Target.OwnClass => fqn
 
+  /** the name a [[DerivedPolicy]] spells this spec's target by — the one the reference port WRITES, so the type's EMITTED name. An OwnClass target is the java class itself and moves with the run's
+    * renames (`emitted`); Mint and Existing already name the emitted type.
+    */
+  def derivedTarget(emitted: String => String): String = target match
+    case _: OpaqueSpec.Target.OwnClass => emitted(fqn)
+    case _ => typeFqn
+
   /** the underlying primitive's Scala FQN, e.g. `scala.Int`. */
   def underlyingFqn: String = underlying.scalaFqn
 

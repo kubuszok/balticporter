@@ -211,6 +211,18 @@ final case class PortRun(
   /** Upstream name translated to the emitted namespace. */
   private def emittedName(fqn: String): String = renamePhase.fold(fqn)(_.emittedName(fqn))
 
+  /** …through the DECLARED renames alone: a pure answer a phase may ask while binding or deriving, before the rename phase has bound its accepted table. */
+  private def declaredName(fqn: String): String =
+    manifest.fold(
+      PortManifest(
+        "run",
+        packageRenames = packageRenames,
+        typeRenames = typeRenames,
+        subPackages = subPackages,
+        flattenNestedTypes = flattenNestedTypes
+      ).renamed(fqn)
+    )(_.renamed(fqn))
+
   /** Whether this run moves any name at all, derived from `renamePhase`. */
   private[runner] def renamesAnything: Boolean = renamePhase.isDefined
 
@@ -2053,27 +2065,29 @@ final case class PortRun(
       PortMap.discover(PortMap.reportRoot, exclude = mine, configured = manifest.map(_.baseReports).getOrElse(Nil)).flatMap(p => p.map.toOption.toList.flatMap(_.members.map(_.upstream))).toSet
     }
     val emittedUnits = partitionUnits(parsed)._1.map(_.symbol).toSet
-    RunScope.of(
-      emittedUnits,
-      manifest.map(_.contributedSubjects).getOrElse(Map.empty),
-      // Targets and verdict overrides for in-pipeline portability reasoning.
-      RunScope.PlatformPolicy(targets, verdictOverrides),
-      substituted,
-      memberUp,
-      // types this run drops+injects -- retarget must not resolve through the parent (item 2).
-      policySubs.dropTypes,
-      derivedPolicy(parsed, emittedUnits),
-      referenceSources
-    )
+    RunScope
+      .of(
+        emittedUnits,
+        manifest.map(_.contributedSubjects).getOrElse(Map.empty),
+        // Targets and verdict overrides for in-pipeline portability reasoning.
+        RunScope.PlatformPolicy(targets, verdictOverrides),
+        substituted,
+        memberUp,
+        // types this run drops+injects -- retarget must not resolve through the parent (item 2).
+        policySubs.dropTypes,
+        derivedPolicy(parsed, emittedUnits),
+        referenceSources
+      )
+      .renaming(declaredName)
 
   // ---- reference-derived spelling policy ----------------------------
   /** the opaque targets of the deriving specs; empty when no phase derives. */
   private def derivingOpaqueTargets: Set[String] =
-    effectivePhases.collect { case p: PrimitiveToOpaqueTransform if p.spec.derive => p.spec.typeFqn }.toSet
+    effectivePhases.collect { case p: PrimitiveToOpaqueTransform if p.spec.derive => p.spec.derivedTarget(declaredName) }.toSet
 
   /** target -> the carriers each deriving spec names (`OpaqueSpec.carriers`); a target without any contributes no entry. */
   private def derivingOpaqueCarriers: Map[String, Set[String]] =
-    effectivePhases.collect { case p: PrimitiveToOpaqueTransform if p.spec.derive && p.spec.carriers.nonEmpty => p.spec.typeFqn -> p.spec.carriers }.toMap
+    effectivePhases.collect { case p: PrimitiveToOpaqueTransform if p.spec.derive && p.spec.carriers.nonEmpty => p.spec.derivedTarget(declaredName) -> p.spec.carriers }.toMap
   private def anyPhaseDerives: Boolean =
     derivingOpaqueTargets.nonEmpty || effectivePhases.exists {
       case n: NullabilityTransform                         => n.deriveMembers
