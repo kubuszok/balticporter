@@ -41,6 +41,10 @@ Detail for `CLAUDE.md` §4.55, §4.56, §4.57, §4.575, §4.58, §4.59 and §4.6
   type variables substituted; the local walk keeps only its SCOPE (filter the published edge) and its
   guard for the arity fallback where a DESCRIPTOR is missing. Nineteen of twenty lanes byte-identical,
   one declaration moved, citation total `27 -> 26` in `findings.tsv` alone.
+- **`java.lang.Object`'s anchor is a name match FILTERED, never widened**: kept by name for
+  `equals`'s retyped parameter, it froze a STATIC `toString(int)` rename. A static member hides and
+  never overrides an instance method (JLS 8.4.8), and another arity is another method, so
+  `ExternalSurface.javaLangObjectOverridden` filters the name set by both. Kind (a).
 - **A promotion may drop something**: a promoted enum constructor parameter becomes a member and can
   collide with `Enum.name()` or a declared accessor; supersede a same-named body field only when it
   is the SAME member, not just the same name — self-assignment `this.f = f` only; `HtmlMatch(String

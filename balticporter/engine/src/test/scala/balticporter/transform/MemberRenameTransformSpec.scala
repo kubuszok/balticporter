@@ -107,6 +107,36 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assert(clue(code(r.out)).contains("close(ms"), r.out)
   }
 
+  private val align =
+    """package com.demo;
+      |
+      |class Align {
+      |  static String toString(int align) { return "a" + align; }
+      |  public String toString() { return "Align"; }
+      |}
+      |
+      |class Label {
+      |  String show(int a) { return Align.toString(a); }
+      |}
+      |""".stripMargin
+
+  test("a STATIC member named like an `Object` method overrides nothing there, and moves") {
+    val ph = new MemberRenameTransform(Map("com.demo.Align#toString(int)" -> "show"))
+    val r  = run(align, ph)
+    assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
+    assert(clue(code(r.out)).contains("def show(align: scala.Int)"), r.out)
+    assert(code(r.out).contains("Align.show(a)"), r.out)
+  }
+
+  test("…and an INSTANCE `toString()` still meets `Object#toString` and is refused") {
+    val ph = new MemberRenameTransform(Map("com.demo.Align#toString()" -> "show"))
+    val r  = run(align, ph)
+    val f  = ph.policyReport.findings
+    assertEquals(clue(f).size, 1)
+    assert(f.head.detail.contains("java.lang.Object#toString"), f.head.detail)
+    assert(clue(code(r.out)).contains("def toString(): java.lang.String"), r.out)
+  }
+
   // ---- 3. the reported failures — each is a finding, never silence -----------------------------
 
   test("a key that names nothing is a REPORTED typo, not a silent no-op") {

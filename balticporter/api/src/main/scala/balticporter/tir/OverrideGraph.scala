@@ -113,7 +113,9 @@ final class OverrideGraph private (
               // …and the one ancestor no Java tree ever shows: `java.lang.Object` is above every
               // type whether or not `SpoonTir.superTypes` lists it (it filters it out on purpose),
               // so a rename of `toString`/`equals`/`clone` would otherwise read as unanchored.
-              if ExternalSurface.javaLangObjectDeclares(sig) then anchors += (ExternalSurface.JavaLangObject -> sig.name)
+              // A static member or a different arity meets nothing there.
+              val static = program.symbolOf(x).exists(_.flags.isStatic)
+              if ExternalSurface.javaLangObjectOverridden(sig, static) then anchors += (ExternalSurface.JavaLangObject -> sig.name)
               // DOWN — every override below, anonymous and enum-constant bodies included.
               descendantsOf(owner).foreach(d => matchingDown(d, sig, owner).foreach(work.enqueue))
             }
@@ -403,6 +405,12 @@ object ExternalSurface:
     */
   def javaLangObjectDeclares(sig: OverrideGraph.Signature): Boolean =
     javaLangObjectMembers.exists(_.name == sig.name)
+
+  /** …and whether a METHOD can override what it declares: the name-matched members filtered to the method's arity, and none for a static method, which hides and never overrides an instance method
+    * (JLS 8.4.8). Arity, not the descriptor, for the name-only match's `equals` reason.
+    */
+  def javaLangObjectOverridden(sig: OverrideGraph.Signature, isStatic: Boolean): Boolean =
+    !isStatic && javaLangObjectMembers.exists(m => m.name == sig.name && m.arity == sig.arity)
 
   /** The PLATFORM interfaces whose member sets are fixed by the JDK, so an absence really is proof — closed, never a demand-derived surface. Arity-only (over-matches toward refusal, the safe
     * direction); a version-dependent or large surface (`Comparator`) stays deliberately ABSENT — unknown anchors. `java.lang.Enum` is deliberately absent too: stating it measured worse.
