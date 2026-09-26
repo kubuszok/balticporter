@@ -111,7 +111,10 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   base's emitted accessor names; adapt it when the base's surface changes. Overloads share one
   `fullName`, so each symbol takes the row ITS OWN parameter list (else arity) selects
   (`PortMapTransform.rowOf`): renamed by bare name, `getEdges(V)` followed `getEdges()` to `edges`
-  in a dependent's test tree while the base kept it (2 `does not take parameters`). Kind (a).
+  in a dependent's test tree while the base kept it (2 `does not take parameters`). A dependent's
+  OVERRIDE of a renamed base member follows it through the PRE-rename override graph (after the
+  rename the edge no longer matches by name): an implementor kept `cpy` beside the base's `copy`
+  (`needs to be abstract`). Kind (a).
 - **A dependent's derived policy is its bases' PUBLISHED rows PLUS its own** (engine mechanism,
   (b)): a frozen file or a reference derivation of its own ADDS to the bases' `derived-policy.tsv`,
   never replaces it — replaced, every base spelling vanished at the dependent's calls (`getWidth()`

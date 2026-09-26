@@ -314,7 +314,17 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
         case Some(fe) if s.name != fe.newName => t.updated(s.copy(name = fe.newName))
         case _                                => t
     }
-    val program1 = if allDirect.isEmpty then program else program.rebuilt(symbols = directTable)
+    // …and every declaration OVERRIDING a renamed method follows it, read off the PRE-rename graph:
+    // after the rename the override edge no longer matches by name
+    val overriderTable = program.symbols.all.filter(s => PolicyBinder.isExecutable(s.info) && directTable(s.id).name != s.name).foldLeft(directTable) { (t, s) =>
+      val newName = directTable(s.id).name
+      graph.closureOf(s.id).members.foldLeft(t) { (t2, m) =>
+        program.symbolOf(m) match
+          case Some(o) if o.name == s.name && t2(m).name == s.name => t2.updated(t2(m).copy(name = newName))
+          case _                                                   => t2
+      }
+    }
+    val program1 = if allDirect.isEmpty then program else program.rebuilt(symbols = overriderTable)
 
     val renamed = program1
 

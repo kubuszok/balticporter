@@ -140,3 +140,27 @@ class PortMapFollowSpec extends munit.FunSuite:
     assert(clue(out).contains("p.setColor(t.r, t.r, t.r, 1"), out)
     assert(!out.contains("color_=(t.r"), out)
   }
+
+  test("a dependent's OVERRIDE of a base member the base renamed takes the base's name") {
+    val base = """package com.base;
+                 |public interface Shape<T extends Shape<T>> { T cpy (); }
+                 |""".stripMargin
+    val demo = """package com.demo;
+                 |class Dot implements com.base.Shape<Dot> {
+                 |  public Dot cpy () { return new Dot(); }
+                 |  Dot twice () { return cpy().cpy(); }
+                 |}
+                 |""".stripMargin
+    val before = SpoonTir.fromSources(List("Shape.java" -> base, "Dot.java" -> demo))
+    val map    = PortMap.Map0(
+      "base",
+      engine = "test",
+      entries = List(
+        PortMap.Entry("member", "com.base.Shape#cpy()", "com.base.Shape#copy", PortMap.Disposition.Renamed, shape = "form=parenless")
+      )
+    )
+    val out = new TirEmitter(new PortMapTransform(List(map)).run(before)).emit
+    assert(clue(out).contains("override def copy: Dot"), out)
+    assert(out.contains("this.copy.copy"), out)
+    assert(!out.contains("cpy"), out)
+  }
