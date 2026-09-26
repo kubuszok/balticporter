@@ -912,6 +912,19 @@ final case class PortRun(
       say(PortReport.Kind.InjectedPortability.classification)
       injectedViolations.foreach(v => println("  " + v.render))
 
+    // Scala TEXT the port ships or reads (spliced bodies and added members sit in the emitted tree,
+    // injected files are copied there, provided roots are read in place): a repeated or array
+    // parameter handed bare to a repeated `Object` slot. Recorded even when empty.
+    val forwardSources =
+      (emitDir :: ownSubs.providedSources).filter(Files.exists(_)).flatMap { root =>
+        SubstitutionCheck.scalaSources(root).map(src => root.relativize(src).toString.replace('\\', '/') -> Files.readString(src))
+      }
+    val unspread = balticporter.verify.RepeatedForwardCheck.check(forwardSources)
+    CheckReport.record(balticporter.verify.RepeatedForwardCheck.Name, unspread.map(_.report))
+    if unspread.nonEmpty then
+      say(s"REPEATED FORWARD (a sequence handed bare to a repeated Object slot): ${unspread.size} site(s)")
+      unspread.foreach(f => println("  " + f.render))
+
     // ---- port map: published for dependents (written after injection) ----
     // A provided replacement publishes as Substituted like an injected one; the consumer's other
     // sources replace no drop and are not this port's to publish.

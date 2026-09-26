@@ -238,6 +238,13 @@ sees the kind); the screen is *would a reader act differently*.
   same shape — scala lubs `X | Nullable[X]`, java typed it `X` (anim8's `writeString` on a picked
   `FileHandle`) — so only the wrapped branch takes `.get`; a null test answers at the leaves only where
   EVERY leaf is wrapped. Kind (a).
+- A body a port SPLICES (`MethodBodyTransform`, added members, injected/provided sources) is written
+  against java's `Object[]`; once the parameter is a repeated `Object*`, `super.get(0, params)`
+  still compiles and passes ONE element, the whole `Seq` (ssg-liquid rendered every date as
+  `ArraySeq(...)`, 98 failures). `repeated-forward` (`RepeatedForwardCheck`) reads the text the port
+  ships and flags a repeated or reference-array parameter handed bare to a repeated
+  `Object`/`AnyRef`/unbounded-`T` slot, the callee resolved only among declarations that text holds;
+  unresolvable or ambiguous sites are not flagged. Fix: `params*`. Kind (a), non-fatal.
 - A dependent module may add context-threading policy for its own types (`globals-to-implicits`),
   while the shared part of that policy is inherited from the base and may not be restated.
 - A class for which no primary constructor is promoted or synthesised still needs a primary that
