@@ -413,7 +413,8 @@ object ExternalSurface:
     !isStatic && javaLangObjectMembers.exists(m => m.name == sig.name && m.arity == sig.arity)
 
   /** The PLATFORM interfaces whose member sets are fixed by the JDK, so an absence really is proof — closed, never a demand-derived surface. Arity-only (over-matches toward refusal, the safe
-    * direction); a version-dependent or large surface (`Comparator`) stays deliberately ABSENT — unknown anchors. `java.lang.Enum` is deliberately absent too: stating it measured worse.
+    * direction); a version-dependent or large surface (`Comparator`) stays ABSENT from this table — unknown anchors, unless a phase reads it off the running JDK ([[jdkReflected]]). `java.lang.Enum`
+    * is deliberately absent too: stating it measured worse.
     */
   val jdkPlatform: Map[String, Set[Member]] = Map(
     "java.io.Serializable" -> Set.empty,
@@ -436,6 +437,38 @@ object ExternalSurface:
     // `java.lang.Enum` is NOT here, and the note above says why — it is a refusal, not an
     // omission.
   )
+
+  /** JDK types kept UNKNOWN even where the running JDK could state their members — stating `java.lang.Enum` measured worse (see [[jdkPlatform]]). */
+  val deliberatelyUnknown: Set[String] = Set("java.lang.Enum")
+
+  /** The members a subclass can override on each JDK type in `fqns`, read off the RUNNING JDK (the run's recorded one): every non-static, non-private method of the type and its supertypes. A name the
+    * platform class loader does not resolve (a third party, a type this program declares) stays unknown, and so anchors.
+    */
+  def jdkReflected(fqns: Iterable[String]): ExternalSurface =
+    ExternalSurface(
+      fqns.iterator.filterNot(f => default.isKnown(f) || deliberatelyUnknown(f)).flatMap(f => jdkClass(f).map(c => f -> overridable(c))).toMap
+    )
+
+  /** `java.util.Map.Entry` is the binary name `java.util.Map$Entry`: try each `.` from the right as a nesting separator. */
+  private def jdkClass(fqn: String): Option[Class[?]] =
+    val loader = ClassLoader.getPlatformClassLoader
+    def load(binary: String): Option[Class[?]] =
+      try Some(Class.forName(binary, false, loader))
+      catch case _: ClassNotFoundException | _: LinkageError => scala.None
+    def nestings(n: String): LazyList[String] =
+      val i = n.lastIndexOf('.')
+      if i < 0 then LazyList(n) else n #:: nestings(n.substring(0, i) + "$" + n.substring(i + 1))
+    nestings(fqn).flatMap(load).headOption
+
+  private def overridable(c: Class[?]): Set[Member] =
+    import java.lang.reflect.Modifier
+    val seen = collection.mutable.LinkedHashSet.empty[Class[?]]
+    def walk(k: Class[?]): Unit =
+      if k != null && seen.add(k) then
+        walk(k.getSuperclass)
+        k.getInterfaces.foreach(walk)
+    walk(c)
+    seen.iterator.flatMap(_.getDeclaredMethods.iterator).filter(m => !Modifier.isStatic(m.getModifiers) && !Modifier.isPrivate(m.getModifiers)).map(m => Member(m.getName, m.getParameterCount)).toSet
 
   /** the default: `java.lang.Object`, plus the platform interfaces whose surfaces are closed. */
   val default: ExternalSurface = ExternalSurface(Map(JavaLangObject -> javaLangObjectMembers) ++ jdkPlatform)

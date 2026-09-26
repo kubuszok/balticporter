@@ -115,7 +115,13 @@ final class NullaryArityTransform(
     emittedConverted = Set.empty
     if scope == RuleScope.Only(Set.empty) && !derive then return program
 
-    val graph = OverrideGraph.build(program)
+    // a JDK parent's members are read off the running JDK: left unknown, a class implementing
+    // `Comparator` anchored every nilary member it declares on a `size()` the JDK never had
+    val external = ExternalSurface.default ++ ExternalSurface.jdkReflected {
+      val g0 = OverrideGraph.build(program)
+      g0.types.iterator.flatMap(g0.externalAncestorsOf).toSet
+    }
+    val graph = OverrideGraph.build(program, external)
     forcedComp = program.symbols.all.toList.filter(s => program.owned(s.id) && forcedId(s.id, s.fullName)).flatMap(s => graph.closureOf(s.id).members).toSet
 
     // ---- 1. find candidates — EVERY member of the population takes a lane row ----
@@ -320,7 +326,12 @@ final class NullaryArityTransform(
     // baseCandidates loop cannot find it. The force set is the authority for those. derivedForce
     // is NOT included: it names members the derive mechanism identified for owned types, which go
     // through the regular candidate path and its body guards.
-    convertedFqns = converted.flatMap(id => program.symbolOf(id).map(_.fullName)) ++ force
+    // a forced member THIS run emits and refused keeps its `()`, so its call sites keep them too
+    val emittedConvertedFqns = allConverted.flatMap(id => program.symbolOf(id).map(_.fullName)).toSet
+    val keptHere             = force.filter { f =>
+      !emittedConvertedFqns(f) && program.symbols.all.exists(s => s.fullName == f && PolicyBinder.isExecutable(s.info) && program.owned(s.id) && runScope.emitsSymbol(program, s.id))
+    }
+    convertedFqns = converted.flatMap(id => program.symbolOf(id).map(_.fullName)) ++ (force -- keptHere)
     if converted.isEmpty && convertedFqns.isEmpty then return program
 
     // ---- 3. strip the empty parameter clause and rewrite call sites ----

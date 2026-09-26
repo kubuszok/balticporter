@@ -806,3 +806,44 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assert(!out.contains("c.isEmpty()"), s"forced base member should lose parens even with side-effecting body:\n$out")
     assert(out.contains("c.isEmpty"), s"isEmpty should be parenless:\n$out")
   }
+
+  private val tally = """
+      import java.util.Comparator;
+      public class Tally implements Comparator<Integer> {
+        private int size = 0;
+        public int size() { return size; }
+        public boolean isEmpty() { return size == 0; }
+        public int compare(Integer a, Integer b) { return a - b; }
+      }
+      class Use { int go(Tally t) { return t.isEmpty() ? 0 : t.size(); } }
+      """
+
+  test("a JDK parent's members are read off the JDK: `size`/`isEmpty` beside `Comparator` are not anchored") {
+    val r = ran(tally, new NullaryArityTransform(everywhere))
+    assertEquals(clue(refusedFor(r, "Tally#size")), Nil)
+    assert(clue(r.out).contains("def size: scala.Int"), r.out)
+    assert(r.out.contains("t.size") && !r.out.contains("t.size()"), r.out)
+    // `size == 0` is a call the body guard declines; what it must not be is an anchor
+    assert(!guards(r).contains("AnchoredClosure"), refused(r).toString)
+  }
+
+  test("the same, forced: the declaration and the call sites move together") {
+    val r = ran(tally, new NullaryArityTransform(everywhere, force = Set("Tally#isEmpty")))
+    assert(clue(r.out).contains("def isEmpty: scala.Boolean"), r.out)
+    assert(r.out.contains("t.isEmpty") && !r.out.contains("t.isEmpty()"), r.out)
+  }
+
+  test("a member the JDK parent really declares stays anchored, and a forced one keeps `()` at its calls too") {
+    val src = """
+      public class Bag extends java.util.AbstractCollection<Integer> {
+        private int n;
+        public int size() { return n; }
+        public java.util.Iterator<Integer> iterator() { return null; }
+      }
+      class Use { int go(Bag b) { return b.size(); } }
+      """
+    val r   = ran(src, new NullaryArityTransform(everywhere, force = Set("Bag#size")))
+    assertEquals(clue(refusedFor(r, "Bag#size")).map(_.verdict).collect { case IdiomVerdict.Refused(g, _) => g }, List("AnchoredClosure"))
+    assert(clue(r.out).contains("def size(): scala.Int"), r.out)
+    assert(r.out.contains("b.size()"), r.out)
+  }

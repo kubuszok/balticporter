@@ -282,6 +282,11 @@ sees the kind); the screen is *would a reader act differently*.
   is a derivation input, not a compared surface; a package-private java FIELD the reference ships public
   derives a `Public` row.
 - The bean fold's `setterOnly` guard reads an INHERITED getter as in scope (`graph.ancestorsOf`).
+- An override anchor on a JDK parent is read off the RUNNING JDK (`ExternalSurface.jdkReflected`),
+  never left unknown: `nullary-arity` anchored every nilary member of a class implementing
+  `Comparator` on a `size()` the JDK never declared (jbump's `Collisions`, 2 frozen `Parenless` rows
+  unapplied). A member the JDK parent really declares stays `AnchoredClosure`, and a FORCED member
+  this run refuses keeps `()` at its calls too. Kind (a).
 - A LAMBDA ascribed to an owned functional interface is an OVERRIDE the graph cannot see (an
   anonymous class `sam-anon->lambda` converted has no class left): a phase retyping the SAM retypes
   the lambda's parameters by position and its `resultTpt`, and a body with a valued `return` is a
