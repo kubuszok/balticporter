@@ -212,7 +212,7 @@ final class NullabilityTransform(
     // reset per-run state: a phase instance is reused across two translations.
     issues.clear(); intrusions.clear(); observedEntries.clear(); planned = false
     newTypes = Map.empty; wrapped = Map.empty; overridingRead = false; typeVars = Map.empty
-    primSyms = Set.empty; matchedMembers.clear()
+    primSyms = Set.empty; matchedMembers.clear(); abstractByOwner = scala.None
     // no-op: nothing bound, nothing to do.
     if boundAnnots.isEmpty && effectiveMembers.isEmpty then return program
 
@@ -274,6 +274,8 @@ final class NullabilityTransform(
       case Target.Union                          => TypeRepr.OrType(t, nullRef)
       case Target.Named(_) | Target.OptionTarget =>
         TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, wrapperSym), List(unboxed(t)))
+
+    nullableOf = nullable
 
     def alreadyNullable(t: TypeRepr): Boolean = t match
       case TypeRepr.OrType(_, TypeRepr.TypeRef(_, s))      => s == nullSym
@@ -396,6 +398,30 @@ final class NullabilityTransform(
             }
           }
       }
+
+      // A LAMBDA ascribed to an owned functional interface implements its single abstract method,
+      // an override edge the graph cannot see (an anonymous class `sam-anon->lambda` converted has
+      // no class left): its parameters follow the SAM's retyped slots, by POSITION.
+      val samParams: Map[SymId, List[(Int, Planned)]] =
+        plan.toList.filter(_.slot == Slot.Param).groupBy(_.sym.owner).map((m, xs) => m -> xs.map(x => paramIndexOf(x.sym) -> x).filter(_._1 >= 0))
+      if samParams.nonEmpty then
+        given Program = program
+        program.units.foreach { u =>
+          StandardTraversal.scanClassDef(u, ()) { (_, t) =>
+            t match
+              case l: Tree.Lambda =>
+                ownedSam(program, l.tpe).flatMap(m => samParams.get(m.id)).foreach { xs =>
+                  xs.foreach { (pos, x) =>
+                    l.params.lift(pos).flatMap(v => program.symbolOf(v.symbol)).foreach { s =>
+                      if !claimed.contains(s.id) && retypable(program, s.id) && !alreadyNullable(s.info) && !isPrimitive(program, s.info) && !s.flags.isVararg then
+                        claimed += s.id
+                        plan += Planned(s, x.key, Slot.Param, s.info, Nil)
+                    }
+                  }
+                }
+              case _ => ()
+          }
+        }
 
     // overload set the retype would erase flat (wrapper mode): two members java kept apart by
     // erasure become one descriptor (E120), so refuse both together before anything is retyped.
@@ -859,10 +885,19 @@ final class NullabilityTransform(
     * the SAM method of an OWNED interface (retyped, so the body stays wrapped); otherwise the SAM is a class file's — the formal can't say, so the body is unwrapped and counted, as [[coerceArgs]]
     * treats an external callee's argument.
     */
-  override def transformLambda(t: Tree.Lambda)(using p: Program): Term =
-    if !isWrapper then t
+  override def transformLambda(t0: Tree.Lambda)(using p: Program): Term =
+    if !isWrapper then t0
     else
+      // the lambda's own declared result (an anonymous class's method) follows the SAM's retype
+      val t = t0.resultTpt match
+        case Some(rt) if !isWrapperType(rt.tpe) && ownedSam(p, t0.tpe).exists(m => newTypes.contains(m.id)) =>
+          t0.copy(resultTpt = Some(TypeTree(nullableOf(rt.tpe), rt.origin)))
+        case _ => t0
       lambdaResult(p, t) match
+        // a body with a valued `return` is a METHOD body (the emitter nests it in a `def`): its
+        // returns are the slot and its tail is a statement, never wrapped
+        case Some(r) if hasValuedReturn(t.body) =>
+          t.copy(body = mapReturns(r, t.body, coerceTo))
         case Some(r) =>
           t.copy(body = mapReturns(r, coerceTo(r, t.body), coerceTo))
         case scala.None =>
@@ -887,16 +922,38 @@ final class NullabilityTransform(
             case Some(s) if FunctionNames(s.fullName) && args.nonEmpty => Some(args.last)
             case Some(s) if p.owns(s.id)                               =>
               // an OWNED functional interface: its one abstract method's RETYPED result decides
-              p.symbols.all.iterator.filter(m => m.owner == s.id && m.flags.isAbstract).toList match
-                case m :: Nil =>
-                  m.info match
-                    case TypeRepr.MethodType(_, r, _)                       => Some(r)
-                    case TypeRepr.PolyType(_, TypeRepr.MethodType(_, r, _)) => Some(r)
-                    case _                                                  => scala.None
-                case _ => scala.None
+              ownedSam(p, t.tpe).flatMap(
+                _.info match
+                  case TypeRepr.MethodType(_, r, _)                       => Some(r)
+                  case TypeRepr.PolyType(_, TypeRepr.MethodType(_, r, _)) => Some(r)
+                  case _                                                  => scala.None
+              )
             case _ => scala.None
         case _ => scala.None
     }
+
+  /** the single abstract method an OWNED functional interface declares itself, the one a lambda ascribed to it implements; `None` where there is not exactly one. */
+  private def ownedSam(p: Program, tpe: TypeRepr): Option[Symbol] =
+    val byOwner = abstractByOwner.getOrElse {
+      val m = p.symbols.all.iterator.filter(_.flags.isAbstract).toList.groupBy(_.owner).map((o, ms) => o -> ms.map(_.id))
+      abstractByOwner = Some(m); m
+    }
+    headSym(tpe).filter(p.owns).flatMap { iface =>
+      byOwner.getOrElse(iface, Nil) match
+        case m :: Nil => p.symbolOf(m)
+        case _        => scala.None
+    }
+
+  /** abstract members by owner, for [[ownedSam]]; rebuilt per run. */
+  private var abstractByOwner: Option[Map[SymId, List[SymId]]] = scala.None
+
+  /** the target shape applied to a type, captured from [[run]] for the tree walk. */
+  private var nullableOf: TypeRepr => TypeRepr = identity
+
+  private def hasValuedReturn(body: Term): Boolean =
+    var found = false
+    ReturnSites.map(body) { e => found = true; e }
+    found
 
   private def bodyIsWrapped(e: Term): Boolean = e match
     case x: Tree.Block => bodyIsWrapped(x.expr)

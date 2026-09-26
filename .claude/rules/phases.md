@@ -267,6 +267,11 @@ sees the kind); the screen is *would a reader act differently*.
   is a derivation input, not a compared surface; a package-private java FIELD the reference ships public
   derives a `Public` row.
 - The bean fold's `setterOnly` guard reads an INHERITED getter as in scope (`graph.ancestorsOf`).
+- A LAMBDA ascribed to an owned functional interface is an OVERRIDE the graph cannot see (an
+  anonymous class `sam-anon->lambda` converted has no class left): a phase retyping the SAM retypes
+  the lambda's parameters by position and its `resultTpt`, and a body with a valued `return` is a
+  METHOD body — returns coerced, tail untouched. Missed, jbump's `CollisionFilter` lambda kept java's
+  parameter types beside a `Nullable` SAM (E007). Kind (a) for the edge, the retype is the phase's.
 - A table that replaces a lookup BY NAME (`ClassTableTransform.Table`) holds `classOf[X]` and
   `() => new X`, never an instance or a companion reference: listing must not run X's static
   initialiser, and running the table end to end measured 0 initialisations for a lookup and 1 for a
