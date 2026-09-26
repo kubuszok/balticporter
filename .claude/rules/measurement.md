@@ -101,6 +101,10 @@ never a DEFECT (a residue cited as *measured worse*, a LOSS, a WORK ITEM). The a
   (checked by `just injections-lint`).
 - `expected-lost` (`test_discovery_guard`): liqp's `!! TESTS LOST — 64 of 639` was a constant nobody
   read; a RECOVERED test is acknowledged, not absorbed. `TestDiff.disappeared` gates too.
+- `findings.tsv`, `counts.tsv`, `report.md` are written when `PortRun.execute` ENDS (a `finally`, so a
+  fatal stop writes them too), to the directory `CheckReport.beginRun` captured when it STARTED — never
+  from a JVM shutdown hook: a generator that sets `balticporter.reportDir` around the run and clears it
+  lost every refusal reason (0 files on disk), and a long-lived JVM mixed several runs' records. Kind (a).
 - `findings.tsv` (`findings_baseline_guard`, `cut -f2-` drops the line-ordered id): counts hold over
   a moved owner, `UsageKind` or running total. Eight dependent baselines were stale (`280 -> 220`)
   since waves 0/1, mis-attributed to a worktree difference until somebody read the row.

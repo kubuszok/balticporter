@@ -234,7 +234,13 @@ final case class PortRun(
     outDir.getParent.resolve(outDir.getFileName.toString + "-besteffort")
 
   /** The whole run. Throws on fatal findings after printing the full report. */
+  /** Run the port. Its findings are written at the END of the run, to the report directory named when it STARTED — a run that stops on a fatal finding still leaves them. */
   def execute(): PortResult =
+    CheckReport.beginRun()
+    try executeRun()
+    finally CheckReport.endRun()
+
+  private def executeRun(): PortResult =
     require(
       !declaredPhases.exists(_.isInstanceOf[PackageRenameTransform]),
       s"[$label] PackageRenameTransform must not be listed in `phases`: it has to run AFTER every " +

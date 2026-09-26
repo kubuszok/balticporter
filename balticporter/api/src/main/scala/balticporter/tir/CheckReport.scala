@@ -62,7 +62,11 @@ object CheckReport:
     * is no port identity to name a directory after (`sun.java.command` under sbt 2 forked tests answers `WorkerMain`, which would publish into the checkout). An explicit `reportDir` still enables it,
     * since the caller supplied the identity.
     */
-  def enabled: Boolean =
+  def enabled: Boolean = synchronized(current) match
+    case Some(t) => t.dir.isDefined
+    case _       => enabledNow
+
+  private def enabledNow: Boolean =
     DebugFlags.get("report").map(_ == "off") match
       case Some(true) => false
       case _          =>
@@ -72,8 +76,30 @@ object CheckReport:
   /** `balticporter.reportDir`, else `port-report/<main class simple name>` under the root. Derived from the main class deliberately — per-port without the engine naming a library, and no call-site
     * configuration needed. [[NoMainClass]] is the total-but-unwritten fallback ([[enabled]] is false there); `PortMap` still discovers a base's map through this directory's parent.
     */
-  def dir: Path =
+  def dir: Path = synchronized(current).flatMap(_.dir).getOrElse(dirNow)
+
+  private def dirNow: Path =
     DebugFlags.path("reportDir").getOrElse(DebugFlags.root.resolve(s"port-report/${mainClassKey.getOrElse(NoMainClass)}"))
+
+  /** Where a run in progress reports: decided when it BEGAN, so a caller that sets the report directory for the run and clears it afterwards still gets its artifacts. `dir` is `None` when reporting
+    * was off at the start.
+    */
+  final private case class Target(dir: Option[Path])
+  private var current: Option[Target] = scala.None
+
+  /** Start a run: forget what an earlier run in this JVM recorded and fix where this one reports. */
+  def beginRun(): Unit = synchronized {
+    recorded.clear()
+    upstream = scala.None
+    current = Some(Target(Option.when(enabledNow)(dirNow)))
+  }
+
+  /** End the run begun by [[beginRun]]: write what it recorded to the directory captured then, whatever the flags say now, and close it. Call it from a `finally`, so a run that stops on a fatal
+    * finding still leaves its findings.
+    */
+  def endRun(): Unit =
+    try writeNow()
+    finally synchronized { current = scala.None; recorded.clear(); upstream = scala.None }
 
   /** the placeholder segment for "this JVM has no port identity"; see [[dir]]. */
   private[tir] val NoMainClass = "default"
@@ -117,27 +143,12 @@ object CheckReport:
   // ---------------------------------------------------------------------------
 
   private val recorded = collection.mutable.LinkedHashMap.empty[String, List[Finding]]
-  private var hooked   = false
 
   /** Record a check's COMPLETE result. Registers the check name even for `Nil`. No-op when disabled. Idempotent per check name within a run: a second call replaces the first, so a migration that
-    * filters and re-records (portability does) reports the filtered number.
+    * filters and re-records (portability does) reports the filtered number. Written by [[endRun]] (or an explicit [[writeNow]]), never at JVM exit.
     */
   def record(check: String, findings: Seq[Finding]): Unit =
-    if enabled then
-      synchronized {
-        recorded(check) = findings.toList
-        if !hooked then
-          hooked = true
-          Runtime.getRuntime.addShutdownHook(
-            new Thread(() =>
-              try writeNow()
-              catch {
-                case e: Exception =>
-                  System.err.println(s"[balticporter] check report could not be written: $e")
-              }
-            )
-          )
-      }
+    if enabled then synchronized { recorded(check) = findings.toList }
 
   /** what has been recorded so far — for a caller that wants the numbers in-process. */
   def snapshot(): Map[String, List[Finding]] = synchronized(recorded.toMap)
@@ -165,7 +176,7 @@ object CheckReport:
   // writing
   // ---------------------------------------------------------------------------
 
-  /** the shutdown-hook path. Nothing recorded ⇒ nothing written: a run that never invoked a check must not leave an artifact claiming every check found zero.
+  /** the end-of-run write. Nothing recorded ⇒ nothing written: a run that never invoked a check must not leave an artifact claiming every check found zero.
     */
   def writeNow(): Unit = if enabled && synchronized(recorded.nonEmpty) then write(runDir)
 

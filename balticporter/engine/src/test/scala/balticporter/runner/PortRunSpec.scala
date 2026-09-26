@@ -695,16 +695,30 @@ class PortRunSpec extends munit.FunSuite:
   test("every RequiredCheck reaches findings.tsv — a number on stdout that is not persisted fails the run") {
     val (root, src) = fixture()
     val rep         = root.resolve("report")
-    withReport(rep) {
-      run(root, src)()
-      // the shutdown hook's path, forced now: `CheckReport.dir` must resolve INSIDE the flag scope
-      CheckReport.write(rep.resolve("run-latest"))
-    }
+    withReport(rep)(run(root, src)())
     val counts = Files.readAllLines(rep.resolve("run-latest/counts.tsv")).toArray(Array.empty[String]).toList.filterNot(_.startsWith("#")).flatMap(_.split('\t').headOption).toSet
     assertEquals(PortRun.RequiredChecks -- counts, Set.empty[String])
     // a check that found NOTHING is still named, or `counts.tsv` cannot tell it from one that
     // never ran — the distinction the whole persistence layer exists to keep.
     assert(counts.contains(PortRun.PortabilityInjected), "nothing was injected, and it must still be named")
+  }
+
+  test("a run whose report directory is set for the run and cleared afterwards still leaves its findings") {
+    // a consumer's generator sets the directory around each run in a long-lived JVM; what the run
+    // recorded is written when the run ENDS, to the directory named when it STARTED
+    val (root, src) = fixture()
+    val first       = root.resolve("report-a")
+    val second      = root.resolve("report-b")
+    withReport(first)(run(root, src)())
+    assert(Files.isRegularFile(first.resolve("run-latest/findings.tsv")), "findings must be on disk when the run returns")
+    assert(Files.isRegularFile(first.resolve("run-latest/counts.tsv")))
+    assert(!CheckReport.enabled, "nothing is left pinned once the run is over")
+    withReport(second)(run(root, src)())
+    assertEquals(
+      Files.readString(second.resolve("run-latest/counts.tsv")),
+      Files.readString(first.resolve("run-latest/counts.tsv")),
+      "the second run reports ITS OWN checks, into ITS OWN directory"
+    )
   }
 
   test("base-surface: an UNCONSUMED Unknown is a finding, and the FATAL half is kept apart") {
@@ -734,10 +748,7 @@ class PortRunSpec extends munit.FunSuite:
   test("\u2026and a run that asks NOTHING still names the check \u2014 a zero is not an absence") {
     val (root, src) = fixture()
     val rep         = root.resolve("report")
-    withReport(rep) {
-      run(root, src)()
-      CheckReport.write(rep.resolve("run-latest"))
-    }
+    withReport(rep)(run(root, src)())
     val counts = Files.readAllLines(rep.resolve("run-latest/counts.tsv")).toArray(Array.empty[String]).toList.filterNot(_.startsWith("#")).map(_.split('\t').toList)
     assertEquals(clue(counts).collectFirst { case k :: v :: _ if k == PortRun.BaseSurface => v }, Some("0"))
   }
