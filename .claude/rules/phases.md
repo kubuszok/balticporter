@@ -230,6 +230,11 @@ sees the kind); the screen is *would a reader act differently*.
 - An opaque coercion must look through composite terms such as `if` branches to find the retyped
   reference underneath; the node kinds treated as carriers are enumerated explicitly, and a missed
   one is a compile error, not a silent skip.
+- A null-model DEREFERENCE (member, call, index, length, for-each) reads the value a COMPOSITE yields,
+  never only the composite's node type: an assignment used as a value (`(f = new X(n)).items`) is a
+  block whose tail reads the wrapped field while the block keeps java's type, so `.items` landed on
+  the wrapper (anim8 276 `not a member of Nullable` errors). `.get` goes on the LEAF
+  (`NullabilityTransform.atLeaves`), java's own NPE. Kind (a).
 - A dependent module may add context-threading policy for its own types (`globals-to-implicits`),
   while the shared part of that policy is inherited from the base and may not be restated.
 - A class for which no primary constructor is promoted or synthesised still needs a primary that

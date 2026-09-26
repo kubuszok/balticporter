@@ -848,10 +848,10 @@ final class NullabilityTransform(
     */
   override def transformSelect(t0: Tree.Select)(using p: Program): Term =
     val t = wrapped.get(t0.sym).map(w => t0.copy(tpe = w)).getOrElse(t0)
-    if isWrapper && isWrapped(t.qual) && !isWrapperMember(t.sym) && !isOperator(p, t.sym)
+    if isWrapper && derefsWrapped(t.qual) && !isWrapperMember(t.sym) && !isOperator(p, t.sym)
     then
-      if isRefEqOp(p, t.sym) then t.copy(qual = unwrapOrNull(t.qual))
-      else t.copy(qual = unwrap(t.qual))
+      if isRefEqOp(p, t.sym) then t.copy(qual = atLeaves(t.qual)(unwrapOrNull))
+      else t.copy(qual = atLeaves(t.qual)(unwrap))
     else t
 
   override def transformApply(t: Tree.Apply)(using p: Program): Term =
@@ -860,10 +860,10 @@ final class NullabilityTransform(
       val result = nullTest(t).getOrElse {
         val recvFixed = t.fun match
           case f @ Tree.Select(recv, m, _, _)
-              if isWrapped(recv) && !isWrapperMember(m)
+              if derefsWrapped(recv) && !isWrapperMember(m)
                 && (!isOperator(p, m) || !isNullTestOp(p, m)) =>
-            if isRefEqOp(p, m) then t.copy(fun = f.copy(qual = unwrapOrNull(recv)))
-            else t.copy(fun = f.copy(qual = unwrap(recv)))
+            if isRefEqOp(p, m) then t.copy(fun = f.copy(qual = atLeaves(recv)(unwrapOrNull)))
+            else t.copy(fun = f.copy(qual = atLeaves(recv)(unwrap)))
           case _ => t
         coerceArgs(recvFixed)
       }
@@ -1001,18 +1001,18 @@ final class NullabilityTransform(
     // `new T[]{ a, b }`: each element sits at a slot of the ARRAY's element type — a wrapped
     // field handed to a `int[][]` literal is unwrapped like any other slot (`PixmapPacker`)
     // `for (c : wrappedArray)`: java dereferences the iterable (NPE on null) — `.get` is that read
-    case fe: Tree.ForEach if isWrapper && isWrapped(fe.iterable) => fe.copy(iterable = unwrap(fe.iterable))
-    case n:  Tree.NewArray if isWrapper && n.init.isDefined      =>
+    case fe: Tree.ForEach if isWrapper && derefsWrapped(fe.iterable) => fe.copy(iterable = atLeaves(fe.iterable)(unwrap))
+    case n:  Tree.NewArray if isWrapper && n.init.isDefined          =>
       val elemWant = n.tpe match
         case TypeRepr.AppliedType(_, List(el)) => el
         case _                                 => TypeRepr.NoType
       n.copy(init = n.init.map(_.map(coerceTo(elemWant, _))))
-    case a: Tree.ArrayLength if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
+    case a: Tree.ArrayLength if isWrapper && derefsWrapped(a.array) => a.copy(array = atLeaves(a.array)(unwrap))
     // an array passed WHOLE through a vararg slot: java's slot takes a null array, so `.orNull`
-    case sp: Tree.Spread if isWrapper && isWrapped(sp.expr)      => sp.copy(expr = unwrapOrNull(sp.expr))
-    case a:  Tree.ArrayAccess if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
+    case sp: Tree.Spread if isWrapper && derefsWrapped(sp.expr)      => sp.copy(expr = atLeaves(sp.expr)(unwrapOrNull))
+    case a:  Tree.ArrayAccess if isWrapper && derefsWrapped(a.array) => a.copy(array = atLeaves(a.array)(unwrap))
     // java's `x instanceof T` is false for null: test the unwrapped value, never the wrapper
-    case io: Tree.InstanceOf if isWrapper && isWrapped(io.expr) => io.copy(expr = unwrapOrNull(io.expr))
+    case io: Tree.InstanceOf if isWrapper && derefsWrapped(io.expr) => io.copy(expr = atLeaves(io.expr)(unwrapOrNull))
     case other => other
 
   // -------------------------------------------------------------------------
@@ -1024,6 +1024,23 @@ final class NullabilityTransform(
   private def isWrapped(t:       Term):     Boolean = headSym(t.tpe).contains(wrapperSym) && wrapperSym != SymId.None
   private def isWrapperType(t:   TypeRepr): Boolean = headSym(t).contains(wrapperSym) && wrapperSym != SymId.None
   private def isWrapperMember(s: SymId):    Boolean = Set(applySym, emptySym, getSym, orNullSym, isEmptySym).contains(s)
+
+  /** Does a DEREFERENCE of `t` reach a wrapped value? `t` itself, or the value a composite yields whose own node type is still java's — an assignment used as a value is a block whose tail reads the
+    * assigned field.
+    */
+  private def derefsWrapped(t: Term): Boolean = isWrapped(t) || (t match
+    case x: Tree.Block => derefsWrapped(x.expr)
+    case _ => false)
+
+  /** `f` at every wrapped value a dereference of `t` reaches ([[derefsWrapped]]), so java's own dereference of that value is what throws on null. */
+  private def atLeaves(t: Term)(f: Term => Term): Term =
+    if isWrapped(t) then f(t)
+    else
+      t match
+        case x: Tree.Block =>
+          val e = atLeaves(x.expr)(f)
+          x.copy(expr = e, tpe = e.tpe)
+        case other => other
 
   private def elementOf(t: TypeRepr): TypeRepr = t match
     case TypeRepr.AppliedType(_, List(a)) => a
@@ -1235,8 +1252,8 @@ final class NullabilityTransform(
       val opName             = p.symbolOf(op).filter(s => OperatorOwners(ownerNameOf(s))).map(_.name)
       def isNullLit(e: Term) = e match { case Tree.Literal(Constant.NullC, _, _) => true; case _ => false }
       (opName, t.args) match
-        case (Some("==" | "eq"), List(a)) if isWrapped(recv) && isNullLit(a) => Some(isEmpty(recv, o))
-        case (Some("!=" | "ne"), List(a)) if isWrapped(recv) && isNullLit(a) => Some(negate(isEmpty(recv, o), o))
+        case (Some("==" | "eq"), List(a)) if derefsWrapped(recv) && isNullLit(a) => Some(atLeaves(recv)(isEmpty(_, o)))
+        case (Some("!=" | "ne"), List(a)) if derefsWrapped(recv) && isNullLit(a) => Some(negate(atLeaves(recv)(isEmpty(_, o)), o))
         // `boxed == 1` / `1 == boxed`: java UNBOXES the wrapped side ONLY against a PRIMITIVE
         // operand (JLS 15.21.1, NPE on null) — `.get` is that dereference. Against a reference
         // (`obj == this` in an `equals`) java compares references and null is a legal operand, so
