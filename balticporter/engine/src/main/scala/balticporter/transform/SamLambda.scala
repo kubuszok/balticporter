@@ -12,7 +12,7 @@ object SamLambda:
     */
   enum Guard:
     case NotSam, Unreadable, BodyNotSingle, SelfReference, NonCapturing, Serializable,
-      MethodMismatch, GenericMethod, ConstructorArgs
+      MethodMismatch, GenericMethod, RepeatedParam, ConstructorArgs
 
     def why: String = this match
       case NotSam =>
@@ -47,6 +47,9 @@ object SamLambda:
         "PERMANENT with the IR as it stands: the implemented method declares its own TYPE " +
           "PARAMETERS and a scala function literal has nowhere to put them, so the conversion " +
           "would drop a binder java wrote"
+      case RepeatedParam =>
+        "PERMANENT: the implemented method takes a java `T...`, emitted as a repeated parameter, and " +
+          "a scala function literal cannot declare one"
       case ConstructorArgs =>
         "the `new` carries CONSTRUCTOR ARGUMENTS, which java's SAM rule cannot produce — an " +
           "INTERFACE has no constructor to pass them to. A site reaching this guard is an engine " +
@@ -75,6 +78,7 @@ object SamLambda:
               val name = p.symbolOf(d.symbol).map(_.name).getOrElse("")
               if d.rhs.isEmpty then refuse(Guard.BodyNotSingle)
               else if d.tparams.nonEmpty then refuse(Guard.GenericMethod)
+              else if d.paramss.flatten.exists(v => p.symbolOf(v.symbol).exists(_.flags.isVararg)) then refuse(Guard.RepeatedParam)
               else if name != m || d.paramss.flatten.sizeIs != arity then refuse(Guard.MethodMismatch)
               else if selfReferences(d, anon.symbol, ancestryOf(nw, anon)) then refuse(Guard.SelfReference)
               else if !captures(d, anon.symbol) then refuse(Guard.NonCapturing)

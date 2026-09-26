@@ -1,6 +1,8 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
+import balticporter.tir.IdiomKind
+import balticporter.transform.SamLambdaTransform
 
 import java.nio.file.{ Files, Path }
 
@@ -31,8 +33,11 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
       |  Kind(String... names) { this.n = names.length; }
       |  int n() { return n; }
       |}
+      |public interface Sink { int take(String... xs); }
       |public class Run {
       |  public static String run() {
+      |    final int base = 10;
+      |    Sink sink = new Sink() { public int take(String... xs) { return base + xs.length; } };
       |    Rooms r = new Rooms();
       |    r.addRoomTypes("a", "b");
       |    String[] more = { "c" };
@@ -43,12 +48,12 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
       |    Rooms.fill("z", slots);
       |    return r.types + "," + Rooms.sum(nums) + "," + Rooms.sum(4, 5) + "," + Rooms.last("p", "q") + "," +
       |      slots[0] + slots[1] + "," + Rooms.count(nums) + "," + Rooms.count(1, 2) + "," + Rooms.count((Object[]) null) + "," +
-      |      new Pair("h", "i", "j").size() + "," + Kind.A.n() + Kind.B.n();
+      |      new Pair("h", "i", "j").size() + "," + Kind.A.n() + Kind.B.n() + "," + sink.take("u", "v");
       |  }
       |}
       |""".stripMargin
 
-  private lazy val ported = port(src)
+  private lazy val ported = port(src, new SamLambdaTransform)
 
   test("the declaration is repeated and each call passes elements or spreads java's array") {
     assertEmits(ported, "def addRoomTypes(ts: java.lang.String*)")
@@ -62,6 +67,11 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
     assertEmits(ported, "enum Kind(names: java.lang.String*)")
   }
 
+  test("an anonymous implementation of a repeated SAM stays a class — a function literal cannot declare `T*`") {
+    assertIdiomRefuses(ported, IdiomKind.SamLambda, "RepeatedParam")
+    assertEmits(ported, "override def take(xs: java.lang.String*): scala.Int")
+  }
+
   test("the port compiles and runs as java did — a write through the parameter reaches the caller's array") {
     val dir   = Files.createTempDirectory("owned-varargs-src")
     val files = ported.after.units.map(ported.emitter.emitUnit).zipWithIndex.map { (text, n) =>
@@ -73,5 +83,5 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
     assert(!rep.hasErrors, s"the emission does not compile:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${ported.out}")
     val loader = new java.net.URLClassLoader(Array(out.toUri.toURL), getClass.getClassLoader)
     val got    = loader.loadClass("va.Run").getMethod("run").invoke(null).asInstanceOf[String]
-    assertEquals(got, "[a, b, c],6,9,q,zz,1,2,-1,3,20")
+    assertEquals(got, "[a, b, c],6,9,q,zz,1,2,-1,3,20,12")
   }
