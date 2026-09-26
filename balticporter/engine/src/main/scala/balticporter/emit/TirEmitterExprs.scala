@@ -412,14 +412,14 @@ private[emit] trait TirEmitterExprs:
     // has put a named, value-carrying boundary around the arm. A TAIL yield never reaches here.
     // `case String s ->` — a java TYPE PATTERN as a case label (JLS 14.11.1); scala's typed
     // pattern is the exact image.
-    case Tree.TypePattern(b, tpt, _, _) => s"${local(b)}: ${tpe(tpt.tpe)}"
+    case Tree.TypePattern(b, tpt, _, _) => s"${TirEmitter.escBinder(sym(b).name)}: ${tpe(tpt.tpe)}"
     // `case Point(x, y)` — java's RECORD PATTERN derives over the record's ACCESSORS (JLS
     // 14.30.1, JS-C43). Named through typeValue (the companion's value path, where unapply is).
     case Tree.RecordPattern(tpt, ps, _, _) =>
       val nm = headSymOf(tpt.tpe).map(typeValue).getOrElse(tpe(tpt.tpe))
       s"$nm(${ps.map(term(_, i)).mkString(", ")})"
     // an UNCONDITIONAL component: the binding alone (a type test would be a different program).
-    case Tree.BindPattern(b, _, _)                    => local(b)
+    case Tree.BindPattern(b, _, _)                    => TirEmitter.escBinder(sym(b).name).trim
     case Tree.Yield(v, _, _) if yieldTarget.isDefined =>
       s"scala.util.boundary.break(${term(v, i)})(using ${yieldTarget.get})"
     case y @ Tree.Yield(v, _, _) =>
@@ -913,7 +913,7 @@ private[emit] trait TirEmitterExprs:
           case (_, Tree.Ident(s, _, _)) if s == c.param.symbol => true
           case (acc, _)                                        => acc
         }(using program)
-        val pname = if paramUsed then esc(sym(c.param.symbol).name) else "_"
+        val pname = if paramUsed then TirEmitter.escBinder(sym(c.param.symbol).name) else "_"
         s"${ind(i + 1)}case $pname: ${catchTpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}"
       }
       .mkString("\n")

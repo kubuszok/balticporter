@@ -237,6 +237,11 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 
 ## More rules (one line each)
 
+- A java identifier ending in `_` is backticked by `TirEmitter.esc` (scala lexes `other_:` as ONE
+  operator identifier: `val other_: Pair = …` is a parse error); a PATTERN binder takes a space
+  instead (`escBinder`), since a backticked name in a pattern is a stable identifier, not a binding.
+  Kind (a).
+
 - A java `T...` the port DECLARES is emitted `T*` (hand-port parity: the reference spells every
   vararg repeated, and a consumer hand-added `addRoomTypes(RoomType*)` beside the `Array` one). Every
   call passes a REPEATED tail or SPREADS java's array (`SpoonTir.varargPack`, one path for owned and

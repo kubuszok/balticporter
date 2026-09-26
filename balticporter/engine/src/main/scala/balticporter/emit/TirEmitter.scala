@@ -466,8 +466,14 @@ object TirEmitter:
     "wait"
   )
 
-  /** backtick an identifier that collides with a Scala keyword. */
-  def esc(name: String): String = if keywords(name) then s"`$name`" else name
+  /** backtick an identifier that collides with a Scala keyword, or that ends in `_`: scala lexes `other_:` as ONE operator identifier, so a java name like `other_` breaks before every `:`. */
+  def esc(name: String): String = if keywords(name) || endsInUnderscore(name) then s"`$name`" else name
+
+  /** a PATTERN binder: a backticked name there is a stable identifier, never a binding, so a `_`-final name takes a space before whatever follows instead. */
+  def escBinder(name: String): String =
+    if endsInUnderscore(name) then s"$name " else if keywords(name) then s"`$name`" else name
+
+  private def endsInUnderscore(name: String): Boolean = name.length > 1 && name.endsWith("_")
 
   /** THE SAME RULE, APPLIED TO EVERY SEGMENT OF A QUALIFIED NAME. `esc` answers for an IDENTIFIER; a `Symbol.fullName` is a PATH, and a java package segment java was free to name
     * `type`/`object`/`val`/`package` emits an unparseable reference reaching the output verbatim. Cut only at the structural three separators (`.`, `$`, `#`), carried across verbatim, so this is safe
