@@ -5,7 +5,8 @@
 # difference catalog, the consumer regression check, the debugging surface,
 # comment-lint, Metals and the TS/JS RAST exporters.
 #
-#   just consumers-check               publish the engine locally and test lls, sge, ssg against it
+#   just consumers-check               publish the engine locally, link each consumer's pinned base port
+#                                      artifact against it, and test lls, sge, ssg against it
 #   just catalog                       render balticporter.catalog to .balticporter/catalog.md
 #   just debug-flags [PORT]            WHICH layer defines each balticporter.* flag right now
 #   just debug-set   KEY VALUE         write one flag into .balticporter/debug.properties
@@ -30,7 +31,7 @@ _default:
 # ---------------------------------------------------------------------------------------------
 # Consumer regression check — the engine's gate against the libraries that depend on it.
 # ---------------------------------------------------------------------------------------------
-[doc("publish the committed engine locally and run each consumer's own tests against it (level: jvm | full; consumers default to lls sge)")]
+[doc("publish the committed engine locally, link each consumer's pinned base port artifact against it, and run each consumer's own tests against it (level: jvm | full | binary; consumers default to lls sge ssg)")]
 consumers-check level="jvm" *consumers:
     "{{root}}/scripts/consumers-check.sh" {{level}} {{consumers}}
 

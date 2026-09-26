@@ -13,15 +13,19 @@ Detail for `CLAUDE.md` §5, §5.1 and §5.4.
 Per-library measure lanes, baselines and port reports live in each consumer repository (lls, sge,
 ssg). The engine verifies itself against the consumers with `just consumers-check`.
 
-## The consumers check proves SOURCE compatibility, not the published chain
+## The consumers check proves SOURCE compatibility AND links the published chain
 
-`consumers-check` publishes the engine AND each consumer's port artifact (`lls-port`) to the ivy-local
-repository, and a dependent consumer with `Resolver.defaultLocal` picks that fresh `lls-port` up. So a
-change to a value type a consumer's policy links against (`PortManifest` gained a parameter: the
-case-class `apply`/`copy` signatures moved) passes every consumer locally and throws
-`NoSuchMethodError` on the dependent's CI, which resolves the PUBLISHED `lls-port` (sge PR #155,
-2026-09-24). A change to `PortManifest`, `RunScope` or any type a `*-port` artifact constructs is a
-RELEASE of every base's port artifact before a dependent may pin the engine; say so in the commit.
+`consumers-check`'s source rows publish the engine AND each consumer's port artifact (`lls-port`) to
+the ivy-local repository, and a dependent consumer with `Resolver.defaultLocal` picks that fresh
+`lls-port` up — so they cannot see a change to a value type a consumer's policy links against
+(`PortManifest` gained a parameter: the case-class `apply`/`copy` and `$lessinit$greater$default$N`
+signatures moved), which threw `NoSuchMethodError` on the dependent's CI twice after the engine was
+published. The `base-binary` row (a build fix, universal) runs FIRST: it resolves the base port
+artifact at the version the dependent PINS, forces this engine, and links every class of it
+(`scripts/LinkCheck.java`); a FAIL names the missing members and means the base must be republished
+against this engine before the dependent may pin it — say so in the commit. `consumers-check
+binary` runs only that row. The check restores ivy-local as it found it (a run once deleted the
+user's own `lls-port` publication at the same version).
 
 ## Required checks
 
