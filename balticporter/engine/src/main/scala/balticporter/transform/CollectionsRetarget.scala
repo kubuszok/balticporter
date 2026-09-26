@@ -1667,3 +1667,66 @@ private[transform] trait CollectionsRetarget:
     yield
       val tpe = TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
       t.copy(args = List(Tree.Typed(arg, TypeTree(tpe, arg.origin), tpe, arg.origin)))
+
+  /** A value the scope HELD BACK at a retarget SOURCE, at a formal this phase moved to the TARGET: the subtyping licence runs the other way, so the value is converted at the call — the port's own
+    * `retargetCoercions` first, the standard library's bridge second — and every crossing is counted, converted or not. The frontend's ascription at java's `? super E` formal is re-stated at `E`
+    * (sound: the source is only read contravariantly there), and dropped where the value itself moved. `restored` is a held-back member's ORIGINAL body, whose node types are all java's.
+    */
+  private[transform] def heldBackRetargetArgs(t: Tree.Apply, restored: Boolean)(using p: Program): Tree.Apply =
+    if effectiveRetarget.isEmpty || literalEmpty || !ownedSym(t.method) || literal(t.method) || mintedSyms.contains(t.method) then t
+    else
+      val formals = formalsOf(t)
+      if formals.sizeIs != t.args.size then t
+      else
+        val as = t.args.zip(formals).map((a, f) => heldBackRetargetArg(a, f, t.method, restored))
+        if as == t.args then t else t.copy(args = as)
+
+  /** a held-back member's original body with its calls into moved formals bridged — see [[heldBackRetargetArgs]]; the member itself stays exactly as the frontend read it. */
+  private[transform] def heldBackBody(rhs: Term)(using Program): Term =
+    if effectiveRetarget.isEmpty then rhs
+    else
+      val ph = new Phase:
+        def name:                                                  String = "collections/held-back-retarget"
+        override def transformApply(t: Tree.Apply)(using Program): Term   = heldBackRetargetArgs(t, restored = true)
+      StandardTraversal.mapTerm(ph, rhs)
+
+  private def headFqn(x: TypeRepr)(using p: Program): Option[String] = headSym(x).flatMap(p.symbolOf).map(_.fullName)
+
+  private def heldBackRetargetArg(a: Term, formal: TypeRepr, callee: SymId, restored: Boolean)(using p: Program): Term =
+    headFqn(formal).flatMap(src => effectiveRetarget.get(src).map(src -> _)) match
+      case scala.None       => a
+      case Some((src, tgt)) =>
+        val (value, lower) = a match
+          case Tree.Typed(inner, tpt, _, _) if headFqn(tpt.tpe).exists(h => h == src || h == tgt) =>
+            val lo = (headSym(formal), tpt.tpe) match
+              case (Some(s), TypeRepr.AppliedType(_, List(TypeRepr.TypeBounds(l, _)))) if l != TypeRepr.NoType =>
+                Some(TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, s), List(l)))
+              case _ => scala.None
+            (inner, lo)
+          case _ => (a, scala.None)
+        val ref = value match
+          case Tree.Ident(s, _, _)     => Some(s)
+          case Tree.Select(_, s, _, _) => Some(s)
+          case x: Tree.Apply => Some(x.method)
+          case _ => scala.None
+        // the value's own type as the EMITTED text will spell it: a restored body reads java's, a
+        // reference the phase moved is the target, one it held back keeps its declared source
+        val (actualT, held) = if restored then (value.tpe, !ref.exists(s => ownedSym(s) && !literal(s))) else actualOf(value)
+        val expected        = headSym(formal).flatMap(remap.get).map(withHead(formal, _)).getOrElse(formal)
+        headFqn(actualT) match
+          // only a RESTORED body keeps java's spelling of the cast; a mapped one moved with its value
+          case Some(`src`) if restored && (value ne a) && !held => value
+          case Some(`src`) if held                              =>
+            val stated = lower.fold(value)(lt => Tree.Typed(value, TypeTree(lt, a.origin), lt, a.origin))
+            val shown  = TirPrinter.tpe(actualT, TirPrinter.Style.canonical)
+            // a held-back member is walked twice (mapped, then restored from the original): one row per site
+            def count(i: RetargetBoundaryCheck.Issue): Unit =
+              if !retargetRefusals.exists(f => f.issue == i && f.origin == a.origin) then retargetSeam("held-back argument", shown, tgt, a.origin, callee, i)
+            retargetCoercions.get((src, tgt)).orElse(CollectionsTransform.RetargetBridges.get((src, tgt))) match
+              case Some(template) =>
+                count(RetargetBoundaryCheck.Issue.HeldBackBridged)
+                renderRetargetCoercion(template, stated, expected, a.origin)
+              case scala.None =>
+                count(RetargetBoundaryCheck.Issue.HeldBackSource)
+                a
+          case _ => a

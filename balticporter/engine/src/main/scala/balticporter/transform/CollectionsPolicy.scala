@@ -453,13 +453,13 @@ private[transform] trait CollectionsPolicy:
   /** Restores scoped-out members by splicing originals back into the mapped unit. Empty `excluded` returns the unit untouched; an excluded class restores only its own positions (parents, tparams)
     * without short-circuiting its body.
     */
-  private[transform] def restoreExcluded(orig: Tree.ClassDef, mapped: Tree.ClassDef): Tree.ClassDef =
+  private[transform] def restoreExcluded(orig: Tree.ClassDef, mapped: Tree.ClassDef)(using Program): Tree.ClassDef =
     if literalEmpty then mapped
     else
       val body = CollectionsTransform.spine(orig.body, mapped.body, orig.symbol).map {
         case (o: Tree.ClassDef, m: Tree.ClassDef) => restoreExcluded(o, m)
-        case (o: Tree.DefDef, m: Tree.DefDef)     => if literal(o.symbol) then o else m
-        case (o: Tree.ValDef, m: Tree.ValDef)     => if literal(o.symbol) then o else m
+        case (o: Tree.DefDef, m: Tree.DefDef)     => if literal(o.symbol) then o.copy(rhs = o.rhs.map(heldBackBody)) else m
+        case (o: Tree.ValDef, m: Tree.ValDef)     => if literal(o.symbol) then o.copy(rhs = o.rhs.map(heldBackBody)) else m
         case (_, m)                               => m
       }
       val own =

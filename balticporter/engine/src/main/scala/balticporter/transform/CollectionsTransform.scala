@@ -1052,7 +1052,7 @@ final class CollectionsTransform(
       if out ne t2 then out
       else
         // bridge the consumer half where a live view exists, before the count runs
-        val bridged = bridgeSinkArgs(bridgeJavaFormals(t2))
+        val bridged = heldBackRetargetArgs(bridgeSinkArgs(bridgeJavaFormals(t2)), restored = false)
         externalArgs(bridged)
         externalProducer(bridged)
     res match
@@ -1405,6 +1405,13 @@ object CollectionsTransform:
     * see `restoreUninheritableParents`, which keeps java's parent and counts the refusal.
     */
   private[balticporter] val UninheritableTargets: Set[String] = Set("scala.Tuple2")
+
+  /** The conversion a retarget SOURCE value needs at a TARGET slot where the standard library ships one, `$0` the value — consulted after a port's own `retargetCoercions`. `Ordering[T]` extends
+    * `Comparator[T]`, so only this direction needs it; a null comparator stays null, as java passed it.
+    */
+  private[balticporter] val RetargetBridges: Map[(String, String), String] = Map(
+    ("java.util.Comparator", "scala.math.Ordering") -> "{ val c$ = $0; if (c$ == null) null else scala.math.Ordering.comparatorToOrdering(using c$) }"
+  )
 
   /** `java.lang.Class` — the one reified carrier java itself guarantees. */
   private[balticporter] val UniversalCarriers: Set[String] = Set("java.lang.Class")

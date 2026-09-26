@@ -50,6 +50,17 @@ license — a value the JDK PRODUCES at a retargeted type — with kinds `Extern
 `CastToTarget`, `IteratorRemove`. The boundary check cannot see it: the position-blind retyping
 moved the node type on both sides of that slot.
 
+- **A SCOPE makes the same wrong direction inside the program**: a declaration the scope held back
+  (a dependent's own field, under a base's `Only(base)` retarget) keeps the SOURCE and hands it to a
+  base member whose formal moved to the TARGET — anim8's `es.sort(entryComparator)` against a
+  `sort(Ordering)`, 8 errors. The held-back member is RESTORED from its original tree
+  (`restoreExcluded`), so the conversion is applied to that restored body (`heldBackBody`), never
+  only to the mapped one the restore discards. Converted at the call (the port's
+  `retargetCoercions`, then `CollectionsTransform.RetargetBridges`: `Comparator -> Ordering` is
+  `Ordering.comparatorToOrdering`), java's `? super E` ascription restated at `E`, COUNTED as
+  `HeldBackBridged`; a pair with no conversion is `HeldBackSource` (does not compile). A value the
+  scope PULLED in only loses the stale java ascription. Kind (a) for the bridge, (b) for the pair.
+
 ## The third population — the seam INSIDE the program
 
 A mapping that sends ONE java family to TWO unrelated scala families breaks java's own subtyping

@@ -26,6 +26,12 @@ object RetargetBoundaryCheck:
       */
     case IteratorRemove
 
+    /** a value a scope HELD BACK at the SOURCE type, passed to a member whose formal the phase moved to the TARGET — converted at the call. */
+    case HeldBackBridged
+
+    /** the same crossing with no conversion known for the pair — the argument is left as java wrote it and does not compile. */
+    case HeldBackSource
+
   object Issue:
     /** which of the three kinds — engine, port policy, or library-specific — the fix is. */
     def classification(i: Issue): String = i match
@@ -45,6 +51,15 @@ object RetargetBoundaryCheck:
           "and the value did not, so this is a `ClassCastException` at run time on a port that " +
           "compiles clean — java statement semantics Scala does not share, of the kind that compiles cleanly and means something else. Refuse the retarget for this type or " +
           "wrap the operand."
+      case HeldBackBridged =>
+        "engine, and IT COMPILES: a declaration the scope held back (a dependent's own, or one " +
+          "outside the entry) keeps java's type, and hands its value to a member whose formal " +
+          "moved to the retarget target. The value is converted at the call — a new object " +
+          "around java's, so identity differs; widen the scope to the declaration to remove the seam."
+      case HeldBackSource =>
+        "port policy: the same crossing, for a (source, target) pair with no conversion the " +
+          "engine knows — a compile error at the call. Add the pair's template to " +
+          "`retargetCoercions`, or widen the scope to the declaration that holds the value."
       case IteratorRemove =>
         "engine gap, REFUSED and counted: java's `Iterator.remove()` mutates the collection " +
           "the iterator came from, and the scala target's `iterator` is a read-only view, so " +
