@@ -105,7 +105,33 @@ The target's arity is yours to declare: list a parenless target member in `exter
 (`"scala.collection.mutable.BitSet#isEmpty"`).
 
 **`class-table`** re-points one reflective name lookup — `Class.forName`-shaped calls — at an
-explicit table you provide (`redirects { "a.B#forName" = "c.D#classFor" }`).
+explicit table (`redirects { "a.B#forName" = "c.D#classFor" }`). Without `tables` you write that
+table yourself. With `tables`, the engine writes it for you from a list of class names:
+
+```hocon
+{ transform = "class-table"
+  redirects { "com.example.Reflect#forName" = "com.example.Names#classFor" }
+  tables = [ {
+    object    = "com.example.Names"                    # the object to generate
+    seeds     = [ "com.example.Texture", "com.example.Model" ]
+    lookup    = "classFor"                             # name -> Class (the default name)
+    construct = "newInstanceFor"                       # optional: name -> new instance
+    missing { throw = "port.ReflectionException", notFound = "Class not found: " }
+  } ]
+}
+```
+
+The generated object maps each class's run-time name (`getName`) to its `classOf[…]`, and, when
+`construct` is set, to a `() => new …` factory. Listing a class never runs its static initialiser;
+only constructing one does. An unknown name throws java's own `ClassNotFoundException`, or, with
+`missing`, the library's wrapper around it: `new <throw>(<notFound> + name, cause)`, with the
+`ClassNotFoundException` as the cause. `notInstantiable` is the matching message for a listed class
+the table cannot build. `throw` is the emitted Scala name. The engine refuses a seed and reports it under
+`policy` in three cases: the seed names no class the port emits or references, the table cannot
+name it (the class is private, or package-private in another package), or, when `construct` is
+set, it has no no-argument constructor the table can call. A class refused only for construction
+stays in the lookup. The table is written by the module that emits the calls to it. The
+placement, member names, seeds and `missing` are shared surface.
 
 **`static-forwarder`** treats a wrapper type's static members as though they belonged to another
 type's companion:

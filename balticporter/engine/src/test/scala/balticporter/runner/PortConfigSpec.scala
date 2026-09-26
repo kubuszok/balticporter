@@ -1277,3 +1277,30 @@ class PortConfigSpec extends munit.FunSuite:
     assertEquals(r.remedies.ids, List("spec-echo-remedy"))
     assertEquals(r.remedies.get("spec-echo-remedy").map(_.lane), Some("spec-echo-lane"))
   }
+
+  test("`class-table`'s `tables` reach the phase, and no `tables` is the table the port supplies") {
+    def tablesOf(surface: String) =
+      PortConfig
+        .load(fixture(Minimal.replace("""manifest { name = "demo" }""", s"""manifest { name = "demo", surface = [ $surface ] }""")))
+        .manifest
+        .get
+        .effectiveSurface
+        .collectFirst { case c: balticporter.transform.ClassTableTransform => c.tables }
+        .get
+    assertEquals(tablesOf("""{ transform = "class-table", redirects { "com.demo.R#forName" = "com.demo.T#classFor" } }"""), Nil)
+    assertEquals(
+      tablesOf(
+        """{ transform = "class-table", redirects { "com.demo.R#forName" = "com.demo.T#classFor" },
+          |  tables = [ { object = "com.demo.T", seeds = ["com.demo.Widget"], construct = "make", missing { throw = "port.Oops", notFound = "nf: " } } ] }""".stripMargin
+      ),
+      List(
+        balticporter.transform.ClassTableTransform.Table(
+          "com.demo.T",
+          List("com.demo.Widget"),
+          "classFor",
+          Some("make"),
+          Some(balticporter.transform.ClassTableTransform.Missing("port.Oops", "nf: ", ""))
+        )
+      )
+    )
+  }

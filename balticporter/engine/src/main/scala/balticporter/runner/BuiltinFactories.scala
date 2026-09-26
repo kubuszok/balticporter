@@ -192,14 +192,28 @@ final class RemediationFactory extends TransformFactory:
   def fromConfig(config: ConfigView): Phase =
     new RemediationTransform(classTables = config.stringMap("classTables").getOrElse(Map.empty))
 
-/** `{ transform = "class-table", redirects { "a.B#forName" = "c.D#classFor" }, scope { … } }`
+/** `{ transform = "class-table", redirects { "a.B#forName" = "c.D#classFor" }, scope { … }, tables = [ { object = "c.D", seeds = [ … ], lookup = "classFor", construct = "newInstanceFor", missing {
+  * throw = "fqn", notFound = "…", notInstantiable = "…" } } ] }`
   *
-  * A REDIRECT, so its scope defaults to the unrestricted `Everywhere(Set.empty)` it ran under before it had one (`.claude/rules/phases.md`).
+  * A REDIRECT, so its scope defaults to the unrestricted `Everywhere(Set.empty)` it ran under before it had one (`.claude/rules/phases.md`). `tables` MINTS each listed object; empty mints nothing.
   */
 final class ClassTableFactory extends TransformFactory:
   def name = "class-table"
   def fromConfig(config: ConfigView): Phase =
-    new ClassTableTransform(config.stringMap("redirects").getOrElse(Map.empty), TransformFactory.scopeOf(config, default = RuleScope.everywhere))
+    val tables = config.children("tables").getOrElse(Nil).map { t =>
+      ClassTableTransform.Table(
+        placement = t.requireString("object"),
+        seeds = t.strings("seeds").getOrElse(Nil),
+        lookup = t.string("lookup").getOrElse("classFor"),
+        construct = t.string("construct"),
+        missing = t.child("missing").map(m => ClassTableTransform.Missing(m.requireString("throw"), m.string("notFound").getOrElse(""), m.string("notInstantiable").getOrElse("")))
+      )
+    }
+    new ClassTableTransform(
+      config.stringMap("redirects").getOrElse(Map.empty),
+      TransformFactory.scopeOf(config, default = RuleScope.everywhere),
+      tables
+    )
 
 /** `.conf` shape for `type-redirect`: `redirects` maps upstream FQN to either a bare string (flat form) or an object carrying `to`, `memberRenames`, `scope`.
   */

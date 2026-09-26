@@ -262,6 +262,12 @@ sees the kind); the screen is *would a reader act differently*.
   is a derivation input, not a compared surface; a package-private java FIELD the reference ships public
   derives a `Public` row.
 - The bean fold's `setterOnly` guard reads an INHERITED getter as in scope (`graph.ancestorsOf`).
+- A table that replaces a lookup BY NAME (`ClassTableTransform.Table`) holds `classOf[X]` and
+  `() => new X`, never an instance or a companion reference: listing must not run X's static
+  initialiser, and running the table end to end measured 0 initialisations for a lookup and 1 for a
+  construction. Key each entry by the class's RUN-TIME `getName`, which is what java's `forName`
+  answers for, and never by the upstream FQN. A miss THROWS java's `ClassNotFoundException`, wrapped
+  the way the library's own API wraps it, never a null. Kind (b): the seeds and the wrapper are policy.
 - A mechanism that DEFERS a class initialiser (`DeferredInit`'s `$set`/`$value` holder) stands in
   for JLS 12.4.2's class-init LOCK as well as its trigger: the value is assigned under the companion's
   monitor, double-checked, the flag written LAST. Only a parallel suite sees the race (sge textra 1 NPE
@@ -287,7 +293,7 @@ sees the kind); the screen is *would a reader act differently*.
 
 | phase(params) — mechanism | policy |
 |---|---|
-| `ClassTableTransform(redirects, scope)` — re-point a reflective name lookup at an explicit table | which method → which table, `RuleScope`; disjoint scopes compose, overlapping refuse |
+| `ClassTableTransform(redirects, scope, tables)` — re-point a reflective name lookup at an explicit table, MINTED from `tables` or supplied by the port | which method → which table, `RuleScope`; disjoint scopes compose, overlapping refuse; `tables` (placement, seeds, `lookup`/`construct` names, `missing` wrapper) — `Nil` mints nothing, one placement with two tables refuses |
 | `StaticForwarderTransform(List[Forwarder])` — a wrapper's statics are members of argument 1 | which wrapper, receiver, members |
 | `Substitutions` — do not emit these types/methods; inject this Scala instead | which ones, replacement sources |
 | `CollectionsTransform(scope, families, familyScopes, retarget, retargetRewrites, retargetRewritesByDesc, retargetTypeArgs, retargetCoercions, reifiedCarriers, reflectiveSinks, retargetIndexedFields)` — retype collections, API-map call sites; JDK table is a §1(a) constant | which declarations, which extra families (per-entry `RuleScope`, scoped on the entry because retyping inside a base's own declarations changes what a dependent's run derives), which library types retarget (java FQN → scala FQN that extends the source), per-member rewrites (`Rename`, `BoolDispatch`, `Construct`, `ForEach`, `Collect`, `Chain`, `FieldWrite`, `DropWrite`, `IndexedField`, `Template`), type-arg maps, coercion templates, reified carriers (a type argument a third party reads back at run time, e.g. `Class<T>`, `TypeReference<…>`, `TypeToken<…>` — not retyped, bridged at the use), reflective sinks (a retyped collection or a java-public field a third party reads back reflectively), indexed field rewrites keyed by (source, field) to avoid key collision with method rewrites. `MergeablePolicy`: independent keys union, same source/different target refuses |
