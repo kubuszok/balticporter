@@ -16,7 +16,7 @@ ssg). The engine verifies itself against the consumers with `just consumers-chec
 ## The consumers check proves SOURCE compatibility AND links the published chain
 
 `consumers-check`'s source rows publish the engine AND each consumer's port artifact (`lls-port`) to
-the ivy-local repository, and a dependent consumer with `Resolver.defaultLocal` picks that fresh
+a PRIVATE ivy home under the run's work dir, and a dependent consumer with `Resolver.defaultLocal` picks that fresh
 `lls-port` up — so they cannot see a change to a value type a consumer's policy links against
 (`PortManifest` gained a parameter: the case-class `apply`/`copy` and `$lessinit$greater$default$N`
 signatures moved), which threw `NoSuchMethodError` on the dependent's CI twice after the engine was
@@ -24,8 +24,12 @@ published. The `base-binary` row (a build fix, universal) runs FIRST: it resolve
 artifact at the version the dependent PINS, forces this engine, and links every class of it
 (`scripts/LinkCheck.java`); a FAIL names the missing members and means the base must be republished
 against this engine before the dependent may pin it — say so in the commit. `consumers-check
-binary` runs only that row. The check restores ivy-local as it found it (a run once deleted the
-user's own `lls-port` publication at the same version).
+binary` runs only that row. The check NEVER writes the user's `~/.ivy2/local`: a move-aside and
+restore around a publish at a version already there lost lls's JS, Native and `lls-io` artifacts
+of that version (the run publishes JVM only). Every build it drives gets `-Dsbt.ivy.home=<work>/ivy`
+in its `.jvmopts` (read by the server `sbt --client` starts; the engine is published from a CLONE so
+no running server decides), resolves the private repository first and the user's ivy-local
+read-only after it.
 
 ## Required checks
 

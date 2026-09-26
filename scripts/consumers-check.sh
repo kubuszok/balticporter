@@ -28,8 +28,11 @@
 # paths a single load would not execute; MiMa would compare the whole engine against its previous
 # version and report every internal change, while this reads only what the base actually calls.
 #
-# ivy-local is left as it was found: a version directory this run publishes over is set aside first
-# and put back at exit, and whatever the run published itself is removed.
+# The user's ~/.ivy2/local is never written: every publish of the run (the engine, each consumer)
+# goes to a PRIVATE ivy home under the run's work dir (`-Dsbt.ivy.home` in each build's `.jvmopts`,
+# which the server `sbt --client` starts reads), and the builds resolve from it first and from the
+# user's ivy-local, read-only, second. The engine is published from a clone of this checkout, so
+# no server already running here decides where it lands.
 set -u
 
 level="${1:-jvm}"
@@ -47,8 +50,10 @@ work="$root/.balticporter/consumers-check"
 engine_jdk="${BP_ENGINE_JAVA_HOME:-$HOME/.sdkman/candidates/java/22.0.2-graalce}"
 consumer_jdk="${BP_CONSUMER_JAVA_HOME:-$HOME/.sdkman/candidates/java/25.0.2-zulu}"
 snapshots="https://central.sonatype.com/repository/maven-snapshots"
-ivy="$HOME/.ivy2/local"
+user_ivy="$HOME/.ivy2/local"
 mkdir -p "$work"
+ivy_home="$work/ivy"
+ivy="$ivy_home/local"
 
 if [ -n "$(git -C "$root" status --porcelain --untracked-files=no)" ]; then
   echo "consumers-check: commit first - the published version is the commit hash" >&2
@@ -57,36 +62,17 @@ fi
 hash="$(git -C "$root" rev-parse HEAD)"
 version="$hash-SNAPSHOT"
 
-# ivy-local bookkeeping: `claimed` lists "<org dir> <artifact glob> <version>" entries this run
-# publishes; a directory already there is moved to $saved first and restored by the EXIT trap.
-saved="$work/ivy-saved"
-claimed=""
-rm -rf "$saved"
-claim() { # org artifact-glob version
-  local d rel
-  claimed+="$1 $2 $3"$'\n'
-  for d in "$ivy/$1"/$2/"$3"; do
-    [ -d "$d" ] || continue
-    rel="${d#"$ivy"/}"
-    mkdir -p "$saved/$(dirname "$rel")"
-    mv "$d" "$saved/$rel"
-  done
+rm -rf "$ivy_home"
+mkdir -p "$ivy"
+
+# one build's publishes and ivy-local resolution go to the private ivy home: the server
+# `sbt --client` starts in that tree reads `.jvmopts`
+private_ivy() { # tree
+  if [ -s "$1/.jvmopts" ] && [ -n "$(tail -c 1 "$1/.jvmopts")" ]; then echo >> "$1/.jvmopts"; fi
+  echo "-Dsbt.ivy.home=$ivy_home" >> "$1/.jvmopts"
 }
-release_claims() {
-  local org glob v d
-  while read -r org glob v; do
-    [ -z "$org" ] && continue
-    for d in "$ivy/$org"/$glob/"$v"; do [ -d "$d" ] && rm -rf "$d"; done
-  done <<< "$claimed"
-  if [ -d "$saved" ]; then
-    (cd "$saved" && find . -mindepth 3 -maxdepth 3 -type d) | while read -r rel; do
-      mkdir -p "$(dirname "$ivy/$rel")"
-      mv "$saved/$rel" "$ivy/$rel"
-    done
-    rm -rf "$saved"
-  fi
-}
-trap release_claims EXIT
+# …and the user's ivy-local stays a READ-ONLY resolver after it
+fallback="Resolver.file(\"user-ivy-local\", file(\"$user_ivy\"))(Resolver.ivyStylePatterns)"
 
 consumer_src() { # name -> the checkout to read, or empty
   local override="BP_$(printf '%s' "$1" | tr '[:lower:]-' '[:upper:]_')_DIR"
@@ -94,11 +80,19 @@ consumer_src() { # name -> the checkout to read, or empty
   if [ -d "$src/.git" ] || [ -f "$src/.git" ]; then (cd "$src" && pwd -P); fi
 }
 
-echo "== publishing the engine as $version"
-claim com.kubuszok 'balticporter-*' "$version"
-(cd "$root" && JAVA_HOME="$engine_jdk" PATH="$engine_jdk/bin:$PATH" sbt --client "reload; publishLocal") \
-  > "$work/engine-publish.log" 2>&1
-if [ $? -ne 0 ] || ! ls "$ivy/com.kubuszok/balticporter-engine_3/$version" > /dev/null 2>&1; then
+echo "== publishing the engine as $version (to $ivy)"
+engine_tree="$work/engine"
+rm -rf "$engine_tree"
+if ! git clone --quiet --local "$root" "$engine_tree" > "$work/engine-publish.log" 2>&1; then
+  echo "consumers-check: could not clone the engine - see $work/engine-publish.log" >&2
+  exit 66
+fi
+private_ivy "$engine_tree"
+(cd "$engine_tree" && JAVA_HOME="$engine_jdk" PATH="$engine_jdk/bin:$PATH" sbt --client "publishLocal") \
+  >> "$work/engine-publish.log" 2>&1
+code=$?
+(cd "$engine_tree" && JAVA_HOME="$engine_jdk" PATH="$engine_jdk/bin:$PATH" sbt --client shutdown) > /dev/null 2>&1
+if [ $code -ne 0 ] || ! ls "$ivy/com.kubuszok/balticporter-engine_3/$version" > /dev/null 2>&1; then
   echo "consumers-check: publishLocal failed or did not produce $version - see $work/engine-publish.log" >&2
   exit 66
 fi
@@ -137,7 +131,7 @@ for name in "${consumers[@]}"; do
       summary+="$name\tbase-binary\tFAIL\t$base-port $pinned: coursier (cs) is not on PATH\n"
       failed=$((failed + 1)); continue
     fi
-    cp="$(JAVA_HOME="$consumer_jdk" cs fetch --classpath --no-default -r "$snapshots" -r central -r ivy2Local \
+    cp="$(JAVA_HOME="$consumer_jdk" cs fetch --classpath --no-default -r "ivy:file://$ivy/[defaultPattern]" -r "$snapshots" -r central -r ivy2Local \
       "$org:$base-port_3:$pinned" "${forces[@]}" 2> "$log")"
     jar="$(printf '%s' "$cp" | tr ':' '\n' | /usr/bin/grep -E "/$base-port_3([-/][^/]*)?\.jar$" | head -1)"
     if [ -z "$jar" ]; then
@@ -195,7 +189,9 @@ for name in "${consumers[@]}"; do
     continue
   fi
   perl -pi -e "s/[0-9a-f]{40}-SNAPSHOT/$version/g" "$pins"
-  printf '\nresolvers += Resolver.defaultLocal\n' >> "$pins"
+  printf '\nresolvers += Resolver.defaultLocal\nresolvers += %s\n' "$fallback" >> "$pins"
+  printf 'ThisBuild / resolvers ++= Seq(Resolver.defaultLocal, %s)\n' "$fallback" > "$tree/consumers-check-resolvers.sbt"
+  private_ivy "$tree"
 
   # A consumer checked earlier in this run was published locally: build against THAT, as its next
   # release would be consumed. (An inline member's body is compiled into the caller, so a consumer
@@ -225,8 +221,6 @@ for name in "${consumers[@]}"; do
       > "$work/$name-publish.log" 2>&1
     built="$(sed 's/\x1b\[[0-9;]*m//g' "$work/$name-publish.log" | /usr/bin/grep -E '^\[info\] [0-9][^ ]*$' | tail -1 | awk '{print $2}')"
     if [ -n "$built" ]; then
-      claim com.kubuszok "${name}_*" "$built"
-      claim com.kubuszok "${name}-*" "$built"
       (cd "$tree" && JAVA_HOME="$consumer_jdk" PATH="$consumer_jdk/bin:$PATH" sbt --client "$publish") \
         >> "$work/$name-publish.log" 2>&1 && published="$published $name=$built"
     fi
@@ -244,11 +238,11 @@ for name in "${consumers[@]}"; do
   fi
 done
 
-# The local publishes served THIS run only (the EXIT trap removes them and restores what they
-# replaced). Left in ivy-local they shadow Central for every other build on the machine (a
-# `<name>-port` at the library's released version but linked against this run's engine broke a
-# consumer's build with two engine hashes), and they hide a published-artifact break that CI would
-# see; the run's evidence is in $work, not in ~/.ivy2.
+# The local publishes served THIS run only and never left $ivy_home. In the user's ivy-local they
+# would shadow Central for every other build on the machine (a `<name>-port` at the library's
+# released version but linked against this run's engine broke a consumer's build with two engine
+# hashes), and a publish at a version already there replaces the user's artifacts of it (a run
+# left lls with its JVM jar and none of its JS/Native ones); the run's evidence is in $work.
 echo
 echo "engine $version, level $level"
 printf "%b" "$summary" | column -t -s "$(printf '\t')"
