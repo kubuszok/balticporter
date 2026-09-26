@@ -1732,8 +1732,8 @@ object Differences:
       Universal,
       "TirEmitter's Tree.NewArray arm is where the construction is written and where the tag would " +
         "have to be; RewriteTrace's scaladoc names this as the canonical hand-built rewrite, and " +
-        "nothing synthesises it. LATENT rather than dormant: java forbids `new T[n]`, and the one " +
-        "path that MINTS a NewArray (SpoonTir.varargPack) resolves a concrete element type first",
+        "nothing synthesises it. LATENT rather than dormant: java forbids `new T[n]`, and no vararg " +
+        "call mints a NewArray any more (SpoonTir.varargPack passes a repeated tail)",
       Rendered("NewArray")
     ),
     Difference(
@@ -1983,16 +1983,16 @@ object Differences:
     ),
     Difference(
       gId(37),
-      "`T...` is an `Array[T]`, materialised at the port's OWN call sites",
+      "`T...` is a repeated `T*`, and the body reads back the array java handed it",
       "JLS 8.4.1, 15.12.4.2",
-      "UNCITED — a declared vararg becomes an array parameter, so callers must pack",
+      "UNCITED — a declared vararg becomes a repeated parameter, which is a `Seq` and not an array",
       Loud,
       Handled,
       measured(
-        "A vararg parameter is emitted as a plain array, so a call to another declaration with that vararg still builds the array explicitly, the way java's compiler packs it."
+        "A vararg parameter is emitted as a repeated parameter, so callers pass java's elements or spread java's array; the body binds the underlying array once, sharing it where the caller spread one."
       ),
       Universal,
-      "SpoonTir.varargPack -> Tree.NewArray for an in-program callee",
+      "SpoonTir.varargPack -> Tree.Repeated for every callee; TirEmitter.param renders `T*` and TirEmitter.varargArray binds the array",
       everyCall
     ),
     Difference(
@@ -2042,8 +2042,8 @@ object Differences:
       Both(everyCall, Rendered("Spread"))
     ),
     // `SpoonTir.annotationsOf` has NO ignore list and carries every MARKER annotation, so
-    // `@SafeVarargs` reaches the emitted file onto a vararg JS-G37 already turned into a plain
-    // `Array` parameter, where scalac neither checks nor derives from it.
+    // `@SafeVarargs` reaches the emitted file onto the repeated `T*` JS-G37 emits, where scalac
+    // neither checks nor derives from it.
     Difference(
       gId(41),
       "`@SafeVarargs` and heap pollution",
@@ -2057,8 +2057,8 @@ object Differences:
       Partial(
         "java's unsoundness is reproduced exactly and needs no translation; what has " +
           "no scala image is the ACKNOWLEDGEMENT — javac warns at a non-reifiable vararg and scalac " +
-          "does not, and the `@SafeVarargs` that answers the warning is emitted onto a method that is " +
-          "not even variadic in scala. Counted per declaration rather than translated"
+          "does not, and the `@SafeVarargs` that answers the warning is emitted onto a repeated " +
+          "parameter scalac derives nothing from. Counted per declaration rather than translated"
       ),
       Predicted,
       Universal,

@@ -1,0 +1,77 @@
+package balticporter.corpus
+
+import balticporter.testkit.PortSuite
+
+import java.nio.file.{ Files, Path }
+
+/** A java `T...` the port DECLARES is emitted as scala's repeated `T*`: a call passing elements passes them, a call passing java's array spreads it, and the body reads the array java handed it — the
+  * caller's own, so a write through it is seen by the caller as in java. Compiled and run, generic, primitive, constructor and enum shapes included.
+  */
+class OwnedVarargsEndToEndSpec extends PortSuite:
+
+  private val src =
+    """package va;
+      |import java.util.*;
+      |public class Rooms {
+      |  final List<String> types = new ArrayList<>();
+      |  public void addRoomTypes(String... ts) { for (String t : ts) types.add(t); }
+      |  public static int sum(int... xs) { int s = 0; for (int i = 0; i < xs.length; i++) s += xs[i]; return s; }
+      |  public static <T> T last(T... xs) { return xs.length == 0 ? null : xs[xs.length - 1]; }
+      |  public static void fill(String v, String... slots) { for (int i = 0; i < slots.length; i++) slots[i] = v; }
+      |  public static int count(Object... os) { return os == null ? -1 : os.length; }
+      |}
+      |public class Pair {
+      |  final String[] parts;
+      |  public Pair(String head, String... rest) { parts = new String[rest.length + 1]; parts[0] = head; System.arraycopy(rest, 0, parts, 1, rest.length); }
+      |  int size() { return parts.length; }
+      |}
+      |public enum Kind {
+      |  A("x", "y"), B();
+      |  private final int n;
+      |  Kind(String... names) { this.n = names.length; }
+      |  int n() { return n; }
+      |}
+      |public class Run {
+      |  public static String run() {
+      |    Rooms r = new Rooms();
+      |    r.addRoomTypes("a", "b");
+      |    String[] more = { "c" };
+      |    r.addRoomTypes(more);
+      |    r.addRoomTypes();
+      |    int[] nums = { 1, 2, 3 };
+      |    String[] slots = new String[2];
+      |    Rooms.fill("z", slots);
+      |    return r.types + "," + Rooms.sum(nums) + "," + Rooms.sum(4, 5) + "," + Rooms.last("p", "q") + "," +
+      |      slots[0] + slots[1] + "," + Rooms.count(nums) + "," + Rooms.count(1, 2) + "," + Rooms.count((Object[]) null) + "," +
+      |      new Pair("h", "i", "j").size() + "," + Kind.A.n() + Kind.B.n();
+      |  }
+      |}
+      |""".stripMargin
+
+  private lazy val ported = port(src)
+
+  test("the declaration is repeated and each call passes elements or spreads java's array") {
+    assertEmits(ported, "def addRoomTypes(ts: java.lang.String*)")
+    assertEmits(ported, "r.addRoomTypes(\"a\", \"b\")")
+    assertEmits(ported, "r.addRoomTypes(more*)")
+    assertEmits(ported, "def sum(xs: scala.Int*)")
+    assertNotEmits(ported, "new scala.Array[java.lang.String](\"a\"")
+    // a METHOD binds the array once; a CONSTRUCTOR reads it in place
+    assertEmits(ported, "val ts$arr: scala.Array[java.lang.String] = (ts match {")
+    assertEmits(ported, "class Pair(head$p: java.lang.String, rest$p: java.lang.String*)")
+    assertEmits(ported, "enum Kind(names: java.lang.String*)")
+  }
+
+  test("the port compiles and runs as java did — a write through the parameter reaches the caller's array") {
+    val dir   = Files.createTempDirectory("owned-varargs-src")
+    val files = ported.after.units.map(ported.emitter.emitUnit).zipWithIndex.map { (text, n) =>
+      val f = dir.resolve(s"U$n.scala"); Files.writeString(f, text); f.toString
+    }
+    val out    = Files.createTempDirectory("owned-varargs-out")
+    val stdlib = List(classOf[scala.Option[?]], classOf[scala.deriving.Mirror]).map(c => Path.of(c.getProtectionDomain.getCodeSource.getLocation.toURI).toString).distinct
+    val rep    = dotty.tools.dotc.Main.process(("-classpath" :: stdlib.mkString(java.io.File.pathSeparator) :: "-d" :: out.toString :: files).toArray)
+    assert(!rep.hasErrors, s"the emission does not compile:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${ported.out}")
+    val loader = new java.net.URLClassLoader(Array(out.toUri.toURL), getClass.getClassLoader)
+    val got    = loader.loadClass("va.Run").getMethod("run").invoke(null).asInstanceOf[String]
+    assertEquals(got, "[a, b, c],6,9,q,zz,1,2,-1,3,20")
+  }

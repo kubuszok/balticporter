@@ -176,8 +176,10 @@ class SpoonTirBodySpec extends munit.FunSuite:
   private def lastArgOf(name: String): Option[Tree] =
     callsIn(varargProgram, "demo.Va#use").find(a => varargProgram.symbolOf(a.method).exists(_.name == name)).flatMap(_.args.lastOption)
 
-  test("an IN-PROGRAM vararg call still materialises the array both halves agree on") {
-    assert(clue(lastArgOf("pick")).exists(_.isInstanceOf[Tree.NewArray]))
+  test("an IN-PROGRAM vararg call passes its elements as the REPEATED tail — the callee is emitted `T*`") {
+    lastArgOf("pick") match
+      case Some(Tree.Repeated(es, _, _)) => assertEquals(es.size, 2)
+      case other                         => fail(s"expected Repeated, got $other")
   }
 
   test("an EXTERNAL vararg call packs into Tree.Repeated — the elements, never an Array") {
@@ -230,13 +232,11 @@ class SpoonTirBodySpec extends munit.FunSuite:
       case other                      => fail(s"expected Spread, got $other")
   }
 
-  test("an IN-PROGRAM callee keeps the PASS-THROUGH — the negative test for the mirror") {
-    // `pick(String...)` is emitted `def pick(xs: Array[String])`, so both halves agree on the bare
-    // array and a spread here would be an argument of the wrong shape.
+  test("an IN-PROGRAM callee is SPREAD by the same rule — it is emitted `T*` too") {
+    // `pick(String...)` is emitted `def pick(xs: String*)`, where a bare array would be ONE element.
     lastFwdArgOf("pick") match
-      case Some(_: Tree.Spread) => fail("an owned vararg callee must keep the array as it stands")
-      case Some(_)              => ()
-      case None                 => fail("no argument at all")
+      case Some(_: Tree.Spread) => ()
+      case other                => fail(s"expected Spread, got $other")
   }
 
   // -- …and a pass-through is decided by the COMPONENT TYPE, not by "the argument is an array" ----
@@ -306,18 +306,16 @@ class SpoonTirBodySpec extends munit.FunSuite:
     // `String[]` and not to the parameter `String[][]`. Forwarded, the emitted call hands a
     // one-dimensional value to a two-dimensional formal.
     dimLastArg("oneAtTwo") match
-      case Some(Tree.NewArray(_, _, Some(es), _, _)) => assertEquals(clue(es).size, 1)
-      case other                                     => fail(s"expected a one-element NewArray, got $other")
+      case Some(Tree.Repeated(es, _, _)) => assertEquals(clue(es).size, 1)
+      case other                         => fail(s"expected a one-element Repeated, got $other")
   }
 
   test("…and a TWO-dimensional one passes through — javac's `outer=2`") {
     // The negative that the dimension test must not swallow: `String[][]` IS assignable to the
     // parameter's array type, so java forwards it and packing would build an array of one.
     dimLastArg("twoAtTwo") match
-      case Some(_: Tree.NewArray) => fail("a two-dimensional argument is assignable to `String[][]`")
-      case Some(_: Tree.Repeated) => fail("the callee is ours — the array passes through as it stands")
-      case Some(_)                => ()
-      case None                   => fail("no argument at all")
+      case Some(_: Tree.Spread) => ()
+      case other                => fail(s"a two-dimensional argument is assignable to `String[][]` and is spread, got $other")
   }
 
   test("…and a one-dimensional array at a ONE-dimensional slot still passes through") {
@@ -436,14 +434,14 @@ class SpoonTirBodySpec extends munit.FunSuite:
 
   test("a vararg call at an ANONYMOUS-CLASS construction packs the array java built") {
     // Without the fix the six-argument `new NodeVisitor(h1…h6) { … }` in a real port emits the
-    // arguments loose against an `Array[VisitHandler[?]]` formal.
+    // arguments without the superclass constructor's vararg shape.
     anonVarargLastArg("anon") match
-      case Some(_: Tree.NewArray) => ()
-      case other                  => fail(s"expected a packed NewArray, got $other")
+      case Some(Tree.Repeated(es, _, _)) => assertEquals(es.size, 2)
+      case other                         => fail(s"expected a packed Repeated, got $other")
   }
 
   test("…and the same `new` WITHOUT a body already did — the pair is the whole evidence") {
     anonVarargLastArg("plain") match
-      case Some(_: Tree.NewArray) => ()
-      case other                  => fail(s"expected a packed NewArray, got $other")
+      case Some(Tree.Repeated(es, _, _)) => assertEquals(es.size, 2)
+      case other                         => fail(s"expected a packed Repeated, got $other")
   }

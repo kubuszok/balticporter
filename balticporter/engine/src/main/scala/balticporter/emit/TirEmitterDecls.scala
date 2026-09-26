@@ -624,7 +624,7 @@ private[emit] trait TirEmitterDecls:
             else "val"
           s"${vis(fs, enumPrivateIn)}$kw $nm: $ty"
         case None if memberParams(v.symbol) => s"private var $nm: $ty"
-        case None                           => s"$nm: $ty"
+        case None                           => s"$nm: ${paramType(v, v.tpt.tpe)}"
     val eprimary = if ctorParams.isEmpty then "" else s"(${ctorParams.map(enumParam).mkString(", ")})"
     EnumParts(ctorParams, paramNames, instance, ctorStats, statics, eprimary)
 

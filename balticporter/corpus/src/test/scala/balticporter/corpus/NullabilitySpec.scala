@@ -139,7 +139,7 @@ class NullabilitySpec extends PortSuite:
     // renders no parameter annotation at all. That asymmetry is exactly why the refusal has to be
     // a COUNTED finding and not "the annotation is still there, look": for `spread` there is
     // nothing to look at.
-    assertEmits(p, "def spread(rest: scala.Array[demo.Actor]): scala.Unit")
+    assertEmits(p, "def spread(rest: demo.Actor*): scala.Unit")
   }
 
   test("an uninitialised annotated field defaults to `null`, not to a cast standing in for one") {

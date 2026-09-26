@@ -398,7 +398,7 @@ class CatalogAreaGSpec extends PortSuite:
 
   // -- the call rows: JS-G18, JS-G32, JS-G37…JS-G40, JS-G42 --------------------------------------
 
-  test("JS-G37 — an in-program `T...` is an `Array[T]`, so the CALL materialises the array java built") {
+  test("JS-G37 — an in-program `T...` is a repeated `T*`, so the CALL passes java's elements") {
     val p = port(
       """public class A {
         |  static void run(String... xs) {}
@@ -407,7 +407,9 @@ class CatalogAreaGSpec extends PortSuite:
     )
     assertConsults(p, JS.G(37), fired = true)
     assertConsults(p, JS.G(38))
-    assertEmits(p, "scala.Array[java.lang.String](\"a\", \"b\")")
+    assertEmits(p, "def run(xs: java.lang.String*)")
+    assertEmits(p, "run(\"a\", \"b\")")
+    assertNotEmits(p, "scala.Array[java.lang.String](\"a\", \"b\")")
   }
 
   test("JS-G38 — a slot ALREADY holding the array must not be re-packed; the rows swap over") {
@@ -420,6 +422,7 @@ class CatalogAreaGSpec extends PortSuite:
     assertConsults(p, JS.G(38), fired = true)
     assertConsults(p, JS.G(37))
     assertNotEmits(p, "scala.Array[java.lang.String](xs)")
+    assertEmits(p, "run(xs*)")
   }
 
   test("JS-G42 — a GENERIC vararg component is not nameable at the call site, so it has four sources") {
@@ -749,7 +752,7 @@ class CatalogAreaGSpec extends PortSuite:
     // nothing at all —
     // mis-aligned, this emitted `override def conv(c: scala.Array[java.lang.String])` beside a
     // trait that still read `A.Cell[?]`. The parameter NAME is what separates the pair.
-    assertEmits(p, "override def conv(c: scala.Array[A.Cell[?]])")
+    assertEmits(p, "override def conv(c: A.Cell[?]*)")
     // …and the OTHER reader of the same map. `alignedArgs` casts every argument reaching a
     // re-rendered parameter, so the mis-alignment put an `asInstanceOf` the java never wrote at the
     // call in `go` — which is how the defect reached emitted code that could not compile.
@@ -888,14 +891,12 @@ class CatalogAreaGSpec extends PortSuite:
     assertEquals(clue(HeapPollutionCheck.check(p.after, p.after.units)).size, 1)
   }
 
-  test("JS-G41 — the acknowledgement is EMITTED, onto a method that is not even variadic in scala") {
+  test("JS-G41 — the acknowledgement is EMITTED, onto a repeated parameter scalac derives nothing from") {
     // Why the row is `Partial` and not `Handled`: `SpoonTir.annotationsOf` has no ignore list, so
-    // the marker crosses — and `JS-G37` has already turned the vararg into a plain `Array`
-    // parameter, so what a reader of the emitted file sees is java's acknowledgement of a risk on a
-    // declaration where scalac derives nothing from it.
+    // the marker crosses onto the `T*` JS-G37 emits, where scalac neither checks nor warns.
     val p = port("public class A { @SafeVarargs final <T> void f(T... xs) { } }")
     assertEmits(p, "@java.lang.SafeVarargs")
-    assertEmits(p, "xs: scala.Array[T]")
+    assertEmits(p, "xs: T*")
   }
 
   // -- the partition, asserted rather than left to a reader ---------------------------------------

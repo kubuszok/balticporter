@@ -59,8 +59,8 @@ class InheritedFormalCastSpec extends munit.FunSuite:
     val flat = out.linesIterator.filter(_.contains("super.takeAll")).toList.filterNot(_.contains("hs.asInstanceOf[scala.Array[scala.Array"))
     assertEquals(clue(flat).size, 1, s"--- emitted ---\n$out")
     assert(
-      flat.head.contains("scala.Array[scala.Array[demo.Box[java.lang.String]]](hs.asInstanceOf[scala.Array[demo.Box[java.lang.String]]])"),
-      s"the one-dimensional call is not java's pack over a one-dimensional cast\n${flat.head}"
+      flat.head.contains("super.takeAll(hs.asInstanceOf[scala.Array[demo.Box[java.lang.String]]])"),
+      s"the one-dimensional call is not java's pack (one repeated element) over a one-dimensional cast\n${flat.head}"
     )
     assert(
       !flat.head.contains("hs.asInstanceOf[scala.Array[scala.Array"),

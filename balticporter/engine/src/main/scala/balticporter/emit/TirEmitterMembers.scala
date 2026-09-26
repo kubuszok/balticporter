@@ -549,7 +549,7 @@ private[emit] trait TirEmitterMembers:
           // `using` clauses, override alignment and the un-annotated arms — a second rendering of a
           // parameter list is the drift this whole change is about.
           val pss = d.paramss.map(ps => paramClause(ps.map(v => v.copy(tpt = v.tpt.copy(tpe = ParentSubst.subst(v.tpt.tpe, psub)))))).mkString
-          val as  = d.paramss.map(ps => ps.map(v => esc(sym(v.symbol).name)).mkString("(", ", ", ")")).mkString
+          val as  = d.paramss.map(ps => ps.map(v => esc(sym(v.symbol).name) + (if repeatedParams.contains(v.symbol) then "*" else "")).mkString("(", ", ", ")")).mkString
           s"${ind(i)}override def $n$tps$pss: ${tpe(ParentSubst.subst(d.returnTpt.tpe, psub))} = super[$sn].$n$as"
         }
       }
@@ -614,16 +614,26 @@ private[emit] trait TirEmitterMembers:
     // a Java `while(true){ … return … }` idiom: the loop never falls through, but Scala types
     // `while(true)` as Unit, so a non-Unit method needs an unreachable tail after it.
     val needsUnreachable = needsUnreachableTail(d)
-    val rhs              = inDeclaration {
+    // a METHOD body reads a repeated parameter as the array java handed it, bound once at its head
+    val bound      = if isCtor then Nil else d.paramss.flatten.map(_.symbol).filter(p => repeatedParams.contains(p) && d.rhs.exists(r => references(r, p)))
+    val savedAlias = repeatedAlias
+    repeatedAlias = repeatedAlias ++ bound.map(p => p -> s"${sym(p).name}$$arr")
+    val binds = bound.map { p =>
+      val kw = if d.rhs.exists(r => assigns(r, p)) then "var" else "val"
+      s"${ind(i + 1)}$kw ${esc(repeatedAlias(p))}: scala.Array[${tpe(repeatedParams(p))}] = ${varargArray(p)}\n"
+    }.mkString
+    val rhs = inDeclaration {
       if isCtor then s" = ${ctorBody(d, i)}"
       else
         d.rhs
           .map(r =>
-            if needsUnreachable then s" = {\n${ind(i + 1)}${term(r, i + 1)}\n${ind(i + 1)}throw new java.lang.RuntimeException(\"unreachable\")\n${ind(i)}}"
+            if needsUnreachable then s" = {\n$binds${ind(i + 1)}${term(r, i + 1)}\n${ind(i + 1)}throw new java.lang.RuntimeException(\"unreachable\")\n${ind(i)}}"
+            else if binds.nonEmpty then s" = {\n$binds${ind(i + 1)}${term(r, i + 1)}\n${ind(i)}}"
             else s" = ${term(r, i)}"
           )
           .getOrElse("")
     }
+    repeatedAlias = savedAlias
     tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
     // trivia first, porter note last, member next — the note must not displace the licence.
     val ctorNowarn = if isCtor && orNullCtors(d.symbol) then nowarnDeprecated(i) else ""
@@ -1043,9 +1053,45 @@ private[emit] trait TirEmitterMembers:
   private[emit] def givenParam(v: Tree.ValDef): String =
     if sym(v.symbol).name.isEmpty then tpe(overrideAlign.getOrElse(v.symbol, v.tpt.tpe)) else param(v)
 
-  // NOTE: Java `T...` → Scala `T*` is deferred — it also needs array-spread (`arr: _*`) at call
-  // sites and overload-aware resolution, else `f(array)` calls break. Emitting the param type
-  // as `Array[T]` keeps varargs callable positionally via the array.
+  /** the element a java `T...` parameter of a METHOD or CONSTRUCTOR repeats, where it is emitted `E*` — `None` for any other parameter (a lambda's, or one not typed as an array). */
+  private[emit] def varargElem(v: Tree.ValDef, t: TypeRepr): Option[TypeRepr] =
+    if !sym(v.symbol).flags.isVararg || !program.definitionOf(sym(v.symbol).owner).exists(_.isInstanceOf[Tree.DefDef]) then scala.None
+    else
+      t match
+        case TypeRepr.AppliedType(TypeRepr.TypeRef(_, a), List(el)) if sym(a).fullName == "scala.Array" => Some(el)
+        case _                                                                                          => scala.None
+
+  /** vararg parameters emitted `E*`, by symbol, with their element — recorded as the signature renders, read by every reference to the parameter. */
+  private[emit] val repeatedParams = collection.mutable.Map.empty[SymId, TypeRepr]
+
+  /** a method body's local binding of a repeated parameter's array, by parameter symbol, while that body renders. */
+  private[emit] var repeatedAlias: Map[SymId, String] = Map.empty
+
+  /** the ARRAY a repeated parameter holds: the caller's own array where it spread one (scala wraps it, sharing it, as java passed it), a copy of any other `Seq`; `null` stays `null`. */
+  private[emit] def varargArray(s: SymId): String =
+    val n    = esc(sym(s).name)
+    val e    = repeatedParams(s)
+    val et   = tpe(e)
+    val bare = e match
+      case TypeRepr.TypeRef(_, x) => sym(x).info.isInstanceOf[TypeRepr.TypeBounds]
+      case _                      => false
+    val copy = if bare then s"s$$.toArray[scala.Any].asInstanceOf[scala.Array[$et]]" else s"s$$.toArray[$et]"
+    s"($n match { case null => null; case a$$: scala.collection.immutable.ArraySeq[?] => a$$.unsafeArray.asInstanceOf[scala.Array[$et]]; case s$$ => $copy })"
+
+  private def references(body: Term, p: SymId): Boolean =
+    StandardTraversal.scanTerm(body, false) {
+      case (true, _)                          => true
+      case (_, Tree.Ident(s, _, _)) if s == p => true
+      case (acc, _)                           => acc
+    }(using program)
+
+  private def assigns(body: Term, p: SymId): Boolean =
+    StandardTraversal.scanTerm(body, false) {
+      case (true, _)                                                   => true
+      case (_, Tree.Assign(Tree.Ident(s, _, _), _, _, _, _)) if s == p => true
+      case (acc, _)                                                    => acc
+    }(using program)
+
   private[emit] def param(v: Tree.ValDef): String =
     // NO TYPE = a parameter a PHASE left for scalac to infer, for a LOWERED unbound method
     // reference (java writes such a qualifier RAW, so an annotated type would be an unusable
@@ -1058,7 +1104,13 @@ private[emit] trait TirEmitterMembers:
       case Some(o: Tree.Opaque) => s" = ${o.raw}"
       case _                    => ""
     if t == TypeRepr.NoType then esc(sym(v.symbol).name) + df
-    else s"${esc(sym(v.symbol).name)}: ${tpe(t)}$df"
+    else s"${esc(sym(v.symbol).name)}: ${paramType(v, t)}$df"
+
+  /** a parameter's rendered type: `E*` for a java vararg (unless an injected parent states the slot), else the type. */
+  private[emit] def paramType(v: Tree.ValDef, t: TypeRepr): String =
+    (if injectedOverrideTypes.contains(v.symbol) then scala.None else varargElem(v, t)) match
+      case Some(e)    => repeatedParams(v.symbol) = e; s"${tpe(e)}*"
+      case scala.None => tpe(t)
 
   private[emit] def valDef(v: Tree.ValDef, i: Int)(using Obligations): String =
     // JS-S19 — java's definite assignment (JLS 16) rejects a read before assignment; scala

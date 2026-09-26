@@ -839,8 +839,8 @@ private[spoon] trait SpoonTirBodyStmts:
     Obligations.consult(JS.G(18), at)(Option.when(external && argEs.nonEmpty)(()))
     // JS-G32 — a formal written in the CALLEE's own type variables, which are not in scope here.
     Obligations.consult(JS.G(32), at)(Option.when(ps.exists(_.exists(p => Option(p.getType).exists(f => mentionsAnyTypeVar(f) && !tpResolvable(f)))))(()))
-    // JS-G37 — java materialised the array and an in-program callee's parameter is emitted
-    // `Array[T]`, so the call has to materialise it too.
+    // JS-G37 — java materialised the array and an in-program callee's parameter is emitted `T*`,
+    // so the call passes the elements as the repeated tail and scalac materialises it.
     Obligations.consult(JS.G(37), at)(Option.when(variadic && !external && !holds)(()))
     // JS-G38 — …and where the slot already holds one, re-packing it would build an array of one.
     Obligations.consult(JS.G(38), at)(Option.when(variadic && holds)(()))
@@ -878,11 +878,8 @@ private[spoon] trait SpoonTirBodyStmts:
               ts.nonEmpty && ts.forall(t => t != null && !t.isPrimitive && tpConcrete(t)) &&
                 ts.map(_.getQualifiedName).distinct.sizeIs == 1
             )(ts.head)
-        // the declaring type is a SHADOW iff reconstructed from bytecode — one answer for
-        // which side of the program's edge the CALLEE is on
-        val external = isExternalCallee(ex)
         if comp == null || argEs.sizeIs < fixed then None
-        else if passesArray then passedThrough(ex, argEs, external, recvSubst)
+        else if passesArray then passedThrough(ex, argEs, recvSubst)
         else if elemRef.isEmpty then None
         else
           val (head, rest) = argEs.splitAt(fixed)
@@ -895,23 +892,22 @@ private[spoon] trait SpoonTirBodyStmts:
           val elems = rest.map(e => coerce(elemRef.get, e, expr(e)))
           val at    = AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(ct))
           val o     = argEs.headOption.map(originOf).getOrElse(Origin.synthetic)
-          Some(fixedTerms :+ (if external then Tree.Repeated(elems, at, o)
-                              else Tree.NewArray(TypeTree(ct, o), Nil, Some(elems), at, o)))
+          // a REPEATED tail whoever declares the callee: a class file's `T...` is scalac's repeated
+          // parameter, and an in-program one is emitted `T*` (JS-G37)
+          Some(fixedTerms :+ Tree.Repeated(elems, at, o))
       case _ => None
 
-  /** java already holds the array and passes it WHOLE through the `T...` slot — the MIRROR of the pack above. Callee OURS: `None`, ordinary argument list. Callee a CLASS FILE: scalac reads `T...` as
-    * REPEATED and a bare array conforms as ONE element (a silent `Object`-element bug, or an uncounted compile error otherwise) — so the array is SPREAD (`arr*`), which still ALIASES `arr` as java's
-    * pass-through does.
+  /** java already holds the array and passes it WHOLE through the `T...` slot — the MIRROR of the pack above. A class file's `T...` is scalac's REPEATED parameter and an in-program one is emitted
+    * `T*`, where a bare array conforms as ONE element (a silent `Object`-element bug, or a compile error otherwise) — so the array is SPREAD (`arr*`), which still ALIASES `arr` as java's pass-through
+    * does.
     */
-  private[spoon] def passedThrough(ex: CtExecutableReference[?], argEs: List[CtExpression[?]], external: Boolean, recvSubst: Map[String, CtTypeReference[?]]): Option[List[Term]] =
-    if !external then None
-    else
-      // through `coerceArgsFixed`, never around it: the erasure cast a java `Object...` formal
-      // needs (`args.asInstanceOf[Array[Object]]`) is that function's answer, and a second
-      // spelling of it here would be a second answer.
-      val terms = coerceArgsFixed(ex, argEs, recvSubst)
-      if terms.sizeIs != argEs.size then None
-      else Some(terms.init :+ Tree.Spread(terms.last, terms.last.tpe, originOf(argEs.last)))
+  private[spoon] def passedThrough(ex: CtExecutableReference[?], argEs: List[CtExpression[?]], recvSubst: Map[String, CtTypeReference[?]]): Option[List[Term]] =
+    // through `coerceArgsFixed`, never around it: the erasure cast a java `Object...` formal
+    // needs (`args.asInstanceOf[Array[Object]]`) is that function's answer, and a second
+    // spelling of it here would be a second answer.
+    val terms = coerceArgsFixed(ex, argEs, recvSubst)
+    if terms.sizeIs != argEs.size then None
+    else Some(terms.init :+ Tree.Spread(terms.last, terms.last.tpe, originOf(argEs.last)))
 
   /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing that Scala won't do implicitly). Skipped when arities differ (varargs spread etc.).
     */

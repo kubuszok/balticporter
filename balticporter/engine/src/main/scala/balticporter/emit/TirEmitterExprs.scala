@@ -64,8 +64,10 @@ private[emit] trait TirEmitterExprs:
     Rendering.of(TirKinds.of(t), t.origin, t)(termArm(t, i))
 
   private[emit] def termArm(t: Term, i: Int)(using Obligations): String = t match
-    case Tree.Ident(s, _, _)       => if isTypeRef(s) then typeValue(s) else staticRef(s)
-    case l @ Tree.Literal(c, _, _) =>
+    // a repeated parameter read as java's array: the method's binding, else the unwrap in place
+    case Tree.Ident(s, _, _) if repeatedParams.contains(s) => repeatedAlias.get(s).map(esc).getOrElse(varargArray(s))
+    case Tree.Ident(s, _, _)                               => if isTypeRef(s) then typeValue(s) else staticRef(s)
+    case l @ Tree.Literal(c, _, _)                         =>
       Obligations.consult(JS.E(20), l.origin)(primitiveClassLiteral(c)).getOrElse(constant(c))
     case Tree.This(s, _, _)  => thisRef(s)
     case Tree.Super(_, _, _) => "super"

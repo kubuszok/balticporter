@@ -84,7 +84,7 @@ class CollectionsMintedSurfaceSpec extends PortSuite:
     assertEmits(p, "override def addOne(elem: E): this.type")
     assertEmits(p, "this.add$java(elem)")
     // …and the pack keeps java's own name, because nothing bridged it.
-    assertEmits(p, "def add(rest: scala.Array[E])")
+    assertEmits(p, "def add(rest: E*)")
   }
 
   test("a SET class owes `contains`/`addOne`/`subtractOne`/`iterator`, and the iterator is a VIEW") {

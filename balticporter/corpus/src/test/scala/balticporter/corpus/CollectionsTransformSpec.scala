@@ -649,12 +649,10 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "return this.entrySet()")
   }
 
-  test("an IN-PROGRAM vararg method still receives the materialised array — the convention holds") {
+  test("an IN-PROGRAM vararg method is repeated too, and receives java's elements — one convention for both callees") {
     val p = port(asList, new CollectionsTransform)
-    // the pack is only opened for the one helper declared `A*`; a java `T...` parameter is still
-    // emitted as `Array[T]` and still fed the array.
-    assertEmits(p, "def pack[T <: java.lang.Object](xs: scala.Array[T])")
-    assertEmits(p, "A.pack(scala.Array[java.lang.String](a, b))")
+    assertEmits(p, "def pack[T <: java.lang.Object](xs: T*)")
+    assertEmits(p, "A.pack(a, b)")
   }
 
   test("a downcast FROM a type the phase does not retype is KEPT, retargeted at the shim") {
