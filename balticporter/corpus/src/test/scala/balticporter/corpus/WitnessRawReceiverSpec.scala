@@ -8,7 +8,9 @@ import balticporter.transform.ElementWitnessTransform
 
 import java.nio.file.Files
 
-/** A dependent's call into a BASE class whose formal is the base's class parameter, on a raw receiver the witness phase filled: the argument takes java's unchecked conversion at the receiver's argument. */
+/** A dependent's call into a BASE class whose formal is the base's class parameter, on a raw receiver the witness phase filled: the argument takes java's unchecked conversion at the receiver's
+  * argument.
+  */
 class WitnessRawReceiverSpec extends munit.FunSuite:
 
   private val base = Map(
@@ -38,7 +40,7 @@ class WitnessRawReceiverSpec extends munit.FunSuite:
   )
 
   test("the unchecked conversion reads a base class-parameter formal at a raw receiver's filled argument") {
-    val root = Files.createTempDirectory("witness-raw-receiver")
+    val root                                           = Files.createTempDirectory("witness-raw-receiver")
     def put(under: String, files: Map[String, String]) = files.foreach { (rel, body) =>
       val p = root.resolve(under).resolve(rel)
       Files.createDirectories(p.getParent)
@@ -46,11 +48,13 @@ class WitnessRawReceiverSpec extends munit.FunSuite:
     }
     put("base", base)
     put("dep", dep)
-    val types = SpoonTir.buildModel(FrontendConfig(root.resolve("dep"), dep.keys.toList, Nil, resolutionRoots = List(root.resolve("base"))), lenient = true)
-    val p     = SpoonTir.fromTypes(types)
-    val own   = p.units.filter(u => p.symbolOf(u.symbol).exists(_.fullName.startsWith("d."))).map(_.symbol).toSet
-    val phase = new ElementWitnessTransform(witness = "demo.MkArray", subjectTypes = Map("d.Holder" -> List(0)), dropBound = Set("d.Holder"), boxedWitness = None)
+    val types      = SpoonTir.buildModel(FrontendConfig(root.resolve("dep"), dep.keys.toList, Nil, resolutionRoots = List(root.resolve("base"))), lenient = true)
+    val p          = SpoonTir.fromTypes(types)
+    val own        = p.units.filter(u => p.symbolOf(u.symbol).exists(_.fullName.startsWith("d."))).map(_.symbol).toSet
+    val phase      = new ElementWitnessTransform(witness = "demo.MkArray", subjectTypes = Map("d.Holder" -> List(0)), dropBound = Set("d.Holder"), boxedWitness = None)
     val (after, _) = Pipeline.runTraced(p, List(phase), new PolicyBinder(p, p.members, RunScope.of(own, Map.empty)))
     val out        = new TirEmitter(after).emit
-    assert(clue(out.linesIterator.filter(_.contains("keep.free(")).mkString("\n")).contains("free(c.asInstanceOf[d.Holder.Cell[java.lang.Object]])"))
+    assert(
+      clue(out.linesIterator.filter(_.contains("keep.free(")).mkString("\n")).contains("free(c.asInstanceOf[d.Holder.Cell[java.lang.Object]])")
+    )
   }
