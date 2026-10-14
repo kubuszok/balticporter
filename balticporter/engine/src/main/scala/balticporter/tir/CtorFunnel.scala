@@ -501,17 +501,23 @@ object CtorFunnel:
       plan.delegations.contains(d.symbol) || superCall(cd, args) != SuperCall.Dropped
 
     /** Private members a replay reaches, to be widened. */
-    def widenedMembers: Set[SymId] = widened.toSet
+    def widenedMembers: Set[SymId] = widened.keySet.toSet
 
-    private val widened = collection.mutable.Set[SymId]()
+    // member -> reached through a prefix other than `this`/`super`
+    private val widened = collection.mutable.Map[SymId, Boolean]()
 
     /** Widenings for subclasses this run cannot see. Narrowed to owned, extensible, non-private, paramful constructors whose replay is usable, touching unreachable mutable fields.
       */
-    def externalReplayWidenings: Set[SymId] = externalReplay
+    def externalReplayWidenings: Set[SymId] = externalReplay.keySet
+
+    /** The widened members some replay reaches through a prefix other than `this`: only `public` reaches them there, while a member reached only through `this` needs no more than `protected`.
+      */
+    def widenedToPublic: Set[SymId] =
+      widened.collect { case (s, true) => s }.toSet ++ externalReplay.collect { case (s, true) => s }
 
     // lazy: reads `decided` which reads `replays`; strict would NPE
-    private lazy val externalReplay: Set[SymId] =
-      val out = collection.mutable.Set[SymId]()
+    private lazy val externalReplay: Map[SymId, Boolean] =
+      val out = collection.mutable.Map[SymId, Boolean]()
       ownedClasses.foreach { cd =>
         if extensibleFromOutside(cd) then
           ctorsOf(program, cd.body).foreach { d =>
@@ -521,12 +527,13 @@ object CtorFunnel:
               val (conceivable, touched) = replayReach(d.symbol, 0, Set.empty)
               if conceivable then
                 // only widen members this run OWNS (chain may climb into ancestor classes)
-                out ++= touched.collect {
-                  case (s, viaPrefix) if isField(s) && !immutableSlotFields(s) && program.symbolOf(s).exists(sy => surface.owns(sy.owner) && unreachableFromASubclass(sy, viaPrefix)) => s
+                touched.foreach { case (s, viaPrefix) =>
+                  if isField(s) && !immutableSlotFields(s) && program.symbolOf(s).exists(sy => surface.owns(sy.owner) && unreachableFromASubclass(sy, viaPrefix)) then
+                    out(s) = out.getOrElse(s, false) || viaPrefix
                 }
           }
       }
-      out.toSet
+      out.toMap
 
     /** True when a subclass replay cannot reach this member: private, package-private, or protected accessed through a prefix (not `this`).
       */
@@ -604,15 +611,15 @@ object CtorFunnel:
               superApply(d).foreach { case (m, args) =>
                 effects(m, args, 0).foreach { e =>
                   val stats   = e.stats
-                  val touched = collection.mutable.Set[SymId]()
+                  val touched = collection.mutable.Map[SymId, Boolean]()
                   // include ctor's own statements for superseding check
                   val after = stats ++ stmtsOf(d).tail
                   // deferred prologue is shared (java ran it too), so skip that prefix
                   val shared = e.deferredTo.flatMap(prologueOf(_, 0)).map(_.size).getOrElse(0)
                   if usable(cd, d, stats, touched) && supersedes(after, prologue.get.drop(shared)) then
                     out((cd.symbol, d.symbol)) = retyped(stats, parentTypeSubst(cd))
-                    widened ++= touched.filter { s =>
-                      program.symbolOf(s).exists(sy => sy.flags.isPrivate && sy.owner != cd.symbol)
+                    touched.foreach { case (s, viaPrefix) =>
+                      if program.symbolOf(s).exists(sy => sy.flags.isPrivate && sy.owner != cd.symbol) then widened(s) = widened.getOrElse(s, false) || viaPrefix
                     }
                 }
               }
@@ -784,13 +791,16 @@ object CtorFunnel:
         }
 
     /** can these statements legally run one level down, in `cd`'s constructor? */
-    private def usable(cd: Tree.ClassDef, d: Tree.DefDef, stats: List[Statement], touched: collection.mutable.Set[SymId]): Boolean =
+    private def usable(cd: Tree.ClassDef, d: Tree.DefDef, stats: List[Statement], touched: collection.mutable.Map[SymId, Boolean]): Boolean =
       // empty replay is valid: the nilary construction the emitted `this()` already performed
       if stats.isEmpty then true
       else
         given Program = program
         var ok        = true
-        val ph        = new Phase:
+        def saw(s: SymId, viaPrefix: Boolean): Unit = touched(s) = touched.getOrElse(s, false) || viaPrefix
+        // a qualifier that is not `this` or `super` — scala's `protected` does not reach through it
+        def viaPrefix(q: Term): Boolean = !(q.isInstanceOf[Tree.This] || q.isInstanceOf[Tree.Super])
+        val ph = new Phase:
           def name = "ctor-replay-scan"
           override def transformTerm(t: Term)(using Program): Term =
             t match
@@ -798,7 +808,10 @@ object CtorFunnel:
               case _: Tree.Super  => ok = false
               case _: Tree.Return => ok = false
               case _ => ()
-            program.symbolIn(t).foreach(touched += _)
+            t match
+              case Tree.Apply(Tree.Select(q, _, _, _), _, m, _, _) => saw(m, viaPrefix(q))
+              case Tree.Select(q, s, _, _)                         => saw(s, viaPrefix(q))
+              case other                                           => program.symbolIn(other).foreach(saw(_, false))
             t
         stats.foreach(StandardTraversal.mapStat(ph, _))
         // a replayed local must not collide with a parameter of the constructor it lands in
@@ -806,7 +819,7 @@ object CtorFunnel:
         val localNames = stats.collect { case v: Tree.ValDef => program.symbolOf(v.symbol).map(_.name).getOrElse("") }
         ok && localNames.forall(n => !paramNames(n)) &&
         // private members of other classes need widening or are unreachable
-        touched.forall { s =>
+        touched.keys.forall { s =>
           program.symbolOf(s).forall { sy =>
             !sy.flags.isPrivate || sy.owner == cd.symbol || reachablePrivate(cd, s, sy)
           }

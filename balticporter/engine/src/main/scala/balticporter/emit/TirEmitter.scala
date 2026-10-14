@@ -61,7 +61,7 @@ final class TirEmitter(
   private[emit] val plans = CtorFunnel.Plans(prepared, Some(surface))
   // Widen private members reached by replayed parent-ctor statements (they execute one level down).
   private[emit] val program =
-    TirEmitter.widen(prepared, plans.widenedMembers, own, plans.externalReplayWidenings)
+    TirEmitter.widen(prepared, plans.widenedMembers, own, plans.externalReplayWidenings, plans.widenedToPublic)
 
   /** Same-named overload candidates for program-declared types. Shared with `overload-risk` check. */
   private[balticporter] lazy val overloads = new balticporter.tir.OverloadRiskCheck.Overloads(program)
@@ -560,11 +560,17 @@ object TirEmitter:
     */
   private[emit] val MemberRenameRule = "member-rename"
 
-  /** Drop `private` from the given members. Java lets a parent constructor write its own private fields; REPLAYED one level down (`CtorFunnel.replayFor`) they execute in the subclass, where `private`
-    * no longer reaches — widening only removes access errors, never behaviour. `forDependents` is the same widening for a subclass THIS RUN CANNOT SEE, kept separate so the note doesn't misattribute
-    * an empty class.
+  /** Widen the given members just far enough for a REPLAYED parent constructor to reach them one level down (`CtorFunnel.replayFor`): java `protected` where every replay writes them through `this`,
+    * `public` for those in `toPublic` (reached through another prefix) and for statics, so the widening adds no surface the replay does not need. `forDependents` is the same widening for a subclass
+    * THIS RUN CANNOT SEE, kept separate so the note doesn't misattribute an empty class.
     */
-  def widen(p: Program, members: Set[SymId], out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty, forDependents: Set[SymId] = Set.empty): Program =
+  def widen(
+    p:             Program,
+    members:       Set[SymId],
+    out:           collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
+    forDependents: Set[SymId] = Set.empty,
+    toPublic:      SymId => Boolean = _ => true
+  ): Program =
     val all = members ++ forDependents
     if all.isEmpty then p
     else
@@ -572,15 +578,17 @@ object TirEmitter:
       // ALL THREE of java's non-public levels, not isPrivate alone — clearing one flag is silently
       // a no-op for the other two.
       def level(f: Flags): String =
-        if f.isPrivate then "private" else if f.isProtected then "protected" else "package-private"
-      def widened(f: Flags): Flags =
-        f.copy(isPrivate = false, isProtected = false, isPackagePrivate = false)
-      def narrower(f: Flags): Boolean = f.isPrivate || f.isProtected || f.isPackagePrivate
-      val syms = p.symbols.all.map(s => if all(s.id) then s.copy(flags = widened(s.flags)) else s)
-      // one row per member that ACTUALLY LOST a modifier — a member already public was in
+        if f.isPrivate then "private" else if f.isProtected then "protected" else if f.isPackagePrivate then "package-private" else "public"
+      // a static has no `protected` scala can express (it lives in the companion), so it goes public.
+      def target(s: Symbol):  String = if toPublic(s.id) || s.flags.isStatic then "public" else "protected"
+      def widened(s: Symbol): Flags  =
+        s.flags.copy(isPrivate = false, isProtected = target(s) == "protected", isPackagePrivate = false)
+      def narrower(s: Symbol): Boolean = level(s.flags) != "public" && level(s.flags) != target(s)
+      val syms = p.symbols.all.map(s => if all(s.id) && narrower(s) then s.copy(flags = widened(s)) else s)
+      // one row per member that ACTUALLY LOST a modifier — a member already at the target was in
       // widenedMembers because the planner could not know.
       p.symbols.all.foreach { s =>
-        if all(s.id) && narrower(s.flags) then
+        if all(s.id) && narrower(s) then
           // an OBSERVED replay wins the sentence where a member is in both sets — the stronger claim.
           val observed = members(s.id)
           note(
@@ -592,7 +600,7 @@ object TirEmitter:
               // the same cause= pair every visibility-widening residue carries, so this is one grep over decisions.tsv.
               "cause" -> "ctor-replay-widening",
               "from" -> level(s.flags),
-              "to" -> "public",
+              "to" -> target(s),
               "scope" -> (if observed then "this-run" else "dependent-modules"),
               "why" ->
                 (if observed then

@@ -95,6 +95,13 @@ class CtorFunnelExternalReplaySpec extends munit.FunSuite:
     assert(!clue(declOf("n")).contains("private"), "the field a cross-module replay must reach")
   }
 
+  test(
+    "a field every replay writes through `this` is widened only to `protected`, the narrowest access a subclass replay reaches"
+  ) {
+    assert(clue(declOf("n")).trim.startsWith("protected"), "`public` adds surface the replay does not need")
+    assert(!clue(declOf("viaPrefix")).trim.startsWith("protected"), "read through another prefix, only `public` reaches it")
+  }
+
   test("a private field NO constructor writes keeps `private`") {
     assert(clue(declOf("untouched")).contains("private"))
   }
@@ -133,4 +140,8 @@ class CtorFunnelExternalReplaySpec extends munit.FunSuite:
     assertEquals(rows.count(_.detail.get("from").contains("private")), 1)
     assertEquals(rows.count(_.detail.get("from").contains("protected")), 1)
     assertEquals(rows.map(_.subjectFqn).sorted, List("demo.Copied#viaPrefix", "demo.Widened#n"))
+    assertEquals(
+      rows.map(d => (d.subjectFqn, d.detail("to"))).sorted,
+      List("demo.Copied#viaPrefix" -> "public", "demo.Widened#n" -> "protected")
+    )
   }
