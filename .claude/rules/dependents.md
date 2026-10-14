@@ -103,6 +103,13 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   a fatal `base-surface` finding, only where the base's map has a row for the OWNER TYPE.
 - A merge is needed for an INSTANCE count, not a policy count: ask first *does any dependent
   CONSTRUCT this phase?* — one grep over the ports.
+- **A dependent's reference the base cannot answer is a `port-map` row at the DEPENDENT's site, before
+  scalac** (engine, (a)): `DroppedType`/`DroppedMember` for what the map records `Dropped`,
+  `UnpublishedType` for a java type in a package the base publishes that its map never names (outside
+  the base's source set: freetype's `SharedLibraryLoader`), `UnpublishedMember` for a member of a type
+  the base emits that has no row. Sites are filtered to the units THIS run emits (`RunScope`): the
+  dependent's model holds the base's java, and its own `Array(Class)` calls were reported as the
+  dependent's (7 rows per extension). The fix is port policy: redirect, rewrite, or replace.
 - `PortMapTransform.followMemberRenames` reads the base's `upstream`/`emitted` member rows and
   `form=parenless`, matches by upstream FQN through the package rename map, and applies the same
   rename via `MemberRenamer` — a dependent re-detects bean-property and nullary-method pairs over the

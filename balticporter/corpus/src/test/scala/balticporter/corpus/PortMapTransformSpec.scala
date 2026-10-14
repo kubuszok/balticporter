@@ -386,6 +386,54 @@ class PortMapTransformSpec extends munit.FunSuite:
     assert(!replaced.findings.exists(_.issue == PortMapTransform.Issue.DroppedType))
   }
 
+  test(
+    "a reference to a base-package type or member the map never names is reported at the dependent's site, never at the base's"
+  ) {
+    val base = baseArray ++ Map(
+      "com/example/gfx/utils/Loader.java" ->
+        """package com.example.gfx.utils;
+          |public class Loader {
+          |  public static void load(String name) { new Array<String>().size(); }
+          |}
+          |""".stripMargin,
+      "com/example/gfx/utils/Array.java" ->
+        """package com.example.gfx.utils;
+          |public class Array<T> {
+          |  public Object[] toArray() { return null; }
+          |  public <V> V[] toArray(Class<V> type) { return null; }
+          |  public int size() { return 0; }
+          |}
+          |""".stripMargin
+    )
+    val dep = Map(
+      "com/example/ecs/Boot.java" ->
+        """package com.example.ecs;
+          |import com.example.gfx.utils.Array;
+          |import com.example.gfx.utils.Loader;
+          |public class Boot {
+          |  public int start(Array<String> a) { Loader.load("x"); a.toArray(); return a.size(); }
+          |}
+          |""".stripMargin
+    )
+    val p     = model(base, dep)
+    val own   = p.units.filter(u => p.symbolOf(u.symbol).exists(_.fullName == "com.example.ecs.Boot")).map(_.symbol).toSet
+    val phase = new PortMapTransform(List(baseMap))
+    Pipeline.runTraced(p, List(phase), new balticporter.tir.PolicyBinder(p, p.members, balticporter.tir.RunScope.of(own, Map.empty)))
+    val byIssue = phase.findings.groupBy(_.issue)
+
+    // the type outside the base's source set, in a package the base publishes
+    val types = byIssue.getOrElse(PortMapTransform.Issue.UnpublishedType, Nil)
+    assertEquals(clue(types).map(_.symbol).distinct, List("com.example.gfx.utils.Loader"))
+    assertEquals(types.head.base, "base-mod")
+    // the member of a published type the map has no row for
+    val members = byIssue.getOrElse(PortMapTransform.Issue.UnpublishedMember, Nil)
+    assertEquals(clue(members).map(_.symbol).distinct, List("com.example.gfx.utils.Array#size"))
+    // every row sits in the dependent's java: Loader's own call to `size` is the base's java
+    assert(clue(phase.findings).forall(_.origin.javaPath.endsWith("Boot.java")))
+    // the published member is not reported
+    assert(!phase.findings.exists(_.symbol == "com.example.gfx.utils.Array#toArray"))
+  }
+
   test("a map that matches NOTHING is REPORTED — a wrong or stale map must not be silently inert") {
     // The failure this phase could otherwise have: hand it the wrong module's map, or one published
     // before a namespace moved, and it does nothing at all while looking configured. There is

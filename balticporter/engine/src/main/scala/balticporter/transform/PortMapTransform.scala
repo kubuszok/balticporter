@@ -8,8 +8,13 @@ import balticporter.tir.*
 /** Migrates a DEPENDENT's references from what its base module PUBLISHED — re-points a renamed type/member to the base's emitted name, and reports a call to a member the base dropped or replaced with
   * a hand-supplied body. `maps` are the base's own published [[PortMap]]s; empty is a no-op. Does not rewrite a dropped call or verify freshness ([[PortMap.freshness]]'s job).
   */
-final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, Rewrite:
+final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, Rewrite, PolicyBound:
   def name: String = "port-map-migration"
+
+  /** the run this phase was bound in: a finding is about a site this module EMITS, never one in the base's own java the dependent's model also holds. */
+  private var boundRun: RunScope = RunScope.whole
+
+  def bindPolicy(binder: PolicyBinder): Unit = boundRun = binder.run
 
   /** the follow RENAMES owned overrides of base members; its residue is the `port-map` lane. */
   def accountedBy: Set[String] = Set("port-map")
@@ -386,7 +391,7 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     program.referenced.toList.flatMap(program.symbolOf).sortBy(_.fullName).foreach { sym =>
       val full = sym.fullName
 
-      def sites(s: SymId) = PortMapTransform.callSites(program, s).filterNot((_, _, encl) => theirs(encl))
+      def sites(s: SymId) = PortMapTransform.callSites(program, s).filterNot((_, _, encl) => theirs(encl) || !emitted(program, encl))
 
       // a reference to a type the base neither emits nor replaces
       typeEntries.get(full) match
@@ -400,7 +405,31 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
               origin
             )
           }
+        case scala.None if !full.contains('#') && unpublishedBaseType(program, sym) =>
+          sites(sym.id).foreach { (origin, _, _) =>
+            out += PortMapTransform.Finding(
+              PortMapTransform.Issue.UnpublishedType,
+              packageOwner(full).getOrElse("?"),
+              full,
+              "a java type in a package the base publishes, which the base's map does not name: the base never emitted it, so this reference resolves to nothing",
+              origin
+            )
+          }
         case _ => ()
+
+      // a reference to a member of a type the base emits, which the base's map does not name
+      if full.contains('#') && !memberEntries.contains(full) then
+        unpublishedBaseMember(program, sym).foreach { who =>
+          sites(sym.id).foreach { (origin, _, _) =>
+            out += PortMapTransform.Finding(
+              PortMapTransform.Issue.UnpublishedMember,
+              who,
+              full,
+              "a member of a type the base emits, which the base's map does not name: the base never emitted it, so this call resolves to nothing",
+              origin
+            )
+          }
+        }
 
       // a call to a member the base dropped, or one whose body it hand-supplied
       if full.contains('#') then
@@ -454,7 +483,42 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     }
     out.toList.distinct.sortBy(f => (f.issue.toString, f.symbol, f.origin.javaPath, f.origin.line))
 
+  /** is this site in a declaration the run writes? An unknown enclosing declaration answers yes, so a site is never hidden for lack of evidence. */
+  private def emitted(program: Program, encl: SymId): Boolean =
+    encl == SymId.None || boundRun.emitsSymbol(program, encl)
+
+  /** the packages the maps publish types in, and which module publishes each — the namespace a reference must fall in to be the base's question at all. */
+  private lazy val publishedPackages: Map[String, String] =
+    typeEntries.iterator.flatMap((fqn, we) => PortMapTransform.packageOf(fqn).map(_ -> we._1)).toMap
+
+  private def packageOwner(full: String): Option[String] =
+    PortMapTransform.packageOf(full).flatMap(publishedPackages.get)
+
+  /** a TYPE declared in java the run READ (a resolution root, never a class file), not this run's own, in a package a base publishes, and absent from every map. */
+  private def unpublishedBaseType(program: Program, sym: Symbol): Boolean =
+    program.definitionOf(sym.id).exists(_.isInstanceOf[Tree.ClassDef]) && !boundRun.emitsSymbol(program, sym.id) &&
+      packageOwner(sym.fullName).isDefined && !typeEntries.contains(PortMapTransform.topLevelOf(sym.fullName))
+
+  /** the module publishing the OWNER of a member declared in java the run read, when that owner is a type the base EMITS and the member is not this run's own; None otherwise. */
+  private def unpublishedBaseMember(program: Program, sym: Symbol): Option[String] =
+    if !program.definitionOf(sym.id).isDefined || boundRun.emitsSymbol(program, sym.id) then scala.None
+    else
+      program.symbolOf(sym.owner).flatMap(o => typeEntries.get(o.fullName)).collect {
+        case (who, e) if e.disposition == PortMap.Disposition.Ported || e.disposition == PortMap.Disposition.Renamed => who
+      }
+
 object PortMapTransform:
+
+  /** the package of a type or member full name: everything before the top-level type's simple name. A name with no package has none. */
+  private[transform] def packageOf(full: String): Option[String] =
+    val top = topLevelOf(full)
+    val dot = top.lastIndexOf('.')
+    if dot <= 0 then scala.None else Some(top.substring(0, dot))
+
+  /** the top-level type of a type or member full name: cut at the first `#` and the first `$`. */
+  private[transform] def topLevelOf(full: String): String =
+    val t = full.takeWhile(_ != '#')
+    t.takeWhile(_ != '$')
 
   /** The phase configured from whatever those base modules last PUBLISHED: {{{surface = List(PortMapTransform.forBases("sge"))}}} A base that published nothing reports so via
     * [[PortMapTransform.policyReport]]. Freshness is checked by `PortRun`, not here. Reads the filesystem at CONSTRUCTION, so [[PortMapTransform.surfaceFingerprint]] depends on what is on disk —
@@ -474,6 +538,12 @@ object PortMapTransform:
     /** a reference to a type the base's map records as `Dropped` — not `Substituted`, which has a replacement standing at the same name and is therefore callable.
       */
     case DroppedType
+
+    /** a reference to a java type in a base's published package that the base's map does not name: outside the base's source set, so never emitted. */
+    case UnpublishedType
+
+    /** a reference to a member of a type the base emits that the base's map does not name. */
+    case UnpublishedMember
 
     /** a call into a member whose body the base replaced. */
     case SubstitutedBody
@@ -512,6 +582,14 @@ object PortMapTransform:
       "port policy: the base module emits nothing at this name and injects " +
         "no replacement. Rewrite the references away in this module, or ship a replacement here — the " +
         "base deliberately does not have one."
+    case Issue.UnpublishedType =>
+      "port policy: the base's source set does not contain this type, so nothing stands at its name. " +
+        "Redirect it (`TypeRedirectTransform`), rewrite the uses away, or ship a replacement in this module; " +
+        "if every module needs it, the base's source set is the place to add it."
+    case Issue.UnpublishedMember =>
+      "port policy: the base emits the owner but not this member. Give this module a replacement " +
+        "(`MethodBodyTransform` for the caller's body, `CallSiteSubstitutionTransform` for the call), or " +
+        "have the base emit it."
     case Issue.SubstitutedBody =>
       "port policy, INFORMATIONAL: the behaviour behind this signature " +
         "is not upstream's. Nothing is broken; check that this module's use of it still holds."
