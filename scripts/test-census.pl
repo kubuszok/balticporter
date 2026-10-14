@@ -21,9 +21,10 @@ my (%modulesOf, %allModules);
 for my $dir (glob("$tree/target/out/*/scala-*/*/test-classes")) {
   my ($axis, $module) = $dir =~ m{/target/out/([^/]+)/scala-[^/]+/([^/]+)/test-classes$} or next;
   my $key = $axis eq 'jvm' ? $module : "$module($axis)";
-  $allModules{$key} = 1;
   find({ no_chdir => 1, wanted => sub {
     return unless /\.class$/ && !/\$/;
+    # only a module that compiled a test class can have run none (a main-only module has an empty dir)
+    $allModules{$key} = 1;
     (my $fqn = substr($_, length($dir) + 1)) =~ s{\.class$}{};
     $fqn =~ s{/}{.}g;
     push @{ $modulesOf{$fqn} }, $key;
@@ -36,6 +37,8 @@ my $sbt = 0;
 open(my $fh, '<', $log) or die "cannot read $log: $!\n";
 while (my $line = <$fh>) {
   $line =~ s/\e\[[0-9;]*m//g;
+  # a FORKED test JVM's output reaches the log through sbt's logger, behind a level prefix
+  $line =~ s/^\[(?:info|warn|error)\] //;
   if ($line =~ /^Test run (\S+) finished: (\d+) failed, (\d+) ignored, (\d+) total/) {
     push @{ $runs{$1} }, [$2, $3, $4];
   } elsif ($line =~ /Total (\d+), Failed \d+, Errors \d+/) {

@@ -34,8 +34,10 @@ read-only after it.
 - **sbt's `Passed: Total N` lines are not a test count** (a build fix, universal): with projects
   testing in parallel, three sge runs over identical suites summed to 3189, 3146 and 3120 (anim8's
   4 suites of 21 tests read 13), while every suite's own `Test run <suite> finished: … N total`
-  line agreed at 3355 in 389 suites. A source row counts those lines per module
-  (`scripts/test-census.pl`, `<work>/<name>-tests.tsv`) and names a module that ran no suite.
+  line agreed at 3364 in 391 suites. A source row counts those lines per module
+  (`scripts/test-census.pl`, `<work>/<name>-tests.tsv`) and names a module that compiled test
+  classes and ran no suite. A FORKED suite's line arrives behind sbt's `[info] ` prefix (missed,
+  robolectric read as idle), and a main-only module has an empty `test-classes` and is no finding.
 
 ## Required checks
 
