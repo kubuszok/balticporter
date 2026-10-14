@@ -237,6 +237,10 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 
 ## More rules (one line each)
 
+- Scala 3 forbids a subclass field, even a `private` one, of the same name as ANY non-private
+  parent field, `private[pkg]` from another package included ("cannot override variable"); java
+  hides it. Probed on 3.8.2. So narrowing a parent's access never frees the name; only a rename
+  on the subclass side does. Kind (a).
 - A java identifier ending in `_` is backticked by `TirEmitter.esc` (scala lexes `other_:` as ONE
   operator identifier: `val other_: Pair = …` is a parse error); a PATTERN binder takes a space
   instead (`escBinder`), since a backticked name in a pattern is a stable identifier, not a binding.
