@@ -547,13 +547,15 @@ private[emit] trait TirEmitterNotes:
           program.symbolOf(typeSym).exists(_.fullName.startsWith(runtimePrefix))
     }
 
-  /** Is this member listed in `externalParenless`? Matches `Owner#name` against the set. */
+  /** Is this member called without `()`? Either the manifest lists it in `externalParenless` (`Owner#name`), or its owner is a dropped type whose INJECTED replacement declares it parenless — the
+    * replacement's own arity, read off the file the port ships, so no manifest entry restates it.
+    */
   private[emit] def isExternalParenless(m: SymId): Boolean =
-    if externalParenless.isEmpty then false
+    val ownerSym = sym(m).owner
+    if ownerSym == SymId.None then false
     else
-      val ownerSym = sym(m).owner
-      if ownerSym == SymId.None then false
-      else externalParenless.contains(s"${sym(ownerSym).fullName}#${sym(m).name}")
+      val key = s"${sym(ownerSym).fullName}#${sym(m).name}"
+      externalParenless.contains(key) || injectedSurface.parenless(sym(ownerSym).fullName, sym(m).name)
 
   /** backtick an identifier that collides with a Scala keyword. */
   private[emit] def esc(name: String): String = TirEmitter.esc(name)

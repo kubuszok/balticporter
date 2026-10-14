@@ -70,6 +70,13 @@ object InjectedSurface:
           sig.copy(paramTypes = sig.paramTypes.map(_.map(pt => ParamType(substituteTypeParams(pt.rendered, subst)))))
       }
 
+    /** Whether the injected file declares this member with no parameter list at all (a parenless `def`, a `val` or a `var`) and no nullary `()` overload beside it — what a call without arguments must
+      * then spell.
+      */
+    def parenless(ownerFqn0: String, memberName: String): Boolean =
+      val sigs = owners(ownerFqn0).flatMap(o => members.getOrElse((o, memberName, 0), Nil))
+      sigs.nonEmpty && sigs.forall(!_.hasParens)
+
     /** Whether this member has parens in the injected file. */
     def memberHasParens(ownerFqn0: String, memberName: String): Option[Boolean] =
       val os = owners(ownerFqn0).toSet

@@ -206,7 +206,8 @@ Remember the asymmetry: a **drop** is inherited by a dependent, an **injection**
 FQNs (`Owner#member`) whose calls are emitted WITHOUT `()`. Closes the cross-platform arity gap where
 a JS/Native platform shim (munit's `Description`) declares a member parenless while the JVM class
 file has `()`. Legal on the JVM too: Scala 3 auto-applies. Empty = no-op. NOT inherited (a classpath
-fact).
+fact). A member of a type you drop and INJECT needs no entry: a call takes the arity your injected
+file declares (a parenless `def`, `val` or `var` drops the `()`), under its emitted name.
 
 ## 2. When config is not enough — a §1(c) rule, in YOUR repository
 
