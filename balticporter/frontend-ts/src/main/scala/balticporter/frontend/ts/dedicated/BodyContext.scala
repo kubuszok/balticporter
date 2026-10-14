@@ -73,6 +73,12 @@ private[dedicated] class BodyContext(
     private def translateExprAt(node: RastNode, expectedType: String): String =
       val baseType = expectedType.takeWhile(c => c != '[' && c != ' ')
       node.kind match
+        // both branches of `c ? a : b` take the slot's type
+        case "ConditionalExpression" if node.children.size >= 3 =>
+          val condNode = node.children.head
+          val combines = condNode.kind == "BinaryExpression" && condNode.operator.exists(op => op == "AmpersandAmpersandToken" || op == "BarBarToken")
+          if exprType(condNode).isEmpty && !combines then refuse("truthiness-unknown-type")
+          s"(if (${translateCondition(condNode)}) ${translateExprAt(node.children(1), expectedType)} else ${translateExprAt(node.children(2), expectedType)})"
         // A present value at an optional slot is wrapped: JS stores the value itself, the reference's optional says it is there.
         case _ if isOptionLike(expectedType) && exprType(node).exists(t => !isOptionLike(t) && t != "Null") =>
           val inner = translateExprAt(node, optionInner(expectedType))
@@ -116,10 +122,13 @@ private[dedicated] class BodyContext(
               case "IndexedSeq"               => "scala.collection.immutable.IndexedSeq"
               case "Seq"                      => "scala.collection.immutable.Seq"
               case _                          => "scala.collection.mutable.ArrayBuffer"
-            if node.children.isEmpty then s"$coll.empty[$et]"
+            // A type the slot names may be spelled through the CALLEE file's imports: only a standard
+            // type is written out, any other is left to Scala's inference from the slot.
+            val targ = if portableType(et) then s"[$et]" else ""
+            if node.children.isEmpty then s"$coll.empty$targ"
             else
               val elems = node.children.map(c => translateExprAt(c, et))
-              s"$coll[$et](${elems.mkString(", ")})"
+              s"$coll$targ(${elems.mkString(", ")})"
           else
             tupleComponents(expectedType) match
               // a fixed-length JS array at a Scala tuple slot: the same values, by position
@@ -134,8 +143,10 @@ private[dedicated] class BodyContext(
                 translateExpr(node)
         case "ObjectLiteralExpression" =>
           translateObjectLiteral(node, Some(expectedType))
-        case "NullKeyword" | "UndefinedKeyword" =>
+        case k if k == "NullKeyword" || k == "UndefinedKeyword" || (k == "Identifier" && node.text.contains("undefined")) =>
           if isNullableType(expectedType) then "Nullable.Null"
+          else if isOptionLike(expectedType) then "None"
+          else if expectedType.contains("| Null") then "null"
           else
             val base = expectedType.takeWhile(c => c != '[' && c != ' ')
             if base != "Any" && base != "AnyRef" && base != "Null" && base != "Nothing" then
@@ -302,7 +313,8 @@ private[dedicated] class BodyContext(
               // A variable whose initialiser is empty or whitespace produces
               // Unit in value position when read later
               if init.trim.isEmpty then refuse("unit-in-value-position")
-              val ascription = declaredType.fold("")(t => s": $t")
+              // a class the annotation names may not be imported here: only a standard type is written out
+              val ascription = declaredType.filter(portableType).fold("")(t => s": $t")
               sb.append(s"$indent$keyword $scalaName$ascription = $init\n")
 
         case "IfStatement" =>
@@ -444,7 +456,11 @@ private[dedicated] class BodyContext(
             case Some(RastValue.Str(s)) => s
             case _ => node.text.getOrElse("/???/")
           val body = text.stripPrefix("/").reverse.dropWhile(_ != '/').reverse.stripSuffix("/")
-          val escaped = body.replace("\\", "\\\\")
+          val flags = text.reverse.takeWhile(_ != '/').reverse
+          // i, m and s have inline Java spellings; g is read where the regex is used; u, y and d have none
+          if flags.exists(f => !"gims".contains(f)) then refuse("regex-flag")
+          val inlineFlags = flags.filter("ims".contains(_)).map(f => s"(?$f)").mkString
+          val escaped = (inlineFlags + body).replace("\\", "\\\\").replace("\"", "\\\"")
           s"\"$escaped\".r"
 
         case "TrueKeyword" => "true"
@@ -608,7 +624,10 @@ private[dedicated] class BodyContext(
         case "ArrayLiteralExpression" =>
           val hasSpread = node.children.exists(_.kind == "SpreadElement")
           val allSpread = node.children.nonEmpty && node.children.forall(_.kind == "SpreadElement")
-          if node.children.isEmpty then "scala.collection.mutable.ArrayBuffer.empty[Any]"
+          if node.children.isEmpty then
+            // `[]` where no slot declares the element type: an ArrayBuffer[Any] fits no typed use
+            refuse("untyped-empty-array")
+            "scala.collection.mutable.ArrayBuffer.empty[Any]"
           else if allSpread && node.children.length == 1 then
             // [...arr] is a fresh mutable copy of a collection; of anything else it has no Scala reading here
             val source = node.children.head.children.head
@@ -973,12 +992,13 @@ private[dedicated] class BodyContext(
             if exprType(obj).exists(t => isOptionLike(t) || t.contains("| Null")) then refuse("optional-receiver")
             else if exprType(obj).exists(_.contains("|")) then refuse("union-receiver")
             // a method the receiver's declared type does not declare
-            exprType(obj).filterNot(t => isOptionLike(t) || t.contains("|")).foreach { t =>
-              val base = t.takeWhile(c => c != '[' && c != ' ')
-              if !knownSafeProperties.contains(method) then
-                if memberIndex.knowsType(base) then
-                  if !List(snakeToCamel(method), method).exists(memberIndex.hasMember(base, _)) then refuse("wrong-member-access")
-                else if isSpecificClassType(t) then refuse("wrong-member-access")
+            // On a class the reference declares the method is that class's own, under its own spelling:
+            // JS collection renames (`has` -> `contains`) never apply there.
+            val classReceiver = exprType(obj).filterNot(t => isOptionLike(t) || t.contains("|")).map(baseName).filter(memberIndex.knowsType)
+            val classMethod   = classReceiver.flatMap(base => List(snakeToCamel(method), method).find(memberIndex.hasMember(base, _)))
+            if classReceiver.isDefined && classMethod.isEmpty && !conventions.methodRewrites.contains(method) then refuse("wrong-member-access")
+            exprType(obj).filterNot(t => isOptionLike(t) || t.contains("|") || classReceiver.isDefined).foreach { t =>
+              if !knownSafeProperties.contains(method) && isSpecificClassType(t) then refuse("wrong-member-access")
             }
             val objExpr = translateExpr(obj)
             // Look up the callee's parameter types for expected-type propagation
@@ -994,7 +1014,7 @@ private[dedicated] class BodyContext(
               val isVararg = s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq["))
               if args.length > s.params.length && !isVararg then
                 refuse("callee-arity-mismatch")
-              if args.length < s.params.length && !isVararg then
+              if args.length < s.params.length && !isVararg && omittedArgs(s, args.length).isEmpty then
                 refuse("callee-arity-mismatch")
               // Check argument types against declared parameter types
               for (arg, i) <- args.zipWithIndex do
@@ -1014,13 +1034,17 @@ private[dedicated] class BodyContext(
               case Some(s) =>
                 args.zipWithIndex.map { case (arg, i) =>
                   s.params.lift(i).map(p => translateExprAt(arg, p.tpe)).getOrElse(translateExpr(arg))
-                }
+                } ++ omittedArgs(s, args.length).getOrElse(Nil)
               case None =>
                 if isPredicate then
                   args.zipWithIndex.map { case (arg, i) =>
                     if i == 0 then translatePredicateLambda(arg, elemType) else translateExpr(arg)
                   }
                 else args.map(translateExpr)
+
+            if classMethod.isDefined && !conventions.methodRewrites.contains(method) then
+              val name = classMethod.get
+              return s"$objExpr.${if scalaKeywords.contains(name) then s"`$name`" else name}(${scalaArgs.mkString(", ")})"
 
             method match
               // Collection methods
@@ -1091,6 +1115,8 @@ private[dedicated] class BodyContext(
                 s"$objExpr.slice(${scalaArgs.mkString(", ")})"
               // String methods
               case "substr" | "substring" =>
+                // `substr(start, LENGTH)` is not `substring(start, END)`
+                if method == "substr" && args.size > 1 then refuse("substr-length")
                 s"$objExpr.substring(${scalaArgs.mkString(", ")})"
               case "charAt" =>
                 s"$objExpr.charAt(${scalaArgs.mkString(", ")})"
@@ -1100,12 +1126,16 @@ private[dedicated] class BodyContext(
                 s"$objExpr.startsWith(${scalaArgs.mkString(", ")})"
               case "endsWith" =>
                 s"$objExpr.endsWith(${scalaArgs.mkString(", ")})"
-              case "replace" =>
-                s"$objExpr.replace(${scalaArgs.mkString(", ")})"
-              case "replaceAll" =>
-                s"$objExpr.replaceAll(${scalaArgs.mkString(", ")})"
+              case "replace" | "replaceAll" =>
+                translateStringReplace(objExpr, method == "replaceAll", args)
               case "split" =>
-                s"$objExpr.split(${scalaArgs.mkString(", ")})"
+                // JS splits on the literal text and keeps trailing empty pieces; Java's split reads a regex and drops them
+                args match
+                  case List(sep) if sep.kind == "StringLiteral" =>
+                    s"$objExpr.split(java.util.regex.Pattern.quote(${translateExpr(sep)}), -1)"
+                  case _ =>
+                    refuse("split-pattern-unknown")
+                    s"$objExpr.split(${scalaArgs.mkString(", ")})"
               case "trim" =>
                 s"$objExpr.trim"
               case "toLowerCase" =>
@@ -1191,6 +1221,12 @@ private[dedicated] class BodyContext(
                 s"$objExpr.clone()"
               // General method
               case _ =>
+                // a JS built-in's static the cases above do not render has no Scala namesake; `Math`'s read through java.lang.Math only where they agree
+                if obj.kind == "Identifier" && obj.text.exists(jsGlobals) && !calleeIndex.knownObjects.exists(obj.text.contains) &&
+                  !(obj.text.contains("Math") && javaMathAgrees(method))
+                then refuse("js-builtin")
+                // JS Math.max/min take any number of arguments, java.lang.Math's exactly two
+                if obj.text.contains("Math") && (method == "max" || method == "min") && args.size != 2 then refuse("js-builtin")
                 s"$objExpr.${snakeToCamel(method)}(${scalaArgs.mkString(", ")})"
 
           else
@@ -1259,7 +1295,7 @@ private[dedicated] class BodyContext(
                 val isVararg = s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq["))
                 if args.length > s.params.length && !isVararg then
                   refuse("callee-arity-mismatch")
-                if args.length < s.params.length && !isVararg then
+                if args.length < s.params.length && !isVararg && omittedArgs(s, args.length).isEmpty then
                   refuse("callee-arity-mismatch")
                 for (arg, i) <- args.zipWithIndex do
                   s.params.lift(i).foreach { param =>
@@ -1272,7 +1308,7 @@ private[dedicated] class BodyContext(
                 case Some(s) =>
                   args.zipWithIndex.map { case (arg, i) =>
                     s.params.lift(i).map(p => translateExprAt(arg, p.tpe)).getOrElse(translateExpr(arg))
-                  }
+                  } ++ omittedArgs(s, args.length).getOrElse(Nil)
                 case None => args.map(translateExpr)
               s"$qualifiedCallee(${scalaArgs.mkString(", ")})"
 
@@ -1295,10 +1331,10 @@ private[dedicated] class BodyContext(
             val rhsName = rhs.text.getOrElse(rhs.children.headOption.flatMap(_.text).getOrElse("Any"))
             if conventions.isClassName(rhsName) then
               // one of the library's own classes -- compile-time isInstanceOf
-              s"$lhs.isInstanceOf[${conventions.scalaClassName(rhsName)}]"
+              s"$lhs.isInstanceOf[${memberIndex.testable(conventions.scalaClassName(rhsName))}]"
             else if rhsName.head.isUpper && !scalaKeywords.contains(rhsName) then
-              // Capitalized non-keyword -- likely a class name
-              s"$lhs.isInstanceOf[$rhsName]"
+              // Capitalized non-keyword -- likely a class name; a generic one is tested with wildcards
+              s"$lhs.isInstanceOf[${memberIndex.testable(rhsName)}]"
             else
               // Runtime class reference (e.g., a function parameter) -- use isInstance
               val scalaRhs = translateExpr(rhs)
@@ -1310,6 +1346,15 @@ private[dedicated] class BodyContext(
         case Some(op) =>
           val lhs = children.head
           val rhs = children.last
+
+          // `x == null` on an optional value asks whether it is absent (JS `== null` also matches undefined)
+          def isNullish(n: RastNode) = n.kind == "NullKeyword" || n.kind == "UndefinedKeyword" || (n.kind == "Identifier" && n.text.contains("undefined"))
+          val equality = Set("EqualsEqualsEqualsToken", "EqualsEqualsToken", "ExclamationEqualsEqualsToken", "ExclamationEqualsToken")
+          if equality(op) && (isNullish(lhs) || isNullish(rhs)) then
+            val value = if isNullish(lhs) then rhs else lhs
+            if exprType(value).exists(isOptionLike) then
+              val negated = op.startsWith("Exclamation")
+              return s"${translateExpr(value)}.${if negated then "isDefined" else "isEmpty"}"
 
           // x.TYPE === "Y" -> x.isInstanceOf[AstY]
           if (op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") &&
@@ -1451,9 +1496,9 @@ private[dedicated] class BodyContext(
             val lhsStr = lhs.kind == "StringLiteral" || lhs.kind == "FirstTemplateToken" || lhs.kind == "NoSubstitutionTemplateLiteral" || lhs.kind == "TemplateExpression"
             val rhsStr = rhs.kind == "StringLiteral" || rhs.kind == "FirstTemplateToken" || rhs.kind == "NoSubstitutionTemplateLiteral" || rhs.kind == "TemplateExpression"
             if !lhsStr && rhsStr then
-              return s"${translateExpr(lhs)}.toString + ${translateExpr(rhs)}"
+              return s"${stringified(lhs)} + ${translateExpr(rhs)}"
             if lhsStr && !rhsStr then
-              return s"${translateExpr(lhs)} + ${translateExpr(rhs)}.toString"
+              return s"${translateExpr(lhs)} + ${stringified(rhs)}"
 
           val isAssignment = op.endsWith("EqualsToken") && !Set("EqualsEqualsToken", "EqualsEqualsEqualsToken", "ExclamationEqualsToken", "ExclamationEqualsEqualsToken", "LessThanEqualsToken", "GreaterThanEqualsToken")(op) ||
             op == "FirstAssignment" || op == "FirstCompoundAssignment"
@@ -1620,7 +1665,10 @@ private[dedicated] class BodyContext(
         c.kind == "PropertyAssignment" || c.kind == "ShorthandPropertyAssignment" ||
         c.kind == "SpreadAssignment" || c.kind == "MethodDeclaration"
       )
-      if props.isEmpty then "scala.collection.mutable.Map.empty[String, Any]"
+      if props.isEmpty then
+        // `{}` is a map only where its slot declares one; elsewhere it is an object of a shape nothing names
+        if !expected.exists(rt => rt.contains("Map") || rt.contains("map")) then refuse("js-map-construction")
+        "scala.collection.mutable.Map.empty[String, Any]"
       else
         // Extract literal key-value pairs
         val litEntries = props.flatMap { p =>
@@ -1681,30 +1729,32 @@ private[dedicated] class BodyContext(
       }
       s"scala.collection.mutable.Map(${entries.mkString(", ")})"
 
-    private def translateTemplateExpr(node: RastNode): String =
-      // Emit as string concatenation ("a " + expr + " b") rather than an
-      // s-string. Concatenation avoids nested quotes from expressions like
-      // toFixed, and the output does not contain "${" which pattern guards
-      // in the consumer would catch.
-      val parts = mutable.ListBuffer.empty[String]
-      for c <- node.children do
-        c.kind match
-          case "TemplateHead" | "TemplateMiddle" | "TemplateTail" =>
-            c.value match
-              case Some(RastValue.Str(s)) if s.nonEmpty =>
-                parts += "\"" + escapeString(s) + "\""
-              case _ => ()
-          case "NoSubstitutionTemplateLiteral" =>
-            c.value match
-              case Some(RastValue.Str(s)) =>
-                parts += "\"" + escapeString(s) + "\""
-              case _ => ()
-          case _ =>
-            val expr = translateExpr(c)
-            parts += s"$expr.toString"
-      if parts.isEmpty then "\"\""
-      else if parts.length == 1 then parts.head
-      else parts.mkString(" + ")
+    /** JS `s.replace(p, r)`: a string pattern replaces its FIRST occurrence (`replaceAll`: every one), a `/regex/` its first match unless flagged `g`. Only a literal replacement is rendered: `$n`
+      * names a group in both languages for a regex, every other `$` form and a backslash differ.
+      */
+    private def translateStringReplace(objExpr: String, all: Boolean, args: List[RastNode]): String =
+      def literal(n: RastNode): Option[String] = n.value.collect { case RastValue.Str(s) => s }.filter(_ => n.kind == "StringLiteral")
+      args match
+        case List(pat, rep) if literal(rep).isDefined =>
+          val r = literal(rep).get
+          pat.kind match
+            case "StringLiteral" =>
+              if r.contains('$') || r.contains('\\') then refuse("replace-replacement-pattern")
+              val p = translateExpr(pat)
+              if all then s"$objExpr.replace($p, ${translateExpr(rep)})"
+              else s"$objExpr.replaceFirst(java.util.regex.Pattern.quote($p), ${translateExpr(rep)})"
+            case "RegularExpressionLiteral" =>
+              if r.contains('\\') || r.replaceAll("\\$[0-9]", "").contains('$') then refuse("replace-replacement-pattern")
+              val flags = pat.value.collect { case RastValue.Str(s) => s }.orElse(pat.text).getOrElse("").reverse.takeWhile(_ != '/')
+              val re    = translateExpr(pat)
+              if all || flags.contains('g') then s"$re.replaceAllIn($objExpr, ${translateExpr(rep)})"
+              else s"$re.replaceFirstIn($objExpr, ${translateExpr(rep)})"
+            case _ =>
+              refuse("replace-pattern-unknown")
+              s"$objExpr.replace(${translateExpr(pat)}, ${translateExpr(rep)})"
+        case _ =>
+          refuse("replace-replacement-unknown")
+          s"$objExpr.replace(${args.map(translateExpr).mkString(", ")})"
 
     /** Emit a while or do-while loop with named boundary wrapping for break/continue. */
     private def emitLoop(indent: String, cond: String, bodyNode: RastNode, isDoWhile: Boolean): Unit =
@@ -1932,5 +1982,5 @@ private[dedicated] class BodyContext(
         conventions.tagField.exists(t => node.children.last.text.contains(t))
 
     /** The Scala class a type-tag value names. */
-    private def tagClass(tag: String): String = conventions.classPrefix.fold(tag)((_, scalaPrefix) => scalaPrefix + tag)
+    private def tagClass(tag: String): String = memberIndex.testable(conventions.classPrefix.fold(tag)((_, scalaPrefix) => scalaPrefix + tag))
 

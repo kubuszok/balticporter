@@ -96,7 +96,11 @@ abstract private[dedicated] class BodyScope(
       case "Identifier" =>
         node.text.flatMap { name =>
           val scalaName = snakeToCamel(name)
-          localTypes.get(scalaName).orElse(localTypes.get(name)).orElse(paramTypes.get(scalaName)).orElse(paramTypes.get(name))
+          localTypes.get(scalaName).orElse(localTypes.get(name)).orElse(paramTypes.get(scalaName)).orElse(paramTypes.get(name)).orElse {
+            // a module-level value the reference declares, when nothing in the body binds the name
+            if declaredInBody(name) || entry.params.contains(name) || apiLookup.contains(name) then None
+            else calleeIndex.resolveMember(scalaName).toOption.flatMap(_.tpe)
+          }
         }
       // the literal's EMITTED spelling decides its Scala type: `2` is an Int, `2.5` a Double
       case "NumericLiteral" | "FirstLiteralToken" =>
@@ -116,16 +120,24 @@ abstract private[dedicated] class BodyScope(
             val method = prop.children.last.text.getOrElse("")
             method match
               case "toFixed" | "toString" | "substring" | "trim" | "toLowerCase" | "toUpperCase" | "replace" | "replaceAll" | "join" | "split" => Some("String")
-              case _ if obj.kind == "Identifier" && obj.text.contains("Math")                                                                  =>
+              // a copy of the receiver's own collection or string
+              case "concat" | "slice" | "filter" | "reverse" if exprType(obj).exists(t => t == "String" || extractElementType(t).isDefined) => exprType(obj)
+              case _ if obj.kind == "Identifier" && obj.text.contains("Math")                                                               =>
                 mathResultType(method, node.children.drop(1).map(exprType))
               case _ =>
                 // Look up the oracle for the callee's return type
                 if obj.kind == "Identifier" then
                   val oName = snakeToCamel(obj.text.getOrElse(""))
                   val cap   = if oName.nonEmpty then oName.take(1).toUpperCase + oName.drop(1) else ""
-                  oracle.get(cap, snakeToCamel(method)).orElse(oracle.get(oName, snakeToCamel(method))).map(_.returnType)
-                else if obj.kind == "ThisKeyword" && memberIndex.knowsType(nodeScalaType) then oracle.get(nodeScalaType, snakeToCamel(method)).map(_.returnType)
-                else None
+                  oracle
+                    .get(cap, snakeToCamel(method))
+                    .orElse(oracle.get(oName, snakeToCamel(method)))
+                    .map(_.returnType)
+                    // a method of a value whose class the reference declares, by that class's own declaration
+                    .orElse(exprType(obj).flatMap(t => memberIndex.methodResult(baseName(t), snakeToCamel(method))))
+                else if obj.kind == "ThisKeyword" && memberIndex.knowsType(nodeScalaType) then
+                  oracle.get(nodeScalaType, snakeToCamel(method)).map(_.returnType).orElse(memberIndex.methodResult(nodeScalaType, snakeToCamel(method)))
+                else exprType(obj).flatMap(t => memberIndex.methodResult(baseName(t), snakeToCamel(method)))
           case Some(id) if id.kind == "Identifier" =>
             val rawName = id.text.getOrElse("")
             val name    = snakeToCamel(rawName)
@@ -182,7 +194,18 @@ abstract private[dedicated] class BodyScope(
         val owner =
           if node.children.head.kind == "ThisKeyword" then Some(nodeScalaType)
           else exprType(node.children.head).map(_.takeWhile(c => c != '[' && c != ' '))
-        owner.flatMap(ctorSchema.get).flatMap(_.find(p => p.name == field || p.name == snakeToCamel(field)).map(_.tpe))
+        val viaInstance = owner.flatMap { o =>
+          ctorSchema
+            .get(o)
+            .flatMap(_.find(p => p.name == field || p.name == snakeToCamel(field)).map(_.tpe))
+            .orElse(memberIndex.memberType(o, field))
+            .orElse(memberIndex.memberType(o, snakeToCamel(field)))
+        }
+        // `Obj.f` where `Obj` is an object the reference declares
+        def viaObject = node.children.head.text.filter(_ => node.children.head.kind == "Identifier").flatMap { o =>
+          calleeIndex.declared(o, field).orElse(calleeIndex.declared(o, snakeToCamel(field))).flatMap(_.tpe)
+        }
+        viaInstance.orElse(viaObject)
       case _ => None
 
   /** The JS truthiness test for a value of the given Scala type. Returns a function that takes the translated operand and produces the Scala boolean expression.
@@ -220,9 +243,9 @@ abstract private[dedicated] class BodyScope(
     val bracketIdx = tpe.indexOf('[')
     if bracketIdx < 0 then None
     else
-      val prefix = tpe.substring(0, bracketIdx)
-      if Set("Array", "ArrayBuffer", "List", "Seq", "IndexedSeq", "Vector").contains(prefix) ||
-        tpe.startsWith("scala.collection.mutable.ArrayBuffer")
+      // `mutable.ArrayBuffer[T]` and `scala.collection.mutable.ArrayBuffer[T]` name the same collection
+      val prefix = tpe.substring(0, bracketIdx).split('.').last
+      if Set("Array", "ArrayBuffer", "List", "Seq", "IndexedSeq", "Vector").contains(prefix) && !tpe.contains("|")
       then Some(tpe.substring(bracketIdx + 1, tpe.lastIndexOf(']')))
       else None
 
@@ -280,11 +303,13 @@ abstract private[dedicated] class BodyScope(
     * argument-type-mismatch.
     */
   protected def checkTypeCompatibility(have: String, want: String): Unit =
-    val haveBase = have.takeWhile(c => c != '[' && c != ' ')
-    val wantBase = want.takeWhile(c => c != '[' && c != ' ')
+    val haveBase = baseName(have)
+    val wantBase = baseName(want)
     if wantBase == "Any" || wantBase == "AnyRef" || haveBase == "Any" ||
       haveBase == "Nothing" || wantBase == "Nothing" || haveBase == "Null"
     then ()
+    // a value that may be absent where the slot requires one: JS read it after a guard Scala does not see
+    else if isOptionLike(have) && !isOptionLike(want) && !want.contains("| Null") then refuse("optional-at-required-slot")
     else if haveBase == wantBase then
       // Same container: compare element types when both are parameterized
       val haveElem = extractElementType(have)
@@ -301,3 +326,70 @@ abstract private[dedicated] class BodyScope(
     else if isSpecificClassType(have) && isSpecificClassType(want) then
       // Two specific class types with different base names: refuse
       refuse(s"argument-type-mismatch:$haveBase->$wantBase")
+
+  /** Renders an expression; the renderer supplies it, the text conversions below call it. */
+  def translateExpr(node: RastNode): String
+
+  /** The arguments a JS call leaves out, as Scala must still pass them: a parameter with a default is skipped, an optional one is passed absent by name (JS passes `undefined`), and any other missing
+    * one leaves the call untranslatable (`None`).
+    */
+  protected def omittedArgs(s: ReferenceSignatures.MethodSig, passed: Int): Option[List[String]] =
+    val missing = s.params.drop(passed)
+    if missing.exists(p => !p.hasDefault && !isOptionLike(p.tpe)) then None
+    else
+      Some(
+        missing.filter(p => !p.hasDefault).map { p =>
+          val name = if scalaKeywords.contains(p.name) then s"`${p.name}`" else p.name
+          s"$name = ${if isNullableType(p.tpe) then "Nullable.Null" else "None"}"
+        }
+      )
+
+  /** A value converted to text as JS's `+ ""` and template substitution do. Scala's `toString` agrees for strings, integers, booleans and a class's own `toString`; a Double prints `2.0` where JS
+    * prints `2`, and an array, a map or a value of unknown type prints differently too.
+    */
+  protected def stringified(n: RastNode): String =
+    val raw = translateExpr(n)
+    // `.toString` binds tighter than any operator the operand may contain
+    val text = if raw.contains(' ') && !(raw.startsWith("(") && raw.endsWith(")")) then s"($raw)" else raw
+    exprType(n) match
+      case Some("String")                                                     => text
+      case Some("Int" | "Long" | "Short" | "Byte" | "Boolean" | "Char")       => s"$text.toString"
+      case Some(t) if isSpecificClassType(t) && extractElementType(t).isEmpty => s"$text.toString"
+      case Some("Double" | "Float")                                           =>
+        refuse("number-to-string")
+        s"$text.toString"
+      case _ =>
+        refuse("value-to-string")
+        s"$text.toString"
+
+  protected def translateTemplateExpr(node: RastNode): String =
+    // Emit as string concatenation ("a " + expr + " b") rather than an
+    // s-string. Concatenation avoids nested quotes from expressions like
+    // toFixed, and the output does not contain "${" which pattern guards
+    // in the consumer would catch.
+    val parts = mutable.ListBuffer.empty[String]
+    for c <- node.children do
+      c.kind match
+        case "TemplateHead" | "TemplateMiddle" | "TemplateTail" =>
+          c.value match
+            case Some(RastValue.Str(s)) if s.nonEmpty =>
+              parts += "\"" + escapeString(s) + "\""
+            case _ => ()
+        case "NoSubstitutionTemplateLiteral" =>
+          c.value match
+            case Some(RastValue.Str(s)) =>
+              parts += "\"" + escapeString(s) + "\""
+            case _ => ()
+        // `${e}text`: the substituted expression, then the literal text up to the next one
+        case "TemplateSpan" if c.children.nonEmpty =>
+          parts += stringified(c.children.head)
+          c.children.drop(1).foreach { lit =>
+            lit.value match
+              case Some(RastValue.Str(s)) if s.nonEmpty => parts += "\"" + escapeString(s) + "\""
+              case _                                    => ()
+          }
+        case _ =>
+          parts += stringified(c)
+    if parts.isEmpty then "\"\""
+    else if parts.length == 1 then parts.head
+    else parts.mkString(" + ")

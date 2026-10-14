@@ -27,7 +27,7 @@ final case class JsConventions(
   /** The Scala class a JS class name spells; any other name unchanged. */
   def scalaClassName(js: String): String = classPrefix match
     case Some((jsPrefix, scalaPrefix)) if js.startsWith(jsPrefix) => scalaPrefix + js.drop(jsPrefix.length)
-    case _                                                     => js
+    case _                                                        => js
 
   /** The JS field naming an object's class, when the library has one. */
   def tagField: Option[String] = typeTag.map(_._1)

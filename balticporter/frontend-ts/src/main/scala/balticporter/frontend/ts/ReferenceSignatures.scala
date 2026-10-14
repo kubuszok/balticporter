@@ -9,7 +9,7 @@ import scala.collection.mutable
 object ReferenceSignatures:
 
   /** A method parameter with its name and type annotation. */
-  final case class ParamSig(name: String, tpe: String)
+  final case class ParamSig(name: String, tpe: String, hasDefault: Boolean = false)
 
   /** A complete method signature extracted from a reference file. */
   final case class MethodSig(
@@ -56,7 +56,8 @@ object ReferenceSignatures:
     member:    String,
     file:      String,
     isPrivate: Boolean,
-    kind:      ReferenceDeclarations.Kind = ReferenceDeclarations.Kind.Def
+    kind:      ReferenceDeclarations.Kind = ReferenceDeclarations.Kind.Def,
+    tpe:       Option[String] = None
   ):
     def qualified: String = s"$owner.$member"
 
@@ -113,14 +114,29 @@ object ReferenceSignatures:
     def of(file: String, declarations: List[ReferenceDeclarations.Declaration]): CalleeIndex =
       val reachable = declarations.filter(d => d.owner.nonEmpty && d.ownerIsObject)
       val objects   = declarations.collect { case d if d.kind == ReferenceDeclarations.Kind.Object && d.ownerIsObject => if d.owner.isEmpty then d.name else s"${d.owner}.${d.name}" }
-      CalleeIndex(reachable.map(d => MemberRef(d.owner, d.name, file, d.isPrivate, d.kind)), objects.toSet)
+      CalleeIndex(reachable.map(d => MemberRef(d.owner, d.name, file, d.isPrivate, d.kind, d.tpe)), objects.toSet)
 
   /** Index of class/object member names, built from the reference tree. Used to validate property access on typed parameters.
     */
   final case class MemberIndex(
-    byType: Map[String, Set[String]],
-    vars:   Map[String, Set[String]] = Map.empty
+    byType:  Map[String, Set[String]],
+    vars:    Map[String, Set[String]] = Map.empty,
+    types:   Map[String, Map[String, String]] = Map.empty,
+    arity:   Map[String, Int] = Map.empty,
+    results: Map[String, Map[String, String]] = Map.empty
   ):
+    /** The declared result type of a method the class declares exactly once under that name (an overloaded name answers nothing). */
+    def methodResult(typeName: String, method: String): Option[String] =
+      results.get(typeName).flatMap(_.get(method))
+
+    /** A class name as a runtime type test spells it: one wildcard per type parameter the reference declares. */
+    def testable(typeName: String): String =
+      arity.get(typeName).filter(_ > 0).fold(typeName)(n => List.fill(n)("?").mkString(s"$typeName[", ", ", "]"))
+
+    /** The declared type of a value-like member (a field, a constructor parameter, a parameterless def), when the reference spells one. */
+    def memberType(typeName: String, memberName: String): Option[String] =
+      types.get(typeName).flatMap(_.get(memberName))
+
     /** True when the given type declares the given member name. */
     def hasMember(typeName: String, memberName: String): Boolean =
       byType.get(typeName).exists(_.contains(memberName))
@@ -164,6 +180,9 @@ object ReferenceSignatures:
     val unparsed    = mutable.ListBuffer.empty[String]
     val members     = mutable.Map.empty[String, mutable.Set[String]]
     val vars        = mutable.Map.empty[String, mutable.Set[String]]
+    val types       = mutable.Map.empty[String, mutable.Map[String, String]]
+    val arity       = mutable.Map.empty[String, Int]
+    val results     = mutable.Map.empty[String, mutable.Map[String, List[String]]]
     val ctors       = mutable.Map.empty[String, List[CtorParam]]
     val enumVals    = mutable.Map.empty[(String, String), String]
 
@@ -171,10 +190,15 @@ object ReferenceSignatures:
       ReferenceDeclarations.read(objectName, source) match
         case Right(decls) =>
           calleeParts += CalleeIndex.of(objectName, decls)
+          decls.filter(_.typeParams > 0).foreach(d => arity(d.name) = d.typeParams)
           // A class or trait member is reached through an instance (`this.x`, `p.x`): indexed under the template's simple name.
           for d <- decls if d.owner.nonEmpty && !d.ownerIsObject && d.kind != ReferenceDeclarations.Kind.Constructor do
             members.getOrElseUpdate(d.owner.split('.').last, mutable.Set.empty) += d.name
             if d.kind == ReferenceDeclarations.Kind.Var then vars.getOrElseUpdate(d.owner.split('.').last, mutable.Set.empty) += d.name
+            d.tpe.foreach(t => types.getOrElseUpdate(d.owner.split('.').last, mutable.Map.empty)(d.name) = t)
+            if d.isMethod then
+              val byName = results.getOrElseUpdate(d.owner.split('.').last, mutable.Map.empty)
+              byName(d.name) = byName.getOrElse(d.name, Nil) :+ d.result.getOrElse("")
         case Left(error) => unparsed += error
 
       // Collect class constructors by joining multi-line declarations
@@ -185,6 +209,7 @@ object ReferenceSignatures:
           val memberSet = members.getOrElseUpdate(className, mutable.Set.empty)
           params.foreach(p => memberSet += p.name)
           params.filter(_.isVar).foreach(p => vars.getOrElseUpdate(className, mutable.Set.empty) += p.name)
+          params.foreach(p => types.getOrElseUpdate(className, mutable.Map.empty)(p.name) = p.tpe)
         }
 
       // Collect enum definitions and their members
@@ -192,7 +217,13 @@ object ReferenceSignatures:
 
     (
       CalleeIndex(calleeParts.toList.flatMap(_.members), calleeParts.toList.flatMap(_.objects).toSet, unparsed.toList),
-      MemberIndex(members.map { case (k, v) => k -> v.toSet }.toMap, vars.map { case (k, v) => k -> v.toSet }.toMap),
+      MemberIndex(
+        members.map { case (k, v) => k -> v.toSet }.toMap,
+        vars.map { case (k, v) => k -> v.toSet }.toMap,
+        types.map { case (k, v) => k -> v.toMap }.toMap,
+        arity.toMap,
+        results.map { case (k, v) => k -> v.collect { case (m, List(r)) if r.nonEmpty => m -> r }.toMap }.toMap
+      ),
       ConstructorSchema(ctors.toMap),
       EnumIndex(enumVals.toMap)
     )
@@ -409,8 +440,9 @@ object ReferenceSignatures:
       else trimmed.indexOf(':')
     if colonIdx < 0 then return None
     val name = trimmed.substring(0, colonIdx).trim
-    val tpe  = stripDefault(trimmed.substring(colonIdx + 1).trim)
-    if name.nonEmpty && tpe.nonEmpty then Some(ParamSig(cleanParamName(name), tpe))
+    val rest = trimmed.substring(colonIdx + 1).trim
+    val tpe  = stripDefault(rest)
+    if name.nonEmpty && tpe.nonEmpty then Some(ParamSig(cleanParamName(name), tpe, hasDefault = tpe != rest))
     else None
 
   private def stripDefault(s: String): String =

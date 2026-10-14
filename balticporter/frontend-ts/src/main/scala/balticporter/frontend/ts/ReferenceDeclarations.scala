@@ -23,7 +23,10 @@ object ReferenceDeclarations:
     kind:          Kind,
     isPrivate:     Boolean,
     line:          Int,
-    body:          Option[BodySpan] = None
+    body:          Option[BodySpan] = None,
+    tpe:           Option[String] = None,
+    typeParams:    Int = 0,
+    result:        Option[String] = None
   ):
     /** A member a reference skeleton emits as a method: a def, abstract or concrete, or a secondary constructor. */
     def isMethod: Boolean = kind == Kind.Def || kind == Kind.AbstractDef || kind == Kind.Constructor
@@ -44,8 +47,11 @@ object ReferenceDeclarations:
 
         def child(owner: String, name: String): String = if owner.isEmpty then name else s"$owner.$name"
 
-        def add(owner: String, isObj: Boolean, name: Name, kind: Kind, mods: List[Mod], body: Option[BodySpan] = None): Unit =
-          out += Declaration(owner, isObj, name.value, kind, closed(mods), name.pos.startLine, body)
+        def add(owner: String, isObj: Boolean, name: Name, kind: Kind, mods: List[Mod], body: Option[BodySpan] = None, tpe: Option[Type] = None, result: Option[Type] = None): Unit =
+          out += Declaration(owner, isObj, name.value, kind, closed(mods), name.pos.startLine, body, tpe.map(_.syntax), result = result.map(_.syntax))
+
+        // the type a value-like member is read at: a val or var's, or a parameterless def's result
+        def valueType(d: Defn.Def): Option[Type] = if d.paramClauseGroups.isEmpty then d.decltpe else None
 
         // The signature's `=` is the last one before the body starts; a default parameter's comes earlier.
         def span(whole: Tree, body: Tree): Option[BodySpan] =
@@ -64,25 +70,34 @@ object ReferenceDeclarations:
             add(owner, isObj, d.name, Kind.Object, d.mods)
             template(d.templ, child(owner, d.name.value), isObj)
           case d: Defn.Class =>
-            add(owner, isObj, d.name, Kind.Class, d.mods)
+            out += Declaration(owner, isObj, d.name.value, Kind.Class, closed(d.mods), d.name.pos.startLine, typeParams = d.tparamClause.values.size)
             template(d.templ, child(owner, d.name.value), false)
           case d: Defn.Trait =>
-            add(owner, isObj, d.name, Kind.Trait, d.mods)
+            out += Declaration(owner, isObj, d.name.value, Kind.Trait, closed(d.mods), d.name.pos.startLine, typeParams = d.tparamClause.values.size)
             template(d.templ, child(owner, d.name.value), false)
           case d: Defn.Enum =>
             add(owner, isObj, d.name, Kind.Enum, d.mods)
             template(d.templ, child(owner, d.name.value), false)
-          case d: Defn.Given          => template(d.templ, child(owner, d.name.value), false)
-          case d: Defn.EnumCase       => add(owner, isObj, d.name, Kind.EnumCase, d.mods)
-          case d: Defn.Def            => add(owner, isObj, d.name, Kind.Def, d.mods, span(d, d.body))
-          case d: Ctor.Secondary      => add(owner, isObj, d.name, Kind.Constructor, d.mods)
-          case d: Decl.Def            => add(owner, isObj, d.name, Kind.AbstractDef, d.mods)
+          case d: Defn.Given     => template(d.templ, child(owner, d.name.value), false)
+          case d: Defn.EnumCase  => add(owner, isObj, d.name, Kind.EnumCase, d.mods)
+          case d: Defn.Def       => add(owner, isObj, d.name, Kind.Def, d.mods, span(d, d.body), valueType(d), d.decltpe)
+          case d: Ctor.Secondary => add(owner, isObj, d.name, Kind.Constructor, d.mods)
+          case d: Decl.Def       =>
+            add(
+              owner,
+              isObj,
+              d.name,
+              Kind.AbstractDef,
+              d.mods,
+              tpe = if d.paramClauseGroups.isEmpty then Some(d.decltpe) else None,
+              result = Some(d.decltpe)
+            )
           case d: Defn.Type           => add(owner, isObj, d.name, Kind.Type, d.mods)
           case d: Decl.Type           => add(owner, isObj, d.name, Kind.Type, d.mods)
-          case d: Defn.Val            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Val, d.mods))
-          case d: Decl.Val            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Val, d.mods))
-          case d: Defn.Var            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Var, d.mods))
-          case d: Decl.Var            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Var, d.mods))
+          case d: Defn.Val            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Val, d.mods, tpe = d.decltpe))
+          case d: Decl.Val            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Val, d.mods, tpe = Some(d.decltpe)))
+          case d: Defn.Var            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Var, d.mods, tpe = d.decltpe))
+          case d: Decl.Var            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Var, d.mods, tpe = Some(d.decltpe)))
           case d: Defn.ExtensionGroup =>
             d.body match
               case Term.Block(stats) => stats.foreach(member(_, owner, false))

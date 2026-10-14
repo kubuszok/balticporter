@@ -180,11 +180,49 @@ private[dedicated] object BodySyntax:
   /** True when the type string denotes a Nullable type, e.g. `Nullable[Foo]` or `Nullable[Bar[Baz]]`.
     */
   def isNullableType(tpe: String): Boolean =
-    tpe.startsWith("Nullable[") || tpe.startsWith("Nullable [")
+    tpe.contains('[') && baseName(tpe) == "Nullable"
 
-  /** A value that may be absent and says so by `isDefined`/`get`: `Nullable[T]` or `Option[T]`. */
+  /** A value that may be absent and says so by `isDefined`/`get`: `Nullable[T]` or `Option[T]`, however qualified. */
   def isOptionLike(tpe: String): Boolean =
-    isNullableType(tpe) || tpe.startsWith("Option[")
+    isNullableType(tpe) || (tpe.contains('[') && baseName(tpe) == "Option")
+
+  /** `Math.<m>` methods `java.lang.Math` declares with the same meaning for doubles (`round` answers a Long there, which `exprType` records). */
+  def javaMathAgrees(m: String): Boolean = Set(
+    "abs",
+    "acos",
+    "asin",
+    "atan",
+    "atan2",
+    "cbrt",
+    "ceil",
+    "cos",
+    "cosh",
+    "exp",
+    "expm1",
+    "floor",
+    "hypot",
+    "log",
+    "log10",
+    "log1p",
+    "max",
+    "min",
+    "pow",
+    "random",
+    "round",
+    "sin",
+    "sinh",
+    "sqrt",
+    "tan",
+    "tanh"
+  )(m)
+
+  /** A type every Scala file can name without an import: the primitives and `String`. */
+  def portableType(t: String): Boolean =
+    Set("Int", "Long", "Double", "Float", "Short", "Byte", "Char", "Boolean", "String", "Any", "AnyRef")(t.trim)
+
+  /** A type's constructor without its package: `lowlevel.Nullable[String]` is `Nullable`. */
+  def baseName(tpe: String): String =
+    tpe.trim.takeWhile(c => c != '[' && c != ' ').split('.').lastOption.getOrElse("")
 
   /** The `T` of an optional type. */
   def optionInner(tpe: String): String =

@@ -299,3 +299,130 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       "Sizes.of(x)"
     )
     assertNoDiff(translate(block(ret(call(prop(ident("x"), "measure")))), params = List("x")).scalaBody.trim, "x.measure()")
+
+  private def regex(text: String): RastNode = RastNode("RegularExpressionLiteral", 0, (0, 0), value = Some(RastValue.Str(text)))
+
+  test("a class-body field's declared type is read, and `== null` on an optional field asks isEmpty"):
+    val src =
+      """package p
+        |final class Parser(x: Int) {
+        |  var next: Nullable[Token] = Nullable.Null
+        |}
+        |""".stripMargin
+    val (ci, mi, cs, _) = ReferenceSignatures.buildIndices(List("Parser" -> src))
+    val r               = translate(
+      block(ret(bin("EqualsEqualsEqualsToken", prop(thisKw, "next"), RastNode("NullKeyword", 0, (0, 0))))),
+      className = "Parser",
+      calleeIndex = ci,
+      memberIndex = mi,
+      ctorSchema = cs,
+      returnType = Some("Boolean")
+    )
+    accepts(r)
+    assertNoDiff(r.scalaBody.trim, "this.next.isEmpty")
+    refuses(
+      translate(
+        block(ret(prop(thisKw, "next"))),
+        className = "Parser",
+        calleeIndex = ci,
+        memberIndex = mi,
+        ctorSchema = cs,
+        returnType = Some("Token")
+      ),
+      "optional-at-required-slot"
+    )
+
+  test(
+    "String.replace replaces the first occurrence of a literal, every match of a /g regex, and refuses a replacement JS and Java read differently"
+  ):
+    def rep(pat: RastNode, r: String) = translate(block(ret(call(prop(ident("s"), "replace"), pat, str(r)))), params = List("s"), paramTypes = Map("s" -> "String"))
+    assertNoDiff(rep(str("a"), "b").scalaBody.trim, "s.replaceFirst(java.util.regex.Pattern.quote(\"a\"), \"b\")")
+    assertNoDiff(rep(regex("/x+/g"), "-$1").scalaBody.trim, "\"x+\".r.replaceAllIn(s, \"-$1\")")
+    assertNoDiff(rep(regex("/x/i"), "y").scalaBody.trim, "\"(?i)x\".r.replaceFirstIn(s, \"y\")")
+    refuses(rep(regex("/x/g"), "$&"), "replace-replacement-pattern")
+    refuses(
+      translate(
+        block(ret(call(prop(ident("s"), "replace"), ident("re"), str("y")))),
+        params = List("s", "re"),
+        paramTypes = Map("s" -> "String", "re" -> "Regex")
+      ),
+      "replace-pattern-unknown"
+    )
+
+  test("String.split on a literal splits on its text and keeps trailing empty pieces"):
+    val r = translate(block(ret(call(prop(ident("s"), "split"), str(".")))), params = List("s"), paramTypes = Map("s" -> "String"))
+    assertNoDiff(r.scalaBody.trim, "s.split(java.util.regex.Pattern.quote(\".\"), -1)")
+
+  test("a template substitutes each span; a Double or a value of unknown type is refused, since JS prints it differently"):
+    def tmpl(tpe: String) =
+      val t = node(
+        "TemplateExpression",
+        RastNode("TemplateHead", 0, (0, 0), value = Some(RastValue.Str("n="))),
+        node("TemplateSpan", ident("n"), RastNode("TemplateTail", 0, (0, 0), value = Some(RastValue.Str("!"))))
+      )
+      translate(block(ret(t)), params = List("n"), paramTypes = Map("n" -> tpe))
+    assertNoDiff(tmpl("Int").scalaBody.trim, "\"n=\" + n.toString + \"!\"")
+    refuses(tmpl("Double"), "number-to-string")
+
+  test("a JS built-in's static with no Scala namesake is refused; java.lang.Math is used only where it agrees"):
+    refuses(translate(block(ret(call(prop(ident("Object"), "getPrototypeOf"), ident("o")))), params = List("o")), "js-builtin")
+    refuses(translate(block(ret(call(prop(ident("Math"), "imul"), num(1), num(2))))), "js-builtin")
+    accepts(translate(block(ret(call(prop(ident("Math"), "floor"), ident("d")))), params = List("d"), paramTypes = Map("d" -> "Double")))
+
+  test("`{}` and `[]` where no slot declares their type are refused"):
+    refuses(translate(block(expr(call(ident("f"), node("ObjectLiteralExpression")))), params = List("f")), "js-map-construction")
+    refuses(translate(block(expr(call(ident("f"), node("ArrayLiteralExpression")))), params = List("f")), "untyped-empty-array")
+
+  test("a type test of a generic class carries one wildcard per type parameter"):
+    val (_, mi, _, _) = ReferenceSignatures.buildIndices(List("T" -> "package p\nclass Box[A, B](a: A)\n"))
+    val r             = translate(
+      block(ret(node("BinaryExpression", ident("x"), ident("Box")).copy(operator = Some("InstanceOfKeyword")))),
+      params = List("x"),
+      memberIndex = mi
+    )
+    assertNoDiff(r.scalaBody.trim, "x.isInstanceOf[Box[?, ?]]")
+
+  test("a file's functions carry the class declaring each method"):
+    val method = node("MethodDeclaration", ident("m"), block())
+    val cls    = node("ClassDeclaration", ident("Shape"), method)
+    val free   = node("FunctionDeclaration", ident("f"), block())
+    val fns    = RastFunctions.of(RastFile(1, "x.ts", "", List(cls, free), Map.empty, Map.empty))
+    assertEquals(fns.map(f => (f.owner, f.name)), List(("Shape", "m"), (RastFunctions.NoClass, "f")))
+
+  test(
+    "an argument JS leaves out is skipped where the parameter has a default, passed absent where it is optional, and refused otherwise"
+  ):
+    val sig = ReferenceSignatures.MethodSig(
+      "f",
+      List(
+        ReferenceSignatures.ParamSig("a", "Int"),
+        ReferenceSignatures.ParamSig("b", "Int", hasDefault = true),
+        ReferenceSignatures.ParamSig("c", "Option[Int]")
+      ),
+      "Int"
+    )
+    val oracle = ReferenceSignatures.TypeOracle.fromEntries(List("Obj" -> sig))
+    val r      = translate(block(ret(call(prop(ident("Obj"), "f"), num(1)))), oracle = oracle, calleeIndex = objectIndex("Obj", "f"))
+    accepts(r)
+    assertNoDiff(r.scalaBody.trim, "Obj.f(1, c = None)")
+    val required = ReferenceSignatures.TypeOracle.fromEntries(List("Obj" -> sig.copy(params = sig.params.take(1) :+ ReferenceSignatures.ParamSig("d", "Int"))))
+    refuses(
+      translate(block(ret(call(prop(ident("Obj"), "f"), num(1)))), oracle = required, calleeIndex = objectIndex("Obj", "f")),
+      "callee-arity-mismatch"
+    )
+
+  test("on a class the reference declares, a method keeps its own name: no JS collection rename applies"):
+    val mi = ReferenceSignatures.MemberIndex(Map("Namespace" -> Set("has")))
+    assertNoDiff(
+      translate(block(ret(call(prop(ident("ns"), "has"), str("x")))), params = List("ns"), paramTypes = Map("ns" -> "Namespace"), memberIndex = mi).scalaBody.trim,
+      "ns.has(\"x\")"
+    )
+
+  test("both branches of a conditional take the slot's type"):
+    val r = translate(
+      block(ret(node("ConditionalExpression", ident("b"), num(1), ident("undefined")))),
+      params = List("b"),
+      paramTypes = Map("b" -> "Boolean"),
+      returnType = Some("Nullable[Int]")
+    )
+    assertNoDiff(r.scalaBody.trim, "(if (b) Nullable(1) else Nullable.Null)")

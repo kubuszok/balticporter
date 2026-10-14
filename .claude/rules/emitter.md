@@ -345,3 +345,16 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   text assigns stays a `var` (`BeanCollapse.writtenSymbols`), or the emitter's never-assigned `val`
   idiom read java's own writes, re-spelled, as absent (screenmanager `currentProcessors`, 2 E052).
   Conservative by construction: a local of the same name also counts. Kind (a).
+
+## Non-Java body translator
+
+- (a) The non-Java body translator (frontend-ts) must refuse a value it cannot TYPE rather than render
+  it: an untyped `[]`/`{}`, a Double or an unknown value in string concatenation (JS prints `2`,
+  Scala `2.0`), `str.replace` with a non-literal pattern (JS replaces the FIRST occurrence of a
+  string), and a JS built-in static with no Scala namesake each compiled before they were refused,
+  and with them KaTeX went 3 -> 27 translated bodies with no test failing.
+- (a) A type a callee's signature names may be spelled through the CALLEE file's imports: the body
+  translator writes out only primitives and `String` as type arguments and ascriptions, and leaves
+  every other type to inference from the slot (`HtmlDomNode` not found in KaTeX's BuildTree).
+- (b) One library's JS naming conventions (class prefix, type-tag field, node factories, methods
+  moved into helpers) are a `JsConventions` value the consumer passes; the empty value reads plain JS.

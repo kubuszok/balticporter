@@ -617,7 +617,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       RastNode("TemplateTail", 0, (0, 0), value = Some(RastValue.Str(" world")))
     )
     val body   = block(ret(tmpl))
-    val result = translate(body, params = List("name"))
+    val result = translate(body, params = List("name"), paramTypes = Map("name" -> "Int"))
     assert(result.scalaBody.contains("\"hello \""), s"should emit text as string literal: ${result.scalaBody}")
     assert(result.scalaBody.contains(".toString"), s"should call toString on interpolated expr: ${result.scalaBody}")
     assert(result.scalaBody.contains("\" world\""), s"should emit tail text: ${result.scalaBody}")
