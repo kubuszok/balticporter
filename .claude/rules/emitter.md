@@ -3,6 +3,8 @@ paths:
   - "balticporter/engine/**/emit/**"
   - "balticporter/engine/**/tir/**"
   - "balticporter/frontend-spoon/**"
+  - "balticporter/frontend-ts/**"
+  - "balticporter/frontend-dart/**"
 ---
 
 # Emitter, TIR and frontend — renames, ownership, provenance, notes, trivia, debugging
