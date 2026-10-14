@@ -139,6 +139,20 @@ object BeanCollapse:
           case _                            => ()
         t
     p.units.foreach(u => StandardTraversal.mapStat(ph, u))
+    // a body a port SUBSTITUTED is text the tree cannot see into: a field of the class it is spliced into
+    // that the text assigns is written all the same (java's own writes, re-spelled), so it stays a `var`
+    p.units.foreach { u =>
+      StandardTraversal.allClassDefs(u).foreach { cd =>
+        val raws = cd.body.collect { case d: Tree.DefDef => d.rhs.toList }.flatten.collect { case o: Tree.Opaque => o.raw }
+        if raws.nonEmpty then
+          cd.body.collect { case v: Tree.ValDef => v.symbol }.foreach { s =>
+            p.symbolOf(s).foreach { sym =>
+              val write = s"(?<![\\w$$.])(?:this\\.)?${java.util.regex.Pattern.quote(sym.name)}\\s*(?:[-+*/%&|^]|<<|>>>?)?=(?!=)".r
+              if raws.exists(r => write.findFirstIn(r).isDefined) then acc += s
+            }
+          }
+      }
+    }
     acc.toSet
 
   /** the field a TRIVIAL getter reads — `return this.f`, and nothing else. `None` for every other body, which is a refusal and never a widening. Read through [[soleStatement]]: a method body is a

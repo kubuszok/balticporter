@@ -337,3 +337,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   (`<T> T[] Arrays.copyOf(T[], int)`) takes the argument's own array type: its erasure reads
   `Object[]`, and the covariance cast to `Array[Object]` bound `T` to `Object` and broke the result's
   `String[]` slot (gdx-tools, 2 errors). A real `Object[]` formal still takes the cast. Kind (a).
+- A body a port SUBSTITUTES is text the write set cannot see into: a private field of its class the
+  text assigns stays a `var` (`BeanCollapse.writtenSymbols`), or the emitter's never-assigned `val`
+  idiom read java's own writes, re-spelled, as absent (screenmanager `currentProcessors`, 2 E052).
+  Conservative by construction: a local of the same name also counts. Kind (a).

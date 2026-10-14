@@ -132,3 +132,23 @@ class MethodBodyTransformSpec extends munit.FunSuite:
     assert(clue(out).contains("def over(a: scala.Int)"))
     assert(!out.contains("a.length()"))
   }
+
+  test("a private field the substituted body assigns stays a var — the text is java's own write, re-spelled") {
+    val counter =
+      """package demo;
+        |class Counter {
+        |  private int[] seen = new int[0];
+        |  private int[] kept = new int[0];
+        |  public void reset(int n) { seen = new int[n]; }
+        |  public int size() { return seen.length + kept.length; }
+        |}
+        |""".stripMargin
+    val after = Pipeline.run(
+      SpoonTir.fromSource(counter),
+      List(new MethodBodyTransform(Map("demo.Counter#reset" -> "{ this.seen = new scala.Array[scala.Int](n + 1) }")))
+    )
+    val out = new TirEmitter(after).emit
+    assert(clue(out).contains("private var seen"))
+    // a field neither java nor the substituted text assigns keeps the idiom
+    assert(out.contains("private val kept"))
+  }
