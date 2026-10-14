@@ -13,8 +13,12 @@ object BodiesReport:
   val SummaryFileName = "bodies-summary.txt"
   val Header          = "file\tmember\toccurrence\tsource\twhy"
 
-  /** `occurrence` is the member's index among the same-named members the skeleton reader offers in that file, `-` for a member it does not offer. */
-  final case class Row(file: String, member: String, occurrence: String, source: String, why: String):
+  val TranslationsFileName = "bodies-translations.txt"
+
+  /** `occurrence` is the member's index among the same-named members the skeleton reader offers in that file, `-` for a member it does not offer. `translation` is the translated body, emitted or
+    * declined; it is written to its own file, never to the table.
+    */
+  final case class Row(file: String, member: String, occurrence: String, source: String, why: String, translation: Option[String] = None):
     def tsv: String = List(file, member, occurrence, source, why).map(clean).mkString("\t")
 
   /** `translated + sum(byWhy) == total`; `byWhy` is keyed by the part of `why` before its first `:`. */
@@ -32,8 +36,12 @@ object BodiesReport:
         if e.source == ParityDerive.Source.Translated then ""
         else if e.why.isEmpty then ParityDerive.Why.Unclassified
         else e.why
-      Row(file.replace('\\', '/'), e.methodName, if e.offered then e.occurrence.toString else "-", e.source, why)
+      Row(file.replace('\\', '/'), e.methodName, if e.offered then e.occurrence.toString else "-", e.source, why, e.translation)
     }
+
+  /** Every translation, headed by its row, in table order: what was emitted, and what each guard in `why` refused. */
+  def formatTranslations(rows: List[Row]): String =
+    rows.flatMap(r => r.translation.map(text => s"== ${r.file}#${r.member}[${r.occurrence}] ${r.source} ${r.why}\n${text.stripLineEnd}\n")).mkString("\n")
 
   /** Every way the rows of one file fail to account for the methods its source DECLARES, read by the parser rather than by the skeleton reader that produced them: a method with no row, a method with
     * more than one, a row on a line that declares no method. Empty when every emitted member has exactly one row; a non-empty answer is a bug in the reader, never a property of the file.
@@ -69,11 +77,12 @@ object BodiesReport:
   def format(rows: List[Row]): String =
     (Header :: rows.map(_.tsv)).mkString("", "\n", "\n")
 
-  /** Writes `bodies.tsv` and the one-line `bodies-summary.txt` into `reportDir`, creating it. */
+  /** Writes `bodies.tsv`, the one-line `bodies-summary.txt` and `bodies-translations.txt` into `reportDir`, creating it. */
   def write(reportDir: Path, rows: List[Row]): Summary =
     val summary = summarize(rows)
     Files.createDirectories(reportDir)
     Files.write(reportDir.resolve(FileName), format(rows).getBytes(StandardCharsets.UTF_8))
+    Files.write(reportDir.resolve(TranslationsFileName), formatTranslations(rows).getBytes(StandardCharsets.UTF_8))
     Files.write(reportDir.resolve(SummaryFileName), (summary.line + "\n").getBytes(StandardCharsets.UTF_8))
     summary
 

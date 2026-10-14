@@ -41,9 +41,10 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     ctorSchema:    ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
     enumIndex:     ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty,
     memberRenames: Map[String, String] = Map.empty,
-    oracle:        ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty
+    oracle:        ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
+    params:        List[String] = Nil
   ): DefmethodBodyTranslator.TranslationResult =
-    val entry = DefmethodEntry("_free_", "test", Nil, body)
+    val entry = DefmethodEntry("_free_", "test", params, body)
     DefmethodBodyTranslator.translateBody(
       entry,
       Nil,
@@ -218,7 +219,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ),
       ret(num(0))
     )
-    val result = translate(body)
+    val result = translate(body, params = List("cond", "done", "work"), paramTypes = Map("cond" -> "Boolean", "done" -> "Boolean", "work" -> "Int"))
     assert(result.scalaBody.contains("(brk$"), s"break boundary must be named: ${result.scalaBody}")
     assert(result.scalaBody.contains("(using brk$"), s"break must target named label: ${result.scalaBody}")
     assert(result.isComplete, s"unlabelled break should not refuse: ${result.refusalReasons}")
@@ -235,7 +236,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ),
       ret(num(0))
     )
-    val result = translate(body)
+    val result = translate(body, params = List("cond", "skip", "work"), paramTypes = Map("cond" -> "Boolean", "skip" -> "Boolean", "work" -> "Int"))
     assert(result.scalaBody.contains("(cnt$"), s"continue boundary must be named: ${result.scalaBody}")
     assert(result.scalaBody.contains("(using cnt$"), s"continue must target named label: ${result.scalaBody}")
     assert(result.isComplete, s"unlabelled continue should not refuse: ${result.refusalReasons}")
@@ -253,7 +254,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ),
       ret(num(0))
     )
-    val result = translate(body)
+    val result = translate(body, params = List("items", "done", "process"), paramTypes = Map("items" -> "Vector[Int]", "done" -> "Boolean", "process" -> "Int"))
     assert(result.scalaBody.contains("(brk$"), s"break boundary named: ${result.scalaBody}")
     assert(result.scalaBody.contains("(using brk$"), s"break targets named label: ${result.scalaBody}")
     assert(result.isComplete, s"unlabelled break should not refuse: ${result.refusalReasons}")
@@ -344,7 +345,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val body = block(
       node("IfStatement", ident("cond"), block(ret(num(1))), block(ret(num(2))))
     )
-    val result = translate(body, returnType = Some("Int"))
+    val result = translate(body, returnType = Some("Int"), params = List("cond"), paramTypes = Map("cond" -> "Boolean"))
     assert(!result.scalaBody.contains("(using )"), s"label must not be empty: ${result.scalaBody}")
     assert(!result.scalaBody.contains("boundary"), s"both-branch-return if-else needs no boundary: ${result.scalaBody}")
     assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
@@ -395,7 +396,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val body = block(
       ret(binOp("BarBarToken", ident("first"), ident("fallback")))
     )
-    val result = translate(body, paramTypes = Map("first" -> "Nullable[String]"))
+    val result = translate(body, paramTypes = Map("first" -> "Nullable[String]", "fallback" -> "String"), params = List("first", "fallback"))
     assert(result.scalaBody.contains("isDefined"), s"|| on Nullable should check isDefined: ${result.scalaBody}")
     assert(result.scalaBody.contains(".get"), s"|| on Nullable should use .get: ${result.scalaBody}")
     assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
@@ -616,7 +617,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       RastNode("TemplateTail", 0, (0, 0), value = Some(RastValue.Str(" world")))
     )
     val body   = block(ret(tmpl))
-    val result = translate(body)
+    val result = translate(body, params = List("name"))
     assert(result.scalaBody.contains("\"hello \""), s"should emit text as string literal: ${result.scalaBody}")
     assert(result.scalaBody.contains(".toString"), s"should call toString on interpolated expr: ${result.scalaBody}")
     assert(result.scalaBody.contains("\" world\""), s"should emit tail text: ${result.scalaBody}")

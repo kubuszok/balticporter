@@ -118,11 +118,16 @@ object ReferenceSignatures:
   /** Index of class/object member names, built from the reference tree. Used to validate property access on typed parameters.
     */
   final case class MemberIndex(
-    byType: Map[String, Set[String]]
+    byType: Map[String, Set[String]],
+    vars:   Map[String, Set[String]] = Map.empty
   ):
     /** True when the given type declares the given member name. */
     def hasMember(typeName: String, memberName: String): Boolean =
       byType.get(typeName).exists(_.contains(memberName))
+
+    /** True when the given type declares the member as a `var`, so a body may store into it. */
+    def isMutable(typeName: String, memberName: String): Boolean =
+      vars.get(typeName).exists(_.contains(memberName))
 
     /** True when the type is known (appears in the index). */
     def knowsType(typeName: String): Boolean = byType.contains(typeName)
@@ -132,7 +137,7 @@ object ReferenceSignatures:
 
   /** Constructor parameter schema for a class, parsed from the reference tree. Used to construct typed objects from JS object literals.
     */
-  final case class CtorParam(name: String, tpe: String, hasDefault: Boolean)
+  final case class CtorParam(name: String, tpe: String, hasDefault: Boolean, isVar: Boolean = false)
 
   final case class ConstructorSchema(
     byType: Map[String, List[CtorParam]]
@@ -158,13 +163,19 @@ object ReferenceSignatures:
     val calleeParts = mutable.ListBuffer.empty[CalleeIndex]
     val unparsed    = mutable.ListBuffer.empty[String]
     val members     = mutable.Map.empty[String, mutable.Set[String]]
+    val vars        = mutable.Map.empty[String, mutable.Set[String]]
     val ctors       = mutable.Map.empty[String, List[CtorParam]]
     val enumVals    = mutable.Map.empty[(String, String), String]
 
     for (objectName, source) <- sources do
       ReferenceDeclarations.read(objectName, source) match
-        case Right(decls) => calleeParts += CalleeIndex.of(objectName, decls)
-        case Left(error)  => unparsed += error
+        case Right(decls) =>
+          calleeParts += CalleeIndex.of(objectName, decls)
+          // A class or trait member is reached through an instance (`this.x`, `p.x`): indexed under the template's simple name.
+          for d <- decls if d.owner.nonEmpty && !d.ownerIsObject && d.kind != ReferenceDeclarations.Kind.Constructor do
+            members.getOrElseUpdate(d.owner.split('.').last, mutable.Set.empty) += d.name
+            if d.kind == ReferenceDeclarations.Kind.Var then vars.getOrElseUpdate(d.owner.split('.').last, mutable.Set.empty) += d.name
+        case Left(error) => unparsed += error
 
       // Collect class constructors by joining multi-line declarations
       val classLines = joinClassDeclarations(source)
@@ -173,6 +184,7 @@ object ReferenceSignatures:
           ctors(className) = params
           val memberSet = members.getOrElseUpdate(className, mutable.Set.empty)
           params.foreach(p => memberSet += p.name)
+          params.filter(_.isVar).foreach(p => vars.getOrElseUpdate(className, mutable.Set.empty) += p.name)
         }
 
       // Collect enum definitions and their members
@@ -180,7 +192,7 @@ object ReferenceSignatures:
 
     (
       CalleeIndex(calleeParts.toList.flatMap(_.members), calleeParts.toList.flatMap(_.objects).toSet, unparsed.toList),
-      MemberIndex(members.map { case (k, v) => k -> v.toSet }.toMap),
+      MemberIndex(members.map { case (k, v) => k -> v.toSet }.toMap, vars.map { case (k, v) => k -> v.toSet }.toMap),
       ConstructorSchema(ctors.toMap),
       EnumIndex(enumVals.toMap)
     )
@@ -286,6 +298,7 @@ object ReferenceSignatures:
     params.toList
 
   private def parseCtorOneParam(param: String): Option[CtorParam] =
+    val isVar   = param.trim.startsWith("var ")
     val trimmed = param.trim.stripPrefix("var ").stripPrefix("val ").trim
     if trimmed.startsWith("using ") || trimmed.startsWith("implicit ") then return None
     val colonIdx = trimmed.indexOf(':')
@@ -294,7 +307,7 @@ object ReferenceSignatures:
     val rest       = trimmed.substring(colonIdx + 1).trim
     val hasDefault = rest.contains("=")
     val tpe        = stripDefault(rest)
-    if name.nonEmpty && tpe.nonEmpty then Some(CtorParam(cleanParamName(name), tpe, hasDefault))
+    if name.nonEmpty && tpe.nonEmpty then Some(CtorParam(cleanParamName(name), tpe, hasDefault, isVar))
     else None
 
   /** Parse a Scala source file and extract all method signatures from the top-level object.

@@ -288,8 +288,10 @@ object DefmethodBodyTranslator:
       else Set.empty
 
     // The Scala type name for the DEFMETHOD's class (e.g., "AstBinary")
+    // A method of a class the reference declares under the same name has that class as its `this`.
     private val nodeScalaType: String =
       if entry.className.startsWith("AST_") then astVarToScalaName(entry.className)
+      else if memberIndex.knowsType(entry.className) then entry.className
       else "AstNode"
 
     // Names that refer to the current node (this, and the first param in
@@ -336,7 +338,11 @@ object DefmethodBodyTranslator:
               .orElse(paramTypes.get(scalaName))
               .orElse(paramTypes.get(name))
           }
-        case "NumericLiteral" | "FirstLiteralToken" => Some("Double")
+        // the literal's EMITTED spelling decides its Scala type: `2` is an Int, `2.5` a Double
+        case "NumericLiteral" | "FirstLiteralToken" =>
+          node.value match
+            case Some(RastValue.Num(n)) if n == n.toLong && n.abs <= Int.MaxValue => Some("Int")
+            case _                                                                => Some("Double")
         case "StringLiteral" | "FirstTemplateToken" | "NoSubstitutionTemplateLiteral" => Some("String")
         case "TrueKeyword" | "FalseKeyword" | "BooleanLiteral" => Some("Boolean")
         case "NullKeyword" | "UndefinedKeyword" => Some("Null")
@@ -352,12 +358,16 @@ object DefmethodBodyTranslator:
                 case "toFixed" | "toString" | "substring" | "trim" |
                      "toLowerCase" | "toUpperCase" | "replace" | "replaceAll" |
                      "join" | "split" => Some("String")
+                case _ if obj.kind == "Identifier" && obj.text.contains("Math") =>
+                  mathResultType(method, node.children.drop(1).map(exprType))
                 case _ =>
                   // Look up the oracle for the callee's return type
                   if obj.kind == "Identifier" then
                     val oName = snakeToCamel(obj.text.getOrElse(""))
                     val cap   = if oName.nonEmpty then oName.take(1).toUpperCase + oName.drop(1) else ""
                     oracle.get(cap, snakeToCamel(method)).orElse(oracle.get(oName, snakeToCamel(method))).map(_.returnType)
+                  else if obj.kind == "ThisKeyword" && memberIndex.knowsType(nodeScalaType) then
+                    oracle.get(nodeScalaType, snakeToCamel(method)).map(_.returnType)
                   else None
             case Some(id) if id.kind == "Identifier" =>
               val rawName  = id.text.getOrElse("")
@@ -369,23 +379,73 @@ object DefmethodBodyTranslator:
                 case Some(q) if q.contains('.') => lookupCallee(q).map(_.returnType)
                 case _ => calleeIndex.resolveMember(name).toOption.flatMap(signatureOf).map(_.returnType)
             case _ => None
+        // a TS cast or `!` changes nothing at run time: the value keeps the type the body can see
+        case "ParenthesizedExpression" | "AsExpression" | "TypeAssertionExpression" | "NonNullExpression" if node.children.nonEmpty => exprType(node.children.head)
+        case "PrefixUnaryExpression" if node.children.nonEmpty =>
+          node.operator match
+            case Some("ExclamationToken")                => Some("Boolean")
+            case Some("MinusToken") | Some("PlusToken")  => exprType(node.children.head).filter(numericTypes.contains)
+            case _                                       => None
+        case "BinaryExpression" if node.children.size >= 2 =>
+          val (l, r) = (exprType(node.children.head), exprType(node.children.last))
+          node.operator.getOrElse("") match
+            case "EqualsEqualsEqualsToken" | "ExclamationEqualsEqualsToken" | "EqualsEqualsToken" | "ExclamationEqualsToken" | "LessThanToken" | "LessThanEqualsToken" |
+                "GreaterThanToken" | "GreaterThanEqualsToken" | "InstanceOfKeyword" =>
+              Some("Boolean")
+            case "AmpersandAmpersandToken" | "BarBarToken" =>
+              if l.contains("Boolean") && r.contains("Boolean") then Some("Boolean")
+              // `opt || fallback` yields the present value or the fallback, both of the optional's inner type
+              else if node.operator.contains("BarBarToken") && l.exists(isOptionLike) then l.map(optionInner)
+              else None
+            case "PlusToken" if l.contains("String") || r.contains("String") => Some("String")
+            // JS division is always fractional; the emitted division widens an integral left operand
+            case "SlashToken" if l.exists(numericTypes.contains) && r.exists(numericTypes.contains) => Some("Double")
+            // JS bitwise operators always produce a 32-bit integer
+            case "AmpersandToken" | "BarToken" | "CaretToken" | "LessThanLessThanToken" | "GreaterThanGreaterThanToken" => Some("Int")
+            case "PlusToken" | "MinusToken" | "AsteriskToken" | "SlashToken" | "PercentToken" | "AmpersandToken" | "BarToken" | "CaretToken" | "LessThanLessThanToken" |
+                "GreaterThanGreaterThanToken" | "GreaterThanGreaterThanGreaterThanToken" =>
+              (l, r) match
+                case (Some(a), Some(b)) if numericTypes(a) && numericTypes(b) => Some(if a == "Int" && b == "Int" then "Int" else if a == b then a else "Double")
+                case _                                                        => None
+            case _ => None
+        // `new C(…)` of a class the reference declares
+        case "NewExpression" if node.children.nonEmpty =>
+          node.children.head.text.filter(n => ctorSchema.get(n).isDefined || memberIndex.knowsType(n))
+        // `xs[i]` on a collection whose element type is declared
+        case "ElementAccessExpression" if node.children.size >= 2 =>
+          exprType(node.children.head).flatMap(extractElementType)
+        // `xs.length` of a collection or a string
+        case "PropertyAccessExpression" if node.children.size >= 2 && node.children.last.text.contains("length") &&
+            exprType(node.children.head).exists(t => t == "String" || extractElementType(t).isDefined) =>
+          Some("Int")
+        // `p.f` where `p`'s declared type is a class whose constructor declares `f`
+        case "PropertyAccessExpression" if node.children.size >= 2 =>
+          val field = node.children.last.text.getOrElse("")
+          val owner =
+            if node.children.head.kind == "ThisKeyword" then Some(nodeScalaType)
+            else exprType(node.children.head).map(_.takeWhile(c => c != '[' && c != ' '))
+          owner.flatMap(ctorSchema.get).flatMap(_.find(p => p.name == field || p.name == snakeToCamel(field)).map(_.tpe))
         case _ => None
 
     /** The JS truthiness test for a value of the given Scala type.
       * Returns a function that takes the translated operand and produces
       * the Scala boolean expression. */
     private def truthinessTest(tpe: String, operand: String): String =
-      if isNullableType(tpe) then s"$operand.isDefined"
+      if isOptionLike(tpe) then s"$operand.isDefined"
       else if tpe == "String" then s"$operand.nonEmpty"
+      else if tpe == "Double" || tpe == "Float" then
+        // NaN is falsy in JS; the operand is read once.
+        if isSimplePath(operand) then s"($operand != 0 && !$operand.isNaN)"
+        else s"{ val n$$ = $operand; n$$ != 0 && !n$$.isNaN }"
       else if numericTypes.contains(tpe) then s"$operand != 0"
       else if tpe == "Boolean" then operand
       else if tpe == "Null" then "false"
-      else operand // for a known reference type, the value itself is truthy
+      else s"($operand != null)" // any other object, an array included, is truthy unless it is absent
 
     /** The JS truthiness value (the value that a truthy operand yields in
-      * `x && y` or `x || y`). For Nullable[T], this is `x.get`. */
+      * `x && y` or `x || y`). For an optional value, this is `x.get`. */
     private def truthyValue(tpe: String, operand: String): String =
-      if isNullableType(tpe) then s"$operand.get"
+      if isOptionLike(tpe) then s"$operand.get"
       else operand
 
     /** Translate a JS expression used as a condition (if, while, ternary).
@@ -394,6 +454,30 @@ object DefmethodBodyTranslator:
       // For `!x`, PrefixUnaryExpression already handles truthiness
       // For bare identifiers, apply the truthiness test
       node.kind match
+        // In a condition `a && b` / `a || b` is truthy exactly when the truthiness tests combine so; each operand is itself a condition.
+        case "BinaryExpression" if node.children.size >= 2 && node.operator.exists(op => op == "AmpersandAmpersandToken" || op == "BarBarToken") =>
+          val lhs   = node.children.head
+          val rhs   = node.children.last
+          val isAnd = node.operator.contains("AmpersandAmpersandToken")
+          val left  = translateCondition(lhs)
+          // `x && x.f`: inside the right operand an optional `x` is known present
+          val unwrap = if isAnd && lhs.kind == "Identifier" then exprType(lhs).filter(isOptionLike).flatMap(t => lhs.text.map(n => (snakeToCamel(n), t))) else None
+          val right = unwrap match
+            case Some((name, tpe)) if !unwrappedIds.contains(name) =>
+              val saved = localTypes.get(name)
+              unwrappedIds += name
+              localTypes(name) = optionInner(tpe)
+              val r = translateCondition(rhs)
+              unwrappedIds -= name
+              saved.fold(localTypes.remove(name))(t => localTypes.put(name, t))
+              r
+            case _ => translateCondition(rhs)
+          s"($left ${if isAnd then "&&" else "||"} $right)"
+        case "ParenthesizedExpression" if node.children.nonEmpty =>
+          s"(${translateCondition(node.children.head)})"
+        // a number-valued `a & b` tested for truthiness
+        case "BinaryExpression" if exprType(node).exists(_ != "Boolean") =>
+          truthinessTest(exprType(node).get, translateExpr(node))
         case "PrefixUnaryExpression" | "BinaryExpression" | "ConditionalExpression" =>
           translateExpr(node) // these already handle truthiness internally
         case _ =>
@@ -402,7 +486,8 @@ object DefmethodBodyTranslator:
               val operand = translateExpr(node)
               truthinessTest(tpe, operand)
             case None =>
-              // No type info: translate as-is, the operand may already be boolean
+              // No type info: a value whose type nothing declares may be any JS value, and its truthiness test is unknown
+              if Set("Identifier", "PropertyAccessExpression", "ElementAccessExpression", "CallExpression")(node.kind) then refuse("truthiness-unknown-type")
               translateExpr(node)
             case _ => translateExpr(node)
 
@@ -412,6 +497,13 @@ object DefmethodBodyTranslator:
     private def translateExprAt(node: RastNode, expectedType: String): String =
       val baseType = expectedType.takeWhile(c => c != '[' && c != ' ')
       node.kind match
+        // A present value at an optional slot is wrapped: JS stores the value itself, the reference's optional says it is there.
+        case _ if isOptionLike(expectedType) && exprType(node).exists(t => !isOptionLike(t) && t != "Null") =>
+          val inner = translateExprAt(node, optionInner(expectedType))
+          if isNullableType(expectedType) then s"Nullable($inner)" else s"Some($inner)"
+        // A Boolean slot reads the JS value's truthiness, which is what the reference's Boolean records.
+        case "BinaryExpression" | "ParenthesizedExpression" | "Identifier" | "PropertyAccessExpression" | "CallExpression" if expectedType == "Boolean" =>
+          translateCondition(node)
         case "StringLiteral" | "FirstTemplateToken" | "LastTemplateToken" =>
           val str = node.value match
             case Some(RastValue.Str(s)) => s
@@ -436,17 +528,36 @@ object DefmethodBodyTranslator:
                   translateExpr(node)
                 else translateExpr(node)
           else translateExpr(node)
-        case "ArrayLiteralExpression" =>
+        case "ArrayLiteralExpression" if !node.children.exists(_.kind == "SpreadElement") =>
           val elemType = extractElementType(expectedType)
           if elemType.isDefined then
             val et = elemType.get
-            val useArray = expectedType.startsWith("Array[")
-            val coll = if useArray then "Array" else "scala.collection.mutable.ArrayBuffer"
+            // The literal builds the collection the slot declares: an immutable slot cannot be mutated through, so a fresh JS array is faithful there.
+            val coll = expectedType.takeWhile(_ != '[') match
+              case "Array"                    => "Array"
+              case "Vector"                   => "scala.collection.immutable.Vector"
+              case "List"                     => "scala.collection.immutable.List"
+              case "IndexedSeq"               => "scala.collection.immutable.IndexedSeq"
+              case "Seq"                      => "scala.collection.immutable.Seq"
+              case _                          => "scala.collection.mutable.ArrayBuffer"
             if node.children.isEmpty then s"$coll.empty[$et]"
             else
               val elems = node.children.map(c => translateExprAt(c, et))
               s"$coll[$et](${elems.mkString(", ")})"
-          else translateExpr(node)
+          else
+            tupleComponents(expectedType) match
+              // a fixed-length JS array at a Scala tuple slot: the same values, by position
+              case Some(parts) if parts.size == node.children.size =>
+                node.children.zip(parts).map((c, t) => translateExprAt(c, t)).mkString("(", ", ", ")")
+              case Some(_) =>
+                refuse("array-literal-at-class-slot")
+                translateExpr(node)
+              case None =>
+                // A JS array where the reference declares a class (a tuple the port reshaped into a record) has no faithful spelling here.
+                if isSpecificClassType(expectedType) then refuse("array-literal-at-class-slot")
+                translateExpr(node)
+        case "ObjectLiteralExpression" =>
+          translateObjectLiteral(node, Some(expectedType))
         case "NullKeyword" | "UndefinedKeyword" =>
           if isNullableType(expectedType) then "Nullable.Null"
           else
@@ -457,6 +568,16 @@ object DefmethodBodyTranslator:
         case _ => translateExpr(node)
 
     /** Extract element type from Array[T], ArrayBuffer[T], List[T], Seq[T]. */
+    /** The Scala type a local's TS annotation names, or the annotation's kind when it names none the translator can spell: a primitive keyword, or a type the reference declares under that name. */
+    private def annotationType(t: RastNode): Either[String, String] =
+      t.kind match
+        case "NumberKeyword"  => Right("Double")
+        case "StringKeyword"  => Right("String")
+        case "BooleanKeyword" => Right("Boolean")
+        case "TypeReference" if t.children.size == 1 =>
+          t.children.head.text.filter(n => ctorSchema.get(n).isDefined || memberIndex.knowsType(n)).toRight("TypeReference")
+        case other => Left(other)
+
     private def extractElementType(tpe: String): Option[String] =
       val bracketIdx = tpe.indexOf('[')
       if bracketIdx < 0 then None
@@ -503,9 +624,14 @@ object DefmethodBodyTranslator:
           refuse("receiver-type-unknown")
       // Also refuse when nodeScalaType is the default "AstNode" for a non-AST
       // class that uses `this.` — the entry's class is not in the hierarchy
-      if nodeScalaType == "AstNode" && !entry.className.startsWith("AST_") && memberIndex.byType.nonEmpty then
+      if nodeScalaType == "AstNode" && !entry.className.startsWith("AST_") && !memberIndex.knowsType(entry.className) && memberIndex.byType.nonEmpty then
         if containsThisKeyword(block) then
           refuse("receiver-type-unknown")
+      // Refuse when a parameter is reassigned in the body: Scala parameters are vals
+      if reassignedParams.nonEmpty then refuse("reassigned-immutable")
+      // The body names its parameters as upstream does; a reference that renamed one leaves the body naming nothing.
+      if paramTypes.nonEmpty && entry.params.exists(p => !paramTypes.contains(p) && !paramTypes.contains(snakeToCamel(p))) then
+        refuse("parameter-name-mismatch")
 
       val stmts = block.children
       if stmts.isEmpty then
@@ -541,8 +667,6 @@ object DefmethodBodyTranslator:
         sb.append(s"$baseIndent{\n")
 
       val innerIndent = if needsBoundary || needsBraces then baseIndent + "  " else baseIndent
-      // Refuse when a parameter is reassigned in the body: Scala parameters are vals
-      if reassignedParams.nonEmpty then refuse("reassigned-immutable")
 
       for (stmt, idx) <- stmts.zipWithIndex do
         val isLast = idx == stmts.size - 1
@@ -575,10 +699,11 @@ object DefmethodBodyTranslator:
 
         case "ExpressionStatement" =>
           // When this is the last expression in the body, apply the return type
-          val expr = if isLast then
-            node.children.headOption.map(translateReturnExpr).getOrElse("()")
-          else
-            node.children.headOption.map(translateExpr).getOrElse("()")
+          val root = node.children.headOption.map(unparenthesized).orNull
+          val expr = withStatementRoot(root) {
+            if isLast then node.children.headOption.map(translateReturnExpr).getOrElse("()")
+            else node.children.headOption.map(translateExpr).getOrElse("()")
+          }
           sb.append(s"$indent$expr\n")
 
         case "VariableStatement" | "FirstStatement" =>
@@ -600,15 +725,30 @@ object DefmethodBodyTranslator:
               for f <- fields do
                 sb.append(s"$indent$keyword ${snakeToCamel(f)} = $initExpr.${snakeToCamel(f)}\n")
             else
-              val initNode = vd.children.drop(1).headOption
-              val init = initNode.map(translateExpr).getOrElse("null")
-              // Track local variable types from initialisers whose type is known
+              // `let x: T = e`: the annotation precedes the initialiser and is never one itself.
+              val (annotation, initNode) = vd.children.drop(1) match
+                case t :: rest if isTypeNode(t) => (Some(t), rest.headOption)
+                case rest                       => (None, rest.headOption)
+              val declared = annotation.map(t => annotationType(t))
+              declared.foreach {
+                case Left(kind) => refuse(s"local-type-annotation:$kind")
+                case Right(_)   => ()
+              }
+              val declaredType = declared.flatMap(_.toOption)
+              // JS leaves an uninitialised local `undefined`; no Scala value of its type says that.
+              if initNode.isEmpty then refuse("uninitialised-local")
+              // `let x = null` types the local as Null in Scala: nothing can be stored into it later
+              if declaredType.isEmpty && initNode.exists(n => n.kind == "NullKeyword" || n.kind == "UndefinedKeyword" || n.text.contains("undefined")) then
+                refuse("null-initialised-local")
+              val init = initNode.map(n => declaredType.fold(translateExpr(n))(translateExprAt(n, _))).getOrElse("null")
+              // Track local variable types from the annotation, else from an initialiser whose type is known
               localNames += scalaName
-              initNode.flatMap(exprType).foreach(t => localTypes(scalaName) = t)
+              declaredType.orElse(initNode.flatMap(exprType)).foreach(t => localTypes(scalaName) = t)
               // A variable whose initialiser is empty or whitespace produces
               // Unit in value position when read later
               if init.trim.isEmpty then refuse("unit-in-value-position")
-              sb.append(s"$indent$keyword $scalaName = $init\n")
+              val ascription = declaredType.fold("")(t => s": $t")
+              sb.append(s"$indent$keyword $scalaName$ascription = $init\n")
 
         case "IfStatement" =>
           val children = node.children
@@ -734,7 +874,8 @@ object DefmethodBodyTranslator:
         case "NumericLiteral" | "FirstLiteralToken" =>
           node.value match
             case Some(RastValue.Num(n)) =>
-              if n == n.toLong then n.toLong.toString else n.toString
+              // an integral value past Int's range is no Int literal; JS holds it as a double
+              if n == n.toLong && n.abs <= Int.MaxValue then n.toLong.toString else n.toString
             case _ => "0"
 
         case "StringLiteral" | "FirstTemplateToken" | "LastTemplateToken" =>
@@ -775,6 +916,12 @@ object DefmethodBodyTranslator:
         case "ElementAccessExpression" =>
           val children = node.children
           if children.size >= 2 then
+            // indexing reads a collection, a map or a string; on a declared class (a tuple the port reshaped) it reads nothing
+            exprType(children.head).foreach { t =>
+              if isSpecificClassType(t) || isOptionLike(t) then refuse("element-access-on-class")
+            }
+            // a JS index is a number; a Scala index must be an Int
+            if exprType(children(1)).exists(t => t == "Double" || t == "Float") then refuse("fractional-index")
             val obj = translateExpr(children.head)
             val idx = translateExpr(children(1))
             s"$obj($idx)"
@@ -873,6 +1020,8 @@ object DefmethodBodyTranslator:
 
         case "PostfixUnaryExpression" =>
           val children = node.children
+          // `x++` yields the value BEFORE the update; the emitted `x += 1` yields Unit
+          if statementRoot ne node then refuse("increment-as-value")
           val operand = if children.nonEmpty then translateExpr(children.head) else "???"
           node.operator match
             case Some("PlusPlusToken") =>
@@ -888,18 +1037,10 @@ object DefmethodBodyTranslator:
             val elseE = translateExpr(children(2))
             // JS `x ? a : b` uses truthiness of x. Lower the condition based
             // on the operand's declared type.
-            exprType(children(0)) match
-              case Some(tpe) if tpe != "Boolean" =>
-                val cond = translateExpr(children(0))
-                val test = truthinessTest(tpe, cond)
-                s"(if ($test) $thenE else $elseE)"
-              case None =>
-                refuse("truthiness-unknown-type")
-                val cond = translateExpr(children(0))
-                s"(if $cond then $thenE else $elseE)"
-              case _ =>
-                val cond = translateExpr(children(0))
-                s"(if $cond then $thenE else $elseE)"
+            val condNode = children(0)
+            val combines = condNode.kind == "BinaryExpression" && condNode.operator.exists(op => op == "AmpersandAmpersandToken" || op == "BarBarToken")
+            if exprType(condNode).isEmpty && !combines then refuse("truthiness-unknown-type")
+            s"(if (${translateCondition(condNode)}) $thenE else $elseE)"
           else "??? /* bad conditional */"
 
         case "ParenthesizedExpression" =>
@@ -914,9 +1055,10 @@ object DefmethodBodyTranslator:
           val allSpread = node.children.nonEmpty && node.children.forall(_.kind == "SpreadElement")
           if node.children.isEmpty then "scala.collection.mutable.ArrayBuffer.empty[Any]"
           else if allSpread && node.children.length == 1 then
-            // [...arr] -> arr.toArray
-            val inner = translateExpr(node.children.head.children.head)
-            s"$inner.toArray"
+            // [...arr] is a fresh mutable copy of a collection; of anything else it has no Scala reading here
+            val source = node.children.head.children.head
+            if !exprType(source).exists(t => extractElementType(t).isDefined) then refuse("array-spread")
+            s"scala.collection.mutable.ArrayBuffer.from(${translateExpr(source)})"
           else if hasSpread then
             // Mixed spread + non-spread
             val nonSpread = node.children.takeWhile(_.kind != "SpreadElement")
@@ -934,7 +1076,7 @@ object DefmethodBodyTranslator:
             s"scala.collection.mutable.ArrayBuffer(${elems.mkString(", ")})"
 
         case "ObjectLiteralExpression" =>
-          translateObjectLiteral(node)
+          translateObjectLiteral(node, None)
 
         case "SpreadElement" =>
           val inner = node.children.headOption.map(translateExpr).getOrElse("???")
@@ -964,6 +1106,9 @@ object DefmethodBodyTranslator:
           s"/* await */ $inner"
 
         case "DeleteExpression" =>
+          // `delete o.k` removes a key only from a map; on an object of a declared class it has no Scala counterpart.
+          val target = node.children.headOption.flatMap(_.children.headOption)
+          if !target.flatMap(exprType).exists(t => t.contains("Map")) then refuse("delete-on-non-map")
           node.children.headOption match
             case Some(prop) if prop.kind == "PropertyAccessExpression" && prop.children.size >= 2 =>
               val obj = translateExpr(prop.children.head)
@@ -1037,6 +1182,43 @@ object DefmethodBodyTranslator:
     // Expression helpers
     // --------------------------------------------------------------------------
 
+    // The expression a statement evaluates only for its effect: an assignment or `x++` there yields no value anyone reads.
+    private var statementRoot: RastNode | Null = null
+
+    private def withStatementRoot[A](root: RastNode | Null)(body: => A): A =
+      val saved = statementRoot
+      statementRoot = root
+      try body
+      finally statementRoot = saved
+
+    private def unparenthesized(n: RastNode): RastNode =
+      if n.kind == "ParenthesizedExpression" && n.children.nonEmpty then unparenthesized(n.children.head) else n
+
+    /** Every name the body itself binds, at any depth: variables, parameters of nested functions, destructured names, nested function names. Scope is over-approximated. */
+    private lazy val bodyDeclarations: Set[String] =
+      val out = mutable.Set.empty[String]
+      def walk(n: RastNode): Unit =
+        n.kind match
+          case "VariableDeclaration" | "Parameter" | "BindingElement" | "FunctionDeclaration" =>
+            n.children.find(_.kind == "Identifier").flatMap(_.text).foreach(out += _)
+          case _ => ()
+        n.children.foreach(walk)
+      walk(entry.bodyNode)
+      out.toSet
+
+    /** Bound by the body itself, or a parameter the reference signature declares. */
+    private def declaredInBody(n: String): Boolean =
+      bodyDeclarations.contains(n) || paramTypes.contains(n) || paramTypes.contains(snakeToCamel(n))
+
+    /** A capitalised name that is a type, an object or a JS global the translator spells itself, rather than a value to resolve. */
+    private def namesAType(n: String): Boolean =
+      memberIndex.knowsType(n) || ctorSchema.get(n).isDefined || calleeIndex.knownObjects.contains(n) || jsGlobals.contains(n)
+
+    /** A local variable of this body, by its JS or its Scala spelling. */
+    private def isLocal(n: String): Boolean =
+      val sc = snakeToCamel(n)
+      localTypes.contains(sc) || localTypes.contains(n) || localNames.contains(sc) || localNames.contains(n)
+
     private def translateIdentifier(name: String): String =
       val base = name match
         case "undefined"    => "null"
@@ -1052,9 +1234,13 @@ object DefmethodBodyTranslator:
           refuse("ArgumentsObject")
           "??? /* arguments */"
         case n if n.startsWith("AST_") => astVarToScalaName(n)
-        case n if n.startsWith("_") && !apiLookup.contains(n) && !entry.params.contains(n) =>
-          refuse("wrong-member-access")
-          snakeToCamel(n)
+        case n if n.startsWith("_") && !apiLookup.contains(n) && !entry.params.contains(n) && !isLocal(n) =>
+          // An underscore-prefixed name is usually a private helper: it is known only when the reference declares it under that same name.
+          calleeIndex.resolveMember(snakeToCamel(n)) match
+            case Right(ref) => qualify(ref)
+            case Left(_)    =>
+              refuse("wrong-member-access")
+              snakeToCamel(n)
         case n =>
           val scName = apiLookup.getOrElse(n, snakeToCamel(n))
           // Resolve unqualified identifiers through the callee index:
@@ -1064,10 +1250,16 @@ object DefmethodBodyTranslator:
              !localTypes.contains(scName) && !localTypes.contains(n) &&
              !localNames.contains(scName) && !localNames.contains(n) &&
              !n.startsWith("AST_") && scName == snakeToCamel(n) &&
-             n.head.isLower then
+             (n.head.isLower || !namesAType(n)) then
             calleeIndex.resolveMember(scName) match
               case Right(ref) => qualify(ref)
-              case Left(_)    => scName
+              case Left(_) =>
+                enclosingOwner.flatMap(calleeIndex.declared(_, scName)) match
+                  case Some(own) => qualify(own) // ambiguous elsewhere, but the body's own object declares it
+                  case None      =>
+                    // A name nothing in scope declares (an import alias of a whole module, a global) would be emitted bare and mean nothing.
+                    if !declaredInBody(n) && !calleeIndex.knownObjects.contains(scName) then refuse("unresolved-identifier")
+                    scName
           else scName
       // When this identifier was tested for Nullable truthiness in an
       // enclosing && guard, it has been unwrapped and must be read as .get
@@ -1141,17 +1333,22 @@ object DefmethodBodyTranslator:
       else
         val renamedProp = memberRenames.get(snakeToCamel(prop)).orElse(memberRenames.get(prop))
         val effectiveProp = renamedProp.getOrElse(snakeToCamel(prop))
+        // The spelling the receiver's declared type actually has, when its type is known.
+        var declaredSpelling: Option[String] = None
         // When the object is a parameter with a known specific type, check the
         // member index from the reference tree. If the type is known and the
         // member is not declared on it, refuse with wrong-member-access.
         if obj.kind == "Identifier" && !knownSafeProperties.contains(prop) then
           val tpe = exprType(obj)
           tpe match
+            case Some(t) if t.contains("|") || isOptionLike(t) =>
+              // a member of a union or of a value that may be absent: TS narrowed it, Scala has not
+              refuse("union-receiver")
             case Some(t) =>
               val baseType = t.takeWhile(c => c != '[' && c != ' ')
               if memberIndex.knowsType(baseType) then
-                if !memberIndex.hasMember(baseType, effectiveProp) && !memberIndex.hasMember(baseType, snakeToCamel(prop)) && !memberIndex.hasMember(baseType, prop) then
-                  refuse("wrong-member-access")
+                declaredSpelling = List(effectiveProp, snakeToCamel(prop), prop).find(memberIndex.hasMember(baseType, _))
+                if declaredSpelling.isEmpty then refuse("wrong-member-access")
               else if isSpecificClassType(t) then
                 refuse("wrong-member-access")
             case None =>
@@ -1159,8 +1356,10 @@ object DefmethodBodyTranslator:
               // cannot validate the access.
               val objName = obj.text.getOrElse("")
               val scObjName = snakeToCamel(objName)
-              if !apiLookup.contains(objName) && !entry.params.contains(objName) &&
-                 !localNames.contains(scObjName) && !localTypes.contains(scObjName) then
+              val isBinding = entry.params.contains(objName) || localNames.contains(scObjName) || localTypes.contains(scObjName)
+              // A parameter or local whose type nothing declares: the member cannot be checked against anything.
+              if !apiLookup.contains(objName) && isBinding then refuse("receiver-type-unknown")
+              else if !apiLookup.contains(objName) then
                 if calleeIndex.knownObjects.contains(scObjName) then
                   // The receiver is a known skeleton object: record the access
                   // for post-translation validation.
@@ -1168,8 +1367,10 @@ object DefmethodBodyTranslator:
                 else if calleeIndex.resolve(scObjName).isLeft then
                   refuse("receiver-type-unknown")
         val objExpr = translateExpr(obj)
-        if renamedProp.isDefined then s"$objExpr.${renamedProp.get}"
-        else translatePropOnExpr(objExpr, prop)
+        declaredSpelling match
+          case Some(p)                    => s"$objExpr.${if scalaKeywords.contains(p) then s"`$p`" else p}"
+          case None if renamedProp.isDefined => s"$objExpr.${renamedProp.get}"
+          case None                       => translatePropOnExpr(objExpr, prop)
 
     /** Translate a property access on an already-translated object expression. */
     private def translatePropOnExpr(objExpr: String, prop: String): String =
@@ -1243,6 +1444,8 @@ object DefmethodBodyTranslator:
                 if innerObj.kind == "PropertyAccessExpression" then
                   val deepParts = innerObj.children
                   if deepParts.size >= 2 && deepParts.last.text.contains("prototype") then
+                    // Only `X.prototype.m.apply(this, …)` is a super call; any other receiver runs `m` on THAT object.
+                    if !args.headOption.exists(_.kind == "ThisKeyword") then refuse("prototype-method-apply")
                     val innerScala = snakeToCamel(innerProp)
                     // super.method(args) pattern
                     val scalaArgs = args.drop(1).flatMap { a =>
@@ -1253,6 +1456,17 @@ object DefmethodBodyTranslator:
                     }
                     return s"super.${innerScala}(${scalaArgs.mkString(", ")})"
 
+            // a method of a value that may be absent: JS reached it after a guard Scala does not see
+            if exprType(obj).exists(t => isOptionLike(t) || t.contains("| Null")) then refuse("optional-receiver")
+            else if exprType(obj).exists(_.contains("|")) then refuse("union-receiver")
+            // a method the receiver's declared type does not declare
+            exprType(obj).filterNot(t => isOptionLike(t) || t.contains("|")).foreach { t =>
+              val base = t.takeWhile(c => c != '[' && c != ' ')
+              if !knownSafeProperties.contains(method) then
+                if memberIndex.knowsType(base) then
+                  if !List(snakeToCamel(method), method).exists(memberIndex.hasMember(base, _)) then refuse("wrong-member-access")
+                else if isSpecificClassType(t) then refuse("wrong-member-access")
+            }
             val objExpr = translateExpr(obj)
             // Look up the callee's parameter types for expected-type propagation
             val calleeSig: Option[ReferenceSignatures.MethodSig] =
@@ -1261,6 +1475,7 @@ object DefmethodBodyTranslator:
                 val cap = if oName.nonEmpty then oName.take(1).toUpperCase + oName.drop(1) else ""
                 val methName = snakeToCamel(method)
                 oracle.get(cap, methName).orElse(oracle.get(oName, methName))
+              else if obj.kind == "ThisKeyword" && memberIndex.knowsType(nodeScalaType) then oracle.get(nodeScalaType, snakeToCamel(method))
               else None
             calleeSig.foreach { s =>
               val isVararg = s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq["))
@@ -1421,7 +1636,10 @@ object DefmethodBodyTranslator:
               case "bind" =>
                 // fn.bind(this) -> fn
                 objExpr
-              // Object static methods
+              // Object static methods: an object's own keys exist in Scala only on a map
+              case "keys" | "values" | "entries" if objExpr == "Object" && !args.headOption.flatMap(exprType).exists(_.contains("Map")) =>
+                refuse("object-reflection")
+                s"${scalaArgs.head}.keys"
               case "keys" if objExpr == "Object" =>
                 s"${scalaArgs.head}.keys"
               case "values" if objExpr == "Object" =>
@@ -1429,8 +1647,9 @@ object DefmethodBodyTranslator:
               case "entries" if objExpr == "Object" =>
                 s"${scalaArgs.head}.iterator"
               case "assign" if objExpr == "Object" =>
-                if scalaArgs.length >= 2 then s"${scalaArgs.head} ++= ${scalaArgs(1)}"
-                else s"${scalaArgs.head}"
+                // Copies every own property of the sources onto the target: no shape-independent Scala spelling.
+                refuse("js-object-assign")
+                s"${scalaArgs.head}"
               case "create" if objExpr == "Object" =>
                 "Map.empty"
               case "defineProperty" if objExpr == "Object" =>
@@ -1648,6 +1867,8 @@ object DefmethodBodyTranslator:
           if (op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") &&
              lhs.kind == "TypeOfExpression" then
             val typeofOperand = lhs.children.head
+            // TS narrows a union by the test; Scala does not, so a later use of the narrowed operand would not typecheck
+            if exprType(typeofOperand).exists(_.contains("|")) then refuse("typeof-narrowing")
             val operandExpr = translateExpr(typeofOperand)
             val typeStr = rhs.value match
               case Some(RastValue.Str(s)) => s
@@ -1689,14 +1910,14 @@ object DefmethodBodyTranslator:
                 // x && y is `test(x) && <y with x unwrapped>`.
                 // In a value context, JS returns one operand: only valid when
                 // both sides have the same declared Scala type.
-                if isNullableType(tpe) then
+                if isOptionLike(tpe) then
                   val lhsName = lhs.text.map(snakeToCamel)
                   // Translate the RHS with x unwrapped: inside the guarded
                   // operand, `x` renders as `x.get` (one level)
                   val rightWithUnwrap = lhsName match
                     case Some(name) =>
                       val wasUnwrapped = unwrappedIds.contains(name)
-                      val inner        = tpe.stripPrefix("Nullable[").stripSuffix("]")
+                      val inner        = optionInner(tpe)
                       unwrappedIds += name
                       localTypes(name) = inner
                       val r = translateExpr(rhs)
@@ -1709,15 +1930,17 @@ object DefmethodBodyTranslator:
                   else
                     // x || y: if x is truthy, yield x (unwrapped); else y
                     val value = truthyValue(tpe, left)
-                    return s"(if ($test) $value else ${translateExpr(rhs)})"
+                    return s"(if ($test) $value else ${translateExprAt(rhs, optionInner(tpe))})"
                 else
                   val right = translateExpr(rhs)
                   val rhsType = exprType(rhs)
                   if op == "AmpersandAmpersandToken" then
+                    // Outside a condition JS yields one OPERAND, the falsy left one included: no Boolean says that.
+                    refuse("truthiness-value-context")
                     return s"($test && $right)"
                   else
-                    // x || y in value context: both sides must agree in type
-                    if rhsType.exists(_ != tpe) then
+                    // x || y in value context: both sides must agree in type, which an unknown right side does not show
+                    if !rhsType.contains(tpe) then
                       refuse("truthiness-value-context")
                     return s"(if ($test) $left else $right)"
               case None =>
@@ -1744,8 +1967,28 @@ object DefmethodBodyTranslator:
             if lhsStr && !rhsStr then
               return s"${translateExpr(lhs)} + ${translateExpr(rhs)}.toString"
 
+          val isAssignment = op.endsWith("EqualsToken") && !Set("EqualsEqualsToken", "EqualsEqualsEqualsToken", "ExclamationEqualsToken", "ExclamationEqualsEqualsToken", "LessThanEqualsToken", "GreaterThanEqualsToken")(op) ||
+            op == "FirstAssignment" || op == "FirstCompoundAssignment"
+          // JS assignment is an expression yielding the stored value; Scala's yields Unit
+          if isAssignment && (statementRoot ne node) then refuse("assignment-as-value")
+          // storing into a field the receiver's declared type holds as a `val` (a case-class field, say)
+          if isAssignment && lhs.kind == "PropertyAccessExpression" && lhs.children.size >= 2 then
+            val field = lhs.children.last.text.getOrElse("")
+            val owner =
+              if lhs.children.head.kind == "ThisKeyword" then Some(nodeScalaType)
+              else exprType(lhs.children.head).map(_.takeWhile(c => c != '[' && c != ' '))
+            owner.filter(memberIndex.knowsType).foreach { t =>
+              if !List(field, snakeToCamel(field)).exists(memberIndex.isMutable(t, _)) then refuse("assign-to-immutable-field")
+            }
+          // the stored value takes the target's declared type, an optional target included
+          val lhsType = if op == "EqualsToken" || op == "FirstAssignment" then exprType(lhs) else None
           val left = translateExpr(lhs)
-          val right = translateExpr(rhs)
+          val right = lhsType.fold(translateExpr(rhs))(translateExprAt(rhs, _))
+          if op == "AsteriskAsteriskToken" then return s"math.pow($left, $right)"
+          // JS `/` never truncates: two integral operands divide as doubles
+          if op == "SlashToken" && exprType(lhs).exists(integralTypes.contains) && exprType(rhs).exists(integralTypes.contains) then
+            return s"($left).toDouble / $right"
+          if op == "AsteriskAsteriskEqualsToken" then refuse("exponent-assignment")
           val scalaOp = op match
             case "EqualsEqualsEqualsToken" => "=="
             case "ExclamationEqualsEqualsToken" => "!="
@@ -1883,7 +2126,8 @@ object DefmethodBodyTranslator:
           // Not a lambda literal: translate as-is
           translateExpr(node)
 
-    private def translateObjectLiteral(node: RastNode): String =
+    /** A JS object literal builds the class its SLOT declares (`expected`); with no declared slot type there is no faithful Scala value. */
+    private def translateObjectLiteral(node: RastNode, expected: Option[String]): String =
       val props = node.children.filter(c =>
         c.kind == "PropertyAssignment" || c.kind == "ShorthandPropertyAssignment" ||
         c.kind == "SpreadAssignment" || c.kind == "MethodDeclaration"
@@ -1902,12 +2146,17 @@ object DefmethodBodyTranslator:
             case _ => None
         }
         // Try to construct a typed class when the return type has a known schema
-        val typeName = declaredReturnType.map(_.takeWhile(c => c != '[' && c != ' '))
+        val typeName = expected.map(_.takeWhile(c => c != '[' && c != ' '))
         typeName.flatMap(ctorSchema.get) match
           case Some(ctorParams) =>
             val keyMap = litEntries.map { case (k, v) => snakeToCamel(k) -> v }.toMap
             val missingRequired = ctorParams.filterNot(_.hasDefault).filterNot(p => keyMap.contains(p.name))
-            if missingRequired.nonEmpty then
+            // A key the class has no field for would be dropped silently.
+            val unknownKeys = keyMap.keySet -- ctorParams.map(_.name)
+            if unknownKeys.nonEmpty || props.exists(p => p.kind != "PropertyAssignment" && p.kind != "ShorthandPropertyAssignment") then
+              refuse("object-literal-unknown-field")
+              emitObjectLiteralAsMap(props)
+            else if missingRequired.nonEmpty then
               refuse("object-literal-missing-field")
               emitObjectLiteralAsMap(props)
             else
@@ -1919,10 +2168,8 @@ object DefmethodBodyTranslator:
               }
               s"${typeName.get}(${args.mkString(", ")})"
           case None =>
-            // No schema: fall back to mutable.Map, refuse if return type is not a Map
-            declaredReturnType.foreach { rt =>
-              if !rt.contains("Map") && !rt.contains("map") then refuse("js-map-construction")
-            }
+            // No schema: fall back to mutable.Map, refuse unless the slot declares a Map
+            if !expected.exists(rt => rt.contains("Map") || rt.contains("map")) then refuse("js-map-construction")
             emitObjectLiteralAsMap(props)
 
     private def emitObjectLiteralAsMap(props: List[RastNode]): String =
@@ -2037,13 +2284,16 @@ object DefmethodBodyTranslator:
           val decls = i.children.filter(_.kind == "VariableDeclaration")
           for d <- decls do
             val name = d.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_i")
-            val initExpr = d.children.find(c => c.kind != "Identifier" && !c.kind.contains("Type"))
-              .map(translateExpr).getOrElse("0")
+            val initNode = d.children.drop(1).find(c => !isTypeNode(c))
+            val initExpr = initNode.map(translateExpr).getOrElse("0")
+            localNames += snakeToCamel(name)
+            initNode.flatMap(exprType).foreach(t => localTypes(snakeToCamel(name)) = t)
             sb.append(s"$indent  var ${snakeToCamel(name)} = $initExpr\n")
         else
-          sb.append(s"$indent  ${translateExpr(i)}\n")
+          sb.append(s"$indent  ${withStatementRoot(unparenthesized(i))(translateExpr(i))}\n")
       }
-      val condStr = cond.map(translateExpr).getOrElse("true")
+      val condStr = cond.map(translateCondition).getOrElse("true")
+      def updateText(u: RastNode): String = withStatementRoot(unparenthesized(u))(translateExpr(u))
       // For a C-style for loop, continue skips the rest of the body but update still runs.
       // The continue boundary wraps only the body; the update is emitted after it.
       val loopIndent = indent + "  "
@@ -2059,12 +2309,12 @@ object DefmethodBodyTranslator:
         sb.append(s"$whileIndent  scala.util.boundary { ($cntLbl: scala.util.boundary.Label[scala.Unit]) ?=>\n")
         translateStatementBody(bodyNode, whileIndent + "    ", false)
         sb.append(s"$whileIndent  }\n")
-        update.foreach(u => sb.append(s"$whileIndent  ${translateExpr(u)}\n"))
+        update.foreach(u => sb.append(s"$whileIndent  ${updateText(u)}\n"))
         sb.append(s"$whileIndent}\n")
       else
         sb.append(s"${whileIndent}while ($condStr) {\n")
         translateStatementBody(bodyNode, whileIndent + "  ", false)
-        update.foreach(u => sb.append(s"$whileIndent  ${translateExpr(u)}\n"))
+        update.foreach(u => sb.append(s"$whileIndent  ${updateText(u)}\n"))
         sb.append(s"$whileIndent}\n")
       if hasBreak then sb.append(s"$loopIndent}\n")
       breakLabel = savedBreak
@@ -2076,6 +2326,10 @@ object DefmethodBodyTranslator:
       if children.size >= 2 then
         val varDecl = children.head
         val iterable = children(1)
+        // `for (k in o)` walks an object's KEYS: only a map has keys to walk in Scala
+        if node.kind == "ForInStatement" && !exprType(iterable).exists(_.contains("Map")) then refuse("for-in-over-object")
+        // `for (const {a, b} of xs)` reads fields by name off each element
+        if varDecl.children.exists(_.children.exists(_.kind == "ObjectBindingPattern")) then refuse("for-of-object-destructuring")
         // Detect array destructuring: `for (const [k, v] of map)`
         val arrayBinding = varDecl.children.headOption
           .flatMap(_.children.find(_.kind == "ArrayBindingPattern"))
@@ -2090,6 +2344,8 @@ object DefmethodBodyTranslator:
             val varName = varDecl.children.headOption
               .flatMap(c => c.children.headOption.flatMap(_.text).orElse(c.text))
               .getOrElse("_item")
+            localNames += snakeToCamel(varName)
+            if node.kind == "ForOfStatement" then exprType(iterable).flatMap(extractElementType).foreach(t => localTypes(snakeToCamel(varName)) = t)
             snakeToCamel(varName)
         val iterExpr = translateExpr(iterable)
         val bodyNode = children.find(_.kind == "Block").orElse(children.lift(2))
@@ -2215,7 +2471,8 @@ object DefmethodBodyTranslator:
           case (Some(he), Some(we)) => checkTypeCompatibility(he, we)
           case _                    => () // same base, no type params or not extractable
       else if numericTypes.contains(haveBase) && numericTypes.contains(wantBase) then
-        () // numeric-to-numeric conversions are compatible in JS
+        // a fractional number at an integral slot does not narrow implicitly in Scala, and JS never truncates there
+        if (haveBase == "Double" || haveBase == "Float") && integralTypes.contains(wantBase) then refuse("double-at-int-slot")
       else if trivialTypes.contains(haveBase) && trivialTypes.contains(wantBase) then
         // Both are known, different non-numeric trivial types
         refuse(s"argument-type-mismatch:$haveBase->$wantBase")
@@ -2232,6 +2489,15 @@ object DefmethodBodyTranslator:
   // --------------------------------------------------------------------------
   // Shared helpers (visible to BodyContext and the object)
   // --------------------------------------------------------------------------
+
+  /** True for a node that spells a TS TYPE (an annotation), never a value. */
+  private def isTypeNode(node: RastNode): Boolean =
+    node.kind.endsWith("Type") || typeKeywordKinds.contains(node.kind) || node.kind == "TypeReference" || node.kind == "TypeLiteral"
+
+  private val typeKeywordKinds: Set[String] = Set(
+    "NumberKeyword", "StringKeyword", "BooleanKeyword", "AnyKeyword", "UnknownKeyword", "VoidKeyword", "NeverKeyword",
+    "ObjectKeyword", "BigIntKeyword", "SymbolKeyword",
+  )
 
   /** True when the RAST tree contains a ThisKeyword node. */
   private def containsThisKeyword(node: RastNode): Boolean =
@@ -2331,10 +2597,12 @@ object DefmethodBodyTranslator:
     if varName.startsWith("AST_") then "Ast" + varName.drop(4)
     else varName
 
+  /** `snake_case` to `camelCase`; leading underscores are part of the name and are kept (`_offset_opt` is `_offsetOpt`, never `OffsetOpt`). */
   private def snakeToCamel(s: String): String =
-    val parts = s.split("_")
+    val lead  = s.takeWhile(_ == '_')
+    val parts = s.drop(lead.length).split("_")
     if parts.length <= 1 then escapeKeyword(s)
-    else escapeKeyword(parts.head + parts.tail.map(_.capitalize).mkString)
+    else escapeKeyword(lead + parts.head + parts.tail.map(_.capitalize).mkString)
 
   private def escapeKeyword(name: String): String =
     if scalaKeywords.contains(name) then s"${name}_" else name
@@ -2354,9 +2622,62 @@ object DefmethodBodyTranslator:
   private def isNullableType(tpe: String): Boolean =
     tpe.startsWith("Nullable[") || tpe.startsWith("Nullable [")
 
+  /** A value that may be absent and says so by `isDefined`/`get`: `Nullable[T]` or `Option[T]`. */
+  private def isOptionLike(tpe: String): Boolean =
+    isNullableType(tpe) || tpe.startsWith("Option[")
+
+  /** The `T` of an optional type. */
+  private def optionInner(tpe: String): String =
+    tpe.dropWhile(_ != '[').drop(1).stripSuffix("]")
+
+  /** An identifier or a dotted path of them: reading it twice evaluates nothing twice. */
+  private def isSimplePath(expr: String): Boolean =
+    expr.nonEmpty && expr.split('.').forall(p => p.nonEmpty && (p.head.isLetter || p.head == '_' || p.head == '$') && p.forall(c => c.isLetterOrDigit || c == '_' || c == '$'))
+
   private val numericTypes: Set[String] = Set(
     "Int", "Long", "Double", "Float", "Short", "Byte",
   )
+
+  private val integralTypes: Set[String] = Set("Int", "Long", "Short", "Byte")
+
+  /** JS built-in globals whose members the translator rewrites at the use. */
+  private val jsGlobals: Set[String] = Set(
+    "Math", "Number", "Object", "Array", "JSON", "String", "Boolean", "Symbol", "Date", "RegExp", "Map", "Set", "WeakMap", "WeakSet", "Error",
+    "TypeError", "RangeError", "SyntaxError", "ReferenceError", "Promise", "Console",
+  )
+
+  /** The component types of a Scala tuple type `(A, B[C, D])`, split at top-level commas. */
+  private def tupleComponents(tpe: String): Option[List[String]] =
+    val t = tpe.trim
+    if !t.startsWith("(") || !t.endsWith(")") then None
+    else
+      val inner = t.substring(1, t.length - 1)
+      val parts = mutable.ListBuffer.empty[String]
+      var depth = 0
+      var start = 0
+      for (c, i) <- inner.zipWithIndex do
+        c match
+          case '(' | '[' => depth += 1
+          case ')' | ']' => depth -= 1
+          case ',' if depth == 0 =>
+            parts += inner.substring(start, i).trim
+            start = i + 1
+          case _ => ()
+      parts += inner.substring(start).trim
+      if parts.size >= 2 && !inner.contains("=>") then Some(parts.toList) else None
+
+  /** The Scala result type of `Math.<m>(…)` as the body emits it (`java.lang.Math`); `round` answers a Long there. */
+  private def mathResultType(method: String, argTypes: List[Option[String]]): Option[String] =
+    method match
+      case "floor" | "ceil" | "sqrt" | "pow" | "random" | "sin" | "cos" | "tan" | "atan" | "atan2" | "asin" | "acos" | "exp" | "log" | "log10" |
+          "hypot" | "cbrt" | "signum" =>
+        Some("Double")
+      case "round"                     => Some("Long")
+      case "abs" | "max" | "min" =>
+        if argTypes.nonEmpty && argTypes.forall(_.contains("Int")) then Some("Int")
+        else if argTypes.forall(_.exists(numericTypes.contains)) then Some("Double")
+        else None
+      case _ => None
 
   /** True when the type is a specific class rather than a primitive, Any, String,
     * or a collection type. Property access on such a type needs API-level knowledge

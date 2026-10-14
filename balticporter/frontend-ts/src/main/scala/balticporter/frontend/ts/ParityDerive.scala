@@ -54,7 +54,9 @@ object ParityDerive:
     keepReferenceOnRefusal: Boolean = false
   )
 
-  /** Where one member's emitted body came from. `offered` is false for a member the skeleton reader cannot replace; such a member has no occurrence index (-1). */
+  /** Where one member's emitted body came from. `offered` is false for a member the skeleton reader cannot replace; such a member has no occurrence index (-1). `translation` is the translated body,
+    * emitted or declined, so a reader can see what was applied and what a guard refused.
+    */
   final case class BodyEntry(
     methodName:       String,
     source:           String,
@@ -62,7 +64,8 @@ object ParityDerive:
     rastRefusalCount: Int = 0,
     occurrence:       Int = 0,
     line:             Int = 0,
-    offered:          Boolean = true
+    offered:          Boolean = true,
+    translation:      Option[String] = None
   )
 
   /** One reference file derived. The counts cover the OFFERED members only; `unoffered` lists the rest, all of them reference bodies. */
@@ -132,14 +135,14 @@ object ParityDerive:
                   case None    => body.text.replace(dedicated.DefmethodBodyTranslator.ReturnTypePlaceholder, "Any")
               else body.text
             sb.append(bodyText)
-            bodyEntries += BodyEntry(method.name, Source.Translated, "", body.refusals.size, idx, method.signatureLine)
+            bodyEntries += BodyEntry(method.name, Source.Translated, "", body.refusals.size, idx, method.signatureLine, translation = Some(bodyText))
             totalRefusals += body.refusals.size
 
           case Left(why) =>
             for i <- method.signatureLine to method.bodyEndLine do
               sb.append(lines(i))
               sb.append("\n")
-            bodyEntries += BodyEntry(method.name, Source.Reference, why, 0, idx, method.signatureLine)
+            bodyEntries += BodyEntry(method.name, Source.Reference, why, 0, idx, method.signatureLine, translation = named.lift(idx).map(_.text))
 
         lineIdx = method.bodyEndLine + 1
         methodIdx += 1
