@@ -556,15 +556,15 @@ private[emit] trait TirEmitterExprs:
           case _                      => false)
       )
 
-  /** does the member's DECLARATION in this program take no parameter clause — a `def` a phase made parenless, or a property collapsed into a field? Read off the declaration, never the symbol's info,
-    * which keeps java's `MethodType(Nil, R)`.
+  /** does the member's DECLARATION take no parameter clause — a `def` a phase made parenless, a property collapsed into a field, or a member the replacement of a dropped type (or `externalParenless`)
+    * declares parenless? Read off the declaration, never the symbol's info, which keeps java's `MethodType(Nil, R)`.
     */
   private[emit] def parenlessDecl(s: SymId): Boolean =
     program.definitionOf(s).exists {
       case d: Tree.DefDef => d.paramss.isEmpty
       case _: Tree.ValDef => true
       case _ => false
-    } || supportParenless(s)
+    } || supportParenless(s) || isExternalParenless(s)
 
   /** the argument list a method reference's lowered call writes after the member: none for a parenless declaration with no arguments, else java's own. */
   private[emit] def callParens(s: SymId, args: String): String =

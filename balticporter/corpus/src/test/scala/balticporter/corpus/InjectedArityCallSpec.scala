@@ -21,6 +21,12 @@ class InjectedArityCallSpec extends munit.FunSuite:
       |  int a(Holder h) { return h.size(); }
       |  String b(Holder h) { return h.name(); }
       |  int c(Holder h) { return h.count(1); }
+      |  java.util.function.ToIntFunction<Holder> unbound() { return Holder::size; }
+      |  java.util.function.IntSupplier bound(Holder h) { return h::size; }
+      |}
+      |public class Sub extends Holder {
+      |  int implicitThis() { return size(); }
+      |  Object fromInner() { return new Object() { int n() { return size(); } }; }
       |}
       |""".stripMargin
 
@@ -49,6 +55,20 @@ class InjectedArityCallSpec extends munit.FunSuite:
     val out = user(new TirEmitter(program, injectedSurface = injected).emit)
     assert(clue(out).contains("h.name()"))
     assert(out.contains("h.count(1)"))
+  }
+
+  test("an implicit-`this` call from a subclass, or from a class nested in it, takes the replacement's arity too") {
+    val out = new TirEmitter(program, injectedSurface = injected).emit
+    val sub = out.linesIterator.dropWhile(!_.contains("class Sub")).take(12).mkString("\n")
+    assertEquals(clue(sub).linesIterator.count(_.contains("size")), 2)
+    assert(!sub.contains("size()"))
+  }
+
+  test("a method reference, unbound or bound, reads the replacement's arity") {
+    val out = user(new TirEmitter(program, injectedSurface = injected).emit)
+    assert(!clue(out).contains("self$.size()"))
+    assert(out.contains("self$.size"))
+    assert(out.contains("recv$.size"), "a bound reference to a parenless member wraps the receiver once")
   }
 
   test("NEGATIVE: with no replacement the call keeps java's parens") {
