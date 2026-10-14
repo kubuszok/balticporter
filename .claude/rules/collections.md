@@ -189,3 +189,7 @@ the calls. Kind (a).
   array handed to the constructor's `T[]` formal at `Array[X]`: java passed it unchecked, scala's
   `Array` is invariant (gdx-tools, 1 E007). Read off the CONSTRUCTOR's own class (a retargeted
   construction keeps the java class's type parameters); a primitive element is never viewed. Kind (a).
+- The witness phase's unchecked conversion at a raw-filled formal reads a formal that IS the callee's
+  class type parameter AT THE RECEIVER's argument (`keep.free(c)` on a raw `Pool<Wrapper>` filled to
+  `Pool[Wrapper[Object]]`): read as the bare `A`, nothing matched and `Wrapper[T]` met
+  `Wrapper[Object]` once the bound drop closed over `Wrapper` (gdx-vfx, 2 E007). Kind (a).

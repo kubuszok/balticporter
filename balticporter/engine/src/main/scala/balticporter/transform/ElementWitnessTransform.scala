@@ -926,6 +926,18 @@ final class ElementWitnessTransform(
           )
           Tree.Typed(a, TypeTree(formal, o), formal, o)
         case _ => a
+
+    /** a formal that IS the callee's class type parameter, read at the receiver's own argument (`pool.free(w)` on a raw `Pool<Wrapper>` filled to `Pool[Wrapper[Object]]` takes a `Wrapper[Object]`),
+      * so the unchecked conversion below sees what the call really demands. By position; any other formal is kept.
+      */
+    def atReceiver(ap: Tree.Apply, f: TypeRepr): TypeRepr = (f, ap.fun) match
+      case (TypeRepr.TypeRef(_, tp), Tree.Select(recv, _, _, _)) =>
+        recv.tpe match
+          case TypeRepr.AppliedType(_, targs) =>
+            val tps = program0.symbolOf(ap.method).map(_.owner).flatMap(program0.definitionOf).collect { case cd: Tree.ClassDef => cd.tparams.map(_.symbol) }.getOrElse(Nil)
+            if tps.contains(tp) && tps.sizeIs == targs.size then targs(tps.indexOf(tp)) else f
+          case _ => f
+      case _ => f
     def formalsOfMethod(m: SymId): List[TypeRepr] =
       program0
         .definitionOf(m)
@@ -985,7 +997,7 @@ final class ElementWitnessTransform(
           ap.copy(fun = nw2, tpe = refill(ap.tpe))
         case ap: Tree.Apply =>
           // the callee's formals as DECLARED (pre-fill program), filled the way its own unit was
-          val formals = formalsOfMethod(ap.method).map(fillType)
+          val formals = formalsOfMethod(ap.method).map(f => fillType(atReceiver(ap, f)))
           if formals.sizeIs != ap.args.size then ap
           else
             val args2 = ap.args.zip(formals).map((a, f) => rawConvert(a, f, ap.origin, owner, unit))

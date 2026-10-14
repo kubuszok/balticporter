@@ -141,6 +141,28 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
     assert(clue(line.mkString("\n")).contains("s.toArray().asInstanceOf[scala.Array[java.lang.String]]"))
   }
 
+  test(
+    "a value handed to a raw receiver's class-parameter formal gets java's unchecked conversion at the receiver's filled argument"
+  ) {
+    val src =
+      """package com.demo;
+        |class Holder<T> {
+        |  T[] items;
+        |  Holder (int n) { items = (T[])new Object[n]; }
+        |  static class Cell<E> { E v; }
+        |  static Keeper<Cell> keep = new Keeper<Cell>();
+        |  void put (Cell<T> c) { keep.free(c); }
+        |}
+        |class Keeper<A> { void free (A a) {} }
+        |""".stripMargin
+    val p     = new ElementWitnessTransform(witness = Witness, subjectTypes = Map("com.demo.Holder" -> List(0)), dropBound = Set("com.demo.Holder"), boxedWitness = None)
+    val after = Pipeline.run(SpoonTir.fromSource(src, "Holder.java"), List(p))
+    val out   = new TirEmitter(after).emit
+    assert(
+      clue(out.linesIterator.filter(_.contains("free(")).mkString("\n")).contains("asInstanceOf[com.demo.Holder.Cell[java.lang.Object]]")
+    )
+  }
+
   test("a class literal's payload is filled like every other position this phase unbound") {
     assert(clue(ported.out).contains("classOf[com.demo.Bag[java.lang.Object]]"))
   }
