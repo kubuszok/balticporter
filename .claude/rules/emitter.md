@@ -326,3 +326,10 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   BODY boundary. The broad-catch guard (§4.4) rethrows BOTH shapes — `boundary.Break[?]` and, at a
   `Throwable` catch, `ControlThrowable` — since `NonFatal` spares the sentinel but `case t:
   Throwable` does not. A spec that asserts the spelling of a jump asserts THIS one.
+
+## Construction and generic arrays
+
+- `outer.new Inner()` names the enclosing instance; scala names it in the PATH, `new outer.Inner()`.
+  The frontend carries a local/parameter qualifier as the inner type's term prefix and `ctorTpe`
+  renders it; dropped, gdx-tools' `mask.new MaskIterator()` read `new MaskIterator()` outside `Mask`
+  (1 error). Any other qualifier keeps the unqualified spelling. Kind (a).

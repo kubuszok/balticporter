@@ -1000,6 +1000,22 @@ private[spoon] trait SpoonTirBodyExprs:
   private[spoon] def isBoxedWrapper(t: CtTypeReference[?]): Boolean =
     boxedWrappers(t.getQualifiedName)
 
+  /** `outer.new Inner()` (JLS 15.9.2): the enclosing instance is the explicit qualifier, and scala names it in the PATH, `new outer.Inner()`. Read where the qualifier is a local variable or parameter
+    * (a stable path); the inner type then carries it as a term prefix. Any other qualifier keeps the unqualified spelling, which scalac rejects outside the outer class rather than binding another
+    * instance.
+    */
+  private def qualifiedInner(cc: CtConstructorCall[?], t: TypeRepr)(using Obligations): TypeRepr =
+    Option(cc.getTarget) match
+      case Some(v: CtVariableRead[?]) if !v.isImplicit =>
+        expr(v) match
+          case Tree.Ident(s, _, _) =>
+            t match
+              case TypeRepr.TypeRef(_, inner)                              => TypeRepr.TypeRef(TypeRepr.TermRef(TypeRepr.NoPrefix, s), inner)
+              case TypeRepr.AppliedType(TypeRepr.TypeRef(_, inner), targs) => TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.TermRef(TypeRepr.NoPrefix, s), inner), targs)
+              case other                                                   => other
+          case _ => t
+      case _ => t
+
   private[spoon] def ctorCall(cc: CtConstructorCall[?])(using Obligations): Term =
     // A RAW `new` is the one place the inherited instantiation must NOT fill: the constructor
     // ARGUMENTS decide the parameter there. `new AssetDescriptor(name, TextureAtlas.class)`
@@ -1008,7 +1024,7 @@ private[spoon] trait SpoonTirBodyExprs:
     // local declarations do need it to match the signatures they feed.)
     val savedNoInherit = noInheritFill
     noInheritFill = true
-    val t = tpe(cc.getType)
+    val t = qualifiedInner(cc, tpe(cc.getType))
     noInheritFill = savedNoInherit
     val cid   = methodSym(cc.getExecutable)
     val argEs = cc.getArguments.asScala.toList

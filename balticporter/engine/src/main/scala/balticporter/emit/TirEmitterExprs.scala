@@ -1057,6 +1057,10 @@ private[emit] trait TirEmitterExprs:
     */
   /** As in `parentTpe`, only the HEAD is a `namedInner` position — the arguments are ordinary. */
   private[emit] def ctorTpe(t: TypeRepr): String = t match
+    // `outer.new Inner()`: the frontend carries the enclosing instance as the type's term prefix
+    case TypeRepr.TypeRef(TypeRepr.TermRef(_, outer), s)                             => s"${local(outer)}.${esc(sym(s).name)}"
+    case TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.TermRef(_, outer), s), args) =>
+      s"${local(outer)}.${esc(sym(s).name)}[${args.map(tpe).mkString(", ")}]"
     case TypeRepr.AppliedType(tc, args) if args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) => byName(tpe(tc))
     case TypeRepr.AppliedType(tc, args)                                                     => s"${byName(tpe(tc))}[${args.map(tpe).mkString(", ")}]"
     case _                                                                                  => byName(tpe(t))
