@@ -136,9 +136,15 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
     assert(ported.out.contains("new com.demo.Bag[java.lang.String](4,"), "the `E[]::new` method reference")
   }
 
-  test("a raw construction completed at `C[X]` views a java array handed to its `T[]` formal at `Array[X]`") {
-    val line = ported.out.linesIterator.filter(_.contains("def collected")).toList ++ ported.out.linesIterator.filter(_.contains("s.toArray()")).toList
-    assert(clue(line.mkString("\n")).contains("s.toArray().asInstanceOf[scala.Array[java.lang.String]]"))
+  test(
+    "a raw construction handed a java array at its `T[]` formal is built at the array's element and converted, never the array cast"
+  ) {
+    val line = ported.out.linesIterator.filter(_.contains("s.toArray()")).mkString("\n")
+    // an `Object[]` viewed as `Array[String]` is a checked cast on the JVM and throws
+    assert(
+      clue(line).contains("new com.demo.Bag[java.lang.Object](s.toArray(), 0, 1).asInstanceOf[com.demo.Bag[java.lang.String]]")
+    )
+    assert(!line.contains("s.toArray().asInstanceOf"))
   }
 
   test(

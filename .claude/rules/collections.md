@@ -185,10 +185,12 @@ the PARENT's arity**, read off the support types' declared table (`RuntimeArtifa
 java's `isEmpty()` beside `JavaCollection`'s `def isEmpty`, a class re-parented from
 `AbstractCollection` failed `incompatible type` at RefChecks, and a policy `force` could move only
 the calls. Kind (a).
-- A RAW construction a witness phase completes at `C[X]` (`new Array(set.toArray())`) views a java
-  array handed to the constructor's `T[]` formal at `Array[X]`: java passed it unchecked, scala's
-  `Array` is invariant (gdx-tools, 1 E007). Read off the CONSTRUCTOR's own class (a retargeted
-  construction keeps the java class's type parameters); a primitive element is never viewed. Kind (a).
+- A RAW construction a witness phase completes (`new Array(set.toArray())`, under java's unchecked
+  conversion to `Array<X>`) is built at the ARGUMENT's element, `C[Object]`, and the erased cast
+  around it converts: scala's `Array` is invariant (gdx-tools, 1 E007), and viewing the `Object[]`
+  as `Array[X]` instead compiled and threw `ClassCastException` on the JVM (gdx-tools' packer, 1
+  failing suite at 0 errors). Read off the CONSTRUCTOR's own class (a retargeted construction keeps
+  the java class's type parameters); a primitive element is never moved. Kind (a).
 - The witness phase's unchecked conversion at a raw-filled formal reads a formal that IS the callee's
   class type parameter AT THE RECEIVER's argument (`keep.free(c)` on a raw `Pool<Wrapper>` filled to
   `Pool[Wrapper[Object]]`): read as the bare `A`, nothing matched and `Wrapper[T]` met

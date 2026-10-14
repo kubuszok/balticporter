@@ -591,7 +591,7 @@ final class ElementWitnessTransform(
       private def completeRawNew(inner: Term, target: TypeRepr, o: Origin)(using Program): Term =
         target match
           case TypeRepr.AppliedType(TypeRepr.TypeRef(_, c), args) if boundSubjects.contains(c) =>
-            val filled    = args.map(fillArg)
+            val filled    = rawArrayElements(inner, c, args.map(fillArg))
             val completed = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, c), filled)
             noteWitness(c, filled, o)
             fillNew(inner, c, completed)
@@ -622,37 +622,35 @@ final class ElementWitnessTransform(
         case n: Tree.New if headSymOfType(n.tpt.tpe).contains(c) =>
           n.copy(tpt = TypeTree(completed, n.origin))
         case ap @ Tree.Apply(n: Tree.New, _, _, _, _) if headSymOfType(n.tpt.tpe).contains(c) =>
-          ap.copy(fun = fillNew(n, c, completed), args = viewRawArrays(ap, c, completed))
+          ap.copy(fun = fillNew(n, c, completed))
         case ap: Tree.Apply     => ap.copy(fun = fillNew(ap.fun, c, completed))
         case ta: Tree.TypeApply => ta.copy(fun = fillNew(ta.fun, c, completed))
         case other => other
 
-      /** java handed the RAW constructor an array unchecked (`new Array(set.toArray())` passes an `Object[]` to `T[]`); completed at `C[X]`, scala's invariant `Array` needs the argument viewed at
-        * `Array[X]` — java's own unchecked view, a reference array at run time either way. A primitive element is never viewed.
+      /** java handed the RAW constructor an array unchecked (`new Array(set.toArray())` passes an `Object[]` to `T[]`), so the object it built holds that array's element type and only the conversion
+        * around it says `C<X>`. Complete it at the ARGUMENT's element (`C[Object]`) and let the cast around it convert, which is erased: viewing the argument as `Array[X]` instead is a checked cast
+        * on the JVM and throws for a concrete `X`. A primitive element is never moved.
         */
-      private def viewRawArrays(ap: Tree.Apply, c: SymId, completed: TypeRepr)(using p: Program): List[Term] =
-        // the CONSTRUCTOR's own class: a retargeted construction keeps the java class's constructor and type parameters
-        val ctorOwner = p.symbolOf(ap.method).map(_.owner).getOrElse(c)
-        val tparams   = p.definitionOf(ctorOwner).orElse(p.definitionOf(c)).collect { case cd: Tree.ClassDef => cd.tparams.map(_.symbol) }.getOrElse(Nil)
-        val filled    = completed match
-          case TypeRepr.AppliedType(_, as) => as
-          case _                           => Nil
-        val formals = p.symbolOf(ap.method).map(_.info).collect { case TypeRepr.MethodType(ps, _, _) => ps.map(_._2) }.getOrElse(Nil)
-        def arrayOf(t: TypeRepr): Option[(TypeRepr, TypeRepr)] = t match
-          case TypeRepr.AppliedType(arr @ TypeRepr.TypeRef(_, a), List(e)) if p.symbolOf(a).exists(_.fullName == "scala.Array") => Some((arr, e))
-          case _                                                                                                                => scala.None
-        if tparams.sizeIs != filled.size || formals.sizeIs != ap.args.size then ap.args
-        else
-          ap.args.zip(formals).map { (a, f) =>
-            (arrayOf(f), arrayOf(a.tpe)) match
-              case (Some((arr, TypeRepr.TypeRef(_, tp))), Some((_, got))) if tparams.contains(tp) =>
-                val want = filled(tparams.indexOf(tp))
-                if got == want || primitives(want) then a
-                else
-                  val view = TypeRepr.AppliedType(arr, List(want))
-                  Tree.Typed(a, TypeTree(view, a.origin), view, a.origin)
-              case _ => a
-          }
+      private def rawArrayElements(t: Term, c: SymId, filled: List[TypeRepr])(using p: Program): List[TypeRepr] = t match
+        case ap @ Tree.Apply(n: Tree.New, _, _, _, _) if headSymOfType(n.tpt.tpe).contains(c) =>
+          // the CONSTRUCTOR's own class: a retargeted construction keeps the java class's constructor and type parameters
+          val ctorOwner = p.symbolOf(ap.method).map(_.owner).getOrElse(c)
+          val tparams   = p.definitionOf(ctorOwner).orElse(p.definitionOf(c)).collect { case cd: Tree.ClassDef => cd.tparams.map(_.symbol) }.getOrElse(Nil)
+          val formals   = p.symbolOf(ap.method).map(_.info).collect { case TypeRepr.MethodType(ps, _, _) => ps.map(_._2) }.getOrElse(Nil)
+          def arrayOf(t: TypeRepr): Option[TypeRepr] = t match
+            case TypeRepr.AppliedType(TypeRepr.TypeRef(_, a), List(e)) if p.symbolOf(a).exists(_.fullName == "scala.Array") => Some(e)
+            case _                                                                                                          => scala.None
+          if tparams.sizeIs != filled.size || formals.sizeIs != ap.args.size then filled
+          else
+            ap.args.zip(formals).foldLeft(filled) { case (acc, (a, f)) =>
+              (arrayOf(f), arrayOf(a.tpe)) match
+                case (Some(TypeRepr.TypeRef(_, tp)), Some(got)) if tparams.contains(tp) && !primitives(acc(tparams.indexOf(tp))) && !primitives(got) =>
+                  acc.updated(tparams.indexOf(tp), got)
+                case _ => acc
+            }
+        case ap: Tree.Apply     => rawArrayElements(ap.fun, c, filled)
+        case ta: Tree.TypeApply => rawArrayElements(ta.fun, c, filled)
+        case _ => filled
 
       private def primitives(t: TypeRepr)(using p: Program): Boolean = t match
         case TypeRepr.TypeRef(_, s) =>
