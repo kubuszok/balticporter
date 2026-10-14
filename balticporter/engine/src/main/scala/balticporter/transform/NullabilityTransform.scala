@@ -164,6 +164,9 @@ final class NullabilityTransform(
 
   private var wrapperSym, applySym, emptySym, getSym, orNullSym, isEmptySym, notSym, boolSym = SymId.None
 
+  /** the binary operators a compound assignment on a wrapped slot is lowered to, minted with the wrapper */
+  private var compoundOps: Map[String, SymId] = Map.empty
+
   /** the primitive symbol IDs — cached at RUN time so [[coerceTo]] can decide `.get` vs `.orNull` without threading a `Program` through a function passed as a value.
     */
   private var primSyms: Set[SymId] = Set.empty
@@ -251,6 +254,10 @@ final class NullabilityTransform(
         isEmptySym = mintOrReuse(OptionFqn + ".isEmpty", "isEmpty", wrapperSym)
         notSym = mintOrReuse(NotOp, "unary_!")
         boolSym = mintOrReuse("scala.Boolean", "Boolean")
+
+    compoundOps =
+      if target.isWrapper then NullabilityTransform.CompoundOps.map(o => o -> mintOrReuse(s"scala.<op>#$o", o)).toMap
+      else Map.empty
 
     // cache primitive symbol IDs so `coerceTo` can decide `.get` vs `.orNull` without `Program`
     primSyms = program.symbols.all.iterator.filter(s => PrimitiveNames(s.fullName)).map(_.id).toSet
@@ -994,6 +1001,15 @@ final class NullabilityTransform(
         .getOrElse(tpe)
     case other => other.tpe
   override def transformTerm(t: Term)(using Program): Term = t match
+    // `s += "/"` on a wrapped slot: java reads the value, applies the operator, writes the result — so the
+    // wrapper is opened, the operator applied to the VALUE, and the result wrapped. A string concatenation
+    // reads `null` as java does (`orNull`), any other operator dereferences (java unboxes: an NPE on null).
+    case a @ Tree.Assign(lhs, rhs, _, _, Some((op, scala.None))) if isWrapper && isWrapped(lhs) && compoundOps.contains(op) =>
+      val elem    = elementOf(lhs.tpe)
+      val concat  = op == "+" && headSym(elem).exists(s => summon[Program].symbolOf(s).exists(_.fullName == "java.lang.String"))
+      val current = if concat then unwrapOrNull(lhs) else unwrap(lhs)
+      val value   = Tree.Apply(Tree.Select(current, compoundOps(op), elem, a.origin), List(rhs), compoundOps(op), elem, a.origin)
+      a.copy(rhs = coerceTo(assignedSlot(lhs), value), compound = scala.None)
     case a: Tree.Assign if isWrapper => a.copy(rhs = coerceTo(assignedSlot(a.lhs), a.rhs))
     // `(T) wrapped` — java casts the VALUE; the wrapper is not it (`Attributes.get`: a
     // `ClassCastException` at run time, 2 of 12 demos). Unwrapped at the cast, by the cast's target.
@@ -1366,6 +1382,9 @@ object NullabilityTransform:
   private val OptionFqn = "scala.Option"
   private val NoneFqn   = "scala.None"
   private val NotOp     = "scala.<op>#unary_!"
+
+  /** java's compound assignment operators (JLS 15.26.2), by the binary operator each applies */
+  private val CompoundOps: List[String] = List("+", "-", "*", "/", "%", "&", "|", "^", "<<", ">>", ">>>")
 
   /** the engine's synthetic operator namespace, minted by the frontend under exactly this owner. */
   private val OperatorOwners = Set("scala.<op>")
