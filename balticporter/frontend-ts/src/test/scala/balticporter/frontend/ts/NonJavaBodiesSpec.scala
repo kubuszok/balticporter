@@ -272,3 +272,24 @@ class NonJavaBodiesSpec extends munit.FunSuite:
     )
     assertEquals(RecordedDivergence.parse("f", "m", "-", "R").params, Some(Nil))
     assertEquals(RecordedDivergence.parse("f", "m", "*", "R").params, None)
+
+  test(
+    "a file-scoped reference-only key keeps its own file's member and not its namesake elsewhere; one naming nothing is reported"
+  ):
+    val (root, reference, rast) = fixture()
+    val lib                     = library.copy(referenceOnlyAt = Map(("other/Unfed.scala", "area") -> "kept-here", ("demo/Shapes.scala", "perimeter") -> "gone"))
+    NonJavaBodies.build(lib, reference, rast) match
+      case built: NonJavaBodies.Built =>
+        val result = built.derive(root.resolve("out"), root.resolve("report"))
+        val why    = result.rows.filter(_.member == "area").map(r => (r.file, r.occurrence, r.why))
+        assertEquals(
+          why,
+          List(
+            ("demo/Shapes.scala", "0", ""),
+            ("demo/Shapes.scala", "1", ""),
+            ("demo/Shapes.scala", "2", "occurrence-out-of-range"),
+            ("other/Unfed.scala", "0", "reference-only:kept-here")
+          )
+        )
+        assertEquals(result.unmatchedReferenceOnlyAt, List(("demo/Shapes.scala", "perimeter")))
+      case refused: NonJavaBodies.Refused => fail(refused.message)

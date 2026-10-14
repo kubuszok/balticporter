@@ -24,7 +24,8 @@ object NonJavaBodies:
 
   /** A registered library. `modules` may need a file of its own first (a class hierarchy) and refuses when it cannot be read. `referenceOnly` maps a member name to the consumer's reason why that
     * member has no upstream counterpart and should always keep its reference body; a key that matches no member in any file is a finding. `recordedDivergences` are the members the consumer diverged
-    * from upstream on purpose, each kept on the reference ahead of every other reason; one that matches no member is a finding too.
+    * from upstream on purpose, each kept on the reference ahead of every other reason; one that matches no member is a finding too. `referenceOnlyAt` is `referenceOnly` keyed by (reference file,
+    * member), so a name one file keeps does not keep its namesake in another; it is read before the name-wide map.
     */
   final case class Library(
     name:                String,
@@ -32,7 +33,8 @@ object NonJavaBodies:
     readRast:            Path => RastFile,
     modules:             Loader => Either[String, List[Module]],
     referenceOnly:       Map[String, String] = Map.empty,
-    recordedDivergences: List[RecordedDivergence] = Nil
+    recordedDivergences: List[RecordedDivergence] = Nil,
+    referenceOnlyAt:     Map[(String, String), String] = Map.empty
   )
 
   /** The translated bodies of one reference file, the syntax-tree files they came from, and the reason there are none when its module could not be built. */
@@ -51,7 +53,8 @@ object NonJavaBodies:
     referenceDir:  Path,
     files:         Map[String, FileBodies],
     referenceOnly: Map[String, String] = Map.empty,
-    recorded:      List[RecordedDivergence] = Nil
+    recorded:      List[RecordedDivergence] = Nil,
+    referenceAt:   Map[(String, String), String] = Map.empty
   ) extends Result:
 
     def bodiesFor(relativeFile: String): ParityDerive.Bodies =
@@ -70,17 +73,18 @@ object NonJavaBodies:
       val rawBodies = entry.fold(ParityDerive.Bodies.empty)(_.bodies)
       val bodies    = if referenceOnly.isEmpty then rawBodies else ParityDerive.Bodies(rawBodies.byName -- referenceOnly.keySet)
       val here      = recorded.filter(_.file == relativeFile)
-      val pinned    = (m: ReferenceSkeleton.ParsedMethod) => here.find(_.covers(relativeFile, m)).map(r => RecordedDivergence.why(r.record))
+      val keptAt    = (member: String) => referenceAt.get((relativeFile, member)).map(ParityDerive.Why.referenceOnly)
+      val pinned    = (m: ReferenceSkeleton.ParsedMethod) => here.find(_.covers(relativeFile, m)).map(r => RecordedDivergence.why(r.record)).orElse(keptAt(m.name))
       val result    = ParityDerive.derive(referenceSource, bodies, policy, pinned)
       BodiesReport.requireCoverage(relativeFile, referenceSource, result)
-      // an unoffered member keeps its reference body anyway; its row names the record when one covers it
-      val unofferedRecord = (row: BodiesReport.Row) => if row.occurrence != "-" then None else here.find(_.member == row.member)
-      val rows            = BodiesReport.rows(relativeFile, result).map { row =>
-        if row.why.startsWith(RecordedDivergence.why("")) then row
+      // an unoffered member keeps its reference body anyway; its row names the record or the file-scoped reason that covers it
+      val unofferedWhy = (row: BodiesReport.Row) => if row.occurrence != "-" then None else here.find(_.member == row.member).map(r => RecordedDivergence.why(r.record)).orElse(keptAt(row.member))
+      val rows         = BodiesReport.rows(relativeFile, result).map { row =>
+        if row.why.startsWith(RecordedDivergence.why("")) || keptAt(row.member).contains(row.why) then row
         else
-          unofferedRecord(row) match
-            case Some(r) => row.copy(why = RecordedDivergence.why(r.record))
-            case None    => referenceOnlyRow(row, entry)
+          unofferedWhy(row) match
+            case Some(why) => row.copy(why = why)
+            case None      => referenceOnlyRow(row, entry)
       }
       (result.emittedSource, rows)
 
@@ -111,17 +115,21 @@ object NonJavaBodies:
       val matched   = all.filter(r => referenceOnly.contains(r.member)).map(_.member).toSet
       val unmatched = (referenceOnly.keySet -- matched).toList.sorted
       val stale     = recorded.filterNot(r => all.exists(row => row.file == r.file && row.member == r.member && row.why == RecordedDivergence.why(r.record)))
-      Run(written.result(), all, BodiesReport.write(reportDir, all), unmatched, stale)
+      val staleAt   = referenceAt.toList.collect {
+        case ((file, member), reason) if !all.exists(row => row.file == file && row.member == member && row.why == ParityDerive.Why.referenceOnly(reason)) => (file, member)
+      }.sorted
+      Run(written.result(), all, BodiesReport.write(reportDir, all), unmatched, stale, staleAt)
 
-  /** What one derive run wrote. `unmatchedReferenceOnly` lists `referenceOnly` keys that matched no member in any file, `unmatchedRecorded` the recorded divergences that matched no member; the
-    * consumer should treat each as a policy finding.
+  /** What one derive run wrote. `unmatchedReferenceOnly` lists `referenceOnly` keys that matched no member in any file, `unmatchedRecorded` the recorded divergences that matched no member,
+    * `unmatchedReferenceOnlyAt` the file-scoped keys whose file declares no such member; the consumer should treat each as a policy finding.
     */
   final case class Run(
-    written:                List[Path],
-    rows:                   List[BodiesReport.Row],
-    summary:                BodiesReport.Summary,
-    unmatchedReferenceOnly: List[String] = Nil,
-    unmatchedRecorded:      List[RecordedDivergence] = Nil
+    written:                  List[Path],
+    rows:                     List[BodiesReport.Row],
+    summary:                  BodiesReport.Summary,
+    unmatchedReferenceOnly:   List[String] = Nil,
+    unmatchedRecorded:        List[RecordedDivergence] = Nil,
+    unmatchedReferenceOnlyAt: List[(String, String)] = Nil
   )
 
   /** Translated bodies for the given `library` value: `referenceDir` is the root of its hand-written Scala (any package directories included), `rastDir` the root of its exported syntax trees. */
@@ -166,7 +174,15 @@ object NonJavaBodies:
               parts.flatMap(_.refusal).headOption.filter(_ => parts.forall(_.refusal.isDefined))
             )
           }
-          Built(library.name, library.policy, referenceDir, files, library.referenceOnly, library.recordedDivergences)
+          Built(
+            library.name,
+            library.policy,
+            referenceDir,
+            files,
+            library.referenceOnly,
+            library.recordedDivergences,
+            library.referenceOnlyAt
+          )
 
   /** The directory prefix under which the most module paths resolve — the reference root may or may not include package directories. Ties take the shortest prefix. */
   private def anchorOf(references: List[String], subPaths: List[String]): String =
