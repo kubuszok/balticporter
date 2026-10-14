@@ -497,7 +497,9 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
   /** a TYPE declared in java the run READ (a resolution root, never a class file), not this run's own, in a package a base publishes, and absent from every map. */
   private def unpublishedBaseType(program: Program, sym: Symbol): Boolean =
     program.definitionOf(sym.id).exists(_.isInstanceOf[Tree.ClassDef]) && !boundRun.emitsSymbol(program, sym.id) &&
-      packageOwner(sym.fullName).isDefined && !typeEntries.contains(PortMapTransform.topLevelOf(sym.fullName))
+      packageOwner(sym.fullName).isDefined && !typeEntries.contains(PortMapTransform.topLevelOf(sym.fullName)) &&
+      // a base's DROP is answered by the replacement inherited with it (a retarget, a redirect), never by this map
+      !boundRun.inheritedDrops(PortMapTransform.topLevelOf(sym.fullName)) && !boundRun.inheritedDrops(sym.fullName)
 
   /** the module publishing the OWNER of a member declared in java the run read, when that owner is a type the base EMITS and the member is not this run's own; None otherwise. */
   private def unpublishedBaseMember(program: Program, sym: Symbol): Option[String] =

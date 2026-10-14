@@ -396,6 +396,10 @@ class PortMapTransformSpec extends munit.FunSuite:
           |  public static void load(String name) { new Array<String>().size(); }
           |}
           |""".stripMargin,
+      "com/example/gfx/utils/Retired.java" ->
+        """package com.example.gfx.utils;
+          |public class Retired { public static void go() {} }
+          |""".stripMargin,
       "com/example/gfx/utils/Array.java" ->
         """package com.example.gfx.utils;
           |public class Array<T> {
@@ -411,14 +415,18 @@ class PortMapTransformSpec extends munit.FunSuite:
           |import com.example.gfx.utils.Array;
           |import com.example.gfx.utils.Loader;
           |public class Boot {
-          |  public int start(Array<String> a) { Loader.load("x"); a.toArray(); return a.size(); }
+          |  public int start(Array<String> a) { Loader.load("x"); com.example.gfx.utils.Retired.go(); a.toArray(); return a.size(); }
           |}
           |""".stripMargin
     )
     val p     = model(base, dep)
     val own   = p.units.filter(u => p.symbolOf(u.symbol).exists(_.fullName == "com.example.ecs.Boot")).map(_.symbol).toSet
     val phase = new PortMapTransform(List(baseMap))
-    Pipeline.runTraced(p, List(phase), new balticporter.tir.PolicyBinder(p, p.members, balticporter.tir.RunScope.of(own, Map.empty)))
+    Pipeline.runTraced(
+      p,
+      List(phase),
+      new balticporter.tir.PolicyBinder(p, p.members, balticporter.tir.RunScope.of(own, Map.empty).inheritingDrops(Set("com.example.gfx.utils.Retired")))
+    )
     val byIssue = phase.findings.groupBy(_.issue)
 
     // the type outside the base's source set, in a package the base publishes
