@@ -855,14 +855,8 @@ private[dedicated] class BodyContext(
             val scalaProp = memberRenames.getOrElse(camel, memberRenames.getOrElse(prop, camel))
             s"$scalaObj.$scalaProp"
       // AST_X.prototype -> skip (handled by prototype extraction)
-      else if obj.kind == "PropertyAccessExpression" then
-        val objParts = obj.children
-        if objParts.size >= 2 && objParts.last.text.contains("prototype") then
-          val cls = objParts.head.text.getOrElse("?")
-          s"${conventions.scalaClassName(cls)}.${snakeToCamel(prop)}"
-        else
-          val objExpr = translateExpr(obj)
-          translatePropOnExpr(objExpr, prop)
+      else if obj.kind == "PropertyAccessExpression" && obj.children.size >= 2 && obj.children.last.text.contains("prototype") then
+        s"${conventions.scalaClassName(obj.children.head.text.getOrElse("?"))}.${snakeToCamel(prop)}"
       else
         val renamedProp = memberRenames.get(snakeToCamel(prop)).orElse(memberRenames.get(prop))
         val effectiveProp = renamedProp.getOrElse(snakeToCamel(prop))
@@ -871,8 +865,9 @@ private[dedicated] class BodyContext(
         // When the object is a parameter with a known specific type, check the
         // member index from the reference tree. If the type is known and the
         // member is not declared on it, refuse with wrong-member-access.
-        if obj.kind == "Identifier" && !knownSafeProperties.contains(prop) then
-          val tpe = exprType(obj)
+        // any receiver whose type is known is checked, a member read's included (`a.b.c` checks `.c` against `b`'s type)
+        val tpe = if knownSafeProperties.contains(prop) then None else exprType(obj)
+        if !knownSafeProperties.contains(prop) && (obj.kind == "Identifier" || tpe.isDefined) then
           tpe match
             case Some(t) if t.contains("|") || isOptionLike(t) =>
               // a member of a union or of a value that may be absent: TS narrowed it, Scala has not
@@ -882,7 +877,7 @@ private[dedicated] class BodyContext(
               if memberIndex.knowsType(baseType) then
                 declaredSpelling = List(effectiveProp, snakeToCamel(prop), prop).find(memberIndex.hasMember(baseType, _))
                 if declaredSpelling.isEmpty then refuse("wrong-member-access")
-              else if isSpecificClassType(t) then
+              else if isSpecificClassType(t) || Set("Any", "AnyRef", "Object")(baseType) then
                 refuse("wrong-member-access")
             case None =>
               // Receiver type unknown and not a known binding: the translator

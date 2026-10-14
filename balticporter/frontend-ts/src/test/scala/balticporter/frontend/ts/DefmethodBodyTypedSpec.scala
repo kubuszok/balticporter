@@ -506,3 +506,33 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       memberIndex = seqIndex
     )
     assert(!reassigned.scalaBody.contains("asInstanceOf[Seq]"), reassigned.scalaBody)
+
+  private def checkerTyped(tpe: RastType, member: String): DefmethodBodyTranslator.TranslationResult =
+    val recv = RastNode("Identifier", 0, (0, 0), text = Some("tok"), `type` = Some("k"))
+    DefmethodBodyTranslator.translateBody(
+      DefmethodEntry("_free_", "test", List("tok"), block(ret(prop(recv, member)))),
+      Nil,
+      memberIndex = ReferenceSignatures.MemberIndex(Map("Token" -> Set("text"), "Box" -> Set("v"))),
+      tsTypes = Map("k" -> tpe)
+    )
+
+  test(
+    "a receiver nothing declares takes the checker's class when the reference declares that class: its members are validated against it"
+  ):
+    accepts(checkerTyped(RastType("object", "Token"), "text"))
+    refuses(checkerTyped(RastType("object", "Token"), "txt"), "wrong-member-access")
+
+  test(
+    "a member read off a member read is checked against the type the reference declares for the inner one, AnyRef having none"
+  ):
+    val mi = ReferenceSignatures.MemberIndex(
+      Map("Ctx" -> Set("parser", "opts"), "Opts" -> Set("size")),
+      types = Map("Ctx" -> Map("parser" -> "AnyRef", "opts" -> "Opts"))
+    )
+    val read = (m: String, f: String) => translate(block(ret(prop(prop(ident("c"), m), f))), params = List("c"), paramTypes = Map("c" -> "Ctx"), memberIndex = mi)
+    refuses(read("parser", "settings"), "wrong-member-access")
+    refuses(read("opts", "colour"), "wrong-member-access")
+    accepts(read("opts", "size"))
+
+  test("a checker type that is a union, an unknown class or an anonymous shape says nothing"):
+    for t <- List(RastType("union", "Token | undefined"), RastType("object", "Other"), RastType("object", "{ text: string; }")) do refuses(checkerTyped(t, "text"), "receiver-type-unknown")

@@ -95,7 +95,23 @@ abstract private[dedicated] class BodyScope(
     * nothing in the reference saying otherwise, is a `Boolean`: its truthiness is its value, and a Scala type that disagrees fails to compile rather than reading differently.
     */
   protected def exprType(node: RastNode): Option[String] =
-    declaredType(node).orElse(if isTsBoolean(node) then Some("Boolean") else None)
+    declaredType(node).orElse(checkerType(node))
+
+  private val plainClassName = "[A-Za-z_][A-Za-z0-9_]*".r
+
+  /** What the checker's type says in Scala, where it is unambiguous: a boolean, or a local or parameter holding an instance of a class the reference declares under that name with no type parameters.
+    * Never a union (an absent value may be any of Scala's optional spellings), never a member read (the reference may declare the member wider, `AnyRef` against a cycle).
+    */
+  private def checkerType(node: RastNode): Option[String] =
+    if isTsBoolean(node) then Some("Boolean")
+    else
+      node.`type`
+        .flatMap(tsTypes.get)
+        .collect {
+          case t if node.kind == "Identifier" && t.kind == "object" && plainClassName.matches(t.text) =>
+            if conventions.isClassName(t.text) then conventions.scalaClassName(t.text) else t.text
+        }
+        .filter(c => memberIndex.knowsType(c) && memberIndex.testable(c) == c)
 
   /** True when the checker typed `node` as `boolean`, possibly `| undefined` or `| null` (both falsy, as `false` is). */
   protected def isTsBoolean(node: RastNode): Boolean =
