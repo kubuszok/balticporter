@@ -934,16 +934,29 @@ final class ElementWitnessTransform(
       case (TypeRepr.TypeRef(_, tp), Tree.Select(recv, _, _, _)) =>
         recv.tpe match
           case TypeRepr.AppliedType(_, targs) =>
-            val tps = program0.symbolOf(ap.method).map(_.owner).flatMap(program0.definitionOf).collect { case cd: Tree.ClassDef => cd.tparams.map(_.symbol) }.getOrElse(Nil)
-            if tps.contains(tp) && tps.sizeIs == targs.size then targs(tps.indexOf(tp)) else f
+            val owner = program0.symbolOf(ap.method).map(_.owner)
+            val tps   = owner.flatMap(program0.definitionOf).collect { case cd: Tree.ClassDef => cd.tparams.map(_.symbol) }.getOrElse(Nil)
+            // a class with no declaration here (a redirect's target) and ONE parameter: the formal owned by that class is it
+            val classParam = program0.symbolOf(tp).exists(s => owner.contains(s.owner))
+            if tps.contains(tp) && tps.sizeIs == targs.size then rawFilled(targs(tps.indexOf(tp)))
+            else if tps.isEmpty && classParam && targs.sizeIs == 1 then rawFilled(targs.head)
+            else f
           case _ => f
       case _ => f
+
+    /** a RAW use of a class this phase unbound, as the emitter prints it: every argument `java.lang.Object` */
+    def rawFilled(t: TypeRepr): TypeRepr = t match
+      case TypeRepr.TypeRef(_, c) if filledClasses(c) =>
+        TypeRepr.AppliedType(t, tparamsOfClass.getOrElse(c, Nil).map(_ => TypeRepr.TypeRef(TypeRepr.NoPrefix, mint.javaObject)))
+      case other => other
     def formalsOfMethod(m: SymId): List[TypeRepr] =
       program0
         .definitionOf(m)
         .collect { case d: Tree.DefDef =>
           d.paramss.flatten.filterNot(v => program0.symbolOf(v.symbol).exists(_.flags.isGiven)).map(_.tpt.tpe)
         }
+        // a member with no declaration here (a redirect's twin on the replacement type) states its formals in its info
+        .orElse(program0.symbolOf(m).map(_.info).collect { case TypeRepr.MethodType(ps, _, false) => ps.map(_._2) })
         .getOrElse(Nil)
 
     /** the (index, element) a raw construction's array-supplier argument states for a slot the fill set to `Object`: the argument's LAMBDA BODY (`n => new E[n]`, read through a cast) or its type

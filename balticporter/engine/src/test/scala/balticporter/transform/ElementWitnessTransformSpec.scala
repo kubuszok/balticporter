@@ -159,7 +159,7 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
     val after = Pipeline.run(SpoonTir.fromSource(src, "Holder.java"), List(p))
     val out   = new TirEmitter(after).emit
     assert(
-      clue(out.linesIterator.filter(_.contains("free(")).mkString("\n")).contains("asInstanceOf[com.demo.Holder.Cell[java.lang.Object]]")
+      clue(out.linesIterator.filter(_.contains("keep.free(")).mkString("\n")).contains("free(c.asInstanceOf[com.demo.Holder.Cell[java.lang.Object]])")
     )
   }
 
