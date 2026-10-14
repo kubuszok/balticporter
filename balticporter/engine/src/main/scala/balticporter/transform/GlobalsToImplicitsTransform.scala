@@ -487,34 +487,37 @@ final class GlobalsToImplicitsTransform(
     // transitive closure: a generic class C[T] constructing a bounded-given class B[T] with its
     // own first type parameter needs the same given threaded through its own constructors.
     val allClassDefs = program0.units.flatMap(StandardTraversal.allClassDefs(_)(using program0))
+    // every type parameter of `cd` a construction of a given-bound class is applied at: `ValueArrayMap[K, V]`
+    // building `DynamicArray[K]` and `DynamicArray[V]` needs a witness at BOTH, or the second has no given
     def findBoundedConstruction(cd: Tree.ClassDef): Option[String] =
       if cd.tparams.isEmpty then return None
-      val firstTp = cd.tparams.head.symbol
+      val tps = cd.tparams.map(_.symbol)
       boundGivens.view.flatMap { (givenClassSym, givenFqn) =>
-        def hasInstantiation(stmts: List[Statement]): Boolean = stmts.exists(hasNew)
-        def hasNew(t: Tree):                          Boolean = t match
+        val found = collection.mutable.LinkedHashSet.empty[Int]
+        def note(t: Tree): Unit = t match
           case Tree.New(tpt, _, _, _) =>
             tpt.tpe match
-              case TypeRepr.AppliedType(TypeRepr.TypeRef(_, headSym), args) =>
-                headSym == givenClassSym && args.headOption.exists {
-                  case TypeRepr.TypeRef(_, s) => s == firstTp
-                  case _                      => false
-                }
-              case TypeRepr.TypeRef(_, headSym) =>
-                headSym == givenClassSym
-              case _ => false
-          case a:     Tree.Apply     => hasNew(a.fun) || a.args.exists(hasNew)
-          case ta:    Tree.TypeApply => hasNew(ta.fun)
-          case b:     Tree.Block     => b.stats.exists(hasNew) || hasNew(b.expr)
-          case sel:   Tree.Select    => hasNew(sel.qual)
-          case typed: Tree.Typed     => hasNew(typed.expr)
-          case ifc:   Tree.If        => hasNew(ifc.cond) || hasNew(ifc.thenp) || hasNew(ifc.elsep)
-          case d:     Tree.DefDef    => d.rhs.exists(hasNew)
-          case v:     Tree.ValDef    => v.rhs.exists(hasNew)
-          case a:     Tree.Assign    => hasNew(a.rhs)
-          case _ => false
-        if hasInstantiation(cd.body) then Some(givenFqn)
-        else None
+              case TypeRepr.AppliedType(TypeRepr.TypeRef(_, headSym), args) if headSym == givenClassSym =>
+                args.headOption match
+                  case Some(TypeRepr.TypeRef(_, s)) if tps.contains(s) => found += tps.indexOf(s)
+                  case _                                               => ()
+              case TypeRepr.TypeRef(_, headSym) if headSym == givenClassSym => found += 0
+              case _                                                        => ()
+          case a:     Tree.Apply     => note(a.fun); a.args.foreach(note)
+          case ta:    Tree.TypeApply => note(ta.fun)
+          case b:     Tree.Block     => b.stats.foreach(note); note(b.expr)
+          case sel:   Tree.Select    => note(sel.qual)
+          case typed: Tree.Typed     => note(typed.expr)
+          case ifc:   Tree.If        => note(ifc.cond); note(ifc.thenp); note(ifc.elsep)
+          case d:     Tree.DefDef    => d.rhs.foreach(note)
+          case v:     Tree.ValDef    => v.rhs.foreach(note)
+          case a:     Tree.Assign    => note(a.rhs)
+          case _ => ()
+        cd.body.foreach(note)
+        val base = givenFqn.split('|').head.takeWhile(_ != ':')
+        if found.isEmpty then None
+        else if found.toList == List(0) then Some(givenFqn)
+        else Some(found.toList.sorted.map(i => s"$base:$i").mkString("|"))
       }.headOption
     var changed = true
     while changed do
