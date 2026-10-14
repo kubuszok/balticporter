@@ -579,8 +579,27 @@ object TirEmitter:
       // a no-op for the other two.
       def level(f: Flags): String =
         if f.isPrivate then "private" else if f.isProtected then "protected" else if f.isPackagePrivate then "package-private" else "public"
+      // a field its class already exposes through a PUBLIC bean accessor (`setX`, `getX`, `isX`) is
+      // reached at that level through the accessor, and the property is spelled through the field
+      // where a fold or a caller reads it so: the widening never lands narrower than that surface.
+      def publicAccessor(s: Symbol): Boolean =
+        val suffix = balticporter.transform.PublicFieldAccessorTransform.beanSuffix(s.name)
+        p.definitionOf(s.owner)
+          .collect { case c: Tree.ClassDef => c }
+          .exists(
+            _.body.exists {
+              case d: Tree.DefDef =>
+                p.symbolOf(d.symbol).exists { m =>
+                  level(m.flags) == "public" && m.flags.isStatic == s.flags.isStatic && {
+                    val arity = d.paramss.flatten.size
+                    (m.name == s"set$suffix" && arity == 1) || ((m.name == s"get$suffix" || m.name == s"is$suffix") && arity == 0)
+                  }
+                }
+              case _ => false
+            }
+          )
       // a static has no `protected` scala can express (it lives in the companion), so it goes public.
-      def target(s: Symbol):  String = if toPublic(s.id) || s.flags.isStatic then "public" else "protected"
+      def target(s: Symbol):  String = if toPublic(s.id) || s.flags.isStatic || publicAccessor(s) then "public" else "protected"
       def widened(s: Symbol): Flags  =
         s.flags.copy(isPrivate = false, isProtected = target(s) == "protected", isPackagePrivate = false)
       def narrower(s: Symbol): Boolean = level(s.flags) != "public" && level(s.flags) != target(s)
