@@ -644,7 +644,7 @@ private[emit] trait TirEmitterMembers:
     val ctorNowarn = if isCtor && orNullCtors(d.symbol) then nowarnDeprecated(i) else ""
     // a JNI `native` method no FFI phase rewrote keeps java's own spelling: `@native`, bodiless
     // (`PanamaFfiTransform` clears the flag where it rewrites).
-    val nativeAnn = if !isCtor && s.flags.isNative && d.rhs.isEmpty then s"${ind(i)}@scala.native\n" else ""
+    val nativeAnn = if !isCtor && NativeMethodCheck.bodiless(s, d) then s"${ind(i)}@scala.native\n" else ""
     s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}$ctorNowarn$nativeAnn${ind(i)}$recv${mods(s, privateQualifier(s.owner))}${
         if OpaqueSpec.OwnClassTag.isInlineCoercion(s) then "inline " else ""
       }def $name$tps$pss$ret$rhs"

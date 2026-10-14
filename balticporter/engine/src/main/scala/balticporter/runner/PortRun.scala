@@ -27,6 +27,7 @@ import balticporter.tir.{
   JdkSurfaceCheck,
   MarkerCheck,
   MemberIndex,
+  NativeMethodCheck,
   NoteCoverageCheck,
   OmissionCheck,
   Origin,
@@ -1096,6 +1097,13 @@ final case class PortRun(
         translated.decisions.record(ReflectionVisibilityCheck.decision(f, sym.id, f.owner))
       }
     }
+
+    // ---- JNI natives: a bodiless `@scala.native` links on the JVM only ----
+    val natives = NativeMethodCheck.check(program, checkedUnits)
+    CheckReport.record(NativeMethodCheck.Name, natives.map(_.report))
+    say(s"JNI NATIVE (bodiless `@scala.native`, JVM-only): ${natives.size}")
+    if natives.nonEmpty then say(NativeMethodCheck.Classification)
+    println(NativeMethodCheck.summary(natives))
 
     // ---- class-init trigger check ----
     val classInits = ClassInitTriggerCheck.check(program, checkedUnits, translated.emitter.forcedClassInits, translated.emitter.emittedShapes.types.get)
@@ -2533,6 +2541,7 @@ object PortRun:
     DependencyCheck.Declared,
     RewriteCallSitesCheck.Name,
     ReflectionVisibilityCheck.Name,
+    NativeMethodCheck.Name,
     UnusedHandled,
     UnusedRefused
     // Collection/nullability/opaque/test-framework lanes are conditionally required (see requiredChecks).
