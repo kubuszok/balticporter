@@ -4,39 +4,54 @@ import balticporter.core.{ MergeablePolicy, SurfacePolicy }
 import balticporter.tir.*
 import balticporter.tir.Tree.*
 
-/** A library-specific rule built on a reusable mechanism: recognizes Terser's `DEFNODE(type, props, ctor, methods, base)` runtime class-building pattern and normalizes it into explicit `ClassDef`
-  * nodes in TIR.
-  *
-  * The DEFNODE pattern builds a prototype-based class hierarchy at runtime. A static frontend cannot see these as classes. This rule pattern-matches the call shape and extracts: class name (string),
-  * field names (space-split string), parent class (variable reference), and method implementations (object literal). The result is a normal TIR ClassDef with fields, methods, and inheritance.
-  *
-  * 134 DEFNODE calls in Terser's `ast.js` produce the entire AST hierarchy.
-  *
-  * Scope: `Only(Set.empty)` default (it mints declarations). See `docs/contributing/architecture/non-java-frontends.md` for how this fits beside the other Terser-specific emitters.
+/** How one JS library builds its classes at runtime: a call `function(name, "field field", ctor, methods, base)` declares class `classPrefix + name` extending `base`, or `rootClass` when absent. The
+  * library's own spelling, so the consumer passes it; the empty value recognises nothing.
+  */
+final case class RuntimeClassBuilder(function: String, classPrefix: String, rootClass: String):
+  def isEmpty: Boolean = function.isEmpty
+
+  /** the class a builder call named `name` declares. */
+  def className(name: String): String = classPrefix + name
+
+object RuntimeClassBuilder:
+  val none: RuntimeClassBuilder = RuntimeClassBuilder("", "", "")
+
+/** Normalises a JS library's runtime class-building calls (a prototype hierarchy a static frontend cannot see) into explicit `ClassDef`s: class name from the first string argument, fields from the
+  * space-split second, parent from the fifth. Which function builds classes and how its classes are spelled is the consumer's [[RuntimeClassBuilder]]; the empty builder or the empty scope is a no-op,
+  * and the scope defaults to `Only(Set.empty)` because the phase mints declarations.
   */
 final class DefnodeNormalizationRule(
-  val scope: RuleScope
+  val scope:   RuleScope,
+  val builder: RuntimeClassBuilder = RuntimeClassBuilder.none
 ) extends Phase,
       SurfacePolicy,
       MergeablePolicy:
   def name = "defnode-normalization"
 
   def surfaceFingerprint: String =
-    val entries = scope.entries
-    if entries.isEmpty then "" else s"scope=${entries.toList.sorted.mkString(",")}"
+    val entries     = scope.entries
+    val scopePart   = if entries.isEmpty then Nil else List(s"scope=${entries.toList.sorted.mkString(",")}")
+    val builderPart =
+      if builder.isEmpty then Nil else List(s"builder=${builder.function},${builder.classPrefix},${builder.rootClass}")
+    (scopePart ++ builderPart).mkString(";")
 
   def subjects: Set[String] = scope.entries
 
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case d: DefnodeNormalizationRule =>
-      (scope, d.scope) match
-        case (RuleScope.Only(a), RuleScope.Only(b)) =>
-          Right(MergeablePolicy.Merged(DefnodeNormalizationRule(RuleScope.Only(a ++ b)), a ++ b))
-        case _ => Left(s"`$name` non-Only scopes cannot merge")
+      val merged =
+        if builder.isEmpty then Right(d.builder)
+        else if d.builder.isEmpty || d.builder == builder then Right(builder)
+        else Left(s"`$name` two different class builders cannot merge")
+      (scope, d.scope, merged) match
+        case (RuleScope.Only(a), RuleScope.Only(b), Right(bld)) =>
+          Right(MergeablePolicy.Merged(DefnodeNormalizationRule(RuleScope.Only(a ++ b), bld), a ++ b))
+        case (_, _, Left(why)) => Left(why)
+        case _                 => Left(s"`$name` non-Only scopes cannot merge")
     case other => Left(s"`$name` cannot merge with ${other.getClass.getSimpleName}")
 
   override def run(program: Program): Program =
-    if scope == RuleScope.Only(Set.empty) then return program
+    if scope == RuleScope.Only(Set.empty) || builder.isEmpty then return program
     given Program = program
 
     var result     = program
@@ -60,13 +75,14 @@ final class DefnodeNormalizationRule(
       nextId += 1
       id
 
-    for (className, call) <- recognized do
-      val origin   = call.origin
-      val classId  = freshId()
-      val classSym = Symbol(
+    for (jsName, call) <- recognized do
+      val className = builder.className(jsName)
+      val origin    = call.origin
+      val classId   = freshId()
+      val classSym  = Symbol(
         id = classId,
-        name = s"AST_$className",
-        fullName = s"AST_$className",
+        name = className,
+        fullName = className,
         flags = Flags(),
         owner = SymId.None,
         info = TypeRepr.NoType,
@@ -79,7 +95,7 @@ final class DefnodeNormalizationRule(
         val fieldSym = Symbol(
           id = fieldId,
           name = propName,
-          fullName = s"AST_$className.$propName",
+          fullName = s"$className.$propName",
           flags = Flags(isMutable = true),
           owner = classId,
           info = TypeRepr.NoType,
@@ -94,7 +110,7 @@ final class DefnodeNormalizationRule(
         val methodSym = Symbol(
           id = methodId,
           name = methodName,
-          fullName = s"AST_$className.$methodName",
+          fullName = s"$className.$methodName",
           flags = Flags(),
           owner = classId,
           info = TypeRepr.NoType,
@@ -114,9 +130,13 @@ final class DefnodeNormalizationRule(
         Decision(
           kind = Decision.Kind.InjectedMember,
           subject = classId,
-          subjectFqn = s"AST_$className",
-          detail = Map("props" -> call.props.size.toString, "methods" -> call.methods.size.toString, "base" -> call.base.getOrElse("AST_Node")),
-          reason = Reason.Configured("defnode-normalization", s"scope=AST_$className"),
+          subjectFqn = className,
+          detail = Map(
+            "props" -> call.props.size.toString,
+            "methods" -> call.methods.size.toString,
+            "base" -> call.base.getOrElse(builder.rootClass)
+          ),
+          reason = Reason.Configured("defnode-normalization", s"scope=$jsName"),
           origin = origin
         )
       )
@@ -131,13 +151,13 @@ final class DefnodeNormalizationRule(
         vd.rhs match
           case Some(apply: Apply) =>
             apply.fun match
-              case ident: Ident if program.symbols.get(ident.sym).exists(_.name == "DEFNODE") =>
-                extractDefnodeArgs(apply.args, vd.origin)
+              case ident: Ident if program.symbols.get(ident.sym).exists(_.name == builder.function) =>
+                extractDefnodeArgs(apply.args, vd.origin, program)
               case _ => None
           case _ => None
       case _ => None
 
-  private def extractDefnodeArgs(args: List[Term], origin: Origin): Option[DefnodeCall] =
+  private def extractDefnodeArgs(args: List[Term], origin: Origin, program: Program): Option[DefnodeCall] =
     if args.size < 3 then return None
     val className = args.head match
       case Literal(Constant.StringC(s), _, _) => s
@@ -148,7 +168,7 @@ final class DefnodeNormalizationRule(
       case _                                  => Nil
     val base = if args.size >= 5 then
       args(4) match
-        case i: Ident => Some(i.sym.toString)
+        case i: Ident => program.symbols.get(i.sym).map(_.name)
         case _ => None
     else None
     val methods = if args.size >= 4 then
@@ -167,3 +187,14 @@ final class DefnodeNormalizationRule(
   private def collectStatements(term: Term): List[Statement] = term match
     case Block(stmts, expr, _, _, _) => stmts ++ collectStatements(expr)
     case _                           => List(term)
+
+object DefnodeNormalizationRule:
+
+  /** The phase from a port's configuration: `scope` as every minting phase reads it, and `class-builder { function, class-prefix, root-class }`; an absent builder is the no-op. */
+  def fromConfig(config: ConfigView): DefnodeNormalizationRule =
+    val scope   = TransformFactory.scopeOf(config, default = RuleScope.Only(Set.empty))
+    val builder = config.child("class-builder") match
+      case Some(b) =>
+        RuntimeClassBuilder(b.requireString("function"), b.string("class-prefix").getOrElse(""), b.string("root-class").getOrElse(""))
+      case None => RuntimeClassBuilder.none
+    DefnodeNormalizationRule(scope, builder)
