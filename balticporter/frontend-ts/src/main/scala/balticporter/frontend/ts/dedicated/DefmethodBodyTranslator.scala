@@ -79,8 +79,9 @@ object DefmethodBodyTranslator:
       memberRenames: Map[String, String] = Map.empty,
       oracle: ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
       enclosingOwner: Option[String] = None,
+      conventions: JsConventions = JsConventions.plain,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions)
     ctx.translateBlock(entry.bodyNode)
     ctx.checkUnresolvedReferences()
     TranslationResult(
@@ -97,6 +98,7 @@ object DefmethodBodyTranslator:
       familyName: String,
       entries: List[DefmethodEntry],
       hierarchy: List[DefnodeClass],
+      conventions: JsConventions = JsConventions.plain,
   ): String =
     val sb = new StringBuilder
     val grouped = entries.groupBy(_.className)
@@ -104,10 +106,10 @@ object DefmethodBodyTranslator:
 
     for cls <- sortedClasses do
       val methods = grouped(cls)
-      val scalaClass = astVarToScalaName(cls)
+      val scalaClass = conventions.scalaClassName(cls)
       sb.append(s"// $scalaClass.$familyName\n")
       for m <- methods do
-        val result = translateBody(m, hierarchy)
+        val result = translateBody(m, hierarchy, conventions = conventions)
         val scalaMethodName = snakeToCamel(m.methodName)
         val paramDecls = m.params.map(p => s"${snakeToCamel(p)}: Any")
         val paramStr = if paramDecls.isEmpty then "" else s"(${paramDecls.mkString(", ")})"
@@ -196,45 +198,15 @@ object DefmethodBodyTranslator:
           Some(DefmethodEntry(className, methodName, params, body))
 
         case "Identifier" =>
+          // `X.prototype.m = f` makes `m` return what the named function would; a library's own
+          // helper names (`return_false`) are read through the caller's `apiLookup`.
           val refName = rhs.text.getOrElse("")
-          val syntheticBody = refName match
-            case "return_false" =>
-              RastNode("Block", 0, (0, 0), children = List(
-                RastNode("ReturnStatement", 0, (0, 0), children = List(
-                  RastNode("FalseKeyword", 0, (0, 0), value = Some(RastValue.Bool(false)))
-                ))
+          val syntheticBody =
+            RastNode("Block", 0, (0, 0), children = List(
+              RastNode("ReturnStatement", 0, (0, 0), children = List(
+                RastNode("Identifier", 0, (0, 0), text = Some(refName))
               ))
-            case "return_true" =>
-              RastNode("Block", 0, (0, 0), children = List(
-                RastNode("ReturnStatement", 0, (0, 0), children = List(
-                  RastNode("TrueKeyword", 0, (0, 0), value = Some(RastValue.Bool(true)))
-                ))
-              ))
-            case "return_this" =>
-              RastNode("Block", 0, (0, 0), children = List(
-                RastNode("ReturnStatement", 0, (0, 0), children = List(
-                  RastNode("ThisKeyword", 0, (0, 0))
-                ))
-              ))
-            case "pass_through" =>
-              RastNode("Block", 0, (0, 0), children = List(
-                RastNode("ReturnStatement", 0, (0, 0), children = List(
-                  RastNode("TrueKeyword", 0, (0, 0), value = Some(RastValue.Bool(true)))
-                ))
-              ))
-            case "first_in_statement" =>
-              // Reference to first_in_statement utility function
-              RastNode("Block", 0, (0, 0), children = List(
-                RastNode("ReturnStatement", 0, (0, 0), children = List(
-                  RastNode("Identifier", 0, (0, 0), text = Some(refName))
-                ))
-              ))
-            case _ =>
-              RastNode("Block", 0, (0, 0), children = List(
-                RastNode("ReturnStatement", 0, (0, 0), children = List(
-                  RastNode("Identifier", 0, (0, 0), text = Some(refName))
-                ))
-              ))
+            ))
           Some(DefmethodEntry(className, methodName, Nil, syntheticBody))
 
         case _ => None

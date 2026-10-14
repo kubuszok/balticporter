@@ -22,7 +22,8 @@ private[dedicated] class BodyContext(
       memberRenames: Map[String, String] = Map.empty,
       oracle: ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
       enclosingOwner: Option[String] = None,
-  ) extends BodyScope(entry, hierarchy, baseIndent, thisBinding, nodeParamName, apiLookup, declaredReturnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner):
+      conventions: JsConventions = JsConventions.plain,
+  ) extends BodyScope(entry, hierarchy, baseIndent, thisBinding, nodeParamName, apiLookup, declaredReturnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions):
     /** Translate a JS expression used as a condition (if, while, ternary).
       * Applies truthiness lowering when the operand has a known non-Boolean type. */
     private def translateCondition(node: RastNode): String =
@@ -173,12 +174,12 @@ private[dedicated] class BodyContext(
       // Pre-check: if the body uses `this` and the member index has data but
       // does not know the entry's class type, refuse upfront — the translator
       // cannot validate member accesses on an unknown receiver.
-      if memberIndex.byType.nonEmpty && !memberIndex.knowsType(nodeScalaType) && nodeScalaType != "AstNode" then
+      if memberIndex.byType.nonEmpty && !memberIndex.knowsType(nodeScalaType) && !conventions.rootClass.contains(nodeScalaType) then
         if containsThisKeyword(block) then
           refuse("receiver-type-unknown")
-      // Also refuse when nodeScalaType is the default "AstNode" for a non-AST
-      // class that uses `this.` — the entry's class is not in the hierarchy
-      if nodeScalaType == "AstNode" && !entry.className.startsWith("AST_") && !memberIndex.knowsType(entry.className) && memberIndex.byType.nonEmpty then
+      // Also refuse when nodeScalaType is the library's root class only by default:
+      // the entry's own class is neither the library's nor one the reference declares
+      if conventions.rootClass.contains(nodeScalaType) && !conventions.isClassName(entry.className) && !memberIndex.knowsType(entry.className) && memberIndex.byType.nonEmpty then
         if containsThisKeyword(block) then
           refuse("receiver-type-unknown")
       // Refuse when a parameter is reassigned in the body: Scala parameters are vals
@@ -741,16 +742,11 @@ private[dedicated] class BodyContext(
         case "undefined"    => "null"
         case "Infinity"     => "Double.PositiveInfinity"
         case "NaN"          => "Double.NaN"
-        case "return_false" => "false"
-        case "return_true"  => "true"
-        case "return_this"  => "this"
-        case "pass_through" => "true"
         case "console"      => "Console"
-        case "walkAbort"    => "TreeWalker.WalkAbort"
         case "arguments" =>
           refuse("ArgumentsObject")
           "??? /* arguments */"
-        case n if n.startsWith("AST_") => astVarToScalaName(n)
+        case n if conventions.isClassName(n) => conventions.scalaClassName(n)
         case n if n.startsWith("_") && !apiLookup.contains(n) && !entry.params.contains(n) && !isLocal(n) =>
           // An underscore-prefixed name is usually a private helper: it is known only when the reference declares it under that same name.
           calleeIndex.resolveMember(snakeToCamel(n)) match
@@ -766,7 +762,7 @@ private[dedicated] class BodyContext(
           if !apiLookup.contains(n) && !entry.params.contains(n) &&
              !localTypes.contains(scName) && !localTypes.contains(n) &&
              !localNames.contains(scName) && !localNames.contains(n) &&
-             !n.startsWith("AST_") && scName == snakeToCamel(n) &&
+             !conventions.isClassName(n) && scName == snakeToCamel(n) &&
              (n.head.isLower || !namesAType(n)) then
             calleeIndex.resolveMember(scName) match
               case Right(ref) => qualify(ref)
@@ -814,8 +810,8 @@ private[dedicated] class BodyContext(
       // this.x -> check apiLookup first, then translate known properties.
       // When the member index knows the class, validate the property.
       if obj.kind == "ThisKeyword" then
-        prop match
-          case "TYPE" => s"$thisBinding.nodeType"
+        conventions.typeTag match
+          case Some((tag, scalaTag)) if tag == prop => s"$thisBinding.$scalaTag"
           case _ =>
             val camel = snakeToCamel(prop)
             val scalaProp = memberRenames.getOrElse(camel, memberRenames.getOrElse(prop, apiLookup.getOrElse(prop, camel)))
@@ -832,8 +828,8 @@ private[dedicated] class BodyContext(
       else if obj.kind == "Identifier" && nodeNames.contains(obj.text.getOrElse("")) then
         val objName = obj.text.getOrElse("")
         val scalaObj = if objName == "this" then thisBinding else snakeToCamel(objName)
-        prop match
-          case "TYPE" => s"$scalaObj.nodeType"
+        conventions.typeTag match
+          case Some((tag, scalaTag)) if tag == prop => s"$scalaObj.$scalaTag"
           case _ =>
             val camel = snakeToCamel(prop)
             val scalaProp = memberRenames.getOrElse(camel, memberRenames.getOrElse(prop, camel))
@@ -843,7 +839,7 @@ private[dedicated] class BodyContext(
         val objParts = obj.children
         if objParts.size >= 2 && objParts.last.text.contains("prototype") then
           val cls = objParts.head.text.getOrElse("?")
-          s"${astVarToScalaName(cls)}.${snakeToCamel(prop)}"
+          s"${conventions.scalaClassName(cls)}.${snakeToCamel(prop)}"
         else
           val objExpr = translateExpr(obj)
           translatePropOnExpr(objExpr, prop)
@@ -1188,19 +1184,11 @@ private[dedicated] class BodyContext(
                 s"System.err.println(${scalaArgs.mkString(", ")})"
               case "error" if objExpr == "Console" || objExpr == "console" =>
                 s"System.err.println(${scalaArgs.mkString(", ")})"
-              // AST node walk/transform
-              case "walk" =>
-                s"$objExpr.walk(${scalaArgs.mkString(", ")})"
-              case "transform" =>
-                s"$objExpr.transform(${scalaArgs.mkString(", ")})"
+              // a method the port moved into a helper
+              case m if conventions.methodRewrites.contains(m) =>
+                conventions.methodRewrites(m).replace("$receiver", objExpr)
               case "clone" =>
                 s"$objExpr.clone()"
-              case "size" =>
-                s"AstSize.size($objExpr)"
-              case "getValue" =>
-                s"$objExpr.getValue()"
-              case "definition" =>
-                s"$objExpr.definition()"
               // General method
               case _ =>
                 s"$objExpr.${snakeToCamel(method)}(${scalaArgs.mkString(", ")})"
@@ -1247,31 +1235,14 @@ private[dedicated] class BodyContext(
             case "Error" | "TypeError" | "RangeError" | "SyntaxError" =>
               val scalaArgs = args.map(translateExpr)
               s"new RuntimeException(${scalaArgs.mkString(", ")})"
-            case "make_void_0" | "makeVoid0" =>
-              val scalaArgs = args.map(translateExpr)
-              val orig = if scalaArgs.nonEmpty then scalaArgs.head else "null"
-              s"{ val $$n = new AstUnaryPrefix(); $$n.operator = \"void\"; $$n.expression = { val $$m = new AstNumber(); $$m.value = 0; $$m }; $$n }"
-
-            case "make_node" =>
+            case n if conventions.nodeFactories(n) =>
               translateMakeNode(args)
-            case "MAP" if args.nonEmpty =>
-              val scalaArgs = args.map(translateExpr)
-              s"${scalaArgs.head}.map(${scalaArgs.drop(1).mkString(", ")})"
-            case "has_flag" =>
-              val scalaArgs = args.map(translateExpr)
-              s"CompressorFlags.hasFlag(${scalaArgs.mkString(", ")})"
-            case "set_flag" =>
-              val scalaArgs = args.map(translateExpr)
-              s"CompressorFlags.setFlag(${scalaArgs.mkString(", ")})"
-            case "clear_flag" =>
-              val scalaArgs = args.map(translateExpr)
-              s"CompressorFlags.clearFlag(${scalaArgs.mkString(", ")})"
             case _ =>
               val scalaName = translateIdentifier(name)
               // Resolve the callee: try callee index for unqualified names
               val resolvedCallee: Option[ReferenceSignatures.MemberRef] =
                 if !apiLookup.contains(name) && !entry.params.contains(name) &&
-                   !name.startsWith("AST_") && scalaName == snakeToCamel(name) then
+                   !conventions.isClassName(name) && scalaName == snakeToCamel(name) then
                   calleeIndex.resolveMember(scalaName) match
                     case Right(ref) => Some(ref)
                     case Left("callee-ambiguous") =>
@@ -1322,9 +1293,9 @@ private[dedicated] class BodyContext(
             val lhs = translateExpr(instChildren.head)
             val rhs = instChildren(1)
             val rhsName = rhs.text.getOrElse(rhs.children.headOption.flatMap(_.text).getOrElse("Any"))
-            if rhsName.startsWith("AST_") then
-              // Known AST type -- compile-time isInstanceOf
-              s"$lhs.isInstanceOf[${astVarToScalaName(rhsName)}]"
+            if conventions.isClassName(rhsName) then
+              // one of the library's own classes -- compile-time isInstanceOf
+              s"$lhs.isInstanceOf[${conventions.scalaClassName(rhsName)}]"
             else if rhsName.head.isUpper && !scalaKeywords.contains(rhsName) then
               // Capitalized non-keyword -- likely a class name
               s"$lhs.isInstanceOf[$rhsName]"
@@ -1348,7 +1319,7 @@ private[dedicated] class BodyContext(
               case Some(RastValue.Str(s)) => s
               case _ => ""
             if typeName.nonEmpty then
-              return s"$objExpr.isInstanceOf[Ast$typeName]"
+              return s"$objExpr.isInstanceOf[${tagClass(typeName)}]"
 
           // x.TYPE !== "Y" -> !x.isInstanceOf[AstY]
           if (op == "ExclamationEqualsEqualsToken" || op == "ExclamationEqualsToken") &&
@@ -1358,7 +1329,7 @@ private[dedicated] class BodyContext(
               case Some(RastValue.Str(s)) => s
               case _ => ""
             if typeName.nonEmpty then
-              return s"!$objExpr.isInstanceOf[Ast$typeName]"
+              return s"!$objExpr.isInstanceOf[${tagClass(typeName)}]"
 
           // "Y" === x.TYPE -> x.isInstanceOf[AstY]
           if (op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") &&
@@ -1368,7 +1339,7 @@ private[dedicated] class BodyContext(
               case Some(RastValue.Str(s)) => s
               case _ => ""
             if typeName.nonEmpty then
-              return s"$objExpr.isInstanceOf[Ast$typeName]"
+              return s"$objExpr.isInstanceOf[${tagClass(typeName)}]"
 
           // "Y" !== x.TYPE -> !x.isInstanceOf[AstY]
           if (op == "ExclamationEqualsEqualsToken" || op == "ExclamationEqualsToken") &&
@@ -1378,7 +1349,7 @@ private[dedicated] class BodyContext(
               case Some(RastValue.Str(s)) => s
               case _ => ""
             if typeName.nonEmpty then
-              return s"!$objExpr.isInstanceOf[Ast$typeName]"
+              return s"!$objExpr.isInstanceOf[${tagClass(typeName)}]"
 
           // typeof X === "type" -> X.isInstanceOf[Type]
           if (op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") &&
@@ -1575,7 +1546,7 @@ private[dedicated] class BodyContext(
           else
             // Multi-statement function body -- use a fresh context for the lambda's own scope
             val innerIndent = baseIndent + "    "
-            val innerCtx = new BodyContext(entry, hierarchy, innerIndent, apiLookup = apiLookup, memberRenames = memberRenames, oracle = oracle)
+            val innerCtx = new BodyContext(entry, hierarchy, innerIndent, apiLookup = apiLookup, memberRenames = memberRenames, oracle = oracle, conventions = conventions)
             innerCtx.translateBlock(block)
             refusals ++= innerCtx.refusals
             val bodyStr = innerCtx.result().stripTrailing()
@@ -1921,16 +1892,12 @@ private[dedicated] class BodyContext(
       if !hasDefault then sb.append(s"$indent  case _ => ()\n")
       sb.append(s"$indent}\n")
 
-    /** Translate `make_node(AST_X, orig, { prop: val, ... })` to Scala.
-      *
-      * JS pattern: `make_node(AST_Binary, self, { operator: "+", left: a, right: b })`
-      * Scala: `{ val $n = new AstBinary(); $n.operator = "+"; $n.left = a; $n.right = b; $n }`
-      */
+    /** Translate a node-factory call `f(Cls, orig, { prop: val, ... })` to Scala: `{ val $n = new Cls(); $n.prop = val; $n }`. */
     private def translateMakeNode(args: List[RastNode]): String =
-      if args.isEmpty then return "??? /* make_node: no args */"
+      if args.isEmpty then return "??? /* node factory: no args */"
       val classArg = args.head
       val className = classArg.text.getOrElse("")
-      val scalaClass = astVarToScalaName(className)
+      val scalaClass = conventions.scalaClassName(className)
 
       // Optional origin argument and props argument
       val propsArg = args.find(_.kind == "ObjectLiteralExpression")
@@ -1958,9 +1925,12 @@ private[dedicated] class BodyContext(
         case None =>
           s"new $scalaClass()"
 
-    /** Check if a node is a `.TYPE` property access (e.g., `node.TYPE`). */
+    /** True for a read of the library's type-tag field (`node.<tag>`). */
     private def isTypePropertyAccess(node: RastNode): Boolean =
       node.kind == "PropertyAccessExpression" &&
         node.children.size >= 2 &&
-        node.children.last.text.contains("TYPE")
+        conventions.tagField.exists(t => node.children.last.text.contains(t))
+
+    /** The Scala class a type-tag value names. */
+    private def tagClass(tag: String): String = conventions.classPrefix.fold(tag)((_, scalaPrefix) => scalaPrefix + tag)
 

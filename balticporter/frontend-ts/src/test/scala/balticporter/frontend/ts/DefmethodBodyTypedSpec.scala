@@ -1,6 +1,6 @@
 package balticporter.frontend.ts
 
-import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry }
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, JsConventions }
 
 /** The body translator reading the reference's declared types: each spec pins one translation a declared type makes faithful, or one refusal where JS and Scala would disagree. */
 class DefmethodBodyTypedSpec extends munit.FunSuite:
@@ -30,7 +30,8 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     calleeIndex: ReferenceSignatures.CalleeIndex = ReferenceSignatures.CalleeIndex.empty,
     memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
     ctorSchema:  ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
-    oracle:      ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty
+    oracle:      ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
+    conventions: JsConventions = JsConventions.plain
   ): DefmethodBodyTranslator.TranslationResult =
     DefmethodBodyTranslator.translateBody(
       DefmethodEntry(className, "test", params, body),
@@ -41,7 +42,8 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       calleeIndex = calleeIndex,
       memberIndex = memberIndex,
       ctorSchema = ctorSchema,
-      oracle = oracle
+      oracle = oracle,
+      conventions = conventions
     )
 
   private def refuses(r: DefmethodBodyTranslator.TranslationResult, reason: String): Unit =
@@ -261,3 +263,39 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     val (_, mi, _, _) = ReferenceSignatures.buildIndices(List("Svg" -> src))
     assert(mi.hasMember("Svg", "gen") && mi.hasMember("Svg", "draw") && mi.hasMember("Svg", "config"), mi.byType.toString)
     assert(!mi.hasMember("Svg", "make"), "an object's member is not an instance member")
+
+  private val nodeLib = JsConventions(
+    classPrefix = Some("N_" -> "N"),
+    rootClass = Some("NBase"),
+    typeTag = Some("KIND" -> "kind"),
+    nodeFactories = Set("build"),
+    methodRewrites = Map("measure" -> "Sizes.of($receiver)")
+  )
+
+  test("plain conventions read no name as special: a prefixed name is just an unresolved identifier"):
+    refuses(translate(block(ret(ident("N_Leaf")))), "unresolved-identifier")
+    assertNoDiff(translate(block(ret(ident("N_Leaf"))), conventions = nodeLib).scalaBody.trim, "NLeaf")
+
+  test("a library's type tag, node factory and moved method are read through its conventions"):
+    val tagTest = translate(block(ret(bin("EqualsEqualsEqualsToken", prop(ident("x"), "KIND"), str("Leaf")))), params = List("x"), conventions = nodeLib)
+    assertNoDiff(tagTest.scalaBody.trim, "x.isInstanceOf[NLeaf]")
+    val built = translate(
+      block(
+        ret(
+          call(
+            ident("build"),
+            ident("N_Leaf"),
+            ident("o"),
+            node("ObjectLiteralExpression", node("PropertyAssignment", ident("v"), num(1)))
+          )
+        )
+      ),
+      params = List("o"),
+      conventions = nodeLib
+    )
+    assertNoDiff(built.scalaBody.trim, "{ val $n = new NLeaf(); $n.v = 1; $n }")
+    assertNoDiff(
+      translate(block(ret(call(prop(ident("x"), "measure")))), params = List("x"), conventions = nodeLib).scalaBody.trim,
+      "Sizes.of(x)"
+    )
+    assertNoDiff(translate(block(ret(call(prop(ident("x"), "measure")))), params = List("x")).scalaBody.trim, "x.measure()")
