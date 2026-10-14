@@ -18,7 +18,13 @@ class DefnodeNormalizationRuleSpec extends munit.FunSuite:
     def lit(c: Constant) = Tree.Literal(c, TypeRepr.NoType, o)
     val call             = Tree.Apply(
       Tree.Ident(fnSym, TypeRepr.NoType, o),
-      List(lit(Constant.StringC("Leaf")), lit(Constant.StringC("left right")), lit(Constant.NullC), lit(Constant.NullC), Tree.Ident(baseSym, TypeRepr.NoType, o)),
+      List(
+        lit(Constant.StringC("Leaf")),
+        lit(Constant.StringC("left right")),
+        lit(Constant.NullC),
+        lit(Constant.NullC),
+        Tree.Ident(baseSym, TypeRepr.NoType, o)
+      ),
       fnSym,
       TypeRepr.NoType,
       o
@@ -26,8 +32,8 @@ class DefnodeNormalizationRuleSpec extends munit.FunSuite:
     val local = Tree.ValDef(localSym, TypeTree(TypeRepr.NoType, o), Some(call), o)
     val body  = Tree.Block(List(local), lit(Constant.UnitC), TypeRepr.NoType, o)
     val init  = Tree.DefDef(initSym, Nil, TypeTree(TypeRepr.NoType, o), Some(body), o)
-    val unit = Tree.ClassDef(unitSym, Nil, None, List(init), o)
-    val syms = SymbolTable(
+    val unit  = Tree.ClassDef(unitSym, Nil, None, List(init), o)
+    val syms  = SymbolTable(
       List(
         Symbol(unitSym, "Module", "pkg.Module", Flags(), SymId.None, TypeRepr.NoType),
         Symbol(initSym, "init", "pkg.Module.init", Flags(), unitSym, TypeRepr.NoType),
@@ -69,7 +75,9 @@ class DefnodeNormalizationRuleSpec extends munit.FunSuite:
 
   test("two different builders refuse to merge; an empty one adopts the other") {
     val other = RuntimeClassBuilder("makeClass", "N", "NBase")
-    assert(DefnodeNormalizationRule(RuleScope.Only(Set("A")), builder).mergedWith(DefnodeNormalizationRule(RuleScope.Only(Set("B")), other)).isLeft)
+    assert(
+      DefnodeNormalizationRule(RuleScope.Only(Set("A")), builder).mergedWith(DefnodeNormalizationRule(RuleScope.Only(Set("B")), other)).isLeft
+    )
     val merged = DefnodeNormalizationRule(RuleScope.Only(Set("A"))).mergedWith(DefnodeNormalizationRule(RuleScope.Only(Set("B")), builder))
     assertEquals(merged.map(_.phase.asInstanceOf[DefnodeNormalizationRule].builder), Right(builder))
   }

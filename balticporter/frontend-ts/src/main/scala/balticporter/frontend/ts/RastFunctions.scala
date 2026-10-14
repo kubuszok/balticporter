@@ -1,7 +1,7 @@
 package balticporter.frontend.ts
 
-/** The function bodies one exported TS/JS file declares: function declarations, class methods and `const f = (…) => …` values, each with the class declaring it, so a translator can read `this`
-  * as that class.
+/** The function bodies one exported TS/JS file declares: function declarations, class methods and `const f = (…) => …` values, each with the class declaring it, so a translator can read `this` as
+  * that class.
   */
 object RastFunctions:
 
@@ -27,8 +27,8 @@ object RastFunctions:
         case "VariableStatement" =>
           for
             vdl <- node.children.find(_.kind == "VariableDeclarationList")
-            vd  <- vdl.children.filter(_.kind == "VariableDeclaration")
-            fn  <- vd.children.find(c => c.kind == "ArrowFunction" || c.kind == "FunctionExpression")
+            vd <- vdl.children.filter(_.kind == "VariableDeclaration")
+            fn <- vd.children.find(c => c.kind == "ArrowFunction" || c.kind == "FunctionExpression")
           do
             val name = vd.children.headOption.flatMap(_.text).getOrElse("")
             // a braceless arrow's body is its LAST child; a return-type annotation may precede it
