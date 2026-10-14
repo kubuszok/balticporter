@@ -91,8 +91,10 @@ object SurfaceFold:
     *
     * @param why
     *   the sentence the finding carries, minus the evidence the map supplies.
+    * @param scope
+    *   where the rewrite for this subject applies; an `Only` scope under which the base's map emits nothing is not an intrusion.
     */
-  final case class Intrusion(phase: String, base: String, subject: String, why: String)
+  final case class Intrusion(phase: String, base: String, subject: String, why: String, scope: RuleScope = RuleScope.everywhere)
 
   /** THE fold. `chain` is furthest base first, `owner` is the manifest being folded (the last element, whose contributions [[SurfaceFold.ownKeys]] records). Identity dedup kept from the pre-merge
     * code path: inheriting one manifest through two paths runs its phases once.
@@ -214,5 +216,6 @@ object SurfaceFold:
         s"""this module's `$phase` adds "$subject", which is inside `${b.name}`'s declared """ +
           s"namespace and $why — it would let a dependent re-shape the SHARED surface, so the two " +
           "modules would each compile alone and could not compile together. A subject the base " +
-          "leaves EMPTY is the allowed case: nothing stands at that name in the base's output"
+          "leaves EMPTY is the allowed case: nothing stands at that name in the base's output",
+        policy.subjectScope(subject)
       )

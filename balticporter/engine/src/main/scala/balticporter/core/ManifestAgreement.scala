@@ -518,16 +518,22 @@ object ManifestAgreement:
     // One finding per phase; divergent phases already reported are skipped.
     val divergentPhases = divergent.map(_.subject).toSet
     val intrusions      =
-      m.surfaceFold.intrusions.filterNot(i => divergentPhases.contains(i.phase)).filter(i => standsAt(ports, i.base, i.subject)).groupBy(_.phase).toList.sortBy(_._1).map { (phase, is) =>
-        val first = is.head
-        Finding(
-          Kind.SurfaceIntrusion,
-          m.name,
-          phase,
-          first.why + evidence(ports, first.base, first.subject) +
-            (if is.size > 1 then s" (${is.size} such subjects; the first is named)" else "")
-        )
-      }
+      m.surfaceFold.intrusions
+        .filterNot(i => divergentPhases.contains(i.phase))
+        .filter(i => standsAt(ports, i.base, i.subject) && !scopedOffSurface(ports, i))
+        .groupBy(_.phase)
+        .toList
+        .sortBy(_._1)
+        .map { (phase, is) =>
+          val first = is.head
+          Finding(
+            Kind.SurfaceIntrusion,
+            m.name,
+            phase,
+            first.why + evidence(ports, first.base, first.subject) +
+              (if is.size > 1 then s" (${is.size} such subjects; the first is named)" else "")
+          )
+        }
 
     // Per-location remedy selection conflicts.
     val chainConflicts = m.resolutionConflicts.map { (key, claims) =>
@@ -587,6 +593,19 @@ object ManifestAgreement:
     ports.find(_.name == base).flatMap(_.map) match
       case Some(m0)   => m0.byUpstream("type").get(subject).exists(_.disposition != PortMap.Disposition.Dropped)
       case scala.None => true
+
+  /** Is the subject's rewrite confined to names where the base's published map emits nothing? Then it rewrites only this module's own code, even inside the base's claimed namespace, and cannot
+    * reshape the shared surface. Without a usable map the answer is `false` (strictly more refusing).
+    */
+  private def scopedOffSurface(ports: List[BasePort], i: SurfaceFold.Intrusion): Boolean =
+    i.scope match
+      case balticporter.tir.RuleScope.Only(entries) if entries.nonEmpty =>
+        ports.find(_.name == i.base).flatMap(_.map) match
+          case Some(m0) =>
+            val emitted = m0.byUpstream("type").valuesIterator.filter(_.disposition != PortMap.Disposition.Dropped).map(_.upstream).toList
+            entries.forall(e => !emitted.exists(t => PortManifest.covers(t, e) || PortManifest.covers(e, t)))
+          case scala.None => false
+      case _ => false
 
   /** Provenance annotation for the evidence. */
   private def evidence(ports: List[BasePort], base: String, subject: String): String =

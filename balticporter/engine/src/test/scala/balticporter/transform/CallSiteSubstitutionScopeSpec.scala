@@ -217,6 +217,23 @@ class CallSiteSubstitutionScopeSpec extends munit.FunSuite:
     assertEquals(inside.surfaceFold.intrusions.map(_.subject), List("demo.Bits"))
   }
 
+  test(
+    "INTRUSION screen: a scope inside the base's claim where its published map emits nothing passes; one where it emits a type fires"
+  ) {
+    val map = balticporter.core.PortMap.Map0(
+      "base",
+      "engine",
+      List("demo.Bits", "demo.Core").map(t => balticporter.core.PortMap.Entry("type", t, t, balticporter.core.PortMap.Disposition.Ported))
+    )
+    val ports                = List(ManifestAgreement.BasePort(PortManifest("base", governs = Set("demo")), Some(map), "run-latest"))
+    def kinds(scope: String) =
+      val dep = dependentOf(new CallSiteSubstitutionTransform(List(Entry(length, "{recv}.size", RuleScope.Only(Set(scope))))))
+      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, ports = ports).map(_.kind)
+    assertEquals(kinds("demo.tools"), Nil)
+    assertEquals(kinds("demo.Core"), List(ManifestAgreement.Kind.SurfaceIntrusion))
+    assertEquals(kinds("demo.Core#f"), List(ManifestAgreement.Kind.SurfaceIntrusion))
+  }
+
   test("the `.conf` shape: `calls` stays the unscoped table, `scoped` adds entries with a scope each") {
     val conf = com.typesafe.config.ConfigFactory.parseString(
       s"""calls { "$ctor" = "demo.Errors.invalid({arg0})" }

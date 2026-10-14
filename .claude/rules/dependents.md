@@ -132,7 +132,10 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   SCOPED `type-redirect` moved must hold a TWIN under the target type (the redirect mints it), or the
   base's `isEmpty -> empty` lands on a `BitSet` (engine mechanism, (b)). The target's arity is the
   port's `externalParenless`. A dependent's `call-site-substitution` keyed on a base member needs a
-  `scoped` entry outside the base's claim, or it is a fatal intrusion (policy, (b)).
+  `scoped` entry outside the base's claim, or it is a fatal intrusion (policy, (b)). Outside means
+  outside what the base's PUBLISHED MAP emits, not its `governs` claim: gdx-tools sits inside
+  libGDX core's `com.badlogic.gdx` claim, and its entry scoped to `com.badlogic.gdx.tools`, where core
+  emits nothing, was fatal (1 intrusion -> 0; without a map the screen still refuses). Kind (a).
 - Primary-constructor decisions are whole-program, and a dependent's program differs from its base's
   (it contains more), so for a base class the dependent must adopt the base's PUBLISHED constructor
   decision rather than re-deriving its own.
