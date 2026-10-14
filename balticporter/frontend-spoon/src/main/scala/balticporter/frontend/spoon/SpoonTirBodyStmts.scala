@@ -962,8 +962,13 @@ private[spoon] trait SpoonTirBodyStmts:
     if formals.size == argEs.size then
       argEs.zipWithIndex.map { (e, i) =>
         val base = expr(e)
-        val c    = nullToTypeParam(e, declFormals(i), recvSubst, coerce(formals(i), e, base, arrayCov = external, tpToObject = false, unchecked = false))
-        val o    = typeParamToObject(e, declFormals(i), c)
+        val c    = nullToTypeParam(
+          e,
+          declFormals(i),
+          recvSubst,
+          coerce(formals(i), e, base, arrayCov = external && !ownTypeVarArray(ex, declFormals(i)), tpToObject = false, unchecked = false)
+        )
+        val o = typeParamToObject(e, declFormals(i), c)
         // Java's unchecked conversion at an argument, off the DECLARATION's formal (the
         // reference's is erased under noClasspath). `rawTarget = false`: a raw FORMAL belongs to
         // the callee's scope, where name-directed fill can resolve differently than here, so
@@ -975,6 +980,21 @@ private[spoon] trait SpoonTirBodyStmts:
           else declFormals(i).map(f => uncheckedGeneric(f, e, o, rawTarget = false, ownScope = false)).getOrElse(o)
       }
     else argEs.map(expr)
+
+  /** Is the callee's real (un-erased) formal an array of the METHOD's own type variable (`<T> T[] copyOf(T[] a, int n)`)? Its erasure reads `Object[]`, but scala infers `T` from the argument, so the
+    * argument's own array type fits and a cast to `Array[Object]` would bind `T` to `Object` and break the result's slot.
+    */
+  private[spoon] def ownTypeVarArray(ex: CtExecutableReference[?], declFormal: Option[CtTypeReference[?]]): Boolean =
+    declFormal match
+      case Some(a: CtArrayTypeReference[?]) =>
+        a.getComponentType match
+          case tp: CtTypeParameterReference if !tp.isInstanceOf[CtWildcardReference] =>
+            Option(ex.getExecutableDeclaration).exists {
+              case m: CtFormalTypeDeclarer => m.getFormalCtTypeParameters.asScala.exists(_.getSimpleName == tp.getSimpleName)
+              case _ => false
+            }
+          case _ => false
+      case _ => false
 
   /** `null` passed to a callee slot whose real (un-erased) formal is a type parameter — cast it (`m(null)` → `m(null.asInstanceOf[T])`). Dominant case: a self-call in scope. Second case: the
     * RECEIVER's — the declaring CLASS's variables resolve through the receiver's type arguments, tried FIRST (exact, keyed on the DECLARING CLASS's own formals, unlike the name-based

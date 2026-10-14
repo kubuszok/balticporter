@@ -333,3 +333,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   The frontend carries a local/parameter qualifier as the inner type's term prefix and `ctorTpe`
   renders it; dropped, gdx-tools' `mask.new MaskIterator()` read `new MaskIterator()` outside `Mask`
   (1 error). Any other qualifier keeps the unqualified spelling. Kind (a).
+- An external callee's formal that is an array of the METHOD's own type variable
+  (`<T> T[] Arrays.copyOf(T[], int)`) takes the argument's own array type: its erasure reads
+  `Object[]`, and the covariance cast to `Array[Object]` bound `T` to `Object` and broke the result's
+  `String[]` slot (gdx-tools, 2 errors). A real `Object[]` formal still takes the cast. Kind (a).

@@ -140,12 +140,11 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     assert(clue(emit(List(new CollectionsTransform(retarget = Retarget)))).contains("balticporter.runtime.JavaCollections.sort("))
   }
 
-  test("`Arrays.sort`'s erasure cast is PRE-EXISTING — this policy neither causes nor fixes it") {
-    // MEASURED, both with and without the retarget:
+  test("`Arrays.sort` takes the array at its own type with or without this policy — `T` is the method's own, so no erasure cast") {
     val plain      = emit(Nil, arraySrc)
     val retargeted = emit(List(new CollectionsTransform(retarget = Retarget)), arraySrc)
-    assert(clue(plain).contains("xs.asInstanceOf[scala.Array[java.lang.Object]]"))
-    assert(clue(retargeted).contains("xs.asInstanceOf[scala.Array[java.lang.Object]]"))
+    assert(!clue(plain).contains("xs.asInstanceOf[scala.Array[java.lang.Object]]"))
+    assert(!clue(retargeted).contains("xs.asInstanceOf[scala.Array[java.lang.Object]]"))
   }
 
   // -------------------------------------------------------------------------
