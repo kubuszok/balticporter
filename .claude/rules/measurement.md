@@ -31,6 +31,12 @@ in its `.jvmopts` (read by the server `sbt --client` starts; the engine is publi
 no running server decides), resolves the private repository first and the user's ivy-local
 read-only after it.
 
+- **sbt's `Passed: Total N` lines are not a test count** (a build fix, universal): with projects
+  testing in parallel, three sge runs over identical suites summed to 3189, 3146 and 3120 (anim8's
+  4 suites of 21 tests read 13), while every suite's own `Test run <suite> finished: … N total`
+  line agreed at 3355 in 389 suites. A source row counts those lines per module
+  (`scripts/test-census.pl`, `<work>/<name>-tests.tsv`) and names a module that ran no suite.
+
 ## Required checks
 
 Every run must record: `signature`, `omissions`, `portability(all|emitted|injected)`,

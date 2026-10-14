@@ -13,6 +13,10 @@
 #   full             verifyLocal — the consumer's own pre-push gate: its tests on every platform
 #   binary           only the base-binary rows below, no source runs (seconds after the publish)
 #
+# A source row's test count is the sum of each suite's own result line, per module, written to
+# <work>/<name>-tests.tsv; a module with test classes and no suite that ran is named in the row
+# (scripts/test-census.pl).
+#
 # The consumers are checked in dependency order (lls is a library of sge and ssg), each against
 # the one published just before it. BP_<NAME>_DIR (e.g. BP_SGE_DIR) checks another checkout of a
 # consumer, such as a worktree on its master, when the sibling checkout is on another branch.
@@ -228,10 +232,11 @@ for name in "${consumers[@]}"; do
   (cd "$tree" && JAVA_HOME="$consumer_jdk" PATH="$consumer_jdk/bin:$PATH" sbt --client shutdown) > /dev/null 2>&1
 
   errors="$(/usr/bin/grep -c '^\[error\]' "$log")"
-  tests="$(/usr/bin/grep -o -E 'Total [0-9]+, Failed [0-9]+, Errors [0-9]+' "$log" | tr -d ',' |
-    awk '{t += $2; f += $4; e += $6; n++} END {if (n) printf "%d tests in %d modules, %d failed, %d errors", t, n, f, e}')"
+  # counted from each suite's own line, per module (written to $name-tests.tsv): sbt's per-task
+  # summaries disagree run to run on the same commit when projects test in parallel
+  tests="$(perl "$root/scripts/test-census.pl" "$tree" "$log" "$work/$name-tests.tsv")"
   if [ "$code" -eq 0 ]; then
-    summary+="$name\tsource\tok\t${tests:-no test summary}\n"
+    summary+="$name\tsource\tok\t${tests:-no test summary} ($work/$name-tests.tsv)\n"
   else
     summary+="$name\tsource\tFAIL\texit $code, $errors error lines; ${tests:-no test summary} ($log)\n"
     failed=$((failed + 1))
