@@ -81,6 +81,10 @@ object ParityDerive:
 
   /** Interleave `translated` into `referenceSource` under `policy`. */
   def derive(referenceSource: String, translated: Bodies, policy: Policy): ParityResult =
+    derive(referenceSource, translated, policy, _ => None)
+
+  /** Interleave `translated` into `referenceSource` under `policy`; a method `pinned` answers for keeps its reference body with that reason, and still consumes its occurrence. */
+  def derive(referenceSource: String, translated: Bodies, policy: Policy, pinned: ReferenceSkeleton.ParsedMethod => Option[String]): ParityResult =
     val lines   = referenceSource.split("\n", -1).toList
     val methods = ReferenceSkeleton.findMethodBoundaries(lines)
 
@@ -107,7 +111,9 @@ object ParityDerive:
         val named         = candidates(method.name)
 
         val decision: Either[String, TranslatedBody] =
-          if !policy.allowPrivate && method.isPrivate then Left(Why.Private)
+          val pin = pinned(method)
+          if pin.nonEmpty then pin.toLeft(TranslatedBody(""))
+          else if !policy.allowPrivate && method.isPrivate then Left(Why.Private)
           else if named.isEmpty then Left(Why.NoTranslatedBody)
           else
             named.lift(idx) match

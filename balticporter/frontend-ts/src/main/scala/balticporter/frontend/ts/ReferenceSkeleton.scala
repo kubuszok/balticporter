@@ -19,7 +19,8 @@ object ReferenceSkeleton:
     bodyEndLine:   Int,
     isPrivate:     Boolean,
     equalsLine:    Int = -1,
-    equalsColumn:  Int = -1
+    equalsColumn:  Int = -1,
+    params:        Option[List[String]] = None
   )
 
   /** A concrete `def` the reader does not offer for replacement, with the line it is declared on and the reason the reader could not offer it. */
@@ -63,7 +64,7 @@ object ReferenceSkeleton:
       yield
         val afterEq       = lines(span.equalsLine).substring(span.equalsColumn + 1).trim
         val bodyStartLine = if afterEq.nonEmpty && afterEq != "{" then span.equalsLine else span.equalsLine + 1
-        ParsedMethod(d.name, d.line, bodyStartLine, span.endLine, m.group(1) != null, span.equalsLine, span.equalsColumn)
+        ParsedMethod(d.name, d.line, bodyStartLine, span.endLine, m.group(1) != null, span.equalsLine, span.equalsColumn, Some(d.params))
     }
 
   private def textBoundaries(lines: List[String]): List[ParsedMethod] =

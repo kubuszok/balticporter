@@ -233,3 +233,42 @@ class NonJavaBodiesSpec extends munit.FunSuite:
           )
         )
       case refused: NonJavaBodies.Refused => fail(refused.message)
+
+  private def runRecorded(records: RecordedDivergence*): (Path, NonJavaBodies.Run) =
+    val (root, reference, rast) = fixture()
+    NonJavaBodies.build(library.copy(recordedDivergences = records.toList), reference, rast) match
+      case built:   NonJavaBodies.Built   => (root, built.derive(root.resolve("out"), root.resolve("report")))
+      case refused: NonJavaBodies.Refused => fail(refused.message)
+
+  test("a recorded divergence keeps its one overload on the reference, and the overloads after it keep their own bodies"):
+    val (root, result) = runRecorded(RecordedDivergence.parse("demo/Shapes.scala", "area", "Int, Int", "R-1"))
+    val area           = result.rows.filter(r => r.file == "demo/Shapes.scala" && r.member == "area").map(r => (r.occurrence, r.why))
+    assertEquals(area, List(("0", ""), ("1", "recorded-divergence:R-1"), ("2", "occurrence-out-of-range")))
+    val emitted = Files.readString(root.resolve("out/demo/Shapes.scala"))
+    assert(emitted.contains("def area(x: Int): Int =\n    10\n"), emitted)
+    assert(emitted.contains("x * y\n"), "the recorded overload keeps the reference body")
+    assertEquals(result.unmatchedRecorded, Nil)
+
+  test("a recorded divergence wins over a reference-only reason, names an unoffered member, and is file-scoped"):
+    val (_, result) = runRecorded(
+      RecordedDivergence.parse("demo/Shapes.scala", "toString", "*", "R-2"),
+      RecordedDivergence.parse("demo/Shapes.scala", "blocked", "*", "R-3")
+    )
+    val why = result.rows.filter(_.file == "demo/Shapes.scala").map(r => r.member -> r.why).toMap
+    assertEquals(why("toString"), "recorded-divergence:R-2")
+    assertEquals(why("blocked"), "recorded-divergence:R-3")
+    assertEquals(result.rows.find(r => r.file == "other/Unfed.scala" && r.member == "area").map(_.why), Some("translated-elsewhere"))
+
+  test("a recorded divergence naming no member, or an overload the file does not declare, is reported"):
+    val gone        = RecordedDivergence.parse("demo/Shapes.scala", "perimeter", "*", "R-4")
+    val overload    = RecordedDivergence.parse("demo/Missing.scala", "missing", "String", "R-5")
+    val (_, result) = runRecorded(gone, overload)
+    assertEquals(result.unmatchedRecorded, List(gone, overload))
+
+  test("a record's parameter list splits at top-level commas only"):
+    assertEquals(
+      RecordedDivergence.parse("f", "m", "Map[String, Int], (Int, Int) => Unit", "R").params,
+      Some(List("Map[String,Int]", "(Int,Int)=>Unit"))
+    )
+    assertEquals(RecordedDivergence.parse("f", "m", "-", "R").params, Some(Nil))
+    assertEquals(RecordedDivergence.parse("f", "m", "*", "R").params, None)

@@ -26,7 +26,8 @@ object ReferenceDeclarations:
     body:          Option[BodySpan] = None,
     tpe:           Option[String] = None,
     typeParams:    Int = 0,
-    result:        Option[String] = None
+    result:        Option[String] = None,
+    params:        List[String] = Nil
   ):
     /** A member a reference skeleton emits as a method: a def, abstract or concrete, or a secondary constructor. */
     def isMethod: Boolean = kind == Kind.Def || kind == Kind.AbstractDef || kind == Kind.Constructor
@@ -47,8 +48,38 @@ object ReferenceDeclarations:
 
         def child(owner: String, name: String): String = if owner.isEmpty then name else s"$owner.$name"
 
-        def add(owner: String, isObj: Boolean, name: Name, kind: Kind, mods: List[Mod], body: Option[BodySpan] = None, tpe: Option[Type] = None, result: Option[Type] = None): Unit =
-          out += Declaration(owner, isObj, name.value, kind, closed(mods), name.pos.startLine, body, tpe.map(_.syntax), result = result.map(_.syntax))
+        def add(
+          owner:  String,
+          isObj:  Boolean,
+          name:   Name,
+          kind:   Kind,
+          mods:   List[Mod],
+          body:   Option[BodySpan] = None,
+          tpe:    Option[Type] = None,
+          result: Option[Type] = None,
+          params: List[String] = Nil
+        ): Unit =
+          out += Declaration(
+            owner,
+            isObj,
+            name.value,
+            kind,
+            closed(mods),
+            name.pos.startLine,
+            body,
+            tpe.map(_.syntax),
+            result = result.map(_.syntax),
+            params = params
+          )
+
+        // the declared types of a method's explicit parameters, every clause but a `using` one, in order
+        def paramTypes(groups: List[Member.ParamClauseGroup]): List[String] =
+          for
+            g <- groups
+            c <- g.paramClauses
+            if !c.mod.exists(_.is[Mod.Using])
+            p <- c.values
+          yield p.decltpe.fold("?")(_.syntax)
 
         // the type a value-like member is read at: a val or var's, or a parameterless def's result
         def valueType(d: Defn.Def): Option[Type] = if d.paramClauseGroups.isEmpty then d.decltpe else None
@@ -80,7 +111,7 @@ object ReferenceDeclarations:
             template(d.templ, child(owner, d.name.value), false)
           case d: Defn.Given     => template(d.templ, child(owner, d.name.value), false)
           case d: Defn.EnumCase  => add(owner, isObj, d.name, Kind.EnumCase, d.mods)
-          case d: Defn.Def       => add(owner, isObj, d.name, Kind.Def, d.mods, span(d, d.body), valueType(d), d.decltpe)
+          case d: Defn.Def       => add(owner, isObj, d.name, Kind.Def, d.mods, span(d, d.body), valueType(d), d.decltpe, paramTypes(d.paramClauseGroups))
           case d: Ctor.Secondary => add(owner, isObj, d.name, Kind.Constructor, d.mods)
           case d: Decl.Def       =>
             add(
@@ -90,7 +121,8 @@ object ReferenceDeclarations:
               Kind.AbstractDef,
               d.mods,
               tpe = if d.paramClauseGroups.isEmpty then Some(d.decltpe) else None,
-              result = Some(d.decltpe)
+              result = Some(d.decltpe),
+              params = paramTypes(d.paramClauseGroups)
             )
           case d: Defn.Type           => add(owner, isObj, d.name, Kind.Type, d.mods)
           case d: Decl.Type           => add(owner, isObj, d.name, Kind.Type, d.mods)
