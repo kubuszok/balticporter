@@ -360,3 +360,14 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   every other type to inference from the slot (`HtmlDomNode` not found in KaTeX's BuildTree).
 - (b) One library's JS naming conventions (class prefix, type-tag field, node factories, methods
   moved into helpers) are a `JsConventions` value the consumer passes; the empty value reads plain JS.
+- (a) The body translator checks a member read against its receiver's declared type for EVERY
+  receiver whose type it knows, a member read included: checking identifiers only let
+  `context.parser.settings` (the reference holds `parser: AnyRef`) reach scalac once the identifier
+  became typed. The checker's type answers only where it is unambiguous (a boolean; a LOCAL of a
+  class the reference declares) — at a member read it was wider in the reference, a compile error.
+- (a) JS `splice` clamps its bounds, removes to the end on one argument, inserts the rest and
+  returns the removed array: no `Buffer.remove` call is faithful, so it is refused (one KaTeX body
+  was emitted as `remove(i, 1, xs*)`).
+- (b) A consumer's deliberate divergences from upstream are `NonJavaBodies.Library.recordedDivergences`,
+  matched by file, member and overload: they keep the reference body ahead of every other reason,
+  and an unmatched record is reported; a faithful translation would otherwise silently undo them.
