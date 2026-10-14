@@ -185,3 +185,7 @@ the PARENT's arity**, read off the support types' declared table (`RuntimeArtifa
 java's `isEmpty()` beside `JavaCollection`'s `def isEmpty`, a class re-parented from
 `AbstractCollection` failed `incompatible type` at RefChecks, and a policy `force` could move only
 the calls. Kind (a).
+- A RAW construction a witness phase completes at `C[X]` (`new Array(set.toArray())`) views a java
+  array handed to the constructor's `T[]` formal at `Array[X]`: java passed it unchecked, scala's
+  `Array` is invariant (gdx-tools, 1 E007). Read off the CONSTRUCTOR's own class (a retargeted
+  construction keeps the java class's type parameters); a primitive element is never viewed. Kind (a).

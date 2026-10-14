@@ -60,6 +60,9 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
       |  static void call (Bag<String> b) { take(b); }
       |  static Object literal () { return Bag.class; }
       |}
+      |class RawArray {
+      |  static Bag<String> collected (java.util.Set<String> s) { Bag<String> b = new Bag(s.toArray(), 0, 1); return b; }
+      |}
       |""".stripMargin
 
   private def parse(): Program = SpoonTir.fromSource(java, "Demo.java")
@@ -131,6 +134,11 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
       ported.out.linesIterator.filter(_.contains("new com.demo.Bag")).mkString("\n")
     )
     assert(ported.out.contains("new com.demo.Bag[java.lang.String](4,"), "the `E[]::new` method reference")
+  }
+
+  test("a raw construction completed at `C[X]` views a java array handed to its `T[]` formal at `Array[X]`") {
+    val line = ported.out.linesIterator.filter(_.contains("def collected")).toList ++ ported.out.linesIterator.filter(_.contains("s.toArray()")).toList
+    assert(clue(line.mkString("\n")).contains("s.toArray().asInstanceOf[scala.Array[java.lang.String]]"))
   }
 
   test("a class literal's payload is filled like every other position this phase unbound") {

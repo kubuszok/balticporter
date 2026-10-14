@@ -588,7 +588,7 @@ final class ElementWitnessTransform(
         * to say which element type it is for. A wildcard argument becomes `java.lang.Object`, which is what java's raw type meant. Then the element type is RECORDED, so the enclosing declaration can
         * be given the witness it must supply.
         */
-      private def completeRawNew(inner: Term, target: TypeRepr, o: Origin): Term =
+      private def completeRawNew(inner: Term, target: TypeRepr, o: Origin)(using Program): Term =
         target match
           case TypeRepr.AppliedType(TypeRepr.TypeRef(_, c), args) if boundSubjects.contains(c) =>
             val filled    = args.map(fillArg)
@@ -618,12 +618,46 @@ final class ElementWitnessTransform(
             texts.foreach(set += _)
 
       /** …and the HEAD `new` under the cast — never a nested one, whose own cast answers for it. */
-      private def fillNew(t: Term, c: SymId, completed: TypeRepr): Term = t match
+      private def fillNew(t: Term, c: SymId, completed: TypeRepr)(using Program): Term = t match
         case n: Tree.New if headSymOfType(n.tpt.tpe).contains(c) =>
           n.copy(tpt = TypeTree(completed, n.origin))
+        case ap @ Tree.Apply(n: Tree.New, _, _, _, _) if headSymOfType(n.tpt.tpe).contains(c) =>
+          ap.copy(fun = fillNew(n, c, completed), args = viewRawArrays(ap, c, completed))
         case ap: Tree.Apply     => ap.copy(fun = fillNew(ap.fun, c, completed))
         case ta: Tree.TypeApply => ta.copy(fun = fillNew(ta.fun, c, completed))
         case other => other
+
+      /** java handed the RAW constructor an array unchecked (`new Array(set.toArray())` passes an `Object[]` to `T[]`); completed at `C[X]`, scala's invariant `Array` needs the argument viewed at
+        * `Array[X]` — java's own unchecked view, a reference array at run time either way. A primitive element is never viewed.
+        */
+      private def viewRawArrays(ap: Tree.Apply, c: SymId, completed: TypeRepr)(using p: Program): List[Term] =
+        // the CONSTRUCTOR's own class: a retargeted construction keeps the java class's constructor and type parameters
+        val ctorOwner = p.symbolOf(ap.method).map(_.owner).getOrElse(c)
+        val tparams   = p.definitionOf(ctorOwner).orElse(p.definitionOf(c)).collect { case cd: Tree.ClassDef => cd.tparams.map(_.symbol) }.getOrElse(Nil)
+        val filled    = completed match
+          case TypeRepr.AppliedType(_, as) => as
+          case _                           => Nil
+        val formals = p.symbolOf(ap.method).map(_.info).collect { case TypeRepr.MethodType(ps, _, _) => ps.map(_._2) }.getOrElse(Nil)
+        def arrayOf(t: TypeRepr): Option[(TypeRepr, TypeRepr)] = t match
+          case TypeRepr.AppliedType(arr @ TypeRepr.TypeRef(_, a), List(e)) if p.symbolOf(a).exists(_.fullName == "scala.Array") => Some((arr, e))
+          case _                                                                                                                => scala.None
+        if tparams.sizeIs != filled.size || formals.sizeIs != ap.args.size then ap.args
+        else
+          ap.args.zip(formals).map { (a, f) =>
+            (arrayOf(f), arrayOf(a.tpe)) match
+              case (Some((arr, TypeRepr.TypeRef(_, tp))), Some((_, got))) if tparams.contains(tp) =>
+                val want = filled(tparams.indexOf(tp))
+                if got == want || primitives(want) then a
+                else
+                  val view = TypeRepr.AppliedType(arr, List(want))
+                  Tree.Typed(a, TypeTree(view, a.origin), view, a.origin)
+              case _ => a
+          }
+
+      private def primitives(t: TypeRepr)(using p: Program): Boolean = t match
+        case TypeRepr.TypeRef(_, s) =>
+          p.symbolOf(s).exists(sym => Set("scala.Int", "scala.Long", "scala.Short", "scala.Byte", "scala.Char", "scala.Float", "scala.Double", "scala.Boolean")(sym.fullName))
+        case _ => false
 
       private def headSymOfType(t: TypeRepr): Option[SymId] = t match
         case TypeRepr.AppliedType(TypeRepr.TypeRef(_, c), _) => Some(c)
