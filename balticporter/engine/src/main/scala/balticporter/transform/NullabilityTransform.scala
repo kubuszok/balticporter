@@ -256,7 +256,7 @@ final class NullabilityTransform(
         boolSym = mintOrReuse("scala.Boolean", "Boolean")
 
     compoundOps =
-      if target.isWrapper then NullabilityTransform.CompoundOps.map(o => o -> mintOrReuse(s"scala.<op>#$o", o)).toMap
+      if target.isWrapper then NullabilityTransform.CompoundOps.map((o, fqn) => o -> mintOrReuse(fqn, o)).toMap
       else Map.empty
 
     // cache primitive symbol IDs so `coerceTo` can decide `.get` vs `.orNull` without `Program`
@@ -1384,7 +1384,19 @@ object NullabilityTransform:
   private val NotOp     = "scala.<op>#unary_!"
 
   /** java's compound assignment operators (JLS 15.26.2), by the binary operator each applies */
-  private val CompoundOps: List[String] = List("+", "-", "*", "/", "%", "&", "|", "^", "<<", ">>", ">>>")
+  private val CompoundOps: List[(String, String)] = List(
+    "+" -> "scala.<op>#+",
+    "-" -> "scala.<op>#-",
+    "*" -> "scala.<op>#*",
+    "/" -> "scala.<op>#/",
+    "%" -> "scala.<op>#%",
+    "&" -> "scala.<op>#&",
+    "|" -> "scala.<op>#|",
+    "^" -> "scala.<op>#^",
+    "<<" -> "scala.<op>#<<",
+    ">>" -> "scala.<op>#>>",
+    ">>>" -> "scala.<op>#>>>"
+  )
 
   /** the engine's synthetic operator namespace, minted by the frontend under exactly this owner. */
   private val OperatorOwners = Set("scala.<op>")
