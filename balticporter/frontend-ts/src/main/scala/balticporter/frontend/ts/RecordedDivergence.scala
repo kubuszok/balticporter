@@ -35,8 +35,8 @@ object RecordedDivergence:
     var depth = 0
     for ch <- s do
       ch match
-        case '[' | '(' => depth += 1; cur += ch
-        case ']' | ')' => depth -= 1; cur += ch
+        case '[' | '('         => depth += 1; cur += ch
+        case ']' | ')'         => depth -= 1; cur += ch
         case ',' if depth == 0 => parts += cur.result().trim; cur.clear()
         case _                 => cur += ch
     if cur.nonEmpty then parts += cur.result().trim

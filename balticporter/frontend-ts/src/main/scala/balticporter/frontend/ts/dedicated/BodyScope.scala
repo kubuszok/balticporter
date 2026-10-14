@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{ RastNode, RastValue, ReferenceSignatures }
+import balticporter.frontend.ts.{ RastNode, RastType, RastValue, ReferenceSignatures }
 import scala.collection.mutable
 import BodySyntax.*
 
@@ -21,10 +21,12 @@ abstract private[dedicated] class BodyScope(
   val memberRenames:      Map[String, String],
   val oracle:             ReferenceSignatures.TypeOracle,
   val enclosingOwner:     Option[String],
-  val conventions:        JsConventions
+  val conventions:        JsConventions,
+  val tsTypes:            Map[String, RastType]
 ):
   val sb                 = new StringBuilder
   val refusals           = mutable.ListBuffer.empty[String]
+  val refusalSites       = mutable.ListBuffer.empty[DefmethodBodyTranslator.RefusalSite]
   protected var labelSeq = 0
   // The label name for the current early-return boundary (empty = no boundary)
   protected var returnLabel = ""
@@ -89,9 +91,27 @@ abstract private[dedicated] class BodyScope(
   // for truthiness and should be unwrapped (Nullable -> .get)
   protected val unwrappedIds = mutable.Set.empty[String]
 
-  /** Look up the declared Scala type of an expression. Checks locals first (they shadow parameters inside guarded scopes), then parameters.
+  /** Look up the declared Scala type of an expression. Checks locals first (they shadow parameters inside guarded scopes), then parameters; a value the TypeScript checker types as a boolean, with
+    * nothing in the reference saying otherwise, is a `Boolean`: its truthiness is its value, and a Scala type that disagrees fails to compile rather than reading differently.
     */
   protected def exprType(node: RastNode): Option[String] =
+    declaredType(node).orElse(if isTsBoolean(node) then Some("Boolean") else None)
+
+  /** True when the checker typed `node` as `boolean`, possibly `| undefined` or `| null` (both falsy, as `false` is). */
+  protected def isTsBoolean(node: RastNode): Boolean =
+    def booleanish(id: String, depth: Int): Option[Boolean] =
+      tsTypes.get(id).flatMap { t =>
+        t.kind match
+          case "booleanLiteral"     => Some(true)
+          case "undefined" | "null" => Some(false)
+          case "union" if depth < 3 =>
+            val parts = t.types.getOrElse(Nil).map(booleanish(_, depth + 1))
+            if parts.nonEmpty && parts.forall(_.isDefined) && parts.exists(_.contains(true)) then Some(true) else None
+          case _ => None
+      }
+    node.`type`.flatMap(booleanish(_, 0)).contains(true)
+
+  private def declaredType(node: RastNode): Option[String] =
     node.kind match
       case "Identifier" =>
         node.text.flatMap { name =>
@@ -288,6 +308,17 @@ abstract private[dedicated] class BodyScope(
 
   protected def refuse(reason: String): Unit =
     refusals += reason
+    refusalSites += DefmethodBodyTranslator.RefusalSite(reason, site._1, site._2)
+
+  // the source position of the innermost node being rendered, for the refusal sites
+  private var site: (Int, Int) = (0, 0)
+
+  /** Renders under `node`'s source position, so a refusal inside names where it arose. */
+  protected def at[A](node: RastNode)(render: => A): A =
+    val saved = site
+    if node.pos != (0, 0) then site = node.pos
+    try render
+    finally site = saved
 
   protected def collectAllProps(cls: DefnodeClass): Set[String] =
     val own = cls.selfProps.toSet
@@ -329,6 +360,76 @@ abstract private[dedicated] class BodyScope(
 
   /** Renders an expression; the renderer supplies it, the text conversions below call it. */
   def translateExpr(node: RastNode): String
+
+  /** Renders a statement; the renderer supplies it, [[translateSequence]] calls it. */
+  def translateStatement(node: RastNode, indent: String, isLast: Boolean): Unit
+
+  // identifiers an `instanceof` test has narrowed, by Scala name, to the class it tested
+  protected val narrowedIds = mutable.Map.empty[String, String]
+
+  /** What `cond` proves when it HOLDS: `x instanceof C` makes the local `x` a `C`, and so does each operand of an `&&`. Only a body-local name the body never reassigns, at a class the reference
+    * declares with no type parameters, so the cast it renders is exactly the test JS made.
+    */
+  protected def narrowedBy(cond: RastNode): List[(String, String)] =
+    cond.kind match
+      case "ParenthesizedExpression"                                                                          => cond.children.headOption.toList.flatMap(narrowedBy)
+      case "BinaryExpression" if cond.operator.contains("AmpersandAmpersandToken") && cond.children.size >= 2 =>
+        narrowedBy(cond.children.head) ++ narrowedBy(cond.children.last)
+      case "BinaryExpression" if cond.operator.contains("InstanceOfKeyword") =>
+        cond.children.filterNot(_.kind == "InstanceOfKeyword") match
+          case (x @ RastNode("Identifier", _, _, _, _, _, _, _, Some(name), _, _, _)) :: (c @ RastNode("Identifier", _, _, _, _, _, _, _, Some(cls), _, _, _)) :: Nil =>
+            val scalaCls   = if conventions.isClassName(cls) then conventions.scalaClassName(cls) else cls
+            val narrowable =
+              (isLocal(name) || entry.params.contains(name)) && !reassignedNames.contains(name) && !reassignedNames.contains(snakeToCamel(name)) &&
+                memberIndex.knowsType(scalaCls) && memberIndex.testable(scalaCls) == scalaCls && !unwrappedIds.contains(snakeToCamel(name))
+            if narrowable then List(name -> scalaCls) else Nil
+          case _ => Nil
+      case _ => Nil
+
+  /** What `cond` proves when it FAILS: `!(x instanceof C)` failing makes `x` a `C`, and so does each operand of a failing `||`. */
+  protected def refutedBy(cond: RastNode): List[(String, String)] =
+    cond.kind match
+      case "ParenthesizedExpression"                                                              => cond.children.headOption.toList.flatMap(refutedBy)
+      case "PrefixUnaryExpression" if cond.operator.contains("ExclamationToken")                  => cond.children.headOption.toList.flatMap(narrowedBy)
+      case "BinaryExpression" if cond.operator.contains("BarBarToken") && cond.children.size >= 2 =>
+        refutedBy(cond.children.head) ++ refutedBy(cond.children.last)
+      case _ => Nil
+
+  /** Renders under the narrowing `pairs` prove: each name reads as its class, and renders cast to it. */
+  protected def underNarrowing[A](pairs: List[(String, String)])(render: => A): A =
+    if pairs.isEmpty then render
+    else
+      val names = pairs.map((js, cls) => snakeToCamel(js) -> cls)
+      val saved = names.map((n, _) => (n, localTypes.get(n), narrowedIds.get(n)))
+      names.foreach { (n, cls) =>
+        localTypes(n) = cls
+        narrowedIds(n) = cls
+      }
+      try render
+      finally
+        saved.foreach { (n, tpe, narrowed) =>
+          tpe.fold(localTypes.remove(n))(localTypes.put(n, _))
+          narrowed.fold(narrowedIds.remove(n))(narrowedIds.put(n, _))
+        }
+
+  /** True for a statement no path completes normally through: control always leaves the enclosing sequence. */
+  protected def exitsAlways(stmt: RastNode): Boolean =
+    stmt.kind match
+      case "ReturnStatement" | "ThrowStatement"     => true
+      case "BreakStatement" | "ContinueStatement"   => stmt.children.isEmpty
+      case "Block"                                  => stmt.children.lastOption.exists(exitsAlways)
+      case "IfStatement" if stmt.children.size >= 3 => exitsAlways(stmt.children(1)) && exitsAlways(stmt.children(2))
+      case _                                        => false
+
+  /** Renders a statement sequence; after `if (c) <exit>` with no else, the rest renders under what `c` failing proves. */
+  protected def translateSequence(stmts: List[RastNode], indent: String, isLast: Boolean): Unit =
+    stmts match
+      case Nil          => ()
+      case stmt :: rest =>
+        translateStatement(stmt, indent, isLast && rest.isEmpty)
+        val proven =
+          if stmt.kind == "IfStatement" && stmt.children.size == 2 && exitsAlways(stmt.children(1)) then refutedBy(stmt.children.head) else Nil
+        underNarrowing(proven)(translateSequence(rest, indent, isLast))
 
   /** The arguments a JS call leaves out, as Scala must still pass them: a parameter with a default is skipped, an optional one is passed absent by name (JS passes `undefined`), and any other missing
     * one leaves the call untranslatable (`None`).

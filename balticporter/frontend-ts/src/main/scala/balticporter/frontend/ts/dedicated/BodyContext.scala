@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{ RastNode, RastValue, ReferenceSignatures }
+import balticporter.frontend.ts.{ RastNode, RastType, RastValue, ReferenceSignatures }
 import scala.collection.mutable
 import BodySyntax.*
 import DefmethodBodyTranslator.ReturnTypePlaceholder
@@ -23,10 +23,13 @@ private[dedicated] class BodyContext(
       oracle: ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
       enclosingOwner: Option[String] = None,
       conventions: JsConventions = JsConventions.plain,
-  ) extends BodyScope(entry, hierarchy, baseIndent, thisBinding, nodeParamName, apiLookup, declaredReturnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions):
+      tsTypes: Map[String, RastType] = Map.empty,
+  ) extends BodyScope(entry, hierarchy, baseIndent, thisBinding, nodeParamName, apiLookup, declaredReturnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions, tsTypes):
     /** Translate a JS expression used as a condition (if, while, ternary).
       * Applies truthiness lowering when the operand has a known non-Boolean type. */
-    private def translateCondition(node: RastNode): String =
+    private def translateCondition(node: RastNode): String = at(node)(renderCondition(node))
+
+    private def renderCondition(node: RastNode): String =
       // For `!x`, PrefixUnaryExpression already handles truthiness
       // For bare identifiers, apply the truthiness test
       node.kind match
@@ -47,7 +50,7 @@ private[dedicated] class BodyContext(
               unwrappedIds -= name
               saved.fold(localTypes.remove(name))(t => localTypes.put(name, t))
               r
-            case _ => translateCondition(rhs)
+            case _ => underNarrowing(if isAnd then narrowedBy(lhs) else refutedBy(lhs))(translateCondition(rhs))
           s"($left ${if isAnd then "&&" else "||"} $right)"
         case "ParenthesizedExpression" if node.children.nonEmpty =>
           s"(${translateCondition(node.children.head)})"
@@ -234,15 +237,15 @@ private[dedicated] class BodyContext(
 
       val innerIndent = if needsBoundary || needsBraces then baseIndent + "  " else baseIndent
 
-      for (stmt, idx) <- stmts.zipWithIndex do
-        val isLast = idx == stmts.size - 1
-        translateStatement(stmt, innerIndent, isLast)
+      translateSequence(stmts, innerIndent, true)
 
       if needsBoundary || needsBraces then sb.append(s"$baseIndent}\n")
 
     private val voidValue: String = if declaredReturnType.contains("Unit") then "()" else "null"
 
-    def translateStatement(node: RastNode, indent: String, isLast: Boolean): Unit =
+    def translateStatement(node: RastNode, indent: String, isLast: Boolean): Unit = at(node)(renderStatement(node, indent, isLast))
+
+    private def renderStatement(node: RastNode, indent: String, isLast: Boolean): Unit =
       node.kind match
         case "ReturnStatement" =>
           if node.children.isEmpty then
@@ -329,15 +332,13 @@ private[dedicated] class BodyContext(
               // Both branches are in value position when the if-else is the last
               // expression; passing isLast to the then-branch prevents emitting a
               // boundary.break with an empty label when both branches return.
-              translateStatementBody(children(1), indent + "  ", isLast)
+              underNarrowing(narrowedBy(children.head))(translateStatementBody(children(1), indent + "  ", isLast))
             if children.size > 2 then
               sb.append(s"$indent} else {\n")
-              translateStatementBody(children(2), indent + "  ", isLast)
+              underNarrowing(refutedBy(children.head))(translateStatementBody(children(2), indent + "  ", isLast))
             sb.append(s"$indent}\n")
 
-        case "Block" =>
-          for (stmt, idx) <- node.children.zipWithIndex do
-            translateStatement(stmt, indent, isLast && idx == node.children.size - 1)
+        case "Block" => translateSequence(node.children, indent, isLast)
 
         case "ForStatement" =>
           translateForStatement(node, indent)
@@ -430,13 +431,13 @@ private[dedicated] class BodyContext(
 
     private def translateStatementBody(node: RastNode, indent: String, isLast: Boolean): Unit =
       node.kind match
-        case "Block" =>
-          for (stmt, idx) <- node.children.zipWithIndex do
-            translateStatement(stmt, indent, isLast && idx == node.children.size - 1)
+        case "Block" => translateSequence(node.children, indent, isLast)
         case _ =>
           translateStatement(node, indent, isLast)
 
-    def translateExpr(node: RastNode): String =
+    def translateExpr(node: RastNode): String = at(node)(renderExpr(node))
+
+    private def renderExpr(node: RastNode): String =
       node.kind match
         case "NumericLiteral" | "FirstLiteralToken" =>
           node.value match
@@ -604,8 +605,8 @@ private[dedicated] class BodyContext(
         case "ConditionalExpression" =>
           val children = node.children
           if children.size >= 3 then
-            val thenE = translateExpr(children(1))
-            val elseE = translateExpr(children(2))
+            val thenE = underNarrowing(narrowedBy(children(0)))(translateExpr(children(1)))
+            val elseE = underNarrowing(refutedBy(children(0)))(translateExpr(children(2)))
             // JS `x ? a : b` uses truthiness of x. Lower the condition based
             // on the operand's declared type.
             val condNode = children(0)
@@ -796,7 +797,7 @@ private[dedicated] class BodyContext(
       // When this identifier was tested for Nullable truthiness in an
       // enclosing && guard, it has been unwrapped and must be read as .get
       val scalaName = snakeToCamel(name)
-      if unwrappedIds.contains(scalaName) then s"$base.get" else base
+      if unwrappedIds.contains(scalaName) then s"$base.get" else narrowedIds.get(scalaName).fold(base)(cls => s"$base.asInstanceOf[$cls]")
 
     private def translatePropertyAccess(node: RastNode): String =
       val children = node.children
@@ -913,7 +914,9 @@ private[dedicated] class BodyContext(
         case "forEach" => s"$objExpr.foreach"
         case "indexOf" => s"$objExpr.indexOf"
         case "includes" | "has" => s"$objExpr.contains"
-        case "splice" => s"$objExpr.remove"
+        case "splice" =>
+          refuse("js-splice")
+          s"$objExpr.remove"
         case "pop" => s"$objExpr.remove($objExpr.length - 1)"
         case "shift" => s"$objExpr.remove(0)"
         case "unshift" => s"$objExpr.prepend"
@@ -1079,9 +1082,9 @@ private[dedicated] class BodyContext(
               case "hasOwnProperty" =>
                 s"$objExpr.contains(${scalaArgs.mkString(", ")})"
               case "splice" =>
-                if scalaArgs.length >= 2 then
-                  s"$objExpr.remove(${scalaArgs.mkString(", ")})"
-                else s"$objExpr.remove(${scalaArgs.mkString(", ")})"
+                // JS clamps its bounds, removes to the end on one argument, inserts the rest and returns the removed array; no Buffer.remove does all that
+                refuse("js-splice")
+                s"$objExpr.remove(${scalaArgs.mkString(", ")})"
               case "concat" =>
                 s"($objExpr ++ ${scalaArgs.mkString(" ++ ")})"
               case "join" =>
@@ -1516,7 +1519,8 @@ private[dedicated] class BodyContext(
           // the stored value takes the target's declared type, an optional target included
           val lhsType = if op == "EqualsToken" || op == "FirstAssignment" then exprType(lhs) else None
           val left = translateExpr(lhs)
-          val right = lhsType.fold(translateExpr(rhs))(translateExprAt(rhs, _))
+          val proven = if op == "AmpersandAmpersandToken" then narrowedBy(lhs) else if op == "BarBarToken" then refutedBy(lhs) else Nil
+          val right = underNarrowing(proven)(lhsType.fold(translateExpr(rhs))(translateExprAt(rhs, _)))
           if op == "AsteriskAsteriskToken" then return s"math.pow($left, $right)"
           // JS `/` never truncates: two integral operands divide as doubles
           if op == "SlashToken" && exprType(lhs).exists(integralTypes.contains) && exprType(rhs).exists(integralTypes.contains) then
@@ -1591,9 +1595,10 @@ private[dedicated] class BodyContext(
           else
             // Multi-statement function body -- use a fresh context for the lambda's own scope
             val innerIndent = baseIndent + "    "
-            val innerCtx = new BodyContext(entry, hierarchy, innerIndent, apiLookup = apiLookup, memberRenames = memberRenames, oracle = oracle, conventions = conventions)
+            val innerCtx = new BodyContext(entry, hierarchy, innerIndent, apiLookup = apiLookup, memberRenames = memberRenames, oracle = oracle, conventions = conventions, tsTypes = tsTypes)
             innerCtx.translateBlock(block)
             refusals ++= innerCtx.refusals
+            refusalSites ++= innerCtx.refusalSites
             val bodyStr = innerCtx.result().stripTrailing()
             if paramStrs.isEmpty then s"(() => {\n$bodyStr\n$baseIndent  })"
             else s"((${paramStrs.mkString(", ")}) => {\n$bodyStr\n$baseIndent  })"

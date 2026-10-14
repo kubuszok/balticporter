@@ -25,8 +25,8 @@ object ParityDerive:
     def skeletonCannotOffer(kind:    String): String = s"skeleton-cannot-offer:$kind"
     def referenceOnly(reason:        String): String = s"reference-only:$reason"
 
-  /** One translated body and every reason the translator gave for leaving part of it untranslated. */
-  final case class TranslatedBody(text: String, refusals: List[String] = Nil)
+  /** One translated body and every reason the translator gave for leaving part of it untranslated; `sites` says where in the source each reason arose, for the report. */
+  final case class TranslatedBody(text: String, refusals: List[String] = Nil, sites: List[String] = Nil)
 
   /** Translated bodies by reference member name, one entry per OCCURRENCE in source order: the n-th member of that name in the reference file takes the n-th body. */
   final case class Bodies(byName: Map[String, List[TranslatedBody]]):
@@ -65,7 +65,8 @@ object ParityDerive:
     occurrence:       Int = 0,
     line:             Int = 0,
     offered:          Boolean = true,
-    translation:      Option[String] = None
+    translation:      Option[String] = None,
+    sites:            List[String] = Nil
   )
 
   /** One reference file derived. The counts cover the OFFERED members only; `unoffered` lists the rest, all of them reference bodies. */
@@ -148,7 +149,16 @@ object ParityDerive:
             for i <- method.signatureLine to method.bodyEndLine do
               sb.append(lines(i))
               sb.append("\n")
-            bodyEntries += BodyEntry(method.name, Source.Reference, why, 0, idx, method.signatureLine, translation = named.lift(idx).map(_.text))
+            bodyEntries += BodyEntry(
+              method.name,
+              Source.Reference,
+              why,
+              0,
+              idx,
+              method.signatureLine,
+              translation = named.lift(idx).map(_.text),
+              sites = named.lift(idx).fold(Nil)(_.sites)
+            )
 
         lineIdx = method.bodyEndLine + 1
         methodIdx += 1

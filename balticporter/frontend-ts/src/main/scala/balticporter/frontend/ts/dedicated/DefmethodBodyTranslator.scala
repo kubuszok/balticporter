@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastValue, ReferenceSignatures}
+import balticporter.frontend.ts.{RastFile, RastNode, RastType, RastValue, ReferenceSignatures}
 import scala.collection.mutable
 import BodySyntax.*
 
@@ -23,7 +23,13 @@ object DefmethodBodyTranslator:
       isComplete: Boolean,
       refusalCount: Int,
       refusalReasons: List[String],
+      refusalSites: List[RefusalSite] = Nil,
   )
+
+  /** Where in the exported source one refusal arose: the line and column of the innermost node being rendered. */
+  final case class RefusalSite(reason: String, line: Int, column: Int):
+    /** `reason path:line:column`, the form a report prints. */
+    def render(path: String): String = s"$reason $path:$line:$column"
 
   /** Placeholder emitted in the boundary Label type when the return type is not known at
     * translation time. `ParityDerive` replaces it with the method's declared return type
@@ -63,6 +69,8 @@ object DefmethodBodyTranslator:
     *   typed objects from JS object literals instead of emitting `mutable.Map`. */
   /** @param enclosingOwner the object path the body is emitted into, when the caller knows it; a
     *   private member of any other object is refused, and so is every private member when absent. */
+  /** @param tsTypes the checker's types of the body's file (`RastFile.types`), read where the
+    *   reference says nothing about a value; empty reads none. */
   def translateBody(
       entry: DefmethodEntry,
       hierarchy: List[DefnodeClass],
@@ -80,8 +88,9 @@ object DefmethodBodyTranslator:
       oracle: ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
       enclosingOwner: Option[String] = None,
       conventions: JsConventions = JsConventions.plain,
+      tsTypes: Map[String, RastType] = Map.empty,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions, tsTypes)
     ctx.translateBlock(entry.bodyNode)
     ctx.checkUnresolvedReferences()
     TranslationResult(
@@ -89,6 +98,7 @@ object DefmethodBodyTranslator:
       isComplete = ctx.refusals.isEmpty,
       refusalCount = ctx.refusals.size,
       refusalReasons = ctx.refusals.toList,
+      refusalSites = ctx.refusalSites.toList,
     )
 
   /** Emit a complete DEFMETHOD family as Scala method declarations.

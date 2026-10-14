@@ -426,3 +426,83 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       returnType = Some("Nullable[Int]")
     )
     assertNoDiff(r.scalaBody.trim, "(if (b) Nullable(1) else Nullable.Null)")
+
+  private val checkerTypes = Map(
+    "f" -> RastType("booleanLiteral", "false", value = Some(RastValue.Bool(false))),
+    "t" -> RastType("booleanLiteral", "true", value = Some(RastValue.Bool(true))),
+    "u" -> RastType("undefined", "undefined"),
+    "b" -> RastType("union", "boolean", types = Some(List("f", "t"))),
+    "bu" -> RastType("union", "boolean | undefined", types = Some(List("u", "f", "t"))),
+    "s" -> RastType("string", "string"),
+    "su" -> RastType("union", "string | undefined", types = Some(List("u", "s"))),
+    "uu" -> RastType("union", "undefined", types = Some(List("u")))
+  )
+
+  private def typedIf(tpe: String): DefmethodBodyTranslator.TranslationResult =
+    val cond = RastNode("PropertyAccessExpression", 0, (3, 8), children = List(ident("o"), ident("flag")), `type` = Some(tpe))
+    DefmethodBodyTranslator.translateBody(
+      DefmethodEntry("_free_", "test", List("o"), block(node("IfStatement", cond, block(ret(num(1)))), ret(num(2)))),
+      Nil,
+      returnType = Some("Int"),
+      tsTypes = checkerTypes
+    )
+
+  test(
+    "a condition the checker types as a boolean, absent or not, is its own truthiness; any other type nothing declares refuses"
+  ):
+    for tpe <- List("b", "bu") do
+      val r = typedIf(tpe)
+      assert(!r.refusalReasons.contains("truthiness-unknown-type"), s"$tpe: ${r.refusalReasons}")
+      assert(r.scalaBody.contains("if (o.flag)"), r.scalaBody)
+    for tpe <- List("s", "su", "uu") do refuses(typedIf(tpe), "truthiness-unknown-type")
+
+  test("a refusal names the source line and column of the node it arose under"):
+    val site = typedIf("s").refusalSites.find(_.reason == "truthiness-unknown-type")
+    assertEquals(site.map(s => (s.line, s.column)), Some((3, 8)))
+    assertEquals(site.map(_.render("src/a.ts")), Some("truthiness-unknown-type src/a.ts:3:8"))
+
+  private val seqIndex = ReferenceSignatures.MemberIndex(Map("Node" -> Set.empty, "Seq" -> Set("items")))
+  private def isSeq(x: String):   RastNode = bin("InstanceOfKeyword", ident(x), ident("Seq"))
+  private def not(e:   RastNode): RastNode = RastNode("PrefixUnaryExpression", 0, (0, 0), children = List(node("ParenthesizedExpression", e)), operator = Some("ExclamationToken"))
+
+  test(
+    "an instanceof test narrows its local where it holds: the rest of the sequence after a failing exit, the right of an &&, a branch"
+  ):
+    val early = translate(
+      block(node("IfStatement", not(isSeq("x")), ret(num(0))), ret(prop(ident("x"), "items"))),
+      params = List("x"),
+      paramTypes = Map("x" -> "Node"),
+      memberIndex = seqIndex
+    )
+    accepts(early)
+    assert(early.scalaBody.contains("x.asInstanceOf[Seq].items"), early.scalaBody)
+    val conj = translate(
+      block(ret(bin("AmpersandAmpersandToken", isSeq("x"), prop(ident("x"), "items")))),
+      params = List("x"),
+      paramTypes = Map("x" -> "Node"),
+      memberIndex = seqIndex
+    )
+    assert(conj.scalaBody.contains("x.isInstanceOf[Seq] && x.asInstanceOf[Seq].items"), conj.scalaBody)
+
+  test("no narrowing outside what the test proves, nor of a name the body reassigns"):
+    refuses(
+      translate(
+        block(node("IfStatement", isSeq("x"), ret(num(0))), ret(prop(ident("x"), "items"))),
+        params = List("x"),
+        paramTypes = Map("x" -> "Node"),
+        memberIndex = seqIndex
+      ),
+      "wrong-member-access"
+    )
+    val reassigned = translate(
+      block(
+        local("y", ident("x")),
+        expr(bin("EqualsToken", ident("y"), ident("x"))),
+        node("IfStatement", isSeq("y"), ret(prop(ident("y"), "items"))),
+        ret(num(0))
+      ),
+      params = List("x"),
+      paramTypes = Map("x" -> "Node"),
+      memberIndex = seqIndex
+    )
+    assert(!reassigned.scalaBody.contains("asInstanceOf[Seq]"), reassigned.scalaBody)
