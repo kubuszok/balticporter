@@ -73,6 +73,18 @@ class DefnodeNormalizationRuleSpec extends munit.FunSuite:
     )
   }
 
+  test("the factory reads the scope and the `class-builder` key; without one the phase recognises nothing") {
+    def phase(conf: String) =
+      new DefnodeNormalizationRuleFactory().fromConfig(balticporter.runner.HoconView.root(com.typesafe.config.ConfigFactory.parseString(conf))).asInstanceOf[DefnodeNormalizationRule]
+    val configured = phase(
+      """scope { only = ["Leaf"] }
+        |class-builder { function = "defineClass", class-prefix = "Node_", root-class = "Node_Base" }""".stripMargin
+    )
+    assertEquals(configured.builder, builder)
+    assertEquals(configured.scope, RuleScope.Only(Set("Leaf")))
+    assertEquals(phase("""scope { only = ["Leaf"] }""").builder, RuntimeClassBuilder.none)
+  }
+
   test("two different builders refuse to merge; an empty one adopts the other") {
     val other = RuntimeClassBuilder("makeClass", "N", "NBase")
     assert(
