@@ -932,7 +932,13 @@ final class ElementWitnessTransform(
       */
     def atReceiver(ap: Tree.Apply, f: TypeRepr): TypeRepr = (f, ap.fun) match
       case (TypeRepr.TypeRef(_, tp), Tree.Select(recv, _, _, _)) =>
-        recv.tpe match
+        // the receiver's DECLARED type where it is a field or local: a raw static field read inside a generic class
+        // carries a use-site type name-filled from the enclosing class, which its declaration does not have
+        val declared = recv match
+          case Tree.Select(_, s, _, _) => program0.symbolOf(s).map(_.info).filter(_.isInstanceOf[TypeRepr.AppliedType])
+          case Tree.Ident(s, _, _)     => program0.symbolOf(s).map(_.info).filter(_.isInstanceOf[TypeRepr.AppliedType])
+          case _                       => scala.None
+        declared.getOrElse(recv.tpe) match
           case TypeRepr.AppliedType(_, targs) =>
             val owner = program0.symbolOf(ap.method).map(_.owner)
             val tps   = owner.flatMap(program0.definitionOf).collect { case cd: Tree.ClassDef => cd.tparams.map(_.symbol) }.getOrElse(Nil)
