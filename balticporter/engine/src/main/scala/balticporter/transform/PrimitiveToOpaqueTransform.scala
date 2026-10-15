@@ -120,8 +120,16 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   /** method fullNames whose base port map upstream descriptor mentions this spec's opaque FQN — a direct read of what the base published, not a re-derivation.
     */
   private var baseRetypedMethods: Set[String] = Set.empty
-  private var opaqueRef:          TypeRepr    = TypeRepr.NoType
-  private var primRef:            TypeRepr    = TypeRepr.NoType
+
+  /** per base callee (`owner#name`), each published overload's formals as "is this position the opaque type" — the base's own answer for a callee this run does not emit. */
+  private var baseOpaqueFormals: Map[String, List[List[Boolean]]] = Map.empty
+
+  /** does every base overload of this arity publish position `i` at the opaque type? A position the overloads disagree on, or a callee the base does not publish, is no evidence. */
+  private def baseOpaqueAt(calleeFqn: String, arity: Int, i: Int): Boolean =
+    val ds = baseOpaqueFormals.getOrElse(calleeFqn, Nil).filter(_.size == arity)
+    ds.nonEmpty && ds.forall(_(i))
+  private var opaqueRef: TypeRepr = TypeRepr.NoType
+  private var primRef:   TypeRepr = TypeRepr.NoType
 
   /** `Array[Opaque.T]` — what an `int[]` seed becomes after retyping. */
   private var opaqueArrayRef: TypeRepr = TypeRepr.NoType
@@ -164,6 +172,9 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
       case OpaqueSpec.Target.Existing(fqn, _, _) => fqn.split('.').last
       case _                                     => spec.fqn.split('.').last
     baseRetypedMethods = binder.run.baseMemberUpstream.filter(u => u.contains(s"($opaqueSimple") || u.contains(s",$opaqueSimple")).map(u => u.takeWhile(_ != '(')).toSet
+    baseOpaqueFormals = binder.run.baseMemberUpstream.toList
+      .filter(u => u.contains('(') && u.endsWith(")") && baseRetypedMethods(u.takeWhile(_ != '(')))
+      .groupMap(_.takeWhile(_ != '('))(u => PrimitiveToOpaqueTransform.descriptorParams(u).map(_ == opaqueSimple))
 
   /** the detected old→new type mapping: every primitive symbol retyped to the opaque type. Array seeds map to `Array[Opaque.T]` rather than `Opaque.T`.
     */
@@ -813,23 +824,50 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   private def isSeedMethod(m: SymId)(using p: Program): Boolean =
     seeds(m) && p.symbolOf(m).exists(_.info.isInstanceOf[TypeRepr.MethodType])
 
-  private def coerceArgs(t: Tree.Apply)(using p: Program): Term =
+  private def coerceArgs(t: Tree.Apply)(using p: Program): Term = t.fun match
+    // `new X(args) { … }`: the anonymous class's constructor is synthesised and declared nowhere; java
+    // passes the arguments to the SUPERCLASS constructor, so that is the formal list to coerce against
+    case Tree.New(tpt, _, _, Some(_)) if p.definitionOf(t.method).isEmpty =>
+      superCtor(tpt.tpe, t.args.length) match
+        case Some(c) =>
+          coerceArgsOf(t.copy(method = c)) match
+            case a: Tree.Apply => t.copy(args = a.args)
+            case other => other
+        case None => coerceArgsOf(t)
+    case _ => coerceArgsOf(t)
+
+  /** the one constructor of the class `tpe` names that takes `arity` explicit arguments, if exactly one does. */
+  private def superCtor(tpe: TypeRepr, arity: Int)(using p: Program): Option[SymId] =
+    headSym(tpe).flatMap { cls =>
+      val ctors = p.symbols.all.toList.filter { s =>
+        s.owner == cls && s.name == "<init>" && (s.info match
+          case m: TypeRepr.MethodType => m.params.size == arity
+          case _ => false)
+      }
+      ctors match
+        case List(one) => Some(one.id)
+        case _         => None
+    }
+
+  private def coerceArgsOf(t: Tree.Apply)(using p: Program): Term =
     p.definitionOf(t.method) match
       case Some(d: Tree.DefDef) =>
         // the EXPLICIT formals: a `using` clause a phase threaded is not an argument the call writes.
         val params = d.paramss.flatten.filterNot(v => p.symbolOf(v.symbol).exists(_.flags.isGiven))
         // a funnelled or synthesised constructor's parameter list does not line up with the call:
         // the formals that stayed java are primitives, so an opaque argument is unwrapped there.
-        if params.length != t.args.length then t.copy(args = t.args.map(unwrapIfOpaque))
+        val calleeEmitted = runScope.emits(unitOf(p, t.method))
+        val calleeFqn     = p.symbolOf(t.method).map(_.fullName).getOrElse("")
+        // a base callee's formal the base PUBLISHES at the opaque type takes the opaque value, whatever this run seeded
+        def baseOpaque(i: Int) = !calleeEmitted && baseOpaqueAt(calleeFqn, t.args.length, i)
+        if params.length != t.args.length then t.copy(args = t.args.zipWithIndex.map((a, i) => if baseOpaque(i) then wrap(a) else unwrapIfOpaque(a)))
         else
           // a formal that stays java is read literally. Propagation may grow the
           // seed set into a base declaration this run does not emit: if the base's port map says
           // it retyped that method (baseRetypedMethods), wrap the argument (direct read of the
           // base's published answer); otherwise unwrap to the primitive.
-          val calleeEmitted = runScope.emits(unitOf(p, t.method))
-          val calleeFqn     = p.symbolOf(t.method).map(_.fullName).getOrElse("")
-          val calleeOwner   = calleeFqn.indexOf('#') match { case -1 => calleeFqn; case i => calleeFqn.take(i) }
-          val baseRetyped   = baseRetypedMethods.exists(m =>
+          val calleeOwner = calleeFqn.indexOf('#') match { case -1 => calleeFqn; case i => calleeFqn.take(i) }
+          val baseRetyped = baseRetypedMethods.exists(m =>
             m.startsWith(calleeOwner) && m.contains('#') && {
               val mName = m.drop(m.indexOf('#') + 1)
               val cName = calleeFqn.drop(calleeFqn.indexOf('#') + 1)
@@ -837,9 +875,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
             }
           )
           t.copy(
-            args = t.args.zip(params).map { (arg, param) =>
+            args = t.args.zip(params).zipWithIndex.map { case ((arg, param), i) =>
               // an own-class receiver is retyped identically in every module, so it is always opaque
               if seeds(param.symbol) && (calleeEmitted || baseRetyped || own.exists(_.receivers(param.symbol))) then wrapFor(arg, p.symbolOf(param.symbol).map(_.info).getOrElse(TypeRepr.NoType))
+              else if baseOpaque(i) then wrap(arg)
               else unwrapIfOpaque(arg)
             }
           )
@@ -1109,3 +1148,22 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     case TypeRepr.TypeRef(_, s)      => Some(s)
     case TypeRepr.AppliedType(tc, _) => headSym(tc)
     case _                           => None
+
+object PrimitiveToOpaqueTransform:
+
+  /** the parameter types of a port-map descriptor (`C#m(Align,ObjectMap<?,?>)`), split at the top-level commas only. */
+  private[transform] def descriptorParams(descriptor: String): List[String] =
+    val inner = descriptor.substring(descriptor.indexOf('(') + 1).stripSuffix(")")
+    if inner.trim.isEmpty then Nil
+    else
+      val out   = List.newBuilder[String]
+      val cur   = new StringBuilder
+      var depth = 0
+      inner.foreach {
+        case c @ ('<' | '[')   => depth += 1; cur += c
+        case c @ ('>' | ']')   => depth -= 1; cur += c
+        case ',' if depth == 0 => out += cur.toString.trim; cur.clear()
+        case c                 => cur += c
+      }
+      out += cur.toString.trim
+      out.result()

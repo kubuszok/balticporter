@@ -720,6 +720,59 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assert(!clue(emitted).contains("Al.unwrap"), "without a full port map the dependent does not propagate")
   }
 
+  test("O8 dependent: a value no seed reaches still takes the opaque at a formal the base PUBLISHES opaque") {
+    // `align(8)` — a literal, so no flow seeds the base's parameter in this run; the base's map says
+    // `align(Al)`, which is the formal the compiled base declares. Unwrapped, `8` met an `Al` slot.
+    val base =
+      """package demo;
+        |class Cell {
+        |  public void align(int a) {}
+        |  public void pad(int a, int b) {}
+        |}
+        |""".stripMargin
+    val ext =
+      """package demo;
+        |class Use {
+        |  private int kept = 2;
+        |  public void run(Cell c) { c.align(8); c.pad(1, 2); }
+        |}
+        |""".stripMargin
+    val ph      = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "Al", hints = Set("demo.Use#kept")))
+    val p       = SpoonTir.fromSources(List("Cell.java" -> base, "Use.java" -> ext))
+    val depUnit = p.units.find(u => p.symbolOf(u.symbol).exists(_.fullName == "demo.Use")).get
+    val scope   = RunScope.of(Set(depUnit.symbol), Map.empty, memberUpstream = Set("demo.Cell#align(Al)", "demo.Cell#pad(int,int)"))
+    val after   = Pipeline.runTraced(p, List(ph), new PolicyBinder(p, p.members, scope))._1
+    val emitted = new TirEmitter(after).emit
+    assert(clue(emitted).contains("c.align(Al(8))"), "the base's opaque formal takes the wrapped value")
+    assert(emitted.contains("c.pad(1, 2)"), "a formal the base keeps primitive is left alone")
+  }
+
+  test(
+    "O8 dependent: an ANONYMOUS subclass's construction passes the opaque to the base constructor the base publishes opaque"
+  ) {
+    val base =
+      """package demo;
+        |class Listener {
+        |  public Listener() {}
+        |  public Listener(int button) {}
+        |}
+        |""".stripMargin
+    val ext =
+      """package demo;
+        |class Use {
+        |  private int kept = 2;
+        |  public Object run() { return new Listener(8) { public String toString() { return "x"; } }; }
+        |}
+        |""".stripMargin
+    val ph      = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "Al", hints = Set("demo.Use#kept")))
+    val p       = SpoonTir.fromSources(List("Listener.java" -> base, "Use.java" -> ext))
+    val depUnit = p.units.find(u => p.symbolOf(u.symbol).exists(_.fullName == "demo.Use")).get
+    val scope   = RunScope.of(Set(depUnit.symbol), Map.empty, memberUpstream = Set("demo.Listener#<init>()", "demo.Listener#<init>(Al)"))
+    val after   = Pipeline.runTraced(p, List(ph), new PolicyBinder(p, p.members, scope))._1
+    val emitted = new TirEmitter(after).emit
+    assert(clue(emitted).contains("new demo.Listener(Al(8))"), "the base's opaque constructor formal takes the wrapped value")
+  }
+
   // -------------------------------------------------------------------------
   // duplicate primitive symbol after CollectionsTransform.retargetFixedTypeSyms
   // -------------------------------------------------------------------------

@@ -270,6 +270,11 @@ sees the kind); the screen is *would a reader act differently*.
   `OpaqueSpec.derivedTarget(RunScope.emittedName)` — keyed on the java FQN, a package rename left
   0 of sge's 69 frozen `Align` slots matched. The (b) phase's own lookup, read off the run, never
   string surgery.
+- At a callee this run does not emit, a formal the base PUBLISHES at the opaque type takes the
+  opaque value whether or not this run's propagation seeded it (a literal, a constant of another
+  spec); and `new X(args) { … }` coerces against X's constructor of that arity, since the anonymous
+  class's own constructor is declared nowhere and read as an external callee (visui `LinkLabel`'s
+  `ClickListener(Buttons.LEFT)`, 1 E007). Kind (a).
 - A derived seed is exact, so a java STATIC whose reference twin is `extension (a: T) def m`
   derives its slot from `SurfaceDecl.receiver` as parameter 0 (`slotTypes`); never for an instance method.
 - A member rename on an EXTERNAL redirected type: hits are the owned overrides whose closure is

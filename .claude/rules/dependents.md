@@ -136,6 +136,9 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   outside what the base's PUBLISHED MAP emits, not its `governs` claim: gdx-tools sits inside
   libGDX core's `com.badlogic.gdx` claim, and its entry scoped to `com.badlogic.gdx.tools`, where core
   emits nothing, was fatal (1 intrusion -> 0; without a map the screen still refuses). Kind (a).
+- A published member's UPSTREAM name comes from the renamed member's own kind and arity: keyed by the
+  new name alone, `getAlign() -> align` relabelled the setter `align(int)` as `getAlign(Align)`, and a
+  dependent could not find the base's opaque formal (visui `Alignment#apply`, 1 E007). Kind (a).
 - Primary-constructor decisions are whole-program, and a dependent's program differs from its base's
   (it contains more), so for a base class the dependent must adopt the base's PUBLISHED constructor
   decision rather than re-deriving its own.

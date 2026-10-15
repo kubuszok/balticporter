@@ -705,3 +705,29 @@ class PortMapSpec extends munit.FunSuite:
 
     assertEquals(PortMap.discover(reports, exclude = Set("me")).map(_.module), List("base"))
   }
+
+  test(
+    "a renamed member's original name labels only the member of its own kind and arity, never an overload or a field sharing the new name"
+  ) {
+    val entries = List(
+      SrcMap.Entry("p.Cell", "p.Cell#align()", "def", 1, 2, "p/Cell.java", 10, "d0"),
+      SrcMap.Entry("p.Cell", "p.Cell#align(Align)", "def", 3, 4, "p/Cell.java", 20, "d1"),
+      SrcMap.Entry("p.Cell", "p.Cell#align", "val", 5, 5, "p/Cell.java", 5, "d2")
+    )
+    val m = PortMap.of(
+      "m",
+      "eng",
+      List("p.Cell"),
+      SrcMap.Recording(entries),
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Map.empty,
+      memberOriginals = Map(PortMap.originalKey("p.Cell#align", Some(0)) -> "p.Cell#getAlign")
+    )
+    val up = m.members.map(e => e.emitted -> e.upstream).toMap
+    assertEquals(up("p.Cell#align()"), "p.Cell#getAlign()")
+    assertEquals(up("p.Cell#align(Align)"), "p.Cell#align(Align)")
+    assertEquals(up("p.Cell#align"), "p.Cell#align")
+  }

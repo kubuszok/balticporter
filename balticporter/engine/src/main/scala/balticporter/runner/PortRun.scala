@@ -960,7 +960,9 @@ final case class PortRun(
           // post-rename FQN = "com.badlogic.gdx...Group#transform"
           val cut           = fqn.lastIndexOf('#')
           val postRenameFqn = fqn.substring(0, cut + 1) + to
-          Some(postRenameFqn -> fqn)
+          // keyed by the renamed member's KIND and ARITY too: an overload sharing the new name
+          // (`align(int)` beside `getAlign()` renamed to `align`) is not the renamed member
+          Some(PortMap.originalKey(postRenameFqn, program.symbolOf(d.subject).flatMap(s => PortMap.arityOf(s.info))) -> fqn)
         else scala.None
       else scala.None
     }.toMap

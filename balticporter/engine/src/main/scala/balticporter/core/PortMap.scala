@@ -180,6 +180,33 @@ object PortMap:
       else if qualifiedHead && fromPath.endsWith("." + declared) then declared
       else fromPath
 
+  /** The `memberOriginals` key of a renamed member: its post-rename FQN with its arity (`/1`), or `/field` for a non-method — an overload or a field sharing the new name is another member. A plain
+    * FQN key still answers every member of that name.
+    */
+  def originalKey(postRenameFqn: String, arity: Option[Int]): String =
+    postRenameFqn + arity.fold("/field")(a => s"/$a")
+
+  /** a method's explicit arity, `None` for anything that is not one. */
+  def arityOf(info: balticporter.tir.TypeRepr): Option[Int] = info match
+    case m: balticporter.tir.TypeRepr.MethodType => Some(m.params.size)
+    case balticporter.tir.TypeRepr.PolyType(_, m: balticporter.tir.TypeRepr.MethodType) => Some(m.params.size)
+    case _                                                                              => scala.None
+
+  /** the number of top-level parameters in a `(A,B<C,D>)` descriptor. */
+  private def descriptorArity(params: String): Int =
+    val inner = params.stripPrefix("(").stripSuffix(")")
+    if inner.trim.isEmpty then 0
+    else
+      var depth = 0
+      var n     = 1
+      inner.foreach {
+        case '<' | '[' => depth += 1
+        case '>' | ']' => depth -= 1
+        case ','       => if depth == 0 then n += 1
+        case _         => ()
+      }
+      n
+
   /** Assemble the map. Pure: every argument comes from the run. */
   def of(
     module:       String,
@@ -247,8 +274,12 @@ object PortMap:
       val bareUpstream = emittedUpstream.indexOf('(') match
         case i if i > 0 => emittedUpstream.substring(0, i)
         case _          => emittedUpstream
+      val entryArity = Option.when(e.kind == "def")(e.member.indexOf('(') match
+        case -1 => 0
+        case i  => descriptorArity(e.member.substring(i)))
       val upstream = memberOriginals
-        .get(bareUpstream)
+        .get(originalKey(bareUpstream, entryArity))
+        .orElse(memberOriginals.get(bareUpstream))
         .map { orig =>
           // The original FQN is also bare. Append the parameter part from emittedUpstream.
           val params = if emittedUpstream.length > bareUpstream.length then emittedUpstream.substring(bareUpstream.length) else ""
