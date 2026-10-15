@@ -83,19 +83,19 @@ private[dedicated] object BodySyntax:
             branch.kind match
               case "Block" =>
                 val inner = branch.children
-                inner.init.exists(containsReturn) || inner.lastOption.exists(lastStmtHasNonTailReturn)
+                inner.dropRight(1).exists(containsReturn) || inner.lastOption.exists(lastStmtHasNonTailReturn)
               case _ => false
           }
         case "SwitchStatement" =>
           node.children.exists { child =>
             child.kind == "CaseBlock" && child.children.exists { clause =>
               val body = clause.children.filterNot(c => c.kind == "BreakStatement")
-              body.init.exists(containsReturn) || body.lastOption.exists(lastStmtHasNonTailReturn)
+              body.dropRight(1).exists(containsReturn) || body.lastOption.exists(lastStmtHasNonTailReturn)
             }
           }
         case "Block" =>
           val ch = node.children
-          ch.init.exists(containsReturn) || ch.lastOption.exists(lastStmtHasNonTailReturn)
+          ch.dropRight(1).exists(containsReturn) || ch.lastOption.exists(lastStmtHasNonTailReturn)
         case _ => false
     val nonLastHasReturn = stmts.size > 1 && stmts.init.exists(containsReturn)
     nonLastHasReturn || stmts.lastOption.exists(lastStmtHasNonTailReturn)

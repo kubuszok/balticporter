@@ -1113,3 +1113,34 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = translateIn(Some("A"), block(ret(node("CallExpression", ident("h")))))
     assert(result.scalaBody.contains("B.Inner.h()"), s"${result.scalaBody}")
     assertEquals(result.refusalReasons, Nil)
+
+  // ---- try ----
+
+  test("a finally block runs however the try completes, and a jump out of the try passes the catch untouched"):
+    val call = (f: String) => node("ExpressionStatement", node("CallExpression", ident(f)))
+    val body = block(
+      node(
+        "TryStatement",
+        block(call("work")),
+        node("CatchClause", node("VariableDeclaration", ident("e")), block(call("recover"))),
+        block(call("cleanup"))
+      ),
+      ret(num(0))
+    )
+    val result = translate(body, returnType = Some("Int"))
+    val text   = result.scalaBody
+    assert(text.contains("} finally {"), s"finally emitted: $text")
+    assert(text.indexOf("cleanup") > text.indexOf("finally"), s"finally holds the cleanup: $text")
+    val breakArm = text.indexOf("case b: scala.util.boundary.Break[?] => throw b")
+    assert(breakArm >= 0 && breakArm < text.indexOf("case e: Throwable"), s"a boundary jump is rethrown ahead of the JS catch: $text")
+
+  // ---- JS globals ----
+
+  test("a JS global coercing its argument reads the same only on a number; parseInt and parseFloat never do"):
+    val call = (f: String, arg: RastNode) => block(ret(node("CallExpression", ident(f), arg)))
+    assertNoDiff(translate(call("isFinite", ident("x")), paramTypes = Map("x" -> "Double")).scalaBody.trim, "java.lang.Double.isFinite(x)")
+    assert(translate(call("isNaN", ident("s")), paramTypes = Map("s" -> "String")).refusalReasons.contains("js-builtin"))
+    assert(translate(call("parseInt", ident("s")), paramTypes = Map("s" -> "String")).refusalReasons.contains("js-builtin"))
+    assert(translate(call("Number", ident("s")), paramTypes = Map("s" -> "String")).refusalReasons.contains("js-builtin"))
+    // String(2.0) is "2" in JS and "2.0" in Scala
+    assert(translate(call("String", ident("d")), paramTypes = Map("d" -> "Double")).refusalReasons.contains("number-to-string"))

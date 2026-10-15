@@ -536,3 +536,76 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
 
   test("a checker type that is a union, an unknown class or an anonymous shape says nothing"):
     for t <- List(RastType("union", "Token | undefined"), RastType("object", "Other"), RastType("object", "{ text: string; }")) do refuses(checkerTyped(t, "text"), "receiver-type-unknown")
+
+  test(
+    "a last if with no else falls off the function's end: the else returns the absent value the result type spells, or refuses"
+  ):
+    val body = block(node("IfStatement", ident("c"), block(ret(ident("n")))))
+    val r    = translate(body, params = List("c", "n"), paramTypes = Map("c" -> "Boolean", "n" -> "Node"), returnType = Some("Node | Null"))
+    accepts(r)
+    assert(r.scalaBody.linesIterator.map(_.trim).toList.containsSlice(List("} else {", "null", "}")), r.scalaBody)
+    refuses(
+      translate(body, params = List("c", "n"), paramTypes = Map("c" -> "Boolean", "n" -> "Int"), returnType = Some("Int")),
+      "null-at-non-nullable-slot"
+    )
+
+  test("two objects compare by identity, as JS compares them; a string or a number by value"):
+    val same = (t: String) => translate(block(ret(bin("EqualsEqualsEqualsToken", ident("a"), ident("b")))), params = List("a", "b"), paramTypes = Map("a" -> t, "b" -> t)).scalaBody.trim
+    assertNoDiff(same("Node | Null"), "(a eq b)")
+    assertNoDiff(same("ArrayBuffer[Int]"), "(a eq b)")
+    assertNoDiff(same("String"), "a == b")
+    assertNoDiff(same("Double"), "a == b")
+
+  test("a JS method that reorders in place, clamps a string index or counts a bound from the end is refused"):
+    def onXs(m: String, args: RastNode*) =
+      translate(
+        block(expr(call(prop(ident("xs"), m), args*))),
+        params = List("xs", "i"),
+        paramTypes = Map("xs" -> "ArrayBuffer[Int]", "i" -> "Int")
+      )
+    refuses(onXs("sort"), "js-in-place-reorder")
+    refuses(onXs("reverse"), "js-in-place-reorder")
+    refuses(onXs("slice", ident("i")), "js-slice")
+    assert(onXs("slice", num(1)).scalaBody.contains("xs.drop(1)"), onXs("slice", num(1)).scalaBody)
+
+  test("a local nothing writes is a val whatever JS keyword declared it; one a nested function writes stays a var"):
+    val decl = (n: String) =>
+      RastNode(
+        "VariableStatement",
+        0,
+        (0, 0),
+        children = List(
+          node("VariableDeclarationList", RastNode("VariableDeclaration", 0, (0, 0), children = List(ident(n), num(1)), flags = List("let")))
+        )
+      )
+    assert(translate(block(decl("a"), ret(ident("a")))).scalaBody.contains("val a = 1"))
+    val bump = node("ArrowFunction", block(expr(bin("PlusEqualsToken", ident("a"), num(1)))))
+    assert(translate(block(decl("a"), expr(bump), ret(ident("a")))).scalaBody.contains("var a = 1"))
+    val onS = translate(block(ret(call(prop(ident("s"), "charAt"), num(0)))), params = List("s"), paramTypes = Map("s" -> "String"))
+    refuses(onS, "js-string-index")
+
+  test("an empty branch is no reason to fail: the early-return scan reads it as returning nothing"):
+    val r = translate(block(node("IfStatement", ident("c"), block())), params = List("c"), paramTypes = Map("c" -> "Boolean"), returnType = Some("Unit"))
+    accepts(r)
+
+  test("new Set and new Map of an iterable take its elements"):
+    val r = translate(block(ret(node("NewExpression", ident("Set"), ident("xs")))), params = List("xs"), paramTypes = Map("xs" -> "Vector[Int]"))
+    assertNoDiff(r.scalaBody.trim, "scala.collection.mutable.Set.from(xs)")
+
+  test("JS reads past an array's end as undefined: a read of reference elements answers null there, a store stays an update"):
+    val read = translate(
+      block(ret(node("ElementAccessExpression", ident("xs"), ident("i")))),
+      params = List("xs", "i"),
+      paramTypes = Map("xs" -> "ArrayBuffer[Node]", "i" -> "Int")
+    )
+    assertNoDiff(read.scalaBody.trim, "xs.lift(i).orNull")
+    val store = translate(
+      block(expr(bin("EqualsToken", node("ElementAccessExpression", ident("xs"), ident("i")), ident("n")))),
+      params = List("xs", "i", "n"),
+      paramTypes = Map("xs" -> "ArrayBuffer[Node]", "i" -> "Int", "n" -> "Node")
+    )
+    assert(store.scalaBody.contains("xs(i) = n"), store.scalaBody)
+    refuses(
+      translate(block(ret(node("ElementAccessExpression", ident("s"), num(0)))), params = List("s"), paramTypes = Map("s" -> "String")),
+      "js-string-index"
+    )

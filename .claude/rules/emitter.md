@@ -385,3 +385,16 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 - (b) A consumer's deliberate divergences from upstream are `NonJavaBodies.Library.recordedDivergences`,
   matched by file, member and overload: they keep the reference body ahead of every other reason,
   and an unmatched record is reported; a faithful translation would otherwise silently undo them.
+- (a) JS semantics the translator spelled wrong are spelled faithfully or refused, each found
+  reading a translated body against its source: a `finally` runs (it was dropped); a JS `catch`
+  never sees a jump, so `case b: boundary.Break[?] => throw b` precedes it; a last `if` with no
+  `else` returns the result type's absent value; `===` on two reference types is `eq`, parenthesised
+  since a letter operator binds looser than `&&`; a local nothing writes is a `val` whatever its JS
+  keyword; `new Set(xs)` and `new Map(xs)` take the elements (`Set.from`), never the iterable; JS
+  reads past an array's end as `undefined` where Scala throws, so a read of reference elements is
+  `xs.lift(i).orNull` (a compressor reading its parent off a one-deep stack threw 1444 times). Refused:
+  in-place `sort`/`reverse` (Scala returns a copy, the statement was a no-op), a negative or
+  non-literal `slice` bound, `substring`/`charAt`/`charCodeAt` (JS clamps and answers "" or NaN
+  where Java throws, and `charAt` is a String), `match`/`exec`, `parseInt`/`parseFloat`, a coercing
+  global (`isNaN`, `Number`) on a non-number, `join` of non-strings (and `join()` joins with ","),
+  `Object.create`, a `RegExp` constructor.

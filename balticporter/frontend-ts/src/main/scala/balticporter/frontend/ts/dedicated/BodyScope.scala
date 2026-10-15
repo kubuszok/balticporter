@@ -68,6 +68,13 @@ abstract private[dedicated] class BodyScope(
 
   // Names that are declared const but later assigned in the body: emit var
   protected val reassignedNames: Set[String] = collectReassignedNames(entry.bodyNode)
+
+  /** Every name an assignment, compound assignment or increment writes anywhere in the body, nested functions included: a local no write reaches is a `val`, whichever JS keyword declared it. */
+  protected lazy val assignedAnywhere: Set[String] =
+    val out = mutable.Set.empty[String]
+    writeTargets.forEach(n => if n.kind == "Identifier" then n.text.foreach(out += _))
+    out.toSet
+
   // Parameter names that are reassigned in the body: refuse upfront
   protected val reassignedParams: Set[String] = entry.params.filter(reassignedNames.contains).toSet
 
@@ -321,6 +328,44 @@ abstract private[dedicated] class BodyScope(
   protected def isLocal(n: String): Boolean =
     val sc = snakeToCamel(n)
     localTypes.contains(sc) || localTypes.contains(n) || localNames.contains(sc) || localNames.contains(n)
+
+  // the nodes an assignment, a compound assignment or an increment writes, by identity: a written element is an update, never a guarded read
+  private lazy val writeTargets: java.util.Set[RastNode] =
+    val out = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[RastNode, java.lang.Boolean]())
+    def walk(n: RastNode): Unit =
+      val writes =
+        (n.kind == "BinaryExpression" && n.operator.exists(op => (op.endsWith("EqualsToken") && !comparisonOps(op)) || op == "FirstAssignment" || op == "FirstCompoundAssignment")) ||
+          ((n.kind == "PostfixUnaryExpression" || n.kind == "PrefixUnaryExpression") && n.operator.exists(op => op == "PlusPlusToken" || op == "MinusMinusToken"))
+      if writes then n.children.headOption.foreach(out.add)
+      n.children.foreach(walk)
+    walk(entry.bodyNode)
+    out
+
+  private val comparisonOps = Set(
+    "EqualsEqualsToken",
+    "EqualsEqualsEqualsToken",
+    "ExclamationEqualsToken",
+    "ExclamationEqualsEqualsToken",
+    "LessThanEqualsToken",
+    "GreaterThanEqualsToken"
+  )
+
+  /** True for a node an assignment or an increment writes. */
+  protected def isWriteTarget(n: RastNode): Boolean = writeTargets.contains(n)
+
+  /** A type whose values JS compares by identity: a class, a collection or an array, possibly absent as `null`; never a primitive, a string, an optional, a wider union or an unknown `Any`. */
+  protected def comparesByIdentity(t: String): Boolean =
+    val core = t.trim.stripSuffix("| Null").trim
+    !core.contains('|') && !numericTypes(core) && !Set("String", "Boolean", "Char", "Unit", "Null").contains(core) && !isOptionLike(core) &&
+    !Set("Any", "AnyRef", "Object", "Matchable", "Nullable").contains(baseName(core))
+
+  /** True when the checker types `node` as an array of strings, whose elements print as themselves. */
+  protected def checkerStringArray(node: RastNode): Boolean =
+    node.`type`.flatMap(tsTypes.get).filter(_.kind == "array").flatMap(_.elementType).flatMap(tsTypes.get).exists(t => t.kind == "string" || t.kind == "stringLiteral")
+
+  /** A non-negative integer literal's value. */
+  protected def intLiteral(n: RastNode): Option[Int] =
+    n.value.collect { case RastValue.Num(d) if d >= 0 && d == d.toInt => d.toInt }.filter(_ => n.kind == "NumericLiteral" || n.kind == "FirstLiteralToken")
 
   protected def refuse(reason: String): Unit =
     refusals += reason

@@ -82,6 +82,9 @@ private[dedicated] class BodyContext(
           case Some(tpe) if tpe != "Boolean" =>
             val operand = translateExpr(node)
             truthinessTest(tpe, operand)
+          // a length is a count whatever holds it: truthy when not zero
+          case None if node.kind == "PropertyAccessExpression" && node.children.lastOption.exists(_.text.contains("length")) =>
+            s"${translateExpr(node)} != 0"
           case None =>
             // No type info: a value whose type nothing declares may be any JS value, and its truthiness test is unknown
             if Set("Identifier", "PropertyAccessExpression", "ElementAccessExpression", "CallExpression")(node.kind) then refuse("truthiness-unknown-type")
@@ -285,10 +288,9 @@ private[dedicated] class BodyContext(
           vdl <- node.children.find(_.kind == "VariableDeclarationList")
           vd <- vdl.children.filter(_.kind == "VariableDeclaration")
         do
-          val name    = vd.children.headOption.flatMap(_.text).getOrElse("_")
-          val isConst = vd.flags.contains("const") || node.flags.contains("Const")
-          // JS const that is later assigned in the body must become var
-          val keyword   = if isConst && !reassignedNames.contains(name) then "val" else "var"
+          val name = vd.children.headOption.flatMap(_.text).getOrElse("_")
+          // a local nothing writes after its declaration is a `val`, whether JS declared it `const`, `let` or `var`
+          val keyword   = if assignedAnywhere.contains(name) then "var" else "val"
           val scalaName = snakeToCamel(name)
           // Handle destructuring: { x, y } = obj
           val hasObjectBinding = vd.children.exists(_.kind == "ObjectBindingPattern")
@@ -339,6 +341,10 @@ private[dedicated] class BodyContext(
           if children.size > 2 then
             sb.append(s"$indent} else {\n")
             underNarrowing(refutedBy(children.head))(translateStatementBody(children(2), indent + "  ", isLast))
+          else if isLast && declaredReturnType.exists(rt => rt != "Unit" && rt != ReturnTypePlaceholder) then
+            // a function falling off its end returns `undefined`: the absent value the declared result spells, refused where it has none
+            sb.append(s"$indent} else {\n")
+            sb.append(s"$indent  ${translateExprAt(RastNode("UndefinedKeyword", 0, (0, 0)), declaredReturnType.get)}\n")
           sb.append(s"$indent}\n")
 
       case "Block" => translateSequence(node.children, indent, isLast)
@@ -367,21 +373,25 @@ private[dedicated] class BodyContext(
         val tryBlock = node.children.headOption
         tryBlock.foreach(b => translateStatementBody(b, indent + "  ", false))
         sb.append(s"$indent}")
-        node.children.find(_.kind == "CatchClause") match
-          case Some(catchClause) =>
-            val param     = catchClause.children.find(_.kind == "VariableDeclaration").orElse(catchClause.children.find(_.kind == "Identifier"))
-            val paramName = param.flatMap(p => p.children.headOption.flatMap(_.text).orElse(p.text)).getOrElse("e")
-            sb.append(s" catch {\n")
-            sb.append(s"$indent  case ${snakeToCamel(paramName)}: Throwable =>\n")
-            catchClause.children.find(_.kind == "Block").foreach { b =>
-              for stmt <- b.children do translateStatement(stmt, indent + "    ", false)
-            }
-            sb.append(s"$indent}\n")
-          case None =>
-            sb.append("\n")
-        node.children.find(_.kind == "Block").filter(_ != tryBlock.orNull).foreach { finallyBlock =>
-          // If there's a finally block distinct from the try block
+        node.children.find(_.kind == "CatchClause").foreach { catchClause =>
+          val param     = catchClause.children.find(_.kind == "VariableDeclaration").orElse(catchClause.children.find(_.kind == "Identifier"))
+          val paramName = param.flatMap(p => p.children.headOption.flatMap(_.text).orElse(p.text)).getOrElse("e")
+          sb.append(s" catch {\n")
+          // no JS catch sees a return, break or continue, while the boundary jump they become is a Throwable
+          sb.append(s"$indent  case b: scala.util.boundary.Break[?] => throw b\n")
+          sb.append(s"$indent  case ${snakeToCamel(paramName)}: Throwable =>\n")
+          catchClause.children.find(_.kind == "Block").foreach { b =>
+            for stmt <- b.children do translateStatement(stmt, indent + "    ", false)
+          }
+          sb.append(s"$indent}")
         }
+        // the block after the try's own is its `finally`, which runs however the try completes
+        node.children.drop(1).find(_.kind == "Block").foreach { finallyBlock =>
+          sb.append(" finally {\n")
+          translateStatementBody(finallyBlock, indent + "  ", false)
+          sb.append(s"$indent}")
+        }
+        sb.append("\n")
 
       case "SwitchStatement" =>
         translateSwitchStatement(node, indent)
@@ -490,9 +500,14 @@ private[dedicated] class BodyContext(
           }
           // a JS index is a number; a Scala index must be an Int
           if exprType(children(1)).exists(t => t == "Double" || t == "Float") then refuse("fractional-index")
+          // a JS string indexes to a one-character string, or `undefined` past its end; Scala's to a Char, or a throw
+          if exprType(children.head).contains("String") then refuse("js-string-index")
           val obj = translateExpr(children.head)
           val idx = translateExpr(children(1))
-          s"$obj($idx)"
+          // JS reads past an array's end as `undefined`, Scala throws: a read of reference elements answers null there
+          val element = exprType(children.head).flatMap(extractElementType)
+          if !isWriteTarget(node) && element.exists(t => t == "String" || comparesByIdentity(t)) then s"$obj.lift($idx).orNull"
+          else s"$obj($idx)"
         else "??? /* bad element access */"
 
       case "CallExpression" =>
@@ -523,24 +538,21 @@ private[dedicated] class BodyContext(
           case "Array" =>
             if args.isEmpty then "scala.collection.mutable.ArrayBuffer.empty[Any]"
             else s"scala.collection.mutable.ArrayBuffer.fill(${args.head})(null)"
-          case "Map" =>
+          // `new Map(entries)` and `new Set(xs)` take the iterable's ELEMENTS, never the iterable as one
+          case "Map" | "`Map`" =>
             if args.isEmpty then "scala.collection.mutable.Map.empty[Any, Any]"
-            else s"scala.collection.mutable.Map(${args.mkString(", ")})"
-          case "`Map`" =>
-            if args.isEmpty then "scala.collection.mutable.Map.empty[Any, Any]"
-            else s"scala.collection.mutable.Map(${args.mkString(", ")})"
-          case "Set" =>
+            else s"scala.collection.mutable.Map.from(${args.head})"
+          case "Set" | "`Set`" =>
             if args.isEmpty then "scala.collection.mutable.Set.empty[Any]"
-            else s"scala.collection.mutable.Set(${args.mkString(", ")})"
-          case "`Set`" =>
-            if args.isEmpty then "scala.collection.mutable.Set.empty[Any]"
-            else s"scala.collection.mutable.Set(${args.mkString(", ")})"
+            else s"scala.collection.mutable.Set.from(${args.head})"
           case "WeakMap" =>
             "scala.collection.mutable.WeakHashMap.empty[Any, Any]"
           case "WeakSet" =>
             "scala.collection.mutable.Set.empty[Any] /* WeakSet */"
           case "RegExp" =>
-            s"${args.head}.r"
+            // a flags argument changes the match, and a JS pattern's syntax is not Java's
+            refuse("regex-constructor")
+            s"${args.headOption.getOrElse("\"\"")}.r"
           case "Error" | "TypeError" | "RangeError" | "SyntaxError" | "ReferenceError" =>
             s"new RuntimeException(${args.mkString(", ")})"
           case _ =>
@@ -1065,7 +1077,9 @@ private[dedicated] class BodyContext(
             case "concat" =>
               s"($objExpr ++ ${scalaArgs.mkString(" ++ ")})"
             case "join" =>
-              s"$objExpr.mkString(${scalaArgs.mkString(", ")})"
+              // JS joins with "," by default and prints a whole double without its ".0"
+              if !exprType(obj).flatMap(extractElementType).exists(t => t == "String" || integralTypes.contains(t)) && !checkerStringArray(obj) then refuse("value-to-string")
+              s"$objExpr.mkString(${if scalaArgs.isEmpty then "\",\"" else scalaArgs.mkString(", ")})"
             case "map" =>
               s"$objExpr.map(${scalaArgs.mkString(", ")})"
             case "filter" =>
@@ -1084,24 +1098,25 @@ private[dedicated] class BodyContext(
               s"$objExpr.flatten"
             case "flatMap" =>
               s"$objExpr.flatMap(${scalaArgs.mkString(", ")})"
+            // JS sorts and reverses IN PLACE (a default sort compares as strings); Scala's return a copy
             case "sort" =>
+              refuse("js-in-place-reorder")
               if scalaArgs.nonEmpty then s"$objExpr.sortWith((a, b) => ${scalaArgs.head}(a, b) < 0)"
               else s"$objExpr.sorted"
             case "reverse" =>
+              refuse("js-in-place-reorder")
               s"$objExpr.reverse"
             case "fill" =>
+              if args.size > 1 then refuse("js-fill-range")
               s"$objExpr.mapInPlace(_ => ${scalaArgs.headOption.getOrElse("null")})"
             case "slice" =>
-              s"$objExpr.slice(${scalaArgs.mkString(", ")})"
-            // String methods
-            case "substr" | "substring" =>
-              // `substr(start, LENGTH)` is not `substring(start, END)`
-              if method == "substr" && args.size > 1 then refuse("substr-length")
+              // JS counts a negative bound from the end; only non-negative literal bounds read the same (`slice(a)` is `drop(a)`)
+              if !args.forall(a => intLiteral(a).isDefined) || args.isEmpty || args.size > 2 then refuse("js-slice")
+              if args.size == 1 then s"$objExpr.drop(${scalaArgs.head})" else s"$objExpr.slice(${scalaArgs.mkString(", ")})"
+            // String methods: JS clamps, swaps or answers "" and NaN where Java's throw, and `charAt` yields a String, not a Char
+            case "substr" | "substring" | "charAt" | "charCodeAt" =>
+              refuse("js-string-index")
               s"$objExpr.substring(${scalaArgs.mkString(", ")})"
-            case "charAt" =>
-              s"$objExpr.charAt(${scalaArgs.mkString(", ")})"
-            case "charCodeAt" =>
-              s"$objExpr.charAt(${scalaArgs.mkString(", ")}).toInt"
             case "startsWith" =>
               s"$objExpr.startsWith(${scalaArgs.mkString(", ")})"
             case "endsWith" =>
@@ -1140,11 +1155,14 @@ private[dedicated] class BodyContext(
             case "toString" =>
               if scalaArgs.nonEmpty then s"java.lang.Integer.toString($objExpr.toInt, ${scalaArgs.head})"
               else s"$objExpr.toString"
+            // `match` and `exec` answer a match array or null, and a global regex keeps its position between calls
             case "match" =>
+              refuse("regex-method")
               s"${scalaArgs.head}.findPrefixMatchOf($objExpr).isDefined"
             case "test" =>
               s"${objExpr}.findFirstIn(${scalaArgs.mkString(", ")}).isDefined"
             case "exec" =>
+              refuse("regex-method")
               s"${objExpr}.findFirstMatchIn(${scalaArgs.mkString(", ")})"
             // Function binding
             case "call" =>
@@ -1173,10 +1191,9 @@ private[dedicated] class BodyContext(
               // Copies every own property of the sources onto the target: no shape-independent Scala spelling.
               refuse("js-object-assign")
               s"${scalaArgs.head}"
-            case "create" if objExpr == "Object" =>
-              "Map.empty"
-            case "defineProperty" if objExpr == "Object" =>
-              s"/* Object.defineProperty */ ${scalaArgs.mkString(", ")}"
+            case "create" | "defineProperty" if objExpr == "Object" =>
+              refuse("object-reflection")
+              s"/* Object.$method */ ${scalaArgs.mkString(", ")}"
             // Array static methods
             case "isArray" if objExpr == "Array" =>
               s"${scalaArgs.head}.isInstanceOf[Seq[?]]"
@@ -1218,27 +1235,21 @@ private[dedicated] class BodyContext(
         val name = callee.text.getOrElse("???")
         // Translate global JS functions
         name match
-          case "parseInt" =>
-            val scalaArgs = args.map(translateExpr)
-            s"${scalaArgs.head}.toInt"
-          case "parseFloat" =>
-            val scalaArgs = args.map(translateExpr)
-            s"${scalaArgs.head}.toDouble"
-          case "isNaN" =>
-            val scalaArgs = args.map(translateExpr)
-            s"${scalaArgs.head}.isNaN"
-          case "isFinite" =>
-            val scalaArgs = args.map(translateExpr)
-            s"${scalaArgs.head}.isInfinite == false"
-          case "String" =>
-            val scalaArgs = args.map(translateExpr)
-            s"${scalaArgs.head}.toString"
+          // JS parses a prefix and answers NaN where Scala's conversions throw: no faithful spelling
+          case "parseInt" | "parseFloat" =>
+            refuse("js-builtin")
+            s"${args.headOption.map(translateExpr).getOrElse("")}.toDouble"
+          // the global tests coerce their argument to a number first: only a number reads the same
+          case "isNaN" | "isFinite" =>
+            if !args.headOption.flatMap(exprType).exists(numericTypes.contains) then refuse("js-builtin")
+            s"java.lang.Double.$name(${args.headOption.map(translateExpr).getOrElse("")})"
+          case "String" if args.size == 1 =>
+            stringified(args.head)
           case "Number" =>
-            val scalaArgs = args.map(translateExpr)
-            s"${scalaArgs.head}.toDouble"
-          case "Boolean" =>
-            val scalaArgs = args.map(translateExpr)
-            s"(${scalaArgs.head} != null && ${scalaArgs.head} != false)"
+            if !args.headOption.flatMap(exprType).exists(numericTypes.contains) then refuse("js-builtin")
+            s"${args.headOption.map(translateExpr).getOrElse("")}.toDouble"
+          case "Boolean" if args.size == 1 =>
+            s"(${translateCondition(args.head)})"
           case "Array" if args.isEmpty =>
             "Array.empty[Any]"
           case "Array" =>
@@ -1495,6 +1506,9 @@ private[dedicated] class BodyContext(
         // JS `/` never truncates: two integral operands divide as doubles
         if op == "SlashToken" && exprType(lhs).exists(integralTypes.contains) && exprType(rhs).exists(integralTypes.contains) then return s"($left).toDouble / $right"
         if op == "AsteriskAsteriskEqualsToken" then refuse("exponent-assignment")
+        // JS compares two objects by identity; Scala's `==` calls `equals`, which a case class or a collection answers structurally.
+        // Parenthesised: a letter operator binds looser than `&&`.
+        if equality(op) && List(lhs, rhs).forall(n => exprType(n).exists(comparesByIdentity)) then return s"($left ${if op.startsWith("Exclamation") then "ne" else "eq"} $right)"
         val scalaOp = op match
           case "EqualsEqualsEqualsToken"                     => "=="
           case "ExclamationEqualsEqualsToken"                => "!="
