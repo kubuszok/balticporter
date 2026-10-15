@@ -192,20 +192,10 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     * bean-property collapse and parenless-arity decisions the base already made. Uses `MemberRenamer` so the whole override component (and its call sites) moves too.
     */
   private def followMemberRenames(program: Program): Program =
-    // types the base SUBSTITUTED emit members from the INJECTED file, which never renamed them —
-    // renaming the dependent's references here would call a name that file does not have.
-    val substitutedTypes: Set[String] = maps
-      .flatMap(_.types)
-      .collect {
-        case e if e.disposition == PortMap.Disposition.Substituted && e.upstream.nonEmpty => e.upstream
-      }
-      .toSet
-
+    // a SUBSTITUTED type's rows are followed too: the base publishes them at the names its
+    // replacement file declares (`PortMap.withReplacementNames`), so a row is the callable name
     val memberRenameEntries = maps.flatMap(_.members).filter { e =>
       e.upstream.nonEmpty && e.emitted.nonEmpty && e.disposition == PortMap.Disposition.Renamed && {
-        val ownerFqn = PortMapTransform.ownerOf(e.upstream)
-        !substitutedTypes.contains(ownerFqn)
-      } && {
         val upSimple   = PortMapTransform.simpleNameOf(PortMapTransform.bareKey(e.upstream))
         val emitSimple = PortMapTransform.simpleNameOf(PortMapTransform.bareKey(e.emitted))
         // a NAME change (bean pair rename) or a FORM change (parenless, collapsed)
@@ -230,7 +220,9 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
         case TypeRepr.PolyType(_, m: TypeRepr.MethodType) => Some(m.params.size)
         case _                                            => scala.None
       val kinded = ss.filter(s => PolicyBinder.isExecutable(s.info) == wantMethod)
-      kinded.find(s => wantArity.isDefined && arityOf(s) == wantArity).orElse(kinded.headOption).orElse(ss.headOption)
+      // …and an overload of ANOTHER known arity is never the answer: the base's `getRegion()` may already
+      // carry its new name here, and the `getRegion(int)` left under the old one is a different member
+      kinded.find(s => wantArity.isDefined && arityOf(s) == wantArity).orElse(kinded.find(s => wantArity.isEmpty || arityOf(s).isEmpty)).orElse(Option.when(kinded.isEmpty)(ss.headOption).flatten)
     def lookup(fqn: String, entry: PortMap.Entry): Option[Symbol] = byFullNameAll.get(fqn).flatMap(ofKind(entry, _))
 
     // find the symbol by its UPSTREAM FQN and request a rename to the emitted name.

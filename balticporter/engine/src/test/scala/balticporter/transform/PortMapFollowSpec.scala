@@ -86,6 +86,40 @@ class PortMapFollowSpec extends munit.FunSuite:
     assert(row.exists(_.contains("form=parenless")), shapes.toString)
   }
 
+  test("two overloads the base renamed to one name both follow, each keeping its own arity at the call") {
+    val base = """package com.base;
+                 |public class Font {
+                 |  public Object getRegion () { return null; }
+                 |  public Object getRegion (int page) { return null; }
+                 |  public static class Glyph { public int page; }
+                 |}
+                 |""".stripMargin
+    val demo = """package com.demo;
+                 |class Use { Object go (com.base.Font f, com.base.Font.Glyph g) { return f.getRegion(g.page) == null ? f.getRegion() : null; } }
+                 |""".stripMargin
+    val parsed = SpoonTir.fromSources(List("Font.java" -> base, "Use.java" -> demo))
+    // the dependent's own getter detection already moved the nilary one: only `getRegion(int)` keeps the name
+    val nilary = parsed.symbols.all
+      .find(s =>
+        s.name == "getRegion" && (s.info match
+          case m: balticporter.tir.TypeRepr.MethodType => m.params.isEmpty
+          case _ => false)
+      )
+      .get
+    val before = parsed.rebuilt(symbols = parsed.symbols.updated(nilary.copy(name = "region", fullName = "com.base.Font#region")))
+    val map    = PortMap.Map0(
+      "base",
+      engine = "test",
+      entries = List(
+        PortMap.Entry("member", "com.base.Font#getRegion()", "com.base.Font#region", PortMap.Disposition.Renamed, shape = "form=parenless"),
+        PortMap.Entry("member", "com.base.Font#getRegion(int)", "com.base.Font#region(int)", PortMap.Disposition.Renamed)
+      )
+    )
+    val out = new TirEmitter(new PortMapTransform(List(map)).run(before)).emit
+    assert(out.contains("f.region(g.page)"), out)
+    assert(!out.contains("getRegion"), out)
+  }
+
   test("a renamed nilary overload moves alone: the overload the base kept keeps its name at the call") {
     val base = """package com.base;
                  |public class Net<V> {

@@ -136,6 +136,14 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
   outside what the base's PUBLISHED MAP emits, not its `governs` claim: gdx-tools sits inside
   libGDX core's `com.badlogic.gdx` claim, and its entry scoped to `com.badlogic.gdx.tools`, where core
   emits nothing, was fatal (1 intrusion -> 0; without a map the screen still refuses). Kind (a).
+- The follow picks a row's symbol by its ARITY, never by falling back to an overload of another
+  known arity: a dependent's own getter detection may already have renamed the base's `getRegion()`,
+  and the `getRegion(int)` still under the old name was taken for it and then refused by its own
+  signature (textra `Font`, 2 E008). Kind (a).
+- A SUBSTITUTED type's member rows are followed like any other, because the base publishes them at
+  the names its REPLACEMENT file declares (`PortMap.withReplacementNames`): a planned rename the file
+  did not make is published at the upstream name. Skipping them all left `Skin.dispose()` and
+  `Pixmap.dispose()` in visui where the base ships `close()` (2 E008). Kind (a).
 - A published member's UPSTREAM name comes from the renamed member's own kind and arity: keyed by the
   new name alone, `getAlign() -> align` relabelled the setter `align(int)` as `getAlign(Align)`, and a
   dependent could not find the base's opaque formal (visui `Alignment#apply`, 1 E007). Kind (a).

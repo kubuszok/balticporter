@@ -207,6 +207,28 @@ object PortMap:
       }
       n
 
+  /** A SUBSTITUTED type's members are emitted from its replacement file, not from the rename plan, so each renamed row is read against what that file declares: a row the file spells under the
+    * upstream name instead is published at that name, the name a caller can actually use. `declares` answers (emitted owner, member name, arity).
+    */
+  def withReplacementNames(m: Map0, declares: (String, String, Int) => Boolean): Map0 =
+    val substituted         = m.types.filter(_.disposition == Disposition.Substituted).map(_.emitted).toSet
+    def nameOf(key: String) = key.substring(key.lastIndexOf('#') + 1)
+    m.copy(
+      entries = m.entries.map { e =>
+        val bare = e.emitted.indexOf('(') match
+          case -1 => e.emitted
+          case i  => e.emitted.substring(0, i)
+        val cut = bare.lastIndexOf('#')
+        if e.kind != "member" || cut < 0 || e.disposition != Disposition.Renamed || !substituted(bare.substring(0, cut)) then e
+        else
+          val owner  = bare.substring(0, cut)
+          val upName = nameOf(e.upstream.takeWhile(_ != '('))
+          val arity  = if bare.length == e.emitted.length then 0 else descriptorArity(e.emitted.substring(bare.length))
+          if nameOf(bare) == upName || declares(owner, nameOf(bare), arity) || !declares(owner, upName, arity) then e
+          else e.copy(emitted = s"$owner#$upName${e.emitted.substring(bare.length)}")
+      }
+    )
+
   /** Assemble the map. Pure: every argument comes from the run. */
   def of(
     module:       String,

@@ -967,7 +967,7 @@ final case class PortRun(
       else scala.None
     }.toMap
 
-    val portMap = PortMap.of(
+    val portMap0 = PortMap.of(
       module = label,
       engine = balticporter.core.EngineInfo.fingerprint,
       emittedTypes = translated.emitOrder.flatMap(emittedFqns).filterNot(f => f.isEmpty || policySubs.dropsType(f)),
@@ -991,6 +991,8 @@ final case class PortRun(
       // Schema 4: JDK fingerprint.
       jdk = balticporter.core.JvmInfo.specification
     )
+    // a substituted type's rows name what its replacement file declares
+    val portMap = PortMap.withReplacementNames(portMap0, (owner, name, arity) => replacementSurface.lookup(owner, name, arity).isDefined)
     // Written only when the artifact layer is on.
     val mapPath = Option.when(CheckReport.enabled)(PortMap.write(CheckReport.runDir, portMap))
     say(

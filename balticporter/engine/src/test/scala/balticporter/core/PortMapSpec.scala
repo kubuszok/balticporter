@@ -706,6 +706,24 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(PortMap.discover(reports, exclude = Set("me")).map(_.module), List("base"))
   }
 
+  test("a SUBSTITUTED type's renamed row is published at the name its replacement file declares") {
+    val m = PortMap.Map0(
+      "m",
+      "eng",
+      List(
+        PortMap.Entry("type", "up.Skin", "p.Skin", PortMap.Disposition.Substituted),
+        PortMap.Entry("member", "up.Skin#dispose()", "p.Skin#close()", PortMap.Disposition.Renamed),
+        PortMap.Entry("member", "up.Skin#getRegion(int)", "p.Skin#region(int)", PortMap.Disposition.Renamed),
+        PortMap.Entry("member", "up.Skin#getFont()", "p.Skin#font()", PortMap.Disposition.Renamed)
+      )
+    )
+    val declared = Set(("p.Skin", "close", 0), ("p.Skin", "getRegion", 1))
+    val out      = PortMap.withReplacementNames(m, (o, n, a) => declared((o, n, a))).members.map(e => e.upstream -> e.emitted).toMap
+    assertEquals(out("up.Skin#dispose()"), "p.Skin#close()") // the file declares the planned name
+    assertEquals(out("up.Skin#getRegion(int)"), "p.Skin#getRegion(int)") // the file kept java's name
+    assertEquals(out("up.Skin#getFont()"), "p.Skin#font()") // the file declares neither: nothing to correct
+  }
+
   test(
     "a renamed member's original name labels only the member of its own kind and arity, never an overload or a field sharing the new name"
   ) {
