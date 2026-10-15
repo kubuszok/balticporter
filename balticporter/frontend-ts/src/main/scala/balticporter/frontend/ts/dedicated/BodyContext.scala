@@ -515,10 +515,18 @@ private[dedicated] class BodyContext(
           if exprType(children.head).contains("String") then refuse("js-string-index")
           val obj = translateExpr(children.head)
           val idx = translateExpr(children(1))
-          // JS reads past an array's end as `undefined`, Scala throws: a read of reference elements answers null there
-          val element = exprType(children.head).flatMap(extractElementType)
-          if !isWriteTarget(node) && element.exists(t => t == "String" || comparesByIdentity(t)) then s"$obj.lift($idx).orNull"
-          else s"$obj($idx)"
+          // JS reads past an array's end, or an absent key, as `undefined` where Scala throws: a read of references answers
+          // null there; any other read needs a length or key test on the same receiver around it
+          val recvType = exprType(children.head)
+          val element  = recvType.flatMap(extractElementType)
+          val value    = recvType.flatMap(mapValueType)
+          if isWriteTarget(node) then s"$obj($idx)"
+          else if element.exists(absentIsNull) then s"$obj.lift($idx).orNull"
+          else if value.exists(absentIsNull) then s"$obj.getOrElse($idx, null)"
+          else
+            val guard = if value.isDefined then hasTest else if element.isDefined then lengthTest else (n: RastNode, w: String) => lengthTest(n, w) || hasTest(n, w)
+            if !guardedBy(node, children.head, guard) then refuse("read-past-end")
+            s"$obj($idx)"
         else "??? /* bad element access */"
 
       case "CallExpression" =>
@@ -1073,6 +1081,12 @@ private[dedicated] class BodyContext(
               s"$objExpr.contains(${scalaArgs.mkString(", ")})"
             case "set" =>
               s"$objExpr.update(${scalaArgs.mkString(", ")})"
+            // a JS map answers `undefined` for an absent key: null for a reference value, else a `has` test must guard the read
+            case "get" if exprType(obj).flatMap(mapValueType).isDefined =>
+              if exprType(obj).flatMap(mapValueType).exists(absentIsNull) then s"$objExpr.getOrElse(${scalaArgs.mkString(", ")}, null)"
+              else
+                if !guardedBy(node, obj, hasTest) then refuse("read-past-end")
+                s"$objExpr(${scalaArgs.mkString(", ")})"
             case "get" =>
               s"$objExpr.get(${scalaArgs.mkString(", ")})"
             case "delete" =>
@@ -1087,10 +1101,15 @@ private[dedicated] class BodyContext(
                 s"$objExpr ++= $spreadArg"
               else if scalaArgs.length == 1 then s"$objExpr += ${scalaArgs.head}"
               else scalaArgs.map(a => s"$objExpr += $a").mkString("; ")
-            case "pop" =>
-              s"$objExpr.remove($objExpr.length - 1)"
-            case "shift" =>
-              s"$objExpr.remove(0)"
+            // on an empty array JS answers `undefined` where `remove` throws: null for references, else a length test must guard it
+            case "pop" | "shift" =>
+              val at = if method == "pop" then "b$.length - 1" else "0"
+              // as a statement nothing reads the answer, so an empty array just leaves nothing to remove
+              if statementRoot eq node then s"{ val b$$ = $objExpr; if (b$$.nonEmpty) b$$.remove(${at}) }"
+              else if exprType(obj).flatMap(extractElementType).exists(absentIsNull) then s"{ val b$$ = $objExpr; if (b$$.isEmpty) null else b$$.remove(${at}) }"
+              else
+                if !guardedBy(node, obj, lengthTest) then refuse("read-past-end")
+                s"{ val b$$ = $objExpr; b$$.remove(${at}) }"
             case "unshift" =>
               s"$objExpr.prepend(${scalaArgs.mkString(", ")})"
             case "indexOf" =>

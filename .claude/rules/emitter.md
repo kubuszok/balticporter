@@ -425,3 +425,9 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   (`extend({ color })` against `extend(color = …, size = …)`) becomes named arguments, each at its
   parameter's type; a key naming no parameter, or an omitted parameter with no default, keeps the
   `js-map-construction` refusal.
+- (a) No translated body may throw where JS would not. JS reads past an array's end, an absent map
+  key and `pop`/`shift` of an empty array as `undefined`: a read of references answers null
+  (`lift(i).orNull`, `getOrElse(k, null)`, an emptiness test before `remove`), a `pop` nothing reads
+  removes only when there is something to remove, and any other read is refused (`read-past-end`)
+  unless a length or `has` test on the SAME receiver encloses it (an `if`/loop/`?:` condition or the
+  left of an `&&`). KaTeX's `scriptFromCodepoint` read `block[0]` of a numeric pair: 46 -> 45.

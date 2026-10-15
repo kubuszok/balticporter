@@ -801,3 +801,72 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       translate(block(ret(node("ElementAccessExpression", ident("s"), num(0)))), params = List("s"), paramTypes = Map("s" -> "String")),
       "js-string-index"
     )
+
+  private def lengthOf(r: RastNode):                  RastNode = prop(r, "length")
+  private def ifThen(c:   RastNode, body: RastNode*): RastNode = node("IfStatement", c, block(body*))
+
+  test("a read of primitive elements is refused unless a length test on the same receiver guards it"):
+    val ints = Map("xs" -> "ArrayBuffer[Int]", "ys" -> "ArrayBuffer[Int]", "i" -> "Int")
+    val read = (r: String) => node("ElementAccessExpression", ident(r), ident("i"))
+    refuses(translate(block(ret(read("xs"))), params = List("xs", "i"), paramTypes = ints, returnType = Some("Int")), "read-past-end")
+    val guarded = translate(
+      block(ifThen(bin("LessThanToken", ident("i"), lengthOf(ident("xs"))), ret(read("xs"))), ret(num(0))),
+      params = List("xs", "i"),
+      paramTypes = ints,
+      returnType = Some("Int")
+    )
+    accepts(guarded)
+    // a test on ANOTHER receiver guards nothing
+    refuses(
+      translate(
+        block(ifThen(bin("LessThanToken", ident("i"), lengthOf(ident("ys"))), ret(read("xs"))), ret(num(0))),
+        params = List("xs", "ys", "i"),
+        paramTypes = ints,
+        returnType = Some("Int")
+      ),
+      "read-past-end"
+    )
+
+  test("a map read answers null for an absent key of reference values, and needs a has test otherwise"):
+    val refs = translate(
+      block(ret(call(prop(ident("m"), "get"), ident("k")))),
+      params = List("m", "k"),
+      paramTypes = Map("m" -> "mutable.Map[String, Node]", "k" -> "String")
+    )
+    assertNoDiff(refs.scalaBody.trim, "m.getOrElse(k, null)")
+    val nums = Map("m" -> "mutable.Map[String, Int]", "k" -> "String")
+    refuses(
+      translate(block(ret(call(prop(ident("m"), "get"), ident("k")))), params = List("m", "k"), paramTypes = nums, returnType = Some("Int")),
+      "read-past-end"
+    )
+    // the has test guards the read (the condition's own truthiness is another question)
+    val guarded = translate(
+      block(ifThen(call(prop(ident("m"), "has"), ident("k")), ret(call(prop(ident("m"), "get"), ident("k")))), ret(num(0))),
+      params = List("m", "k"),
+      paramTypes = nums,
+      returnType = Some("Int")
+    )
+    assert(!guarded.refusalReasons.contains("read-past-end"), guarded.refusalReasons.toString)
+    assert(guarded.scalaBody.contains("m(k)"), guarded.scalaBody)
+
+  test("pop and shift on an empty array answer null for references, and need a length test otherwise"):
+    val nodes = translate(block(ret(call(prop(ident("xs"), "pop")))), params = List("xs"), paramTypes = Map("xs" -> "ArrayBuffer[Node]"))
+    assertNoDiff(nodes.scalaBody.trim, "{ val b$ = xs; if (b$.isEmpty) null else b$.remove(b$.length - 1) }")
+    val ints = Map("xs" -> "ArrayBuffer[Int]")
+    refuses(
+      translate(block(ret(call(prop(ident("xs"), "shift")))), params = List("xs"), paramTypes = ints, returnType = Some("Int")),
+      "read-past-end"
+    )
+    accepts(
+      translate(
+        block(ifThen(lengthOf(ident("xs")), ret(call(prop(ident("xs"), "shift")))), ret(num(0))),
+        params = List("xs"),
+        paramTypes = ints,
+        returnType = Some("Int")
+      )
+    )
+
+  test("a pop nothing reads removes only when there is something to remove"):
+    val r = translate(block(expr(call(prop(ident("xs"), "pop")))), params = List("xs"), paramTypes = Map("xs" -> "ArrayBuffer[Int]"))
+    accepts(r)
+    assertNoDiff(r.scalaBody.trim, "{ val b$ = xs; if (b$.nonEmpty) b$.remove(b$.length - 1) }")
