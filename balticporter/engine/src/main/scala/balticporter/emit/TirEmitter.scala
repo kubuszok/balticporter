@@ -855,13 +855,14 @@ object TirEmitter:
       def implementsInherited(v: Tree.ValDef): Boolean =
         val n    = nm(v.symbol)
         val same = inheritedDecls.filter(s => eff(s) == n)
+        def parameterless(s: SymId, abstractOnly: Boolean): Boolean = p.definitionOf(s) match
+          case Some(d: Tree.DefDef) => d.paramss.isEmpty && (d.rhs.isEmpty || !abstractOnly)
+          case _                    => false
         // ABSTRACT only: a concrete parameterless def is a def-pair getter over its OWN owner's
         // field, unrelated to a descendant's plain shadow (2 RefChecks errors measured otherwise).
-        same.exists(s =>
-          p.definitionOf(s) match
-            case Some(d: Tree.DefDef) => d.paramss.isEmpty && d.rhs.isEmpty
-            case _                    => false
-        )
+        // Where an ancestor already IMPLEMENTS the abstract accessor concretely, the field would
+        // shadow that implementation instead.
+        same.exists(parameterless(_, abstractOnly = true)) && !same.exists(s => parameterless(s, abstractOnly = false) && !parameterless(s, abstractOnly = true))
 
       cd.body.foreach {
         case v: Tree.ValDef

@@ -166,6 +166,30 @@ class BeanPropertyPortSpec extends PortSuite:
     assert(out.contains("def w: scala.Int"), "the interface still declares the property")
   }
 
+  private val implementedAbove =
+    """
+    package demo;
+
+    public interface Styled { Object getStyle(); }
+
+    class Base implements Styled {
+      private Object current;
+      public Object getStyle() { return current; }
+    }
+
+    class Sub extends Base {
+      private Object style;
+      void touch() { style = getStyle(); }
+    }
+    """
+
+  test("a field under an abstract accessor an ANCESTOR already implements shadows that implementation, and is renamed") {
+    val phase        = new BeanPropertyTransform(scope = balticporter.tir.RuleScope.Only(Set("demo.Styled", "demo.Base")))
+    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(implementedAbove, "Styled.java"), List(phase))
+    val out          = new TirEmitter(after, notes = log).emit
+    assert(clue(out).contains("style$shadow"), "the subclass field still collides with the inherited implementation")
+  }
+
   test("emitted probe is written for a real compiler") {
     val (_, _, _, out) = ported()
     val p              = _root_.java.nio.file.Path.of(sys.props.getOrElse("balticporter.dumpProbe", s"${sys.props("user.dir")}/target/probe"), "BeanPropertyProbe.scala")

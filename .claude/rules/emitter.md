@@ -31,6 +31,10 @@ Detail for `CLAUDE.md` §4.55, §4.56, §4.57, §4.575, §4.58, §4.59 and §4.6
   collapsed `var w` to `w$shadow` under the interface's abstract `def w`, leaving the class abstract
   until 0 typer errors. A scala `val`/`var` and a PARAMETERLESS `def` of one name across a subtype
   edge are an implementation pair; java cannot produce that shape.
+- An abstract inherited accessor makes a same-named field its IMPLEMENTATION only while no ancestor
+  already implements it concretely: under `Styleable#style` and `TextButton#style` both, a dependent's
+  own field `style` was read as the implementation and kept its name, shadowing the concrete method
+  (visui `VisTextButton`, `FileChooser`, 2 errors). Kind (a).
 - **A map from an over-approximate key to a single value is a choice nobody made.** `Map[(name,
   arity), Sym]` kept whichever the builder saw LAST: a public `visit(Node)` beside a `protected
   visit(AnchorRefTarget)` emitted `has weaker access privileges`. Index to a `List`, the CALLER
@@ -263,14 +267,14 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   `T...` method stays a class (`sam-anon->lambda` guard `RepeatedParam`: a function literal cannot
   declare `T*`); an owned override of an external NON-vararg `T[]` member, and a java LAMBDA at an
   owned `T...` SAM, are loud untested edges. Kind (a).
-- The `x$arr` binding's fallback COPIES a caller's `Seq` that is not an `ArraySeq` — every literal
-  vararg on Scala.js arrives as a JS-array-backed `Seq`. At an element whose `Object` bound the
-  witness phase dropped, `toArray[Any]` builds boxes, and `System.arraycopy` into the `int[]`
-  backing store throws (lls `DynamicArray` "addAll from plain array" on JS; on the JVM only a
 - The element-only overload test reads the overloads the class INHERITS as well as its own, and an
   OVERRIDE takes the form of the member it overrides: an enum declaring `m(Actor...)` beside its
   interface's `m(CellWidget...)` emitted `Actor*` there and `CellWidget*` in each constant body,
   which then overrode nothing (visui `TableLayout`, 3 errors). Kind (a).
+- The `x$arr` binding's fallback COPIES a caller's `Seq` that is not an `ArraySeq` — every literal
+  vararg on Scala.js arrives as a JS-array-backed `Seq`. At an element whose `Object` bound the
+  witness phase dropped, `toArray[Any]` builds boxes, and `System.arraycopy` into the `int[]`
+  backing store throws (lls `DynamicArray` "addAll from plain array" on JS; on the JVM only a
   non-array `Seq` spread reaches it). The phase that knows the representation tags the parameter
   (`VarargArrayFactory`, the witness's `create`) and the copy goes through it; no witness in scope is
   `witness` lane `VarargCopy`. Kind (a).
@@ -349,6 +353,12 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   receiver: the bare and `this.`-qualified shortcuts for an own `this` dropped the cast, and the
   subclass member was looked up on the superclass (RegExodus `Term#toString`, 1 E008). Kind (a).
 
+- An INNER class's companion is emitted inside the enclosing class's body, so its class-initialisation
+  trigger names it by simple name from the innermost inner level down, never by the package path
+  (`val _ = p.Outer.Inner` is not found; regexodus' 18 upstream tests did not compile). A SUBCLASS
+  trigger whose companion is outside that body has no path at all: declined and counted
+  (`class-init-trigger` `SubclassInitPathless`). Kind (a).
+
 ## Construction and generic arrays
 
 - `outer.new Inner()` names the enclosing instance; scala names it in the PATH, `new outer.Inner()`.
@@ -357,12 +367,6 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   (1 error). Any other qualifier (a field, emitted a `var`; a call) is no stable path: it is bound
   once, first, to a local `outer$q` the path names (visui `chooser.new FileItem(…)` rendered the
   projection `new FileChooser#FileItem`, 1 E083). Kind (a).
-- An INNER class's companion is emitted inside the enclosing class's body, so its class-initialisation
-  trigger names it by simple name from the innermost inner level down, never by the package path
-  (`val _ = p.Outer.Inner` is not found; regexodus' 18 upstream tests did not compile). A SUBCLASS
-  trigger whose companion is outside that body has no path at all: declined and counted
-  (`class-init-trigger` `SubclassInitPathless`). Kind (a).
-
 - An external callee's formal that is an array of the METHOD's own type variable
   (`<T> T[] Arrays.copyOf(T[], int)`) takes the argument's own array type: its erasure reads
   `Object[]`, and the covariance cast to `Array[Object]` bound `T` to `Object` and broke the result's
