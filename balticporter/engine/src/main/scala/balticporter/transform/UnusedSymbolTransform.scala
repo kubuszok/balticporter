@@ -19,6 +19,12 @@ final class UnusedSymbolTransform extends Phase:
   )
   override def runsBefore: Set[String] = Set("package-rename", SuppressionPhase.Name)
 
+  /** the terms a type's PATH names (`outer.Inner`), at any depth of its arguments. */
+  private def pathTerms(t: TypeRepr): List[SymId] = t match
+    case TypeRepr.TypeRef(TypeRepr.TermRef(_, s), _) => List(s)
+    case TypeRepr.AppliedType(tc, as)                => pathTerms(tc) ++ as.flatMap(pathTerms)
+    case _                                           => Nil
+
   // Exposed for PortRun to build check-lane findings
   var handledSymbols: List[Decision]                 = Nil
   var refusedRows:    List[(String, String, Origin)] = Nil // (fqn, guard, origin)
@@ -44,7 +50,9 @@ final class UnusedSymbolTransform extends Phase:
           case Tree.Select(_, s, _, _)       => allCounts(s) += 1
           case Tree.Apply(_, _, m, _, _)     => allCounts(m) += 1
           case Tree.MethodRef(_, m, _, _, _) => allCounts(m) += 1
-          case _                             => ()
+          // `new outer.Inner()` names the local in the TYPE's path, a read scalac counts too
+          case n: Tree.New => pathTerms(n.tpt.tpe).foreach(allCounts(_) += 1)
+          case _ => ()
         t
 
     program.units.foreach(u => StandardTraversal.mapClassDef(refCollector, u))

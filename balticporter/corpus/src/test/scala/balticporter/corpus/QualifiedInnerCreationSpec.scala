@@ -29,3 +29,31 @@ class QualifiedInnerCreationSpec extends munit.FunSuite:
     // the unqualified creation inside the outer class is unchanged
     assert(out.contains("new Cursor()"))
   }
+
+  test("a FIELD qualifier is bound once to a local first, since a field is no stable path") {
+    val out = emit(
+      """package demo;
+        |class Chooser {
+        |  class Item { }
+        |}
+        |class Adapter {
+        |  private final Chooser chooser;
+        |  Adapter(Chooser c) { chooser = c; }
+        |  Chooser.Item make() { return chooser.new Item(); }
+        |}
+        |""".stripMargin
+    )
+    assert(clue(out).contains("val outer$q: demo.Chooser = this.chooser"), out)
+    assert(out.contains("new outer$q.Item()"), out)
+    assert(!out.contains("new demo.Chooser#Item"), out)
+    // …and the local the path names is a READ: the unused-symbol pass keeps it
+    val kept = new TirEmitter(
+      balticporter.tir.Pipeline.run(
+        SpoonTir.fromSource(
+          "package demo;\nclass C { class I {} }\nclass A { private final C c; A(C c) { this.c = c; } C.I make() { return c.new I(); } }\n"
+        ),
+        List(new balticporter.transform.UnusedSymbolTransform)
+      )
+    ).emit
+    assert(clue(kept).contains("val outer$q"), kept)
+  }

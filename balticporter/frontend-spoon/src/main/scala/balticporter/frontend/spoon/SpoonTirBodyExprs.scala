@@ -1005,17 +1005,24 @@ private[spoon] trait SpoonTirBodyExprs:
     * (a stable path); the inner type then carries it as a term prefix. Any other qualifier keeps the unqualified spelling, which scalac rejects outside the outer class rather than binding another
     * instance.
     */
-  private def qualifiedInner(cc: CtConstructorCall[?], t: TypeRepr)(using Obligations): TypeRepr =
+  private def qualifiedInner(cc: CtConstructorCall[?], t: TypeRepr)(using Obligations): (TypeRepr, Option[Tree.ValDef]) =
+    def prefixed(s: SymId): TypeRepr = t match
+      case TypeRepr.TypeRef(_, inner)                              => TypeRepr.TypeRef(TypeRepr.TermRef(TypeRepr.NoPrefix, s), inner)
+      case TypeRepr.AppliedType(TypeRepr.TypeRef(_, inner), targs) => TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.TermRef(TypeRepr.NoPrefix, s), inner), targs)
+      case other                                                   => other
+    // any other qualifier — a field (a `var` once emitted), a call — is no stable path: it is
+    // evaluated once, first, as java does, into a local the path can name
+    def bound(q: CtExpression[?], value: Term): (TypeRepr, Option[Tree.ValDef]) =
+      val qt = ty(q)
+      val id = minter.define("@" + methodId.raw + "$Q$" + posKey(cc))(sid => Symbol(sid, "outer$q", "outer$q", Flags(), methodId, qt))
+      (prefixed(id), Some(Tree.ValDef(id, tt(qt, q), Some(value), originOf(q))))
     Option(cc.getTarget) match
       case Some(v: CtVariableRead[?]) if !v.isImplicit =>
         expr(v) match
-          case Tree.Ident(s, _, _) =>
-            t match
-              case TypeRepr.TypeRef(_, inner)                              => TypeRepr.TypeRef(TypeRepr.TermRef(TypeRepr.NoPrefix, s), inner)
-              case TypeRepr.AppliedType(TypeRepr.TypeRef(_, inner), targs) => TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.TermRef(TypeRepr.NoPrefix, s), inner), targs)
-              case other                                                   => other
-          case _ => t
-      case _ => t
+          case Tree.Ident(s, _, _) => (prefixed(s), None)
+          case other               => bound(v, other)
+      case Some(q) if !q.isImplicit && !q.isInstanceOf[CtThisAccess[?]] && !q.isInstanceOf[CtTypeAccess[?]] => bound(q, expr(q))
+      case _                                                                                                => (t, None)
 
   private[spoon] def ctorCall(cc: CtConstructorCall[?])(using Obligations): Term =
     // A RAW `new` is the one place the inherited instantiation must NOT fill: the constructor
@@ -1025,7 +1032,8 @@ private[spoon] trait SpoonTirBodyExprs:
     // local declarations do need it to match the signatures they feed.)
     val savedNoInherit = noInheritFill
     noInheritFill = true
-    val t = qualifiedInner(cc, tpe(cc.getType))
+    val t0          = tpe(cc.getType)
+    val (t, outerQ) = qualifiedInner(cc, t0)
     noInheritFill = savedNoInherit
     val cid   = methodSym(cc.getExecutable)
     val argEs = cc.getArguments.asScala.toList
@@ -1071,7 +1079,9 @@ private[spoon] trait SpoonTirBodyExprs:
       val wSym = minter.external(cc.getType.getQualifiedName, cc.getType.getSimpleName)
       val vSym = minter.external(cc.getType.getQualifiedName + "#valueOf", "valueOf", wSym)
       Tree.Apply(Tree.Select(Tree.Ident(wSym, TypeRef(NoPrefix, wSym), originOf(cc)), vSym, NoType, originOf(cc)), args, vSym, t, originOf(cc))
-    else Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc), anon), args, cid, t, originOf(cc))
+    else
+      val made = Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc), anon), args, cid, t, originOf(cc))
+      outerQ.fold(made)(vd => Tree.Block(List(vd), made, t0, originOf(cc)))
 
   /** A RAW constructor call — `return new Values(this)` inside `ArrayMap<K,V>`. Java checks a raw `new`'s arguments against the ERASED constructor, so `this: ArrayMap<K,V>` passes unchecked. We
     * render the raw type name-FILLED (`new Values[V](…)`), re-imposing the un-erased formal — so arguments must be filled by the SAME name-directed rule, or the two halves of one raw use disagree.
