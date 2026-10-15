@@ -353,6 +353,12 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   (1 error). Any other qualifier (a field, emitted a `var`; a call) is no stable path: it is bound
   once, first, to a local `outer$q` the path names (visui `chooser.new FileItem(…)` rendered the
   projection `new FileChooser#FileItem`, 1 E083). Kind (a).
+- An INNER class's companion is emitted inside the enclosing class's body, so its class-initialisation
+  trigger names it by simple name from the innermost inner level down, never by the package path
+  (`val _ = p.Outer.Inner` is not found; regexodus' 18 upstream tests did not compile). A SUBCLASS
+  trigger whose companion is outside that body has no path at all: declined and counted
+  (`class-init-trigger` `SubclassInitPathless`). Kind (a).
+
 - An external callee's formal that is an array of the METHOD's own type variable
   (`<T> T[] Arrays.copyOf(T[], int)`) takes the argument's own array type: its erasure reads
   `Object[]`, and the covariance cast to `Array[Object]` bound `T` to `Object` and broke the result's

@@ -493,7 +493,12 @@ private[emit] trait TirEmitterDecls:
       // Forced FIRST in the companion body (java ran the ancestor's initialiser first). Asks
       // `hasCompanion` rather than re-deriving "does anything read a static of this type".
       val superForce =
-        nearestClinitAncestor(cd.symbol).filterNot(reentrantBearers.contains).map(a => forceCompanion(cd, a, balticporter.tir.ClassInitTriggerCheck.SubclassInit, i + 1)).toList.filter(_.nonEmpty)
+        nearestClinitAncestor(cd.symbol)
+          .filterNot(reentrantBearers.contains)
+          .filterNot(a => balticporter.tir.ClassInitTriggerCheck.pathless(cd.symbol, a)(using program))
+          .map(a => forceCompanion(cd, a, balticporter.tir.ClassInitTriggerCheck.SubclassInit, i + 1))
+          .toList
+          .filter(_.nonEmpty)
       val sb = (superForce ++ parentExports ++ markerDecl ++
         orderBody(statics, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
         recStatics).mkString("\n")
@@ -823,7 +828,17 @@ private[emit] trait TirEmitterDecls:
     emissionOf += d
     printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
     forcedClinits += (cd.symbol -> trigger)
-    s"${PorterNote.render(d, ind(i))}${ind(i)}val _ = ${escPath(tg.fullName).replace('$', '.')}"
+    s"${PorterNote.render(d, ind(i))}${ind(i)}val _ = ${companionPath(target)}"
+
+  /** the term path to `target`'s companion: the dotted `fullName` for a chain of static members, and simple names from the innermost INNER level down otherwise, since that level's companion is
+    * emitted inside its enclosing class's (or method's) body, where no package path reaches it.
+    */
+  private[emit] def companionPath(target: SymId): String =
+    balticporter.tir.ClassInitTriggerCheck.innerCut(target)(using program) match
+      case scala.None => escPath(sym(target).fullName).replace('$', '.')
+      case Some(cut)  =>
+        def down(x: SymId): List[String] = if x == cut then List(esc(sym(x).name)) else down(sym(x).owner) :+ esc(sym(x).name)
+        down(target).mkString(".")
 
   /** every type this program declares whose class initialiser does anything — [[hasClinit]]'s question (JLS 12.4.2 step 9), asked of the DECLARED body.
     */

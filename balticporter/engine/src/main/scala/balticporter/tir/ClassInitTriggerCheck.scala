@@ -18,6 +18,9 @@ object ClassInitTriggerCheck:
     /** Forcing declined: re-entrant initialisation that scala cannot survive. A counted refusal. */
     case ReentrantRefused
 
+    /** Subclass trigger declined: the ancestor's companion is emitted inside an enclosing body the subclass's companion is not in, so no path names it. A counted refusal. */
+    case SubclassInitPathless
+
   object Issue:
     def classification(i: Issue): String = i match
       case ReentrantRefused =>
@@ -42,6 +45,13 @@ object ClassInitTriggerCheck:
           "not a compile-time constant. A finding here means that content reached the output " +
           "through a rendering that has no class body to put the trigger in — fix the emitter, " +
           "not the port."
+      case SubclassInitPathless =>
+        "engine (true of every Java program), and a REFUSAL rather than a defect. The ancestor is an INNER " +
+          "class (or nested in one, or in a method): java's statics of an inner class belong to the class, while " +
+          "the port emits their companion inside the enclosing class's body, reachable by simple name from " +
+          "inside that body only. This subclass's companion is outside it, so no path forces the ancestor's " +
+          "initialiser, and it runs on scala's own schedule — first touch of the object. There is nothing to " +
+          "configure."
       case SubclassInitUnforced =>
         "engine (true of every Java program): JLS 12.4.1 initialises a class when one of its SUBCLASSES is initialised, " +
           "and a subclass with statics of its own is initialised by a bare `S.member` read that " +
@@ -68,6 +78,10 @@ object ClassInitTriggerCheck:
           s"initialises `$declarer` first on any route that initialises `$owner` — a bare " +
           s"`$owner.member` read above all (JLS 12.4.1 item 7) — and initialising this port's " +
           s"`$owner` object reaches no other object"
+      case Issue.SubclassInitPathless =>
+        s"`$owner` inherits $StepNine from `$declarer`, whose companion is emitted inside an enclosing " +
+          s"body `$owner`'s companion is not in, so the trigger is DECLINED: nothing names that companion " +
+          s"from here"
       case Issue.ReentrantRefused =>
         s"`$owner` is emitted as a `$form` carrying $StepNine whose own initialisation comes back " +
           s"to `$owner` (through `$declarer`), so java's instantiation trigger cannot be " +
@@ -122,7 +136,10 @@ object ClassInitTriggerCheck:
         case _                 => nearest(next, seen ++ next)
     val subclass = all.collect {
       case cd if shapeOf(fqn(cd.symbol)).exists(_.companion) && !forced(cd.symbol -> SubclassInit) =>
-        nearest(List(cd.symbol), Set(cd.symbol)).map(a => Finding(Issue.SubclassInitUnforced, fqn(cd.symbol), fqn(a), formOf(fqn(cd.symbol)).getOrElse("?"), cd.origin))
+        nearest(List(cd.symbol), Set(cd.symbol)).map { a =>
+          val issue = if pathless(cd.symbol, a) then Issue.SubclassInitPathless else Issue.SubclassInitUnforced
+          Finding(issue, fqn(cd.symbol), fqn(a), formOf(fqn(cd.symbol)).getOrElse("?"), cd.origin)
+        }
     }.flatten
 
     (unforced ++ subclass).sortBy(f => (f.issue.toString, f.owner))
@@ -197,6 +214,35 @@ object ClassInitTriggerCheck:
       }
     }
     out.toSet
+
+  /** The innermost type on `target`'s nesting chain, itself included, that java declared as an INSTANCE member of a class or inside a method: its companion is emitted in that declaration's body, so
+    * no package path names it and it is reached by simple name from inside that body only. `None` when every level is a static member, whose companion is the dotted `fullName`.
+    */
+  def innerCut(target: SymId)(using program: Program): Option[SymId] =
+    def go(x: SymId, fuel: Int): Option[SymId] =
+      program.symbolOf(x).filter(_ => fuel > 0).flatMap { s =>
+        if s.owner == SymId.None || program.definitionOf(s.owner).isEmpty then scala.None
+        else if !s.flags.isStatic then Some(x)
+        else go(s.owner, fuel - 1)
+      }
+    go(target, 32)
+
+  /** Is code in `from`'s companion lexically inside the body that declares `cut`'s companion — the only place `cut`'s simple name reaches? A class's companion sits beside the class, so a STATIC
+    * member's companion is outside its owner's class body.
+    */
+  def reachesCut(from: SymId, cut: SymId)(using program: Program): Boolean =
+    val home        = program.symbolOf(cut).map(_.owner).getOrElse(SymId.None)
+    val homeIsClass = program.definitionOf(home).exists(_.isInstanceOf[Tree.ClassDef])
+    def go(x: SymId, fuel: Int): Boolean =
+      program.symbolOf(x).filter(_ => fuel > 0).exists { s =>
+        if s.owner == home then !homeIsClass || !s.flags.isStatic
+        else s.owner != SymId.None && go(s.owner, fuel - 1)
+      }
+    home != SymId.None && go(from, 32)
+
+  /** The subclass trigger `from`'s companion cannot write: `ancestor`'s companion lives in a body `from`'s companion is not inside, so no path names it. */
+  def pathless(from: SymId, ancestor: SymId)(using Program): Boolean =
+    innerCut(ancestor).exists(c => !reachesCut(from, c))
 
   private def isStaticRef(s: SymId)(using program: Program): Boolean =
     program.symbolOf(s).exists(_.flags.isStatic)
