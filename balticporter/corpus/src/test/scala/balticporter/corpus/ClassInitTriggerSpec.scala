@@ -45,9 +45,15 @@ class ClassInitTriggerSpec extends PortSuite:
     val p = port(registering)
     assertEmits(p, "val _ = demo.C")
     val force = p.out.indexOf("val _ = demo.C")
-    val field = p.out.indexOf("var n:")
-    assert(force > 0 && field > 0, p.out)
-    assert(force < field, s"the trigger must precede every field initialiser\n${p.out}")
+    // `n` is the class parameter its constructor filled (no instance state a class initialiser can
+    // read), so the trigger heads the BODY: nothing but notes may precede it
+    val body = p.out.indexOf(") {\n", p.out.indexOf("class C("))
+    assert(force > 0 && body > 0, p.out)
+    val before = p.out.substring(body + 4, force).linesIterator.map(_.trim).filter(_.nonEmpty)
+    assert(
+      before.forall(l => l.startsWith("/*") || l.startsWith("—") || l.endsWith("*/")),
+      s"the trigger must precede every field initialiser\n${p.out}"
+    )
   }
 
   test("a NESTED bearer names its companion path with `.`, never the JVM's `$`") {

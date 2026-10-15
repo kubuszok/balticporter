@@ -730,13 +730,58 @@ object TirEmitter:
 
       val plan = plans(cd)
       if plan.primary.isDefined then
-        val taken = collection.mutable.Set.from(visibleNames(cd))
+        // the class's OWN widened names are what is being placed, never a clash with themselves: read
+        // as taken, every promoted parameter was renamed, and a parameter name is surface (`f(x = 1)`)
+        val own = cd.body.collect {
+          case d: Tree.DefDef if nm(d.symbol) != "<init>" => eff(d.symbol)
+          case v: Tree.ValDef                             => eff(v.symbol)
+          case c: Tree.ClassDef                           => eff(c.symbol)
+        }.toSet
+        val taken = collection.mutable.Set.from(own ++ parentSyms(cd).flatMap(declOf.get).flatMap(visibleNames(_, Set(cd.symbol))))
+        // an INHERITED name is captured only through a reference in the class: a parameter java hands
+        // to `super(...)` alone, in a class naming nothing so called, keeps its name (`Repeat(child)`)
+        lazy val mentioned: Set[String] =
+          val primary = plan.primary.map(_.symbol)
+          val rest    = cd.copy(body = cd.body.filterNot { case d: Tree.DefDef => primary.contains(d.symbol); case _ => false })
+          // a MEMBER reference, or the parameter itself; another method's local captures nothing
+          val pparams = plan.primaryParams.map(_.symbol).toSet
+          def counts(s: SymId): Boolean = pparams(s) || p.symbolOf(s).exists(sy => p.definitionOf(sy.owner).exists(_.isInstanceOf[Tree.ClassDef]) || !p.definitionOf(sy.owner).isDefined)
+          def names(acc: Set[String], t: Term): Set[String] = t match
+            case Tree.Ident(s, _, _) if counts(s)     => acc + eff(s)
+            case Tree.Select(_, s, _, _) if counts(s) => acc + eff(s)
+            case _                                    => acc
+          StandardTraversal.scanClassDef(rest, Set.empty[String])(names)(using p) ++
+            plan.primaryBody.flatMap {
+              case t: Term        => StandardTraversal.scanTerm(t, Set.empty[String])(names)(using p)
+              case v: Tree.ValDef => Set(eff(v.symbol)) ++ v.rhs.toList.flatMap(StandardTraversal.scanTerm(_, Set.empty[String])(names)(using p))
+              case _ => Set.empty
+            }
+        def superOnly(v: Tree.ValDef): Boolean =
+          plan.primaryParams.exists(_.symbol == v.symbol) && !own(nm(v.symbol)) && !mentioned(nm(v.symbol))
         // the promoted constructor's params, then the top-level locals of its body (nested
         // blocks keep their own scope and never reach the class body)
         val widened = widenedOf(cd)
+        // a parameter emitted AS the field it fills keeps the name both share
+        val sup = CtorSupersede.of(p, cd, plan, plans.widenedMembers ++ plans.externalReplayWidenings)
+        sup.merged.foreach { (ps, f) =>
+          note(
+            out,
+            Decision.Kind.FunnelledCtor,
+            p,
+            f,
+            Map(
+              "superseded-by" -> nm(ps),
+              "owner" -> p.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
+              "why" -> ("the promoted constructor's parameter is emitted as this field, which java's constructor " +
+                "filled from it; a parameter of its own would need another name, and a parameter name is " +
+                "surface to a named argument")
+            ),
+            MemberRenameRule
+          )
+        }
         widened.foreach { v =>
           val n = nm(v.symbol)
-          if taken(n) then
+          if taken(n) && !sup.merged.contains(v.symbol) && !superOnly(v) then
             var fresh = n + "$p"
             while taken(fresh) do fresh += "$"
             taken += fresh
@@ -754,7 +799,7 @@ object TirEmitter:
                 "why" -> ("promoting this constructor to scala's PRIMARY widens its parameters " +
                   "and top-level locals into class members, where this name was already taken by " +
                   "an own or INHERITED member — java scoped it to the constructor and scala cannot")
-              ),
+              ) ++ sup.refused.get(v.symbol).map("not-merged" -> _),
               MemberRenameRule
             )
         }

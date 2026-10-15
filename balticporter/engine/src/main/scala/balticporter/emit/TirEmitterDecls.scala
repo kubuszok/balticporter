@@ -255,8 +255,26 @@ private[emit] trait TirEmitterDecls:
     // inlined (those statements run at construction), its `super(args)` moves into the `extends`
     // clause (which also fixes parents that need constructor arguments), and its PARAMETERS become
     // the class's parameters. Every other constructor stays a `def this(...)` delegating to it.
-    val (loweredBody, superArgs) = (lowerCtors(cd.body, plan), plan.superArgs)
-    val pparams                  = plan.primaryParams
+    // a promoted parameter emitted AS the field it fills: the field's declaration and java's
+    // `this.x = x` go, and the parameter carries the field's modifiers, comments and notes
+    val superseded =
+      if s.flags.isModule then Map.empty[SymId, Tree.ValDef]
+      else
+        val m = balticporter.tir.CtorSupersede.of(program, cd, plan, plans.widenedMembers ++ plans.externalReplayWidenings).merged
+        m.flatMap((ps, f) => cd.body.collectFirst { case v: Tree.ValDef if v.symbol == f => ps -> v })
+    val supersededPairs          = superseded.view.mapValues(_.symbol).toMap
+    val (loweredBody, superArgs) =
+      val lb = lowerCtors(cd.body, plan)
+      if superseded.isEmpty then (lb, plan.superArgs)
+      else
+        val gone = superseded.values.map(_.symbol).toSet
+        (lb.filterNot {
+           case v: Tree.ValDef => gone(v.symbol)
+           case st => balticporter.tir.CtorSupersede.elided(st, supersededPairs)
+         },
+         plan.superArgs
+        )
+    val pparams = plan.primaryParams
     // A SYNTHESISED primary (CtorFunnel.Plan.synthetic) has no java constructor behind it, so its
     // parameters come from the plan's own (name, type) pairs. `protected`, not `private` (scala's
     // `private` is CLASS-private, unreachable from a subclass) and not per-class-derived (a
@@ -293,10 +311,22 @@ private[emit] trait TirEmitterDecls:
         StandardTraversal.mapClassDef(scan, cd.copy(body = loweredBody))(using source)
         acc.toSet
     def primaryParam(v: Tree.ValDef): String =
-      if mutatedParams(v.symbol) then s"private var ${param(v)}" else param(v)
+      superseded.get(v.symbol) match
+        case Some(f) =>
+          // the field's own declaration — comments, notes, annotations, modifiers, `val`/`var` — as
+          // initialised from the parameter, less the initialiser the promotion now performs
+          val bound = f.copy(rhs = Some(Tree.Ident(v.symbol, v.tpt.tpe, v.origin)))
+          stat(bound, i + 1).stripSuffix(" = " + esc(sym(v.symbol).name))
+        case None if mutatedParams(v.symbol) => s"private var ${param(v)}"
+        case None                            => param(v)
+    // one parameter per line once a field's comments, notes or annotations sit among them
+    val paramList =
+      val ps = pparams.map(primaryParam)
+      if superseded.isEmpty then ps.mkString(", ")
+      else "\n" + ps.map(p => if p.startsWith(ind(i + 1)) || p.contains("\n") then p else ind(i + 1) + p).mkString(",\n") + "\n" + ind(i)
     val prim =
       if plan.isSynthesised then s" protected (${(plan.synthetic.map((n, t) => s"$n: ${tpe(t)}") ++ markerParam).mkString(", ")})$givenClause"
-      else if pparams.nonEmpty then s"${if ctorVis.isEmpty then "" else " " + ctorVis}(${pparams.map(primaryParam).mkString(", ")})$givenClause"
+      else if pparams.nonEmpty then s"${if ctorVis.isEmpty then "" else " " + ctorVis}($paramList)$givenClause"
       // a class whose constructor java declared NILARY and the pipeline gave a clause: the clause
       // is the whole parameter list, `class C(using T)`. A NILARY constructor that is not public
       // still needs the modifier's place — with a context clause it already exists and must NOT

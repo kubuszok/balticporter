@@ -33,7 +33,7 @@ class UnusedLocalCoverageSpec extends PortSuite:
   test("an effectful unused local keeps its initialiser as a bare statement") {
     assertNotEmits(ported, "val unusedEffect")
     assertNotEmits(ported, "val alsoUnused")
-    assertEmits(ported, "C.compute(x$p)")
+    assertEmits(ported, "C.compute(x)")
     assertEmits(ported, "C.compute(3)")
   }
 

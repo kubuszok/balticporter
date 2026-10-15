@@ -75,28 +75,27 @@ class CtorFunnelPromotedLocalOrderSpec extends munit.FunSuite:
     */
   private def at(s: String): Int = out.linesIterator.indexWhere(_.contains(s))
 
-  // the `$p` suffixes below are the promotion rename, asserted deliberately: this fix moves
-  // the PLACEMENT only, and a rename that stopped firing would be a second change measured as one.
+  // the names below are java's: no member clashes with them, so the promotion renames nothing
   test("a promoted local's initialiser runs where java's declaration stood, not at the head") {
-    val assigned = at("this.h = holder$p")
-    val local    = at("probe$p: scala.Int = this.h.v")
+    val assigned = at("this.h = holder")
+    val local    = at("probe: scala.Int = this.h.v")
     assert(assigned >= 0, clue(out))
     assert(local >= 0, clue(out))
     assert(assigned < local, clue((assigned, local, out)))
   }
 
   test("the statements AFTER the promoted local still follow it") {
-    val local = at("probe$p: scala.Int = this.h.v")
-    val seen  = at("this.seen = probe$p")
-    val later = at("this.later = probe$p")
+    val local = at("probe: scala.Int = this.h.v")
+    val seen  = at("this.seen = probe")
+    val later = at("this.later = probe + 1")
     assert(local >= 0 && seen >= 0 && later >= 0, clue(out))
     assert(local < seen && seen < later, clue((local, seen, later, out)))
   }
 
   test("a promoted local with no dependency keeps java's position too") {
-    val a       = at("this.a = x$p")
-    val doubled = at("doubled$p: scala.Int = x$p")
-    val b       = at("this.b = doubled$p")
+    val a       = at("this.a = x")
+    val doubled = at("doubled: scala.Int = x")
+    val b       = at("this.b = doubled")
     assert(a >= 0 && doubled >= 0 && b >= 0, clue(out))
     assert(a < doubled && doubled < b, clue((a, doubled, b, out)))
   }

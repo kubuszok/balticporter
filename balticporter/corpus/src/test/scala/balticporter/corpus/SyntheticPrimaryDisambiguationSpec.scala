@@ -39,7 +39,7 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
   private val out     = new TirEmitter(program).emit
 
   test("COLLAPSE — a pass-through root whose parameters ARE the slots is promoted, not disambiguated") {
-    assert(clue(out).contains("class Coll private[demo] (n$p$: scala.Int, b$p$: scala.Boolean) extends demo.Base(n$p$, b$p$)"))
+    assert(clue(out).contains("class Coll private[demo] (n: scala.Int, b: scala.Boolean) extends demo.Base(n, b)"))
     // no synthetic member and no marker: this class is byte-for-byte what it was before the
     // disambiguator existed, which is the whole reason collapse is tried first
     assert(!out.contains("class Coll protected ("))

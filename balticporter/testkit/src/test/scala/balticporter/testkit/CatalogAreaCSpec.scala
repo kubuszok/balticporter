@@ -274,7 +274,8 @@ class CatalogAreaCSpec extends PortSuite:
     // a class the funnel does not PLAN emits every constructor as a SECONDARY one delegating to a
     // primary nothing synthesised — which is what `cd.body`-only walks produced before
     // `StandardTraversal.allClassDefs`.
-    assertEmitsMatch(p, "(?s).*class Local[^\\n]*\\(off[^\\n]*: scala\\.Int\\).*")
+    // the parameter is the field java's constructor filled from it
+    assertEmitsMatch(p, "(?s).*class Local\\(\\s*[^)]*val off: scala\\.Int\\s*\\).*")
     // a capture needs no lowering: javac synthesises a constructor parameter, scala closes over it.
     assertEmits(p, "base")
   }

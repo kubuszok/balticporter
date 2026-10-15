@@ -236,7 +236,7 @@ class RowSourcesSpec extends munit.FunSuite:
     go()
     val js  = Files.readString(row(root, "js").resolve("com/demo/async/Executor.scala"))
     val jvm = Files.readString(row(root, "jvm").resolve("com/demo/async/Executor.scala"))
-    assert(clue(jvm).contains("class Executor(max$p: scala.Int, name$p: java.lang.String)"))
+    assert(clue(jvm).contains("class Executor(max: scala.Int, name: java.lang.String)"))
     assert(clue(js).contains("def this(max: scala.Int, name: java.lang.String)"))
   }
 

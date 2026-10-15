@@ -104,13 +104,13 @@ class MutableParamsScanSpec extends munit.FunSuite:
 
   test("a constructor's delegation reads the PARAMETER SLOT, never the var declared below it") {
     // the var really is there and really is declared BELOW the extends clause…
-    assert(clue(ctorOut).contains("var off$p: scala.Int = off$arg$p"))
+    assert(clue(ctorOut).contains("var off: scala.Int = off$arg"))
     // …so the delegation must name the slot. The untouched sibling in the same call does not move.
-    assertEquals(clue(superArgsOf("Sub")), List("off$arg$p, n$p"))
+    assertEquals(clue(superArgsOf("Sub")), List("off$arg, n"))
   }
 
   test("a constructor with NOTHING reassigned keeps java's own delegation, un-renamed") {
-    assertEquals(clue(superArgsOf("Plain")), List("off$p, n$p"))
+    assertEquals(clue(superArgsOf("Plain")), List("off, n"))
     assert(!ctorOut.linesIterator.filter(_.contains("class Plain")).exists(_.contains("$arg")), clue(ctorOut))
   }
 

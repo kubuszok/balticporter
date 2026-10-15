@@ -248,7 +248,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     assert(clue(use.head.detail).contains("CONSTRUCTS `demo.Link`"), use.head.render)
     // …and the emitted text really is the uncompilable shape the seam is about: the reference
     // lowered to a lambda that runs the constructor, inside a `locally` with no given in it.
-    assert(clue(code(o)).contains("class Link(p$p: java.lang.String)(using demo.Ctx)"), code(o))
+    assert(clue(code(o)).contains("class Link(p: java.lang.String)(using demo.Ctx)"), code(o))
     assert(clue(code(o)).contains("(((a0$) => new demo.Link(a0$)): demo.Builder)"), code(o))
     val lo = code(o).linesIterator.dropWhile(!_.contains("locally {")).take(4).mkString("\n")
     assert(!clue(lo).contains("using"), lo)
@@ -344,9 +344,10 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     // conforms to `Builder` — and its body reads the context off the value it was handed.
     val (p, a, _, o) = portedFrom(retainSrc, retainHolder.copy(retain = Map("demo.Label" -> "demoCtx"), selfSupplied = Map("demo.Link" -> "this.label.demoCtx")))
     val c            = code(o)
-    assert(clue(c).contains("class Link(label$p: demo.Label)"), c)
-    assert(!c.contains("class Link(label$p: demo.Label)(using"), c)
-    // …and the given reads the value it was HANDED. That it sits above `this.label = label$p` is
+    // the parameter IS the field java's constructor filled from it
+    assert(clue(c).contains("class Link(\n  protected[demo] var label: demo.Label\n) {"), c)
+    assert(!c.contains("demo.Label\n)(using"), c)
+    // …and the given reads the value it was HANDED. That it sits above any assignment of the field is
     // safe and MEASURED rather than assumed: a class-level anonymous `given T = e` is initialised
     // lazily in Scala 3, so `e` runs at the first `summon` and not during the prologue (probed
     // against scalac 3.8.4, both for a field this class assigns and for one a parent does).

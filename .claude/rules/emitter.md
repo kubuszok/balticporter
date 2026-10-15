@@ -57,6 +57,18 @@ Detail for `CLAUDE.md` §4.55, §4.56, §4.57, §4.575, §4.58, §4.59 and §4.6
   open)` beside `final Pattern open` is two members. Decide from the emitted TYPE; a WIDENING is two
   members; the drop, the rename and the self-assignment elision read ONE derivation.
 - Count what the constructor funnel PROMOTES — parameters and top-level locals — as members.
+- **A promoted parameter is renamed only on a REAL clash**: the class's own widened names are what is
+  being placed, and read as taken they renamed every promoted parameter `$p` — a parameter name is
+  surface, so every named argument broke (`DefaultTimepiece(maxDeltaTime = …)`). Where the clash is
+  the field java's constructor only fills (`this.x = x`, same type), the parameter IS that field
+  (`class C(var x: T)`, `CtorSupersede`): scala fills a class parameter BEFORE the superclass
+  constructor and the field initialisers run, so a pair is refused, keeping `x$p`, where anything
+  in that window can read it — a `this` other than a field qualifier, an instance method, an owned
+  superclass constructor or initialiser that dispatches, an unowned superclass, a non-literal field
+  initialiser, a class-file annotation, a `val` a subclass replay writes. An INHERITED name is
+  captured only through a reference (probed: `this.child` in a subclass whose parameter is `child`
+  reads the parameter), so a parameter java hands to `super(...)` alone, in a class referencing no
+  member so named, keeps its name (`Repeat(times, child) extends LoopDecorator(child)`). Kind (a).
 - **A promotion moves a NAME, never a POSITION.** A local variable of a promoted constructor must
   keep its original position in the class body: hoisting it with the fields reorders Java's
   initialisation sequence and causes null reads at run time. A FIELD initialiser is JLS 12.5 step 4, hoisted

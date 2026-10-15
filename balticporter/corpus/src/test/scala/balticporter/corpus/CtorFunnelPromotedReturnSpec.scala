@@ -80,7 +80,7 @@ class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
          |""".stripMargin
     )
     assert(!plain.contains("ctorBody$"), clue(plain))
-    assert(plain.contains("this.flags = params$p.length"), clue(plain))
+    assert(plain.contains("this.flags = params.length"), clue(plain))
   }
 
   test("a `return` that belongs to an ANONYMOUS CLASS's method is not the constructor's") {
