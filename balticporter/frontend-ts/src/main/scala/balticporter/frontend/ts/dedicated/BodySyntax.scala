@@ -385,6 +385,9 @@ private[dedicated] object BodySyntax:
     "findIndex"
   )
 
+  /** JS array methods whose callback takes an element and answers something other than a predicate: its parameter is of the array's element type. */
+  val elementCallbacks: Set[String] = Set("forEach", "map", "flatMap")
+
   def escapeString(s: String): String =
     s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t")
 

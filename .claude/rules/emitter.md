@@ -445,3 +445,18 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   removes only when there is something to remove, and any other read is refused (`read-past-end`)
   unless a length or `has` test on the SAME receiver encloses it (an `if`/loop/`?:` condition or the
   left of an `&&`). KaTeX's `scriptFromCodepoint` read `block[0]` of a numeric pair: 46 -> 45.
+- (a) A JS array local is a mutable buffer only where its annotation names an element type the
+  TARGET reference file writes itself (`ReferenceDeclarations.typeNamesIn`, passed as
+  `nameableTypes`), since `[]` must name it. Handing the buffer to a slot the reference declares
+  immutable copies it, which is unobservable only at the local's LAST use: declared once from an
+  array literal, every earlier read a member read, an element access or a `for … of`, no loop or
+  function around the hand-over that the declaration is outside of, and any closure holding an
+  earlier read run in place by an array method. graphs-commons 36 -> 41.
+- (a) JS grows an array stored to at or past its end, where Scala throws: an element store is
+  refused unless a length test on the same receiver guards it (points-on-curve's `b[0] = …` on an
+  empty array compiled and would have thrown on every curve of four points or more). `push` of two
+  or more arguments evaluates them all before appending any, and answers a length no append does.
+- (a) A lambda's parameters are locals that shadow every module-level name (rotateLines' `line`
+  was emitted as a module function of that name), typed by the array a method's callback walks;
+  a function that can run off its end answers `undefined`, refused unless the caller discards the
+  result (`forEach`).

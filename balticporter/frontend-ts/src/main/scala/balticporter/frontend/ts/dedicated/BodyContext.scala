@@ -1,7 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
 import balticporter.frontend.ts.{ RastNode, RastType, RastValue, ReferenceSignatures }
-import scala.collection.mutable
 import BodySyntax.*
 import DefmethodBodyTranslator.ReturnTypePlaceholder
 
@@ -24,7 +23,8 @@ private[dedicated] class BodyContext(
   enclosingOwner:     Option[String] = None,
   conventions:        JsConventions = JsConventions.plain,
   tsTypes:            Map[String, RastType] = Map.empty,
-  enclosingClass:     Option[String] = None
+  enclosingClass:     Option[String] = None,
+  nameableTypes:      Set[String] = Set.empty
 ) extends BodyScope(
       entry,
       hierarchy,
@@ -43,10 +43,12 @@ private[dedicated] class BodyContext(
       enclosingOwner,
       conventions,
       tsTypes,
-      enclosingClass
+      enclosingClass,
+      nameableTypes
     )
     with BodyBindings
-    with BodyObjects:
+    with BodyObjects
+    with BodyArrays:
   /** Translate a JS expression used as a condition (if, while, ternary). Applies truthiness lowering when the operand has a known non-Boolean type.
     */
   private def translateCondition(node: RastNode): String = at(node)(renderCondition(node))
@@ -111,6 +113,9 @@ private[dedicated] class BodyContext(
       case _ if isOptionLike(expectedType) && exprType(node).exists(t => !isOptionLike(t) && t != "Null") =>
         val inner = translateExprAt(node, optionInner(expectedType))
         if isNullableType(expectedType) then s"Nullable($inner)" else s"Some($inner)"
+      // a body-local JS array handed to an immutable slot is copied there
+      case "Identifier" if exprType(node).exists(isMutableBuffer) && isHandOverSlot(expectedType) =>
+        handOver(node, translateExpr(node), expectedType)
       // A Boolean slot reads the JS value's truthiness, which is what the reference's Boolean records.
       case "BinaryExpression" | "ParenthesizedExpression" | "Identifier" | "PropertyAccessExpression" | "CallExpression" if expectedType == "Boolean" =>
         translateCondition(node)
@@ -152,7 +157,7 @@ private[dedicated] class BodyContext(
             case _            => "scala.collection.mutable.ArrayBuffer"
           // A type the slot names may be spelled through the CALLEE file's imports: only a standard
           // type is written out, any other is left to Scala's inference from the slot.
-          val targ = if portableType(et) then s"[$et]" else ""
+          val targ = if writableType(et) then s"[$et]" else ""
           if node.children.isEmpty then s"$coll.empty$targ"
           else
             val elems = node.children.map(c => translateExprAt(c, et))
@@ -331,7 +336,7 @@ private[dedicated] class BodyContext(
             // Unit in value position when read later
             if init.trim.isEmpty then refuse("unit-in-value-position")
             // a class the annotation names may not be imported here: only a standard type is written out
-            val ascription = declaredType.filter(portableType).fold("")(t => s": $t")
+            val ascription = declaredType.filter(writableType).fold("")(t => s": $t")
             sb.append(s"$indent$keyword $scalaName$ascription = $init\n")
 
       case "IfStatement" =>
@@ -520,7 +525,10 @@ private[dedicated] class BodyContext(
           val recvType = exprType(children.head)
           val element  = recvType.flatMap(extractElementType)
           val value    = recvType.flatMap(mapValueType)
-          if isWriteTarget(node) then s"$obj($idx)"
+          if isWriteTarget(node) then
+            // JS grows an array stored to at or past its end, where Scala throws: a length test on the same receiver must guard the store
+            if element.isDefined && !guardedBy(node, children.head, lengthTest) then refuse("write-past-end")
+            s"$obj($idx)"
           else if element.exists(absentIsNull) then s"$obj.lift($idx).orNull"
           else if value.exists(absentIsNull) then s"$obj.getOrElse($idx, null)"
           else
@@ -1064,11 +1072,19 @@ private[dedicated] class BodyContext(
                   s.params.lift(i).map(p => translateExprAt(arg, p.tpe)).getOrElse(translateExpr(arg))
                 } ++ omittedArgs(s, args.length).getOrElse(Nil)
               case None =>
-                if isPredicate then
-                  args.zipWithIndex.map { case (arg, i) =>
-                    if i == 0 then translatePredicateLambda(arg, elemType) else translateExpr(arg)
-                  }
-                else args.map(translateExpr)
+                val elem = exprType(obj).flatMap(extractElementType)
+                args.zipWithIndex.map { case (arg, i) =>
+                  if i == 0 && isPredicate then translatePredicateLambda(arg, elemType)
+                  // an array method's callback takes the element, and `forEach` discards what it answers
+                  else if i == 0 && elem.isDefined && elementCallbacks(method) && (arg.kind == "ArrowFunction" || arg.kind == "FunctionExpression") then
+                    if arg.children.count(_.kind == "Parameter") > 1 then refuse("callback-index-parameter")
+                    translateFunctionExpr(arg, List(elem), discardsResult = method == "forEach")
+                  // the element an array receives is of the array's element type
+                  else if elem.isDefined && (method == "push" || method == "unshift") && arg.kind != "SpreadElement" then
+                    exprType(arg).foreach(checkTypeCompatibility(_, elem.get))
+                    translateExprAt(arg, elem.get)
+                  else translateExpr(arg)
+                }
           )
 
           if classMethod.isDefined && !conventions.methodRewrites.contains(method) then
@@ -1094,13 +1110,30 @@ private[dedicated] class BodyContext(
             case "forEach" =>
               s"$objExpr.foreach(${scalaArgs.mkString(", ")})"
             case "push" =>
-              // .push(x) -> += x; .push(a,b) -> a += x; b += y
-              val hasSpread = args.exists(_.kind == "SpreadElement")
-              if hasSpread && scalaArgs.length == 1 then
-                val spreadArg = scalaArgs.head.stripSuffix("*")
-                s"$objExpr ++= $spreadArg"
-              else if scalaArgs.length == 1 then s"$objExpr += ${scalaArgs.head}"
-              else scalaArgs.map(a => s"$objExpr += $a").mkString("; ")
+              // JS `push` answers the new length, which `+=` does not
+              if statementRoot ne node then refuse("push-as-value")
+              // JS evaluates every argument before it appends any: two or more are bound first, in order
+              val bound = if args.size > 1 then scalaArgs.map(t => (freshLabel("a"), t.stripSuffix("*"))) else Nil
+              val temps = bound.map((n, t) => s"val $n = $t")
+              // each argument in order, a spread one element by element; a tuple record spreads its fields
+              val pieces = args.zip(scalaArgs).zipWithIndex.flatMap { case ((arg, text), i) =>
+                val value = bound.lift(i).fold(text.stripSuffix("*"))(_._1)
+                if arg.kind != "SpreadElement" then List(s"$objExpr += $value")
+                else
+                  val src = arg.children.head
+                  // spreading the receiver into itself reads what the appends are changing
+                  if shapeOf(src) == shapeOf(obj) then refuse("array-spread")
+                  exprType(src).flatMap(t => conventions.tupleRecords.get(baseName(t)).map(baseName(t) -> _)) match
+                    case Some((cls, fields)) =>
+                      if !isSimplePath(value) then refuse("array-spread")
+                      exprType(obj).flatMap(extractElementType).foreach(e => fields.flatMap(memberIndex.memberType(cls, _)).foreach(checkTypeCompatibility(_, e)))
+                      fields.map(f => s"$objExpr += $value.$f")
+                    case None =>
+                      if !exprType(src).exists(t => extractElementType(t).isDefined) then refuse("array-spread")
+                      List(s"$objExpr ++= $value")
+              }
+              if pieces.size > 1 && !isSimplePath(objExpr) then refuse("array-spread")
+              if pieces.size == 1 && temps.isEmpty then pieces.head else (temps ++ pieces).mkString("{ ", "; ", " }")
             // on an empty array JS answers `undefined` where `remove` throws: null for references, else a length test must guard it
             case "pop" | "shift" =>
               val at = if method == "pop" then "b$.length - 1" else "0"
@@ -1588,55 +1621,94 @@ private[dedicated] class BodyContext(
         val right = translateExpr(children.last)
         s"$left /* op? */ $right"
 
-  private def translateFunctionExpr(node: RastNode): String =
+  /** A JS function literal as a Scala lambda. Its parameters are locals of the types `paramTypes` gives by position (unknown where it gives none), shadowing any outer name; `discardsResult` says the
+    * caller ignores what the function returns, as an array's `forEach` does.
+    */
+  private def translateFunctionExpr(node: RastNode, paramTypes: List[Option[String]] = Nil, discardsResult: Boolean = false): String =
     val params    = node.children.filter(_.kind == "Parameter")
     val body      = node.children.find(_.kind == "Block")
     val paramStrs = params.map { p =>
       val name = p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
       snakeToCamel(name)
     }
+    // the value of an expression the function evaluates for its effect: nothing reads it where the caller discards the result
+    def effect(e: RastNode): String = if discardsResult then withStatementRoot(unparenthesized(e))(translateExpr(e)) else translateExpr(e)
 
-    body match
-      case Some(block) =>
-        if block.children.size == 1 && block.children.head.kind == "ReturnStatement" then
-          val ret  = block.children.head
-          val expr = ret.children.headOption.map(translateExpr).getOrElse("()")
+    withLambdaParams(paramStrs, paramTypes) {
+      body match
+        case Some(block) =>
+          if block.children.size == 1 && block.children.head.kind == "ReturnStatement" then
+            val ret  = block.children.head
+            val expr = ret.children.headOption.map(translateExpr).getOrElse("()")
+            if paramStrs.isEmpty then s"(() => $expr)"
+            else s"((${paramStrs.mkString(", ")}) => $expr)"
+          else if block.children.size == 1 && block.children.head.kind == "ExpressionStatement" then
+            // a block with no `return` answers `undefined`, which only a caller discarding the result never sees
+            if !discardsResult then refuse("function-returns-undefined")
+            val expr = block.children.head.children.headOption.map(effect).getOrElse("()")
+            if paramStrs.isEmpty then s"(() => $expr)"
+            else s"((${paramStrs.mkString(", ")}) => $expr)"
+          else translateFunctionBlock(block, paramStrs, discardsResult)
+        case None =>
+          // Arrow without block: single expression body
+          val exprBody = node.children.find(c => c.kind != "Parameter")
+          val expr     = exprBody.map(effect).getOrElse("???")
           if paramStrs.isEmpty then s"(() => $expr)"
           else s"((${paramStrs.mkString(", ")}) => $expr)"
-        else if block.children.size == 1 && block.children.head.kind == "ExpressionStatement" then
-          val expr = block.children.head.children.headOption.map(translateExpr).getOrElse("()")
-          if paramStrs.isEmpty then s"(() => $expr)"
-          else s"((${paramStrs.mkString(", ")}) => $expr)"
-        else
-          // Multi-statement function body -- use a fresh context for the lambda's own scope
-          val innerIndent = baseIndent + "    "
-          val innerCtx    = new BodyContext(
-            entry,
-            hierarchy,
-            innerIndent,
-            apiLookup = apiLookup,
-            memberRenames = memberRenames,
-            oracle = oracle,
-            conventions = conventions,
-            tsTypes = tsTypes
-          )
-          innerCtx.translateBlock(block)
-          refusals ++= innerCtx.refusals
-          refusalSites ++= innerCtx.refusalSites
-          val bodyStr = innerCtx.result().stripTrailing()
-          if paramStrs.isEmpty then s"(() => {\n$bodyStr\n$baseIndent  })"
-          else s"((${paramStrs.mkString(", ")}) => {\n$bodyStr\n$baseIndent  })"
-      case None =>
-        // Arrow without block: single expression body
-        val exprBody = node.children.find(c => c.kind != "Parameter")
-        val expr     = exprBody.map(translateExpr).getOrElse("???")
-        if paramStrs.isEmpty then s"(() => $expr)"
-        else s"((${paramStrs.mkString(", ")}) => $expr)"
+    }
+
+  /** Renders `render` with lambda parameters bound as this body's locals, each of its type where one is given and of no known type otherwise, restoring whatever they shadowed. */
+  private def withLambdaParams[A](names: List[String], types: List[Option[String]])(render: => A): A =
+    val saved = names.map(n => (n, localNames.contains(n), localTypes.get(n), opaqueLocals.contains(n), narrowedIds.get(n), unwrappedIds.contains(n)))
+    names.zipWithIndex.foreach { (n, i) =>
+      localNames += n
+      narrowedIds.remove(n)
+      unwrappedIds -= n
+      types.lift(i).flatten match
+        case Some(t) =>
+          localTypes(n) = t
+          opaqueLocals -= n
+        case None =>
+          localTypes.remove(n)
+          opaqueLocals += n
+    }
+    try render
+    finally
+      saved.reverse.foreach { (n, wasLocal, tpe, wasOpaque, narrowed, unwrapped) =>
+        if wasLocal then localNames += n else localNames -= n
+        tpe.fold(localTypes.remove(n))(localTypes.put(n, _))
+        if wasOpaque then opaqueLocals += n else opaqueLocals -= n
+        narrowed.fold(narrowedIds.remove(n))(narrowedIds.put(n, _))
+        if unwrapped then unwrappedIds += n else unwrappedIds -= n
+      }
+
+  // a multi-statement function body, in a fresh context for the lambda's own scope
+  private def translateFunctionBlock(block: RastNode, paramStrs: List[String], discardsResult: Boolean): String =
+    // a body that can run off its end answers `undefined` there, which only a caller discarding the result never sees
+    if !discardsResult && !block.children.lastOption.exists(exitsAlways) then refuse("function-returns-undefined")
+    val innerIndent = baseIndent + "    "
+    val innerCtx    = new BodyContext(
+      entry,
+      hierarchy,
+      innerIndent,
+      apiLookup = apiLookup,
+      memberRenames = memberRenames,
+      oracle = oracle,
+      conventions = conventions,
+      tsTypes = tsTypes,
+      nameableTypes = nameableTypes
+    )
+    innerCtx.translateBlock(block)
+    refusals ++= innerCtx.refusals
+    refusalSites ++= innerCtx.refusalSites
+    val bodyStr = innerCtx.result().stripTrailing()
+    if paramStrs.isEmpty then s"(() => {\n$bodyStr\n$baseIndent  })"
+    else s"((${paramStrs.mkString(", ")}) => {\n$bodyStr\n$baseIndent  })"
 
   /** Translate a lambda whose result is used as a Boolean predicate (filter, find, some/exists, every/forall, findIndex). The body expression goes through truthiness lowering: a String becomes
     * `.nonEmpty`, a Nullable becomes `.isDefined`, unknown type refuses.
     */
-  private def translatePredicateLambda(node: RastNode, elemType: Option[String] = None): String =
+  private def translatePredicateLambda(node: RastNode, elemType: Option[String]): String =
     node.kind match
       case "ArrowFunction" | "FunctionExpression" =>
         val params    = node.children.filter(_.kind == "Parameter")
@@ -1644,42 +1716,27 @@ private[dedicated] class BodyContext(
           val name = p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
           snakeToCamel(name)
         }
-        val paramNames = params.flatMap(_.children.find(_.kind == "Identifier").flatMap(_.text)).map(snakeToCamel).toSet
-        // Register the lambda parameter type from the element type so that
-        // truthiness lowering knows the parameter's type
-        val savedTypes = mutable.Map.empty[String, String]
-        elemType.foreach { et =>
-          paramStrs.headOption.foreach { pn =>
-            localTypes.get(pn).foreach(old => savedTypes(pn) = old)
-            localTypes(pn) = et
-          }
-        }
+        // JS passes the index and the array too; a Scala predicate takes the element alone
+        if params.size > 1 then refuse("callback-index-parameter")
         val body     = node.children.find(_.kind == "Block")
         val exprNode = body match
           case Some(block) =>
             if block.children.size == 1 && block.children.head.kind == "ReturnStatement" then block.children.head.children.headOption
-            else if block.children.size == 1 && block.children.head.kind == "ExpressionStatement" then block.children.head.children.headOption
-            else None // multi-statement: fall back to normal translation
+            else None // anything else: the plain lambda, which refuses a body that can answer `undefined`
           case None => node.children.find(c => c.kind != "Parameter")
-        val result = exprNode match
+        exprNode match
           case Some(expr) =>
-            // In predicate context, an expression whose type is unknown and
-            // is not already Boolean must refuse
-            val knownType = exprType(expr)
-            if knownType.isEmpty && expr.kind == "Identifier" then refuse("truthiness-unknown-type")
-            val translated = translateCondition(expr)
-            if paramStrs.isEmpty then s"(() => $translated)"
-            else s"((${paramStrs.mkString(", ")}) => $translated)"
-          case None =>
-            // Multi-statement or unparseable: fall back to normal
-            translateFunctionExpr(node)
-        // Restore saved types
-        paramStrs.headOption.foreach { pn =>
-          savedTypes.get(pn) match
-            case Some(old) => localTypes(pn) = old
-            case None      => localTypes.remove(pn)
-        }
-        result
+            // the element is the parameter's type, so that its truthiness test is known
+            withLambdaParams(paramStrs, List(elemType)) {
+              // In predicate context, an expression whose type is unknown and
+              // is not already Boolean must refuse
+              val knownType = exprType(expr)
+              if knownType.isEmpty && expr.kind == "Identifier" then refuse("truthiness-unknown-type")
+              val translated = translateCondition(expr)
+              if paramStrs.isEmpty then s"(() => $translated)"
+              else s"((${paramStrs.mkString(", ")}) => $translated)"
+            }
+          case None => translateFunctionExpr(node, List(elemType))
       case _ =>
         // Not a lambda literal: translate as-is
         translateExpr(node)

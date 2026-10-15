@@ -155,8 +155,15 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     val typed = translate(block(local("n", node("NumberKeyword"), num(0)), ret(ident("n"))))
     accepts(typed)
     assert(typed.scalaBody.contains(" n: Double = 0"), typed.scalaBody)
+    // `number[]` is a buffer of doubles; an array of a type no Scala name spells is refused
+    assert(
+      translate(block(local("xs", node("ArrayType", node("NumberKeyword")), node("ArrayLiteralExpression")), ret(ident("xs")))).scalaBody
+        .contains("val xs: scala.collection.mutable.ArrayBuffer[Double] = scala.collection.mutable.ArrayBuffer.empty[Double]")
+    )
     refuses(
-      translate(block(local("xs", node("ArrayType", node("NumberKeyword")), node("ArrayLiteralExpression")), ret(ident("xs")))),
+      translate(
+        block(local("xs", node("ArrayType", node("TypeReference", ident("Shape"))), node("ArrayLiteralExpression")), ret(ident("xs")))
+      ),
       "local-type-annotation:ArrayType"
     )
     refuses(translate(block(local("v", RastNode("NullKeyword", 0, (0, 0))), ret(ident("v")))), "null-initialised-local")

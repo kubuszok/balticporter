@@ -176,3 +176,24 @@ object ReferenceDeclarations:
 
         tree.stats.foreach(member(_, "", true))
         Right(out.result())
+
+  /** The simple type names `source` writes in a type position, never a type parameter, a declaration's own name or the last part of a qualified type: a body emitted into this file can write each one
+    * and mean what the file's own signatures mean by it. Empty when the source does not parse.
+    */
+  def typeNamesIn(fileName: String, source: String): Set[String] =
+    dialects.Scala3(Input.VirtualFile(fileName, source)).parse[Source] match
+      case _: Parsed.Error => Set.empty
+      case Parsed.Success(tree) =>
+        val notWritten = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[Tree, java.lang.Boolean]())
+        val tparams    = scala.collection.mutable.Set.empty[String]
+        tree.traverse {
+          case s: Type.Select  => notWritten.add(s.name)
+          case p: Type.Project => notWritten.add(p.name)
+          case d: Defn.Class   => notWritten.add(d.name)
+          case d: Defn.Trait   => notWritten.add(d.name)
+          case d: Defn.Enum    => notWritten.add(d.name)
+          case d: Defn.Type    => notWritten.add(d.name)
+          case d: Decl.Type    => notWritten.add(d.name)
+          case p: Type.Param   => tparams += p.name.value; notWritten.add(p.name)
+        }
+        tree.collect { case n: Type.Name if !notWritten.contains(n) && !tparams.contains(n.value) => n.value }.toSet

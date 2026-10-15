@@ -73,6 +73,8 @@ object DefmethodBodyTranslator:
     *   reference says nothing about a value; empty reads none. */
   /** @param enclosingClass the class the body is emitted into, when the reference made a JS function into that class: a name an
     *   enclosing JS function binds is read as the class's member of that name, and refused when the class declares none. */
+  /** @param nameableTypes the simple type names the target reference file writes itself (`ReferenceDeclarations.typeNamesIn`): the body may write
+    *   these as type arguments and ascriptions, besides the primitives and `String`; empty writes none. */
   def translateBody(
       entry: DefmethodEntry,
       hierarchy: List[DefnodeClass],
@@ -92,8 +94,9 @@ object DefmethodBodyTranslator:
       conventions: JsConventions = JsConventions.plain,
       tsTypes: Map[String, RastType] = Map.empty,
       enclosingClass: Option[String] = None,
+      nameableTypes: Set[String] = Set.empty,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions, tsTypes, enclosingClass)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions, tsTypes, enclosingClass, nameableTypes)
     ctx.translateBlock(entry.bodyNode)
     ctx.checkUnresolvedReferences()
     TranslationResult(

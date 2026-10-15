@@ -23,7 +23,8 @@ abstract private[dedicated] class BodyScope(
   val enclosingOwner:     Option[String],
   val conventions:        JsConventions,
   val tsTypes:            Map[String, RastType],
-  val enclosingClass:     Option[String]
+  val enclosingClass:     Option[String],
+  val nameableTypes:      Set[String]
 ):
   val sb                 = new StringBuilder
   val refusals           = mutable.ListBuffer.empty[String]
@@ -135,10 +136,13 @@ abstract private[dedicated] class BodyScope(
       }
     node.`type`.flatMap(booleanish(_, 0)).contains(true)
 
+  // lambda parameters in scope whose type nothing gives: they shadow every outer name and have no type
+  protected val opaqueLocals = mutable.Set.empty[String]
+
   private def declaredType(node: RastNode): Option[String] =
     node.kind match
       case "Identifier" =>
-        node.text.flatMap { name =>
+        node.text.filterNot(n => opaqueLocals(snakeToCamel(n))).flatMap { name =>
           val scalaName = snakeToCamel(name)
           localTypes.get(scalaName).orElse(localTypes.get(name)).orElse(paramTypes.get(scalaName)).orElse(paramTypes.get(name)).orElse {
             outerBinding(name) match
@@ -291,7 +295,20 @@ abstract private[dedicated] class BodyScope(
       case "BooleanKeyword"                        => Right("Boolean")
       case "TypeReference" if t.children.size == 1 =>
         t.children.head.text.filter(n => ctorSchema.get(n).isDefined || memberIndex.knowsType(n)).toRight("TypeReference")
+      // `T[]` is a JS array: a mutable buffer of `T`, kept only where the body can write `T`, since `[]` must name it
+      case "ArrayType" if t.children.size == 1 =>
+        annotationType(t.children.head).toOption.filter(writableType).map(e => s"scala.collection.mutable.ArrayBuffer[$e]").toRight("ArrayType")
       case other => Left(other)
+
+  private val standardCollections = Set("Vector", "List", "Seq", "IndexedSeq", "Option", "Map", "Set")
+
+  /** True when the body can write `t` as a type and mean what the target file means: every name in it is a primitive, `String`, a standard collection, a fully qualified `scala.collection` type or a
+    * name the file writes itself (`nameableTypes`).
+    */
+  protected def writableType(t: String): Boolean =
+    val unqualified = t.replace("scala.collection.mutable.", "").replace("scala.collection.immutable.", "")
+    val names       = "[A-Za-z_][A-Za-z0-9_]*".r.findAllIn(unqualified).toList
+    names.nonEmpty && !unqualified.contains('.') && names.forall(n => portableType(n) || standardCollections(n) || n == "ArrayBuffer" && t.contains("scala.collection.mutable.") || nameableTypes(n))
 
   protected def extractElementType(tpe: String): Option[String] =
     val bracketIdx = tpe.indexOf('[')
@@ -367,6 +384,21 @@ abstract private[dedicated] class BodyScope(
     def walk(n: RastNode): Unit = n.children.foreach { c => out.put(c, n); walk(c) }
     walk(entry.bodyNode)
     out
+
+  /** The node `n` sits in, by identity; none for the body itself. */
+  protected def parentOf(n: RastNode): Option[RastNode] = Option(parents.get(n))
+
+  /** The immutable sequence a slot declares, and the conversion that copies a buffer into it. */
+  protected val handOverConversions: Map[String, String] = Map("Vector" -> "toVector", "List" -> "toList", "IndexedSeq" -> "toIndexedSeq", "Seq" -> "toSeq")
+
+  /** True for the type of a mutable buffer a JS array local is kept in. */
+  protected def isMutableBuffer(t: String): Boolean = baseName(t) == "ArrayBuffer" && extractElementType(t).isDefined
+
+  /** True when a buffer handed to `slot` is copied there: the slot is an immutable sequence. */
+  protected def isHandOverSlot(slot: String): Boolean = handOverConversions.contains(baseName(slot)) && extractElementType(slot).isDefined
+
+  /** `n` without its source position: two reads of one receiver compare equal. */
+  protected def shapeOf(n: RastNode): String = shape(n)
 
   // a node's shape without its source position: two reads of one receiver compare equal
   private def shape(n: RastNode): String = s"${n.kind}(${n.text.getOrElse("")}${n.value.fold("")(_.toString)}${n.children.map(shape).mkString(",")})"
@@ -497,6 +529,11 @@ abstract private[dedicated] class BodyScope(
     then ()
     // a value that may be absent where the slot requires one: JS read it after a guard Scala does not see
     else if isOptionLike(have) && !isOptionLike(want) && !want.contains("| Null") then refuse("optional-at-required-slot")
+    // a JS array local at an immutable slot is copied there, where the slot's translation decides whether the copy is unobservable
+    else if isMutableBuffer(have) && isHandOverSlot(want) then
+      (extractElementType(have), extractElementType(want)) match
+        case (Some(he), Some(we)) => checkTypeCompatibility(he, we)
+        case _                    => ()
     else if haveBase == wantBase then
       // Same container: compare element types when both are parameterized
       val haveElem = extractElementType(have)

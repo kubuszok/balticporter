@@ -50,9 +50,11 @@ private[dedicated] trait BodyObjects extends BodyScope:
         c.kind == "SpreadAssignment" || c.kind == "MethodDeclaration"
     )
     if props.isEmpty then
-      // `{}` is a map only where its slot declares one; elsewhere it is an object of a shape nothing names
-      if !expected.exists(rt => rt.contains("Map") || rt.contains("map")) then refuse("js-map-construction")
-      "scala.collection.mutable.Map.empty[String, Any]"
+      // `{}` is a map only where its slot declares a MUTABLE one, which JS may then fill; elsewhere it is an object of a shape nothing names.
+      // The map takes the slot's key and value types, written out where the body can name them and inferred from the slot otherwise.
+      val mutableMap = expected.filter(rt => rt.startsWith("mutable.Map[") || rt.startsWith("scala.collection.mutable.Map["))
+      if mutableMap.isEmpty then refuse("js-map-construction")
+      mutableMap.map(rt => rt.substring(rt.indexOf('['))).filter(writableType).fold("scala.collection.mutable.Map.empty")(args => s"scala.collection.mutable.Map.empty$args")
     else
       // Extract literal key-value pairs
       val litEntries = props.flatMap { p =>
