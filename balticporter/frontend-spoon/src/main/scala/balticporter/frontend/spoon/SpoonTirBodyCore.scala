@@ -57,6 +57,9 @@ private[spoon] trait SpoonTirBodyCore:
   private[spoon] def isOwnThis(ta: CtThisAccess[?]): Boolean =
     Option(ta.getType).map(_.getQualifiedName).forall(_ == minter.fullNameOf(classId))
 
+  /** true when the source CAST this `this` (`((Sub) this).f`): the cast decides which member is reached, so the access is an ordinary receiver, never the bare or `this.`-qualified shortcut. */
+  private[spoon] def hasCast(ta: CtThisAccess[?]): Boolean = !ta.getTypeCasts.isEmpty
+
   /** A `this` used as a VALUE. Inside an anonymous class body it denotes the ANONYMOUS instance, not the enclosing one — only for a `this` Spoon EXPLICITLY types as the anonymous class, and only in
     * value position (as a member-access TARGET, the existing bare-name resolution stays in charge, matching java's own lexical resolution).
     */

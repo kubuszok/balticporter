@@ -394,12 +394,13 @@ private[spoon] trait SpoonTirBodyExprs:
         // name in Scala (inherited or enclosing). Only an OWN `this.f` needs qualifying.
         case _: CtSuperAccess[?] => Tree.Ident(fid, ty(at), originOf(at))
         case null => Tree.Ident(fid, ty(at), originOf(at))
-        case ta: CtThisAccess[?] if !isOwnThis(ta) =>
+        // a CAST `this` (`((Sub) this).f`) is an ordinary receiver: the cast is what names `f`
+        case ta: CtThisAccess[?] if !isOwnThis(ta) && !hasCast(ta) =>
           // as for calls: `Outer.this.f` is written precisely when an inherited/own `f` would
           // otherwise win, so the qualification is load-bearing. Bare only when the enclosing
           // instance is not really reachable (a static-nested boundary, or an inherited owner).
           outerThis(ta).map(q => Tree.Select(q, fid, ty(at), originOf(at))).getOrElse(Tree.Ident(fid, ty(at), originOf(at)))
-        case _: CtThisAccess[?] => Tree.Select(thisTerm(at), fid, ty(at), originOf(at))
+        case ta: CtThisAccess[?] if !hasCast(ta) => Tree.Select(thisTerm(at), fid, ty(at), originOf(at))
         case other =>
           // wildcard/raw receiver whose field type depends on its type vars → read through the
           // ERASED view, exactly as for a call (`erasedReceiverView`). The READ's type moves with
@@ -777,9 +778,9 @@ private[spoon] trait SpoonTirBodyExprs:
           // such a member, so `CharArray.this.append(cbuf)` inside `CharArrayWriter extends Writer`
           // is qualified precisely because the inherited `Writer.append` would otherwise win.
           // Emitted bare, Scala calls that ambiguous. Keep Java's qualification.
-          case ta: CtThisAccess[?] if !isOwnThis(ta) =>
+          case ta: CtThisAccess[?] if !isOwnThis(ta) && !hasCast(ta) =>
             shadowedImplicitCall(inv, mid, o).orElse(outerThis(ta).map(q => Tree.Select(q, mid, NoType, o))).getOrElse(Tree.Ident(mid, NoType, o))
-          case _: CtThisAccess[?] => Tree.Select(thisTerm(inv), mid, NoType, o)
+          case ta: CtThisAccess[?] if !hasCast(ta) => Tree.Select(thisTerm(inv), mid, NoType, o)
           case t =>
             val recv = expr(t)
             // wildcard/raw receiver whose callee depends on its type vars → call through the

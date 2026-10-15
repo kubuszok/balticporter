@@ -341,6 +341,10 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   Where a rule is not modelled the answer is "can": a wrong "cannot" deletes code java runs, a wrong
   "can" only duplicates unreachable code. Kind (a).
 
+- A member reached through a CAST `this` (`((Sub) this).f`, `((Sub) this).m()`) is an ordinary
+  receiver: the bare and `this.`-qualified shortcuts for an own `this` dropped the cast, and the
+  subclass member was looked up on the superclass (RegExodus `Term#toString`, 1 E008). Kind (a).
+
 ## Construction and generic arrays
 
 - `outer.new Inner()` names the enclosing instance; scala names it in the PATH, `new outer.Inner()`.
