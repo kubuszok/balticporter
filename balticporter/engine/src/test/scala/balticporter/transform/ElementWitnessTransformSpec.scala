@@ -181,6 +181,31 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
     assert(ported.out.contains("class Table[K <: java.lang.Object]"))
   }
 
+  test("a method parameter fed to a subject keeps its bound where it also reaches a class that kept java's `Object` bound") {
+    val src =
+      """package com.demo;
+        |class Bag<T> {
+        |  T[] items;
+        |  Bag (int n) { items = (T[])new Object[n]; }
+        |  void add (T t) {}
+        |}
+        |class Table<K> {
+        |  K[] keyTable;
+        |  Table (int n) { keyTable = (K[])new Object[n]; }
+        |}
+        |class Util {
+        |  static <T> void copy (Table<T> src, Bag<T> dst) {}
+        |  static <T> void fill (Bag<T> dst) {}
+        |  static <T> void local (Bag<T> dst) { Table<T> t = null; }
+        |}
+        |""".stripMargin
+    val p   = phase(subjects = Map("com.demo.Bag" -> List(0), "com.demo.Table" -> List(0)), unbound = Set("com.demo.Bag"))
+    val out = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src, "Util.java"), List(p))).emit
+    assert(clue(out).contains("def copy[T <: java.lang.Object](src: com.demo.Table[T], dst: com.demo.Bag[T])"))
+    assert(out.contains("def local[T <: java.lang.Object]("))
+    assert(out.contains("def fill[T](dst: com.demo.Bag[T])"))
+  }
+
   test("the drop is recorded as a decision naming the element parameter") {
     val d = ported.log.all.filter(_.subjectFqn == "com.demo.Bag").filter(_.kind == balticporter.tir.Decision.Kind.RetypedSignature)
     assert(clue(d).nonEmpty)

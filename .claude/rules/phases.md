@@ -355,6 +355,9 @@ sees the kind); the screen is *would a reader act differently*.
   value, applies the operator and writes the result wrapped: a string concatenation reads null as
   java does (`orNull`), any other operator dereferences (java unboxes). Wrapping only the right
   operand emitted `Nullable + Nullable` (gdx-tools, 1 E008). Kind (a).
+- A METHOD's own type parameter that feeds a bound-dropped subject keeps java's `Object` bound where
+  the method also hands it to a class that KEPT the bound (`copy[T](ObjectSet[T], DynamicArray[T])`):
+  unbounded it no longer satisfies `ObjectSet[T <: Object]` (gltf, 1 E057). Kind (a).
 - `requiredGivens`' transitive closure threads a witness at EVERY type parameter a given-bound class
   is constructed at (`ValueArrayMap[K, V]` building `DynamicArray[K]` and `DynamicArray[V]`); the
   first parameter alone left the second construction without a given (gdx-vfx, 1 E172). Kind (a).

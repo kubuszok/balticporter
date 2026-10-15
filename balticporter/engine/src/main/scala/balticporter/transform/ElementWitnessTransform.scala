@@ -305,6 +305,37 @@ final class ElementWitnessTransform(
     def signatureTypes(d: Tree.DefDef): List[TypeRepr] =
       d.paramss.flatten.map(_.tpt.tpe) :+ d.returnTpt.tpe
 
+    /** every type a method writes down — its signature and every type in its body. */
+    def typesIn(d: Tree.DefDef): List[TypeRepr] =
+      val acc  = collection.mutable.ListBuffer.empty[TypeRepr]
+      val scan = new Phase:
+        def name:                                               String   = "type-class-array/kept-bound"
+        override def transformType(t: TypeRepr)(using Program): TypeRepr = { acc += t; t }
+      d.rhs.foreach(r => StandardTraversal.mapTerm(scan, r)(using program0))
+      signatureTypes(d) ++ acc
+
+    /** Is `tp` handed to an owned class at a type-parameter position that KEEPS java's `Object` bound (`ObjectSet[T]`)? Unbounded, `tp` would no longer satisfy that class, so it keeps its own bound.
+      */
+    def keptBoundAt(types: List[TypeRepr], tp: SymId): Boolean =
+      var hit = false
+      def walk(t: TypeRepr): Unit = t match
+        case TypeRepr.AppliedType(TypeRepr.TypeRef(_, c), args) =>
+          tparamsOfClass.get(c).foreach { tps =>
+            args.zip(tps).foreach {
+              case (TypeRepr.TypeRef(_, s), ctp) if s == tp && objectBounded(ctp) && !unboundClassTparams(ctp) => hit = true
+              case _                                                                                           => ()
+            }
+          }
+          args.foreach(walk)
+        case TypeRepr.AppliedType(tc, args) => walk(tc); args.foreach(walk)
+        case TypeRepr.AndType(l, r)         => walk(l); walk(r)
+        case TypeRepr.OrType(l, r)          => walk(l); walk(r)
+        case TypeRepr.ByNameType(u)         => walk(u)
+        case TypeRepr.TypeBounds(lo, hi)    => walk(lo); walk(hi)
+        case _                              => ()
+      types.foreach(walk)
+      hit
+
     /** Does this method's BODY construct a subject class at its own type parameter `tp`? That is the shape of a generic FACTORY (`Array.of`, `ObjectSet.with`), which the constructor threading cannot
       * see: the clause belongs on the METHOD, not on any class. A RAW `new` — java wrote no type argument — owes the witness just as much, and is recognised where the declaration leaves only one
       * answer for which parameter it means.
@@ -814,10 +845,14 @@ final class ElementWitnessTransform(
         // A method DECLARED IN a type whose element bound is dropped is reached from that type's
         // own body with the unbounded parameter, so it inherits the drop — `TimSort[T]` calling
         // its companion's `binarySort[T <: java.lang.Object]` is a bound violation otherwise.
-        val unboundHere = d.tparams.filter(td =>
-          inUnbound ||
-            feedsSubject(signatureTypes(d), td.symbol, unboundOnly = true) ||
-            constructsSubjectAt(d, td.symbol, unboundOnly = true)
+        // …and a method parameter it FEEDS a subject at keeps the bound where it also reaches a
+        // class that kept java's `Object` bound: that class would not admit it unbounded.
+        lazy val written = typesIn(d)
+        val unboundHere  = d.tparams.filter(td =>
+          inUnbound || (
+            (feedsSubject(signatureTypes(d), td.symbol, unboundOnly = true) || constructsSubjectAt(d, td.symbol, unboundOnly = true)) &&
+              !keptBoundAt(written, td.symbol)
+          )
         )
         val elems   = classElems ++ threaded.map(td => td.symbol -> TypeRepr.TypeRef(TypeRepr.NoPrefix, td.symbol)).toMap
         val tparams = d.tparams.map(td => if unboundHere.exists(_.symbol == td.symbol) then dropUpperBound(td) else td)
