@@ -83,10 +83,10 @@ private[dedicated] trait BodyObjects extends BodyScope:
           // A key the class has no field for would be dropped silently.
           if keyed.exists(k => k._2.isEmpty || k._3.isEmpty) || props.exists(p => p.kind != "PropertyAssignment" && p.kind != "ShorthandPropertyAssignment") then
             refuse("object-literal-unknown-field")
-            emitObjectLiteralAsMap(props)
+            emitObjectLiteralAsMap(props, None)
           else if missing.nonEmpty || keyed.map(_._2).distinct.size != keyed.size then
             refuse("object-literal-missing-field")
-            emitObjectLiteralAsMap(props)
+            emitObjectLiteralAsMap(props, None)
           else
             // in the literal's own order, which is the order JS evaluates its values in
             val args = keyed.collect { case (_, Some(param), Some(valueNode)) =>
@@ -97,8 +97,8 @@ private[dedicated] trait BodyObjects extends BodyScope:
             s"${typeName.get}(${args.mkString(", ")})"
         case None =>
           // No schema: fall back to mutable.Map, refuse unless the slot declares a Map
-          if !expected.exists(rt => rt.contains("Map") || rt.contains("map")) then refuse("js-map-construction")
-          emitObjectLiteralAsMap(props)
+          if !expected.exists(rt => baseName(rt) == "Map" && mapValueType(rt).isDefined) then refuse("js-map-construction")
+          emitObjectLiteralAsMap(props, expected)
 
   /** The class a `{ <tag>: "Y", … }` literal builds: the ONE class the reference declares with that tag, when the slot names no type or a type the class extends. */
   private def taggedClass(entries: List[(String, Option[RastNode])], expected: Option[String]): Option[String] =
@@ -112,26 +112,24 @@ private[dedicated] trait BodyObjects extends BodyScope:
       if expected.forall(e => memberIndex.ancestry(cls).contains(baseName(e)) || Set("Any", "AnyRef")(baseName(e)))
     yield cls
 
-  private def emitObjectLiteralAsMap(props: List[RastNode]): String =
-    val entries = props.map { p =>
-      p.kind match
-        case "PropertyAssignment" =>
-          val key   = p.children.headOption.flatMap(_.text).getOrElse("?")
-          val value = p.children.drop(1).headOption.map(translateExpr).getOrElse("???")
-          s"\"${escapeString(key)}\" -> $value"
-        case "ShorthandPropertyAssignment" =>
-          val key = p.children.headOption.flatMap(_.text).getOrElse("?")
-          s"\"${escapeString(key)}\" -> ${snakeToCamel(key)}"
-        case "SpreadAssignment" =>
-          val expr = p.children.headOption.map(translateExpr).getOrElse("???")
-          s"/* spread */ $expr"
-        case "MethodDeclaration" =>
-          val name = p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("?")
-          refuse(s"MethodInObject:$name")
-          s"\"$name\" -> ??? /* method */"
-        case _ => "??? /* unknown prop */"
+  /** An object literal used as a dictionary, built as the map its slot declares (`expected`): each key the string JS makes of it, each value at the map's value type and evaluated in the literal's
+    * order. A spread, a method or a computed key builds what no list of pairs says, and is refused.
+    */
+  private def emitObjectLiteralAsMap(props: List[RastNode], expected: Option[String]): String =
+    val valueType = expected.flatMap(mapValueType)
+    val entries   = props.map { p =>
+      val keyNode = p.children.headOption
+      val key     = keyNode.flatMap(k => if k.kind == "Identifier" then k.text else if k.kind == "StringLiteral" then k.value.collect { case balticporter.frontend.ts.RastValue.Str(s) => s } else None)
+      def value(v: RastNode): String = s"(${valueType.fold(translateExpr(v))(translateExprAt(v, _))})"
+      (p.kind, key) match
+        case ("PropertyAssignment", Some(k)) if p.children.size >= 2 => s"\"${escapeString(k)}\" -> ${value(p.children(1))}"
+        case ("ShorthandPropertyAssignment", Some(k))                => s"\"${escapeString(k)}\" -> ${value(keyNode.get)}"
+        case _                                                       =>
+          refuse("object-literal-entry")
+          "??? /* entry */"
     }
-    s"scala.collection.mutable.Map(${entries.mkString(", ")})"
+    val mutable = expected.exists(rt => rt.startsWith("mutable.Map[") || rt.startsWith("scala.collection.mutable.Map["))
+    s"scala.collection.${if mutable then "mutable" else "immutable"}.Map(${entries.mkString(", ")})"
 
   /** A node-factory call `f(Cls, orig, { prop: val, ... })`: `{ val $n = new Cls(); $n.prop = val; $n }`. */
   protected def translateMakeNode(args: List[RastNode]): String =

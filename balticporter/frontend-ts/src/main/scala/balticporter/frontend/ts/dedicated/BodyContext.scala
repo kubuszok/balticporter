@@ -542,17 +542,11 @@ private[dedicated] class BodyContext(
               case None        => translateExpr(arg)
           }
         )
-        // Refuse when a constructor argument's known type differs from the
-        // expected parameter type (e.g. passing Settings where Boolean is expected)
+        // a constructor argument is checked against its parameter as a call's is (Settings where a Boolean is expected is refused)
         if named.isEmpty then
-          for (arg, i) <- rawArgs.zipWithIndex do
-            ctorParamTypes.lift(i).foreach { param =>
-              exprType(arg).foreach { argType =>
-                val expectedBase = param.tpe.takeWhile(c => c != '[' && c != ' ')
-                val argBase      = argType.takeWhile(c => c != '[' && c != ' ')
-                if expectedBase != argBase && expectedBase != "Any" && argBase != "Any" then refuse("constructor-arg-type-mismatch")
-              }
-            }
+          for (arg, i) <- rawArgs.zipWithIndex; param <- ctorParamTypes.lift(i); argType <- exprType(arg) do checkTypeCompatibility(argType, param.tpe)
+          // more arguments than the constructor takes, or one left out that has no default to stand for JS's `undefined`
+          if ctorSchema.get(cls).exists(ps => rawArgs.size > ps.size || ps.drop(rawArgs.size).exists(!_.hasDefault)) then refuse("callee-arity-mismatch")
         cls match
           case "Array" =>
             if args.isEmpty then "scala.collection.mutable.ArrayBuffer.empty[Any]"

@@ -118,4 +118,27 @@ class DefmethodBodyOptionalSpec extends munit.FunSuite:
     val nested = translate(block(expr(call(ident("f"), node("ArrowFunction", block(expr(double))))), ret(ident("n"))), Map("n" -> "Double"), "Double")
     assert(nested.refusalReasons.contains("reassigned-immutable"), nested.refusalReasons.toString)
 
+  test(
+    "a subclass the reference declares fits its parent's slot, and an immutable sequence of it, but never a buffer of the parent"
+  ):
+    val mi      = ReferenceSignatures.MemberIndex(Map("Base" -> Set.empty, "Sub" -> Set.empty), parents = Map("Sub" -> List("Base")))
+    val sigs    = List("one" -> "Base", "all" -> "Vector[Base]", "buf" -> "scala.collection.mutable.ArrayBuffer[Base]")
+    val callees = ReferenceSignatures.CalleeIndex(sigs.map((m, _) => ReferenceSignatures.MemberRef("Obj", m, "Obj", isPrivate = false)), Set("Obj"))
+    val oracle  = ReferenceSignatures.TypeOracle.fromEntries(sigs.map((m, t) => "Obj" -> ReferenceSignatures.MethodSig(m, List(ReferenceSignatures.ParamSig("p", t)), "Unit")))
+    def run(callee: String, argType: String) =
+      DefmethodBodyTranslator.translateBody(
+        DefmethodEntry("_free_", "test", List("x"), block(expr(call(ident(callee), ident("x"))))),
+        Nil,
+        "    ",
+        returnType = Some("Unit"),
+        paramTypes = Map("x" -> argType),
+        calleeIndex = callees,
+        memberIndex = mi,
+        oracle = oracle,
+        enclosingOwner = Some("Obj")
+      )
+    assert(run("one", "Sub").isComplete)
+    assert(run("all", "Vector[Sub]").isComplete)
+    assert(run("buf", "scala.collection.mutable.ArrayBuffer[Sub]").refusalReasons.contains("argument-type-mismatch:Sub->Base"))
+
   extension (n: RastNode) private def pipe(f: RastNode => RastNode): RastNode = f(n)

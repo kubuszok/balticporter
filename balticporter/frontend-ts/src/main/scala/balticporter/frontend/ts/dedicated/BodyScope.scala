@@ -579,10 +579,12 @@ abstract private[dedicated] class BodyScope(
   /** Check whether `have` is compatible with `want`. When both are known specific types with different base names that are not in a subtype relationship the member index can prove, refuse
     * argument-type-mismatch.
     */
-  protected def checkTypeCompatibility(have: String, want: String): Unit =
+  protected def checkTypeCompatibility(have: String, want: String, subtypes: Boolean = true): Unit =
     val haveBase = baseName(have)
     val wantBase = baseName(want)
-    if wantBase == "Any" || wantBase == "AnyRef" || haveBase == "Any" ||
+    // a class the reference declares extending the slot's, at a slot that admits a subtype (a covariant element's or none at all)
+    if subtypes && haveBase != wantBase && memberIndex.knowsType(haveBase) && memberIndex.ancestry(haveBase).contains(wantBase) && !want.contains('[') then ()
+    else if wantBase == "Any" || wantBase == "AnyRef" || haveBase == "Any" ||
       haveBase == "Nothing" || wantBase == "Nothing" || haveBase == "Null"
     then ()
     // a value that may be absent where the slot requires one: JS read it after a guard Scala does not see
@@ -590,7 +592,8 @@ abstract private[dedicated] class BodyScope(
     // a present value at an optional slot is wrapped there, so it must be of the slot's inner type
     else if isOptionLike(want) && !isOptionLike(have) then checkTypeCompatibility(have, optionInner(want))
     // two optionals of one spelling hold values of their inner types
-    else if isOptionLike(want) && isOptionLike(have) && haveBase == wantBase then checkTypeCompatibility(optionInner(have), optionInner(want))
+    // (an `Option` is covariant, a `Nullable` is not)
+    else if isOptionLike(want) && isOptionLike(have) && haveBase == wantBase then checkTypeCompatibility(optionInner(have), optionInner(want), subtypes = haveBase == "Option")
     // a JS array local at an immutable slot is copied there, where the slot's translation decides whether the copy is unobservable
     else if isMutableBuffer(have) && isHandOverSlot(want) then
       (extractElementType(have), extractElementType(want)) match
@@ -600,8 +603,9 @@ abstract private[dedicated] class BodyScope(
       // Same container: compare element types when both are parameterized
       val haveElem = extractElementType(have)
       val wantElem = extractElementType(want)
+      // an immutable sequence holds a subtype's elements; a buffer or an array only its own element type
       (haveElem, wantElem) match
-        case (Some(he), Some(we)) => checkTypeCompatibility(he, we)
+        case (Some(he), Some(we)) => checkTypeCompatibility(he, we, subtypes = handOverConversions.contains(haveBase))
         case _                    => () // same base, no type params or not extractable
     else if numericTypes.contains(haveBase) && numericTypes.contains(wantBase) then
       // a fractional number at an integral slot does not narrow implicitly in Scala, and JS never truncates there
@@ -612,6 +616,11 @@ abstract private[dedicated] class BodyScope(
     else if isSpecificClassType(have) && isSpecificClassType(want) then
       // Two specific class types with different base names: refuse
       refuse(s"argument-type-mismatch:$haveBase->$wantBase")
+    // a class where a primitive or a string is required, or the other way round; a string at an enumeration's slot names its member, which the slot's translation resolves or refuses
+    else if (isSpecificClassType(have) && scalarTypes(wantBase)) || (scalarTypes(haveBase) && isSpecificClassType(want) && !(haveBase == "String" && enumIndex.byValue.keys.exists(_._1 == wantBase)))
+    then refuse(s"argument-type-mismatch:$haveBase->$wantBase")
+
+  private val scalarTypes = Set("String", "Boolean", "Char", "Int", "Long", "Short", "Byte", "Double", "Float")
 
   /** Renders an expression; the renderer supplies it, the text conversions below call it. */
   def translateExpr(node: RastNode): String

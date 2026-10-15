@@ -499,3 +499,10 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   nested functions included; one a nested function writes stays refused (`reassigned-immutable`).
   A local starting from an integer literal that a store makes fractional is declared `Double`, as
   every JS number is. graphs-commons 46 -> 47, KaTeX 53 -> 54, terser 35 -> 36.
+- (a) A value fits a slot of a class the reference declares as one of its ancestors (a covariant
+  `Vector`/`Option` element too, never a buffer's, an array's or a `Nullable`'s), and a constructor
+  argument is checked as a call's: more arguments than the constructor takes, or one left out
+  with no default, is refused, and a class where a scalar is required (or the reverse) is
+  refused, a string at an enumeration's slot excepted. An object literal used as a map keys each
+  entry by the string JS makes of it and parenthesises its value: a quoted key had been emitted
+  as `"?"` and `"k" -> a + b` reads `("k" -> a) + b`. KaTeX 54 -> 58.

@@ -56,6 +56,13 @@ class DefmethodBodySwitchSpec extends munit.FunSuite:
     val r     = translate(block(switch(ident("s"), caseOf(str("a"), early, expr(call(ident("f"))), brk))), Map("s" -> "String", "c" -> "Boolean"))
     assert(r.refusalReasons.contains("switch-break-in-middle"), r.refusalReasons.toString)
 
+  test("an object literal at a map slot keys each entry by the string JS makes of it, its value whole"):
+    val plus = node("BinaryExpression", ident("w"), str("em")).copy(operator = Some("PlusToken"))
+    val lit  = node("ObjectLiteralExpression", node("PropertyAssignment", str("width"), plus))
+    val r    = translate(block(node("ReturnStatement", lit)), Map("w" -> "String"), returnType = "scala.collection.mutable.Map[String, String]")
+    assert(r.isComplete, r.refusalReasons.toString)
+    assertNoDiff(r.scalaBody.trim, "scala.collection.mutable.Map(\"width\" -> (w + \"em\"))")
+
   test("an object literal's values are passed in the literal's order, a backticked field by its own key"):
     val schema = ReferenceSignatures.ConstructorSchema(
       Map("OpSet" -> List(ReferenceSignatures.CtorParam("type", "String", false), ReferenceSignatures.CtorParam("ops", "Int", false)))
