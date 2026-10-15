@@ -36,7 +36,9 @@ private[dedicated] trait BodyArrays extends BodyScope:
     */
   private def isLastUseOfFreshLocal(id: RastNode): Boolean =
     id.text.exists { name =>
-      val binders = allNodes.filter(n => Set("VariableDeclaration", "Parameter", "BindingElement", "FunctionDeclaration")(n.kind) && n.children.headOption.exists(c => c.kind == "Identifier" && c.text.contains(name))).toList
+      val binders = allNodes
+        .filter(n => Set("VariableDeclaration", "Parameter", "BindingElement", "FunctionDeclaration")(n.kind) && n.children.headOption.exists(c => c.kind == "Identifier" && c.text.contains(name)))
+        .toList
       binders match
         case List(decl) if decl.kind == "VariableDeclaration" && decl.children.lastOption.exists(_.kind == "ArrayLiteralExpression") =>
           // in source order, which a pre-order walk of the tree keeps

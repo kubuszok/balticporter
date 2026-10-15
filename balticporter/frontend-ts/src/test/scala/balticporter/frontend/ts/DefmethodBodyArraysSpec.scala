@@ -13,15 +13,15 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
   private def ret(e:       RastNode):                    RastNode = node("ReturnStatement", e)
   private def block(stmts: RastNode*):                   RastNode = node("Block", stmts*)
   private def expr(e:      RastNode):                    RastNode = node("ExpressionStatement", e)
-  private def prop(obj:    RastNode, p:    String):    RastNode = node("PropertyAccessExpression", obj, ident(p))
-  private def call(callee: RastNode, args: RastNode*): RastNode = node("CallExpression", (callee :: args.toList)*)
-  private def arr(elems:   RastNode*):                 RastNode = node("ArrayLiteralExpression", elems*)
-  private def typeRef(n:   String):                    RastNode = node("TypeReference", ident(n))
-  private def local(name: String, rest: RastNode*):    RastNode =
+  private def prop(obj:    RastNode, p:      String):    RastNode = node("PropertyAccessExpression", obj, ident(p))
+  private def call(callee: RastNode, args:   RastNode*): RastNode = node("CallExpression", (callee :: args.toList)*)
+  private def arr(elems:   RastNode*):                   RastNode = node("ArrayLiteralExpression", elems*)
+  private def typeRef(n:   String):                      RastNode = node("TypeReference", ident(n))
+  private def local(name: String, rest: RastNode*):      RastNode =
     node("VariableStatement", node("VariableDeclarationList", node("VariableDeclaration", (ident(name) :: rest.toList)*)))
-  private def param(n: String):                        RastNode = node("Parameter", ident(n))
+  private def param(n:      String):                       RastNode = node("Parameter", ident(n))
   private def arrow(params: List[String], body: RastNode): RastNode = node("ArrowFunction", (params.map(param) :+ body)*)
-  private def spread(e: RastNode):                     RastNode = node("SpreadElement", e)
+  private def spread(e:     RastNode):                     RastNode = node("SpreadElement", e)
 
   // `const points: Point[] = []`
   private def pointsLocal: RastNode = local("points", node("ArrayType", typeRef("Point")), arr())
@@ -34,7 +34,7 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
   private val ctorSchema = ReferenceSignatures.ConstructorSchema(
     Map(
       "Point" -> List(ReferenceSignatures.CtorParam("x", "Double", false), ReferenceSignatures.CtorParam("y", "Double", false)),
-      "Line"  -> List(ReferenceSignatures.CtorParam("p1", "Point", false), ReferenceSignatures.CtorParam("p2", "Point", false))
+      "Line" -> List(ReferenceSignatures.CtorParam("p1", "Point", false), ReferenceSignatures.CtorParam("p2", "Point", false))
     )
   )
   private val callees = ReferenceSignatures.CalleeIndex(
@@ -43,7 +43,11 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
   )
   private val oracle = ReferenceSignatures.TypeOracle.fromEntries(
     List(
-      "Fill" -> ReferenceSignatures.MethodSig("rotate", List(ReferenceSignatures.ParamSig("points", "Vector[Point]"), ReferenceSignatures.ParamSig("c", "Point")), "Unit"),
+      "Fill" -> ReferenceSignatures.MethodSig(
+        "rotate",
+        List(ReferenceSignatures.ParamSig("points", "Vector[Point]"), ReferenceSignatures.ParamSig("c", "Point")),
+        "Unit"
+      ),
       "Fill" -> ReferenceSignatures.MethodSig("use", List(ReferenceSignatures.ParamSig("p", "Point")), "Unit")
     )
   )
@@ -76,8 +80,13 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
   private def accepts(r: DefmethodBodyTranslator.TranslationResult): Unit =
     assert(r.isComplete, s"expected no refusal, got ${r.refusalReasons} for:\n${r.scalaBody}")
 
-  test("an annotated array local is a buffer of its element type, a pushed literal builds the element, and the last use copies it into the immutable result"):
-    val r = translate(block(pointsLocal, expr(call(prop(ident("points"), "push"), arr(num(1), num(2)))), ret(ident("points"))), returnType = Some("Vector[Point]"))
+  test(
+    "an annotated array local is a buffer of its element type, a pushed literal builds the element, and the last use copies it into the immutable result"
+  ):
+    val r = translate(
+      block(pointsLocal, expr(call(prop(ident("points"), "push"), arr(num(1), num(2)))), ret(ident("points"))),
+      returnType = Some("Vector[Point]")
+    )
     accepts(r)
     assertNoDiff(
       r.scalaBody.linesIterator.map(_.trim).mkString("\n").trim,
@@ -89,9 +98,14 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
     )
 
   test("an element type the target file does not write leaves the annotated local refused"):
-    refuses(translate(block(pointsLocal, ret(ident("points"))), returnType = Some("Vector[Point]"), nameableTypes = Set.empty), "local-type-annotation:ArrayType")
+    refuses(
+      translate(block(pointsLocal, ret(ident("points"))), returnType = Some("Vector[Point]"), nameableTypes = Set.empty),
+      "local-type-annotation:ArrayType"
+    )
 
-  test("a callback's parameter is a local of the element type, shadowing a module-level namesake, and a spread tuple record pushes its fields in order"):
+  test(
+    "a callback's parameter is a local of the element type, shadowing a module-level namesake, and a spread tuple record pushes its fields in order"
+  ):
     val r = translate(
       block(
         pointsLocal,
@@ -107,11 +121,18 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
     assert(r.scalaBody.contains("Fill.rotate(points.toVector, c)"), r.scalaBody)
 
   test("a lambda parameter is never resolved as a module-level member of the same name"):
-    val r = translate(block(expr(call(prop(ident("ps"), "forEach"), arrow(List("line"), call(ident("use"), ident("line")))))), params = List("ps"), paramTypes = Map("ps" -> "Vector[Point]"), returnType = Some("Unit"))
+    val r = translate(
+      block(expr(call(prop(ident("ps"), "forEach"), arrow(List("line"), call(ident("use"), ident("line")))))),
+      params = List("ps"),
+      paramTypes = Map("ps" -> "Vector[Point]"),
+      returnType = Some("Unit")
+    )
     accepts(r)
     assert(r.scalaBody.contains("ps.foreach(((line) => Fill.use(line)))"), r.scalaBody)
 
-  test("the copy is refused where the array is read after it, escaped before it, or is handed over inside a loop the local is declared outside of"):
+  test(
+    "the copy is refused where the array is read after it, escaped before it, or is handed over inside a loop the local is declared outside of"
+  ):
     val after = translate(
       block(pointsLocal, expr(call(ident("rotate"), ident("points"), ident("c"))), ret(prop(ident("points"), "length"))),
       params = List("c"),
@@ -134,8 +155,22 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
 
   test("a callback that can run off its end answers undefined, which only forEach discards"):
     val body = block(expr(call(ident("use"), ident("p"))))
-    refuses(translate(block(ret(call(prop(ident("ps"), "map"), node("ArrowFunction", param("p"), body)))), params = List("ps"), paramTypes = Map("ps" -> "Vector[Point]")), "function-returns-undefined")
-    accepts(translate(block(expr(call(prop(ident("ps"), "forEach"), node("ArrowFunction", param("p"), body)))), params = List("ps"), paramTypes = Map("ps" -> "Vector[Point]"), returnType = Some("Unit")))
+    refuses(
+      translate(
+        block(ret(call(prop(ident("ps"), "map"), node("ArrowFunction", param("p"), body)))),
+        params = List("ps"),
+        paramTypes = Map("ps" -> "Vector[Point]")
+      ),
+      "function-returns-undefined"
+    )
+    accepts(
+      translate(
+        block(expr(call(prop(ident("ps"), "forEach"), node("ArrowFunction", param("p"), body)))),
+        params = List("ps"),
+        paramTypes = Map("ps" -> "Vector[Point]"),
+        returnType = Some("Unit")
+      )
+    )
 
   test("JS grows an array stored to past its end, so an unguarded element store is refused"):
     val store = node("BinaryExpression", node("ElementAccessExpression", ident("points"), num(0)), arr(num(1), num(2))).copy(operator = Some("EqualsToken"))
@@ -151,5 +186,17 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
     accepts(r)
     assert(r.scalaBody.contains("{ val a$1 = p; val a$2 = q; points += a$1; points += a$2 }"), r.scalaBody)
 
+  test("an array the reference holds as an immutable collection is never changed in place"):
+    val r = translate(
+      block(expr(call(prop(ident("ps"), "push"), ident("p")))),
+      params = List("ps", "p"),
+      paramTypes = Map("ps" -> "Vector[Point]", "p" -> "Point"),
+      returnType = Some("Unit")
+    )
+    refuses(r, "mutated-immutable-collection")
+
   test("push answers the new length, which no Scala append does"):
-    refuses(translate(block(pointsLocal, ret(call(prop(ident("points"), "push"), arr(num(1), num(2))))), returnType = Some("Int")), "push-as-value")
+    refuses(
+      translate(block(pointsLocal, ret(call(prop(ident("points"), "push"), arr(num(1), num(2))))), returnType = Some("Int")),
+      "push-as-value"
+    )

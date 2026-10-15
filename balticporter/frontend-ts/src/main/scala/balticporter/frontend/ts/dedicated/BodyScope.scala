@@ -240,7 +240,8 @@ abstract private[dedicated] class BodyScope(
       case "ElementAccessExpression" if node.children.size >= 2 =>
         tupleField(node.children.head, node.children(1)) match
           case Some((cls, field)) => memberIndex.memberType(cls, field)
-          case None               => exprType(node.children.head).flatMap(extractElementType)
+          // an element of a collection, or the value a map holds under a key
+          case None => exprType(node.children.head).flatMap(t => extractElementType(t).orElse(mapValueType(t)))
       // `xs.length` of a collection or a string
       case "PropertyAccessExpression"
           if node.children.size >= 2 && node.children.last.text.contains("length") &&
@@ -673,8 +674,8 @@ abstract private[dedicated] class BodyScope(
     */
   protected def stringified(n: RastNode): String =
     val raw = translateExpr(n)
-    // `.toString` binds tighter than any operator the operand may contain
-    val text = if raw.contains(' ') && !(raw.startsWith("(") && raw.endsWith(")")) then s"($raw)" else raw
+    // `.toString` binds tighter than any operator the operand may contain, a prefix `-` included
+    val text = if isSimplePath(raw) || enclosedInParens(raw) then raw else s"($raw)"
     exprType(n) match
       case Some("String")                                                     => text
       case Some("Int" | "Long" | "Short" | "Byte" | "Boolean" | "Char")       => s"$text.toString"
@@ -685,6 +686,16 @@ abstract private[dedicated] class BodyScope(
       case _ =>
         refuse("value-to-string")
         s"$text.toString"
+
+  // one parenthesised group from the first character to the last, so a member read binds to all of it
+  private def enclosedInParens(s: String): Boolean =
+    s.startsWith("(") && s.endsWith(")") && {
+      var depth = 0
+      s.indices.forall { i =>
+        if s(i) == '(' then depth += 1 else if s(i) == ')' then depth -= 1
+        depth > 0 || i == s.length - 1
+      }
+    }
 
   protected def translateTemplateExpr(node: RastNode): String =
     // Emit as string concatenation ("a " + expr + " b") rather than an

@@ -460,3 +460,14 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   was emitted as a module function of that name), typed by the array a method's callback walks;
   a function that can run off its end answers `undefined`, refused unless the caller discards the
   result (`forEach`).
+- (a) A JS `switch` runs on from a clause control does not leave into the next one and tries
+  `default` after every label wherever it stands: each arm is its clause's statements plus those
+  it falls into, `default` is the last arm, a non-literal label is a guard (`eq` for a reference),
+  and a `break` before a clause's end is refused (`switch-break-in-middle`), since a `match` arm
+  cannot be left early — an empty `case "hachure":` above `default:` had been emitted as an arm
+  doing nothing. A string label at a selector of unknown type is refused (`switch-label-type`).
+- (a) An object literal's values are evaluated in the LITERAL's order, so the named arguments are
+  written in that order (rough.js reads `random()` inside them); a field the reference names with a
+  keyword is matched by its key and written backticked. An array JS changes in place (`push`,
+  `pop`, an element store) where the reference holds an immutable collection is refused
+  (`mutated-immutable-collection`). graphs-commons 41 -> 44, KaTeX 46 -> 48.

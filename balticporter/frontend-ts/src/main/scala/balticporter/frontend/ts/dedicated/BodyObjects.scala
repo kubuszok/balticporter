@@ -73,22 +73,26 @@ private[dedicated] trait BodyObjects extends BodyScope:
       val entries  = if tagged.isDefined then litEntries.filterNot((k, _) => conventions.tagField.contains(k)) else litEntries
       typeName.flatMap(ctorSchema.get) match
         case Some(ctorParams) =>
-          val keyMap          = entries.map { case (k, v) => snakeToCamel(k) -> v }.toMap
-          val missingRequired = ctorParams.filterNot(_.hasDefault).filterNot(p => keyMap.contains(p.name))
+          // a key names the parameter of its own spelling, of the reference's renamed spelling, or of either backticked
+          def paramFor(k: String): Option[ReferenceSignatures.CtorParam] =
+            val names = Set(snakeToCamel(k), k, memberRenames.getOrElse(snakeToCamel(k), snakeToCamel(k))).map(_.stripPrefix("`").stripSuffix("`"))
+            ctorParams.find(p => names(p.name.stripPrefix("`").stripSuffix("`")))
+          val keyed = entries.map((k, v) => (k, paramFor(k), v))
+          // a field JS leaves out is optional in its interface, as the reference's default for it says
+          val missing = ctorParams.filterNot(p => keyed.exists(_._2.contains(p))).filterNot(_.hasDefault)
           // A key the class has no field for would be dropped silently.
-          val unknownKeys = keyMap.keySet -- ctorParams.map(_.name)
-          if unknownKeys.nonEmpty || props.exists(p => p.kind != "PropertyAssignment" && p.kind != "ShorthandPropertyAssignment") then
+          if keyed.exists(k => k._2.isEmpty || k._3.isEmpty) || props.exists(p => p.kind != "PropertyAssignment" && p.kind != "ShorthandPropertyAssignment") then
             refuse("object-literal-unknown-field")
             emitObjectLiteralAsMap(props)
-          else if missingRequired.nonEmpty then
+          else if missing.nonEmpty || keyed.map(_._2).distinct.size != keyed.size then
             refuse("object-literal-missing-field")
             emitObjectLiteralAsMap(props)
           else
-            val args = ctorParams.flatMap { param =>
-              keyMap.get(param.name) match
-                case Some(Some(valueNode)) => Some(s"${param.name} = ${translateExprAt(valueNode, param.tpe)}")
-                case Some(None)            => Some(s"${param.name} = ???")
-                case None                  => None // has default, omitted
+            // in the literal's own order, which is the order JS evaluates its values in
+            val args = keyed.collect { case (_, Some(param), Some(valueNode)) =>
+              // a parameter the reference names with a keyword is written backticked, as the reference writes it
+              val name = param.name.stripPrefix("`").stripSuffix("`")
+              s"${if scalaKeywords.contains(name) then s"`$name`" else name} = ${translateExprAt(valueNode, param.tpe)}"
             }
             s"${typeName.get}(${args.mkString(", ")})"
         case None =>

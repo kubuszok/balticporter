@@ -48,7 +48,8 @@ private[dedicated] class BodyContext(
     )
     with BodyBindings
     with BodyObjects
-    with BodyArrays:
+    with BodyArrays
+    with BodySwitch:
   /** Translate a JS expression used as a condition (if, while, ternary). Applies truthiness lowering when the operand has a known non-Boolean type.
     */
   private def translateCondition(node: RastNode): String = at(node)(renderCondition(node))
@@ -408,7 +409,7 @@ private[dedicated] class BodyContext(
         sb.append("\n")
 
       case "SwitchStatement" =>
-        translateSwitchStatement(node, indent)
+        translateSwitchStatement(node, indent, isLast)
 
       case "DoStatement" =>
         val children = node.children
@@ -528,6 +529,7 @@ private[dedicated] class BodyContext(
           if isWriteTarget(node) then
             // JS grows an array stored to at or past its end, where Scala throws: a length test on the same receiver must guard the store
             if element.isDefined && !guardedBy(node, children.head, lengthTest) then refuse("write-past-end")
+            if recvType.exists(t => handOverConversions.contains(baseName(t))) then refuse("mutated-immutable-collection")
             s"$obj($idx)"
           else if element.exists(absentIsNull) then s"$obj.lift($idx).orNull"
           else if value.exists(absentIsNull) then s"$obj.getOrElse($idx, null)"
@@ -1091,6 +1093,9 @@ private[dedicated] class BodyContext(
             val name = classMethod.get
             return s"$objExpr.${if scalaKeywords.contains(name) then s"`$name`" else name}(${scalaArgs.mkString(", ")})"
 
+          // JS changes the array in place, which the reference holds as an immutable collection
+          if Set("push", "pop", "shift", "unshift", "splice", "fill", "copyWithin")(method) && exprType(obj).exists(t => handOverConversions.contains(baseName(t))) then
+            refuse("mutated-immutable-collection")
           method match
             // Collection methods
             case "has" | "includes" | "contains" =>
@@ -1935,31 +1940,3 @@ private[dedicated] class BodyContext(
     else
       refuse("MalformedForInOf")
       sb.append(s"$indent??? /* for-in/of */\n")
-
-  private def translateSwitchStatement(node: RastNode, indent: String): Unit =
-    val children = node.children
-    if children.isEmpty then
-      refuse("EmptySwitch")
-      sb.append(s"$indent??? /* empty switch */\n")
-      return
-    val scrutinee = translateExpr(children.head)
-    val caseBlock = children.find(_.kind == "CaseBlock")
-    sb.append(s"$indent($scrutinee) match {\n")
-    var hasDefault = false
-    caseBlock.foreach { cb =>
-      for clause <- cb.children do
-        clause.kind match
-          case "CaseClause" =>
-            val value = clause.children.headOption.map(translateExpr).getOrElse("_")
-            val stmts = clause.children.drop(1).filterNot(_.kind == "BreakStatement")
-            sb.append(s"$indent  case $value =>\n")
-            for stmt <- stmts do translateStatement(stmt, indent + "    ", false)
-          case "DefaultClause" =>
-            hasDefault = true
-            val stmts = clause.children.filterNot(_.kind == "BreakStatement")
-            sb.append(s"$indent  case _ =>\n")
-            for stmt <- stmts do translateStatement(stmt, indent + "    ", false)
-          case _ => ()
-    }
-    if !hasDefault then sb.append(s"$indent  case _ => ()\n")
-    sb.append(s"$indent}\n")
