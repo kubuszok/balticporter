@@ -12,7 +12,7 @@ private[dedicated] trait BodySwitch extends BodyScope:
   protected def translateExprAt(node: RastNode, expectedType: String): String
 
   // a clause's statements without the unlabelled `break` that ends it, and whether control leaves the switch there
-  private final case class Clause(node: RastNode, body: List[RastNode], leaves: Boolean)
+  final private case class Clause(node: RastNode, body: List[RastNode], leaves: Boolean)
 
   protected def translateSwitchStatement(node: RastNode, indent: String, isLast: Boolean): Unit =
     node.children.headOption match
@@ -21,9 +21,9 @@ private[dedicated] trait BodySwitch extends BodyScope:
         sb.append(s"$indent??? /* empty switch */\n")
       case Some(selector) =>
         val clauses = node.children.find(_.kind == "CaseBlock").toList.flatMap(_.children).filter(c => c.kind == "CaseClause" || c.kind == "DefaultClause").map { c =>
-          val stmts    = if c.kind == "CaseClause" then c.children.drop(1) else c.children
-          val ends     = stmts.lastOption.exists(s => s.kind == "BreakStatement" && s.children.isEmpty)
-          val body     = if ends then stmts.init else stmts
+          val stmts = if c.kind == "CaseClause" then c.children.drop(1) else c.children
+          val ends  = stmts.lastOption.exists(s => s.kind == "BreakStatement" && s.children.isEmpty)
+          val body  = if ends then stmts.init else stmts
           if body.exists(containsBreak) then refuse("switch-break-in-middle")
           Clause(c, body, ends || body.lastOption.exists(exitsAlways))
         }

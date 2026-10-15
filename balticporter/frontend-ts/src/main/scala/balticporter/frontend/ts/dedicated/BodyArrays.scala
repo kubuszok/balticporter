@@ -17,6 +17,46 @@ private[dedicated] trait BodyArrays extends BodyScope:
   private val loopKinds     = Set("ForStatement", "ForInStatement", "ForOfStatement", "WhileStatement", "DoStatement")
   private val functionKinds = Set("ArrowFunction", "FunctionExpression", "FunctionDeclaration", "MethodDeclaration")
 
+  /** `xs[i]` as JS reads it: a tuple record's field, a module object's `apply`, or an element or a map value, where JS answers `undefined` past the end or for an absent key and Scala throws, so a
+    * read of references answers null there and any other read needs a length or key test on the same receiver around it.
+    */
+  protected def translateElementAccess(node: RastNode): String =
+    val children = node.children
+    val field    = if children.size >= 2 then tupleField(children.head, children(1)) else None
+    if field.isDefined then s"${translateExpr(children.head)}.${field.get._2}"
+    else if children.size < 2 then "??? /* bad element access */"
+    else if objectApply(children.head).isDefined then
+      // what the reference's `apply` answers for a key, absent ones included
+      if isWriteTarget(node) then refuse("element-store-on-object")
+      s"${translateExpr(children.head)}(${translateExpr(children(1))})"
+    else
+      // indexing reads a collection, a map or a string; on a declared class (a tuple the port reshaped) it reads nothing
+      exprType(children.head).foreach { t =>
+        if isSpecificClassType(t) || isOptionLike(t) then refuse("element-access-on-class")
+      }
+      // a JS index is a number; a Scala index must be an Int
+      if exprType(children(1)).exists(t => t == "Double" || t == "Float") then refuse("fractional-index")
+      // a JS string indexes to a one-character string, or `undefined` past its end; Scala's to a Char, or a throw
+      if exprType(children.head).contains("String") then refuse("js-string-index")
+      val obj      = translateExpr(children.head)
+      val idx      = translateExpr(children(1))
+      val recvType = exprType(children.head)
+      val element  = recvType.flatMap(extractElementType)
+      val value    = recvType.flatMap(mapValueType)
+      // a key of the map's key type: an optional one is a key JS read after a guard Scala does not see
+      for t <- recvType; k <- mapKeyType(t); have <- exprType(children(1)) do checkTypeCompatibility(have, k)
+      if isWriteTarget(node) then
+        // JS grows an array stored to at or past its end, where Scala throws: a length test on the same receiver must guard the store
+        if element.isDefined && !guardedBy(node, children.head, lengthTest) then refuse("write-past-end")
+        if recvType.exists(t => handOverConversions.contains(baseName(t))) then refuse("mutated-immutable-collection")
+        s"$obj($idx)"
+      else if element.exists(absentIsNull) then s"$obj.lift($idx).orNull"
+      else if value.exists(absentIsNull) then s"$obj.getOrElse($idx, null)"
+      else
+        val guard = if value.isDefined then hasTest else if element.isDefined then lengthTest else (n: RastNode, w: String) => lengthTest(n, w) || hasTest(n, w)
+        if !guardedBy(node, children.head, guard) then refuse("read-past-end")
+        s"$obj($idx)"
+
   /** The local `id` reads, copied into the immutable collection `slot` declares; refused unless the copy is unobservable. */
   protected def handOver(id: RastNode, rendered: String, slot: String): String =
     if !isLastUseOfFreshLocal(id) then refuse("array-hand-over-not-last-use")

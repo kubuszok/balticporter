@@ -352,7 +352,7 @@ private[dedicated] class BodyContext(
             // Both branches are in value position when the if-else is the last
             // expression; passing isLast to the then-branch prevents emitting a
             // boundary.break with an empty label when both branches return.
-            underNarrowing(narrowedBy(children.head))(translateStatementBody(children(1), indent + "  ", isLast))
+            underNarrowing(narrowedBy(children.head))(underPresence(children.head)(translateStatementBody(children(1), indent + "  ", isLast)))
           if children.size > 2 then
             sb.append(s"$indent} else {\n")
             underNarrowing(refutedBy(children.head))(translateStatementBody(children(2), indent + "  ", isLast))
@@ -507,37 +507,7 @@ private[dedicated] class BodyContext(
         translatePropertyAccess(node)
 
       case "ElementAccessExpression" =>
-        val children = node.children
-        val field    = if children.size >= 2 then tupleField(children.head, children(1)) else None
-        if field.isDefined then s"${translateExpr(children.head)}.${field.get._2}"
-        else if children.size >= 2 then
-          // indexing reads a collection, a map or a string; on a declared class (a tuple the port reshaped) it reads nothing
-          exprType(children.head).foreach { t =>
-            if isSpecificClassType(t) || isOptionLike(t) then refuse("element-access-on-class")
-          }
-          // a JS index is a number; a Scala index must be an Int
-          if exprType(children(1)).exists(t => t == "Double" || t == "Float") then refuse("fractional-index")
-          // a JS string indexes to a one-character string, or `undefined` past its end; Scala's to a Char, or a throw
-          if exprType(children.head).contains("String") then refuse("js-string-index")
-          val obj = translateExpr(children.head)
-          val idx = translateExpr(children(1))
-          // JS reads past an array's end, or an absent key, as `undefined` where Scala throws: a read of references answers
-          // null there; any other read needs a length or key test on the same receiver around it
-          val recvType = exprType(children.head)
-          val element  = recvType.flatMap(extractElementType)
-          val value    = recvType.flatMap(mapValueType)
-          if isWriteTarget(node) then
-            // JS grows an array stored to at or past its end, where Scala throws: a length test on the same receiver must guard the store
-            if element.isDefined && !guardedBy(node, children.head, lengthTest) then refuse("write-past-end")
-            if recvType.exists(t => handOverConversions.contains(baseName(t))) then refuse("mutated-immutable-collection")
-            s"$obj($idx)"
-          else if element.exists(absentIsNull) then s"$obj.lift($idx).orNull"
-          else if value.exists(absentIsNull) then s"$obj.getOrElse($idx, null)"
-          else
-            val guard = if value.isDefined then hasTest else if element.isDefined then lengthTest else (n: RastNode, w: String) => lengthTest(n, w) || hasTest(n, w)
-            if !guardedBy(node, children.head, guard) then refuse("read-past-end")
-            s"$obj($idx)"
-        else "??? /* bad element access */"
+        translateElementAccess(node)
 
       case "CallExpression" =>
         translateCallExpr(node)
@@ -648,7 +618,7 @@ private[dedicated] class BodyContext(
       case "ConditionalExpression" =>
         val children = node.children
         if children.size >= 3 then
-          val thenE = underNarrowing(narrowedBy(children(0)))(translateExpr(children(1)))
+          val thenE = underNarrowing(narrowedBy(children(0)))(underPresence(children(0))(translateExpr(children(1))))
           val elseE = underNarrowing(refutedBy(children(0)))(translateExpr(children(2)))
           // JS `x ? a : b` uses truthiness of x. Lower the condition based
           // on the operand's declared type.
@@ -1569,9 +1539,10 @@ private[dedicated] class BodyContext(
           tupleField(lhs.children.head, lhs.children(1)).foreach((cls, field) => if !memberIndex.isMutable(cls, field) then refuse("assign-to-immutable-field"))
         // the stored value takes the target's declared type, an optional target included
         val lhsType = if op == "EqualsToken" || op == "FirstAssignment" then exprType(lhs) else None
-        val left    = translateExpr(lhs)
-        val proven  = if op == "AmpersandAmpersandToken" then narrowedBy(lhs) else if op == "BarBarToken" then refutedBy(lhs) else Nil
-        val right   = underNarrowing(proven)(lhsType.fold(translateExpr(rhs))(translateExprAt(rhs, _)))
+        for lt <- lhsType; have <- exprType(rhs) do checkTypeCompatibility(have, lt)
+        val left   = translateExpr(lhs)
+        val proven = if op == "AmpersandAmpersandToken" then narrowedBy(lhs) else if op == "BarBarToken" then refutedBy(lhs) else Nil
+        val right  = underNarrowing(proven)(lhsType.fold(translateExpr(rhs))(translateExprAt(rhs, _)))
         if op == "AsteriskAsteriskToken" then return s"math.pow($left, $right)"
         // JS `/` never truncates: two integral operands divide as doubles
         if op == "SlashToken" && exprType(lhs).exists(integralTypes.contains) && exprType(rhs).exists(integralTypes.contains) then return s"($left).toDouble / $right"

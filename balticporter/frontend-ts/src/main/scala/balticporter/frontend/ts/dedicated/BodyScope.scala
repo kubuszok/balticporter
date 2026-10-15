@@ -240,8 +240,11 @@ abstract private[dedicated] class BodyScope(
       case "ElementAccessExpression" if node.children.size >= 2 =>
         tupleField(node.children.head, node.children(1)) match
           case Some((cls, field)) => memberIndex.memberType(cls, field)
-          // an element of a collection, or the value a map holds under a key
-          case None => exprType(node.children.head).flatMap(t => extractElementType(t).orElse(mapValueType(t)))
+          // an element of a collection, the value a map holds under a key, or what a reference object's `apply` answers
+          case None =>
+            objectApply(node.children.head) match
+              case Some((_, result)) => result
+              case None              => exprType(node.children.head).flatMap(t => extractElementType(t).orElse(mapValueType(t)))
       // `xs.length` of a collection or a string
       case "PropertyAccessExpression"
           if node.children.size >= 2 && node.children.last.text.contains("length") &&
@@ -261,16 +264,31 @@ abstract private[dedicated] class BodyScope(
             .orElse(memberIndex.memberType(o, snakeToCamel(field)))
         }
         // `Obj.f` where `Obj` is an object the reference declares
-        def viaObject = node.children.head.text.filter(_ => node.children.head.kind == "Identifier").flatMap { o =>
+        def viaObject = node.children.head.text.filter(_ => node.children.head.kind == "Identifier").flatMap { js =>
+          // the object the consumer's lookup names for a JS module, else the name itself
+          val o = apiLookup.get(js).filterNot(_.contains('(')).getOrElse(js)
           calleeIndex.declared(o, field).orElse(calleeIndex.declared(o, snakeToCamel(field))).flatMap(_.tpe)
         }
         viaInstance.orElse(viaObject)
       case _ => None
 
+  /** A JS module object indexed as a map (`o[k]`) that the reference made an object declaring `apply`: the object's Scala path and the result the reference's one-argument signature of `apply`
+    * declares. None for a name the body binds or any other receiver.
+    */
+  protected def objectApply(recv: RastNode): Option[(String, Option[String])] =
+    recv.text.filter(_ => recv.kind == "Identifier").filterNot(n => declaredInBody(n) || entry.params.contains(n) || isLocal(n) || outerBinding(n).isDefined).flatMap { n =>
+      val path = apiLookup.getOrElse(n, snakeToCamel(n))
+      calleeIndex.declared(path, "apply").filter(_.accessibleFrom(enclosingOwner)).map(ref => (path, signatureOf(ref).filter(_.params.size == 1).map(_.returnType)))
+    }
+
   /** The JS truthiness test for a value of the given Scala type. Returns a function that takes the translated operand and produces the Scala boolean expression.
     */
   protected def truthinessTest(tpe: String, operand: String): String =
-    if isOptionLike(tpe) then s"$operand.isDefined"
+    // a present "", 0, NaN or false is as falsy as an absent value
+    if isOptionLike(tpe) && (optionInner(tpe) == "String" || optionInner(tpe) == "Boolean" || numericTypes(optionInner(tpe))) then
+      if isSimplePath(operand) then s"($operand.isDefined && ${truthinessTest(optionInner(tpe), s"$operand.get")})"
+      else s"{ val o$$ = $operand; o$$.isDefined && ${truthinessTest(optionInner(tpe), "o$.get")} }"
+    else if isOptionLike(tpe) then s"$operand.isDefined"
     else if tpe == "String" then s"$operand.nonEmpty"
     else if tpe == "Double" || tpe == "Float" then
       // NaN is falsy in JS; the operand is read once.
@@ -432,6 +450,13 @@ abstract private[dedicated] class BodyScope(
       c.kind == "PropertyAccessExpression" && c.children.size >= 2 && c.children.last.text.contains("has") && shape(c.children.head) == want
     )) || (n.kind == "BinaryExpression" && n.operator.contains("InKeyword") && n.children.lastOption.exists(r => shape(r) == want))
 
+  /** The key type of a Scala map type, when the type is one. */
+  protected def mapKeyType(t: String): Option[String] =
+    mapValueType(t).map { v =>
+      val args = t.substring(t.indexOf('[') + 1, t.lastIndexOf(']'))
+      args.substring(0, args.length - v.length).trim.stripSuffix(",").trim
+    }
+
   /** The value type of a Scala map type, when the type is one. */
   protected def mapValueType(t: String): Option[String] =
     val base = baseName(t)
@@ -530,6 +555,10 @@ abstract private[dedicated] class BodyScope(
     then ()
     // a value that may be absent where the slot requires one: JS read it after a guard Scala does not see
     else if isOptionLike(have) && !isOptionLike(want) && !want.contains("| Null") then refuse("optional-at-required-slot")
+    // a present value at an optional slot is wrapped there, so it must be of the slot's inner type
+    else if isOptionLike(want) && !isOptionLike(have) then checkTypeCompatibility(have, optionInner(want))
+    // two optionals of one spelling hold values of their inner types
+    else if isOptionLike(want) && isOptionLike(have) && haveBase == wantBase then checkTypeCompatibility(optionInner(have), optionInner(want))
     // a JS array local at an immutable slot is copied there, where the slot's translation decides whether the copy is unobservable
     else if isMutableBuffer(have) && isHandOverSlot(want) then
       (extractElementType(have), extractElementType(want)) match
@@ -577,6 +606,21 @@ abstract private[dedicated] class BodyScope(
           case _ => Nil
       case "BinaryExpression" if cond.operator.exists(op => op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") => tagNarrowing(cond)
       case _                                                                                                              => Nil
+
+  /** Renders `render` where `cond` holding proves an optional local present: under `if (x)` on a `Nullable`/`Option` local or parameter the body never reassigns, `x` reads as its value. */
+  protected def underPresence[A](cond: RastNode)(render: => A): A =
+    val id      = unparenthesized(cond)
+    val present = id.text.filter(n => id.kind == "Identifier" && (isLocal(n) || entry.params.contains(n)) && !reassignedNames.contains(n) && !reassignedNames.contains(snakeToCamel(n)))
+    present.map(snakeToCamel).filterNot(unwrappedIds.contains).flatMap(n => exprType(id).filter(isOptionLike).map(n -> _)) match
+      case None           => render
+      case Some((n, tpe)) =>
+        val saved = localTypes.get(n)
+        unwrappedIds += n
+        localTypes(n) = optionInner(tpe)
+        try render
+        finally
+          unwrappedIds -= n
+          saved.fold(localTypes.remove(n))(localTypes.put(n, _))
 
   /** What `cond` proves when it FAILS: `!(x instanceof C)` failing makes `x` a `C`, and so does each operand of a failing `||`. */
   protected def refutedBy(cond: RastNode): List[(String, String)] =

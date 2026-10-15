@@ -471,3 +471,13 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   keyword is matched by its key and written backticked. An array JS changes in place (`push`,
   `pop`, an element store) where the reference holds an immutable collection is refused
   (`mutated-immutable-collection`). graphs-commons 41 -> 44, KaTeX 46 -> 48.
+- (a) A present `""`, `0`, `NaN` or `false` held in an optional is as falsy as an absent one: the
+  truthiness of `Nullable[String]` is `isDefined && get.nonEmpty`, never `isDefined` alone. Under
+  `if (x)` on an optional local or parameter the body never reassigns, `x` reads as its value. A
+  present value at an optional slot is wrapped, so it is checked against the slot's INNER type
+  (KaTeX's `Options -> Nullable[Options]` had refused 20 sites); an optional stored where a value is
+  required is refused, an assignment included. KaTeX 48 -> 51.
+- (b) A JS module object indexed as a map (`symbols[mode]`) that the reference made an object
+  declaring `apply` is read through that `apply`, whose answer for an absent key is the
+  reference's; the consumer names the object through `apiLookup`. A map key is checked against
+  the map's key type.
