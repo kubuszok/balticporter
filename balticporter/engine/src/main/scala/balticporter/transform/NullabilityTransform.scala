@@ -1034,6 +1034,10 @@ final class NullabilityTransform(
     case a:  Tree.ArrayAccess if isWrapper && derefsWrapped(a.array) => a.copy(array = atLeaves(a.array)(unwrap))
     // java's `x instanceof T` is false for null: test the unwrapped value, never the wrapper
     case io: Tree.InstanceOf if isWrapper && derefsWrapped(io.expr) => io.copy(expr = atLeaves(io.expr)(unwrapOrNull))
+    // `switch (wrapped)`: java unboxes a primitive's box (an NPE on null) and NPEs on a null
+    // reference itself — `.get` for the former, `.orNull` for the latter so the emitter's own
+    // null arm answers it; the labels are VALUES and never match a wrapper
+    case m: Tree.Match if isWrapper && derefsWrapped(m.scrutinee) => m.copy(scrutinee = atLeaves(m.scrutinee)(e => slotUnwrap(elementOf(e.tpe), e)))
     case other => other
 
   // -------------------------------------------------------------------------
@@ -1261,7 +1265,12 @@ final class NullabilityTransform(
                 )
             }
           val sub = receiverSubst(t)
-          t.copy(args = t.args.zip(fs).map((a, f) => coerceTo(ParentSubst.subst(f, sub), a)))
+          t.copy(
+            args = t.args.zip(fs).map { (a, f) =>
+              val want = ParentSubst.subst(f, sub)
+              if boxedTypeArgSlot(f, want, a) then Tree.Typed(a, TypeTree(want, a.origin), want, a.origin) else coerceTo(want, a)
+            }
+          )
         case _ =>
           t.args.filter(isWrapped).foreach { a =>
             issues += Finding(
@@ -1317,6 +1326,15 @@ final class NullabilityTransform(
     * unit (or nested inside it) IS writable everywhere in it; only ANOTHER unit's variable (the CALLEE's own) is not. Unit-granularity because that is what the walk carries ([[currentUnit]]) — a
     * bottom-up traversal has no finer stack to ask.
     */
+  /** A wrapped formal over the callee's TYPE VARIABLE that the receiver instantiates with a BOX (`ObjectMap[String, Integer].put(k, @Null V)`) is a wrapper over the box in scala too, while a value
+    * this phase retyped is a wrapper over the primitive: the two are one java slot and one runtime representation, so the argument is cast to the box's wrapper.
+    */
+  private def boxedTypeArgSlot(formal: TypeRepr, want: TypeRepr, arg: Term): Boolean =
+    isWrapperType(formal) && isWrapped(arg) && (elementOf(formal) match
+      case TypeRepr.TypeRef(_, s) => typeVars.contains(s)
+      case _                      => false) && headSym(elementOf(want)).exists(boxedElem.contains) &&
+      headSym(elementOf(arg.tpe)).exists(primSyms.contains) && typeVarsIn(want).isEmpty
+
   private def typeVarsIn(t: TypeRepr): List[String] = t match
     case TypeRepr.TypeRef(_, s)       => typeVars.get(s).filterNot(_._2 == currentUnit).map(_._1).toList
     case TypeRepr.AppliedType(tc, as) => typeVarsIn(tc) ++ as.flatMap(typeVarsIn)

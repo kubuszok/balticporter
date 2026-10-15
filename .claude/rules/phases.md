@@ -353,3 +353,11 @@ sees the kind); the screen is *would a reader act differently*.
 - `requiredGivens`' transitive closure threads a witness at EVERY type parameter a given-bound class
   is constructed at (`ValueArrayMap[K, V]` building `DynamicArray[K]` and `DynamicArray[V]`); the
   first parameter alone left the second construction without a given (gdx-vfx, 1 E172). Kind (a).
+- A `switch` on a WRAPPED value switches on the value: java unboxes a boxed primitive selector (an
+  NPE on null) and NPEs on a null reference one, so the scrutinee is `.get` for a primitive element
+  and `.orNull` for a reference (the emitter's own null arm answers it). Left wrapped, every label
+  was `E172` (gltf `GLTFTypes`, 15 errors). Kind (a).
+- A wrapped formal over the callee's TYPE VARIABLE that the receiver fills with a BOX
+  (`ObjectMap[String, Integer].put(k, @Null V)`) is `Nullable[Integer]` in scala, while a value the
+  phase retyped is `Nullable[Int]`: one java slot and one runtime representation, so the argument is
+  CAST to the box's wrapper (gltf `GLTFLoaderBase#getNode`, 2 E007). Kind (a).
