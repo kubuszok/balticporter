@@ -277,6 +277,9 @@ sees the kind); the screen is *would a reader act differently*.
   `ClickListener(Buttons.LEFT)`, 1 E007). Kind (a).
 - A derived seed is exact, so a java STATIC whose reference twin is `extension (a: T) def m`
   derives its slot from `SurfaceDecl.receiver` as parameter 0 (`slotTypes`); never for an instance method.
+- A reference member at a getter's property name is the property the getter folded into only when it
+  is API: a qualified-private `private[btree] var status` beside a kept `getStatus` is the field the
+  getter reads, so the `KeepName` row stands (gdx-ai `Task#getStatus`, 74 hand-suite E008). Kind (a).
 - A member rename on an EXTERNAL redirected type: hits are the owned overrides whose closure is
   anchored on `(source, member)`, within the redirect's scope, each request `detachedParents = Set(source)`.
   A second unknown parent's surface is PORT policy (`TypeRedirectTransform(external = default ++ …)`),

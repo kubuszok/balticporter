@@ -313,11 +313,15 @@ object ReferencePolicy:
                     // beside `def getMinWidth: Float` is a field the reference exposes, not the getter
                     // folded — its type disagrees, so java's name is kept
                     val javaRes = javaSimple(d.returnTpt.tpe).getOrElse("")
+                    // and an API: a QUALIFIED-private `private[btree] var status` is the field the kept
+                    // `getStatus` reads, never the property it folded into
+                    def exposedTwin(kc: String, nm: String, a: Int): Option[List[SurfaceDecl]] =
+                      lookup(mp, kc, nm, a, pkg).map(_.filterNot(_.accessLevel.startsWith("private"))).filter(_.nonEmpty)
                     def sameSlot(cands: Option[List[SurfaceDecl]]): Boolean =
                       cands.exists(_.exists(rd => n == 1 || javaRes.isEmpty || refSimple(rd.resultType) == javaRes))
                     val twin =
-                      if isSetter then lookup(mp, "def", prop + "_=", 1, pkg).isDefined || lookup(mp, "prop", prop, 0, pkg).isDefined
-                      else sameSlot(lookup(mp, "def", prop, n, pkg)) || (n == 0 && sameSlot(lookup(mp, "prop", prop, 0, pkg)))
+                      if isSetter then exposedTwin("def", prop + "_=", 1).isDefined || exposedTwin("prop", prop, 0).isDefined
+                      else sameSlot(exposedTwin("def", prop, n)) || (n == 0 && sameSlot(exposedTwin("prop", prop, 0)))
                     if keptName && !twin then rows += DerivedPolicy.Row(DerivedPolicy.Family.KeepName, rowKey(ms, overloaded), s"def ${ms.name}")
                   }
                   // the reference spells the accessor as a PROPERTY (`var x`) and has no def of the java name:

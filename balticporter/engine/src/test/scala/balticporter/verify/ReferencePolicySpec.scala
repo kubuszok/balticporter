@@ -392,6 +392,25 @@ class ReferencePolicySpec extends FunSuite:
     )
   }
 
+  test("a qualified-private field of the same type is no twin: the getter keeps java's name") {
+    val javaSrc2 =
+      """package com.example.tree;
+        |public class Node {
+        |  protected String status;
+        |  public final String getStatus() { return status; }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.tree
+        |class Node { private[tree] var status: String = ""; final def getStatus: String = status }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    assert(
+      clue(r.policy.rows).exists(row => row.family == DerivedPolicy.Family.KeepName && row.upstream == "com.example.tree.Node#getStatus")
+    )
+  }
+
   test("a field the reference declares under an underscore name derives a FieldName row, its type rows read there") {
     val javaSrc2 =
       """package com.example.gfx;
