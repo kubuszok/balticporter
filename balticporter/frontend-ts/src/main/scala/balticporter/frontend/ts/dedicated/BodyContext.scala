@@ -327,8 +327,10 @@ private[dedicated] class BodyContext(
             }
             val annotated = declared.flatMap(_.toOption)
             // JS leaves an uninitialised local `undefined`; no Scala value of its type says that, unless no read can see it
-            val definite     = if initNode.isEmpty then definitelyAssignedType(vd, name, annotated).filter(writableType) else None
-            val declaredType = annotated.orElse(definite)
+            val definite = if initNode.isEmpty then definitelyAssignedType(vd, name, annotated).filter(writableType) else None
+            // `const xs = []` the body returns is a buffer of the declared result's elements
+            val returned     = if annotated.isEmpty && initNode.exists(n => n.kind == "ArrayLiteralExpression" && n.children.isEmpty) then returnedBufferType(vd, name) else None
+            val declaredType = annotated.orElse(definite).orElse(returned)
             if initNode.isEmpty && definite.isEmpty then refuse("uninitialised-local")
             // `let x = null` types the local as Null in Scala: nothing can be stored into it later
             if declaredType.isEmpty && initNode.exists(n => n.kind == "NullKeyword" || n.kind == "UndefinedKeyword" || n.text.contains("undefined")) then refuse("null-initialised-local")

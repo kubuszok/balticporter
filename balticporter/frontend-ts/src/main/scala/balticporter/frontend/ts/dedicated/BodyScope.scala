@@ -299,20 +299,22 @@ abstract private[dedicated] class BodyScope(
   /** The JS truthiness test for a value of the given Scala type. Returns a function that takes the translated operand and produces the Scala boolean expression.
     */
   protected def truthinessTest(tpe: String, operand: String): String =
+    // the test binds tighter than any operator the operand may hold (`a & b != 0` reads `a & (b != 0)`)
+    val p = if isSimplePath(operand) || enclosedInParens(operand) then operand else s"($operand)"
     // a present "", 0, NaN or false is as falsy as an absent value
     if isOptionLike(tpe) && (optionInner(tpe) == "String" || optionInner(tpe) == "Boolean" || numericTypes(optionInner(tpe))) then
       if isSimplePath(operand) then s"($operand.isDefined && ${truthinessTest(optionInner(tpe), s"$operand.get")})"
       else s"{ val o$$ = $operand; o$$.isDefined && ${truthinessTest(optionInner(tpe), "o$.get")} }"
-    else if isOptionLike(tpe) then s"$operand.isDefined"
-    else if tpe == "String" then s"$operand.nonEmpty"
+    else if isOptionLike(tpe) then s"$p.isDefined"
+    else if tpe == "String" then s"$p.nonEmpty"
     else if tpe == "Double" || tpe == "Float" then
       // NaN is falsy in JS; the operand is read once.
       if isSimplePath(operand) then s"($operand != 0 && !$operand.isNaN)"
       else s"{ val n$$ = $operand; n$$ != 0 && !n$$.isNaN }"
-    else if numericTypes.contains(tpe) then s"$operand != 0"
+    else if numericTypes.contains(tpe) then s"$p != 0"
     else if tpe == "Boolean" then operand
     else if tpe == "Null" then "false"
-    else s"($operand != null)" // any other object, an array included, is truthy unless it is absent
+    else s"($p != null)" // any other object, an array included, is truthy unless it is absent
 
   /** The JS truthiness value (the value that a truthy operand yields in `x && y` or `x || y`). For an optional value, this is `x.get`.
     */

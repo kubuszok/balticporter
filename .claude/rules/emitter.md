@@ -491,3 +491,6 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   declares at package level. Such a value is read bare (rough.js's `NOS`) only where no binding,
   no member of the enclosing object or class and no object member of that name could be what the
   bare name reaches instead. graphs-commons 44 -> 46.
+- (a) `const xs = []` whose last read is the body's own `return xs` is a buffer of the declared
+  result's element type: JS returns the array itself. A truthiness test compares its operand
+  WHOLE, parenthesised: `flags & f != 0` reads `flags & (f != 0)` in Scala. terser 34 -> 35.

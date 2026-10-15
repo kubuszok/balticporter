@@ -195,6 +195,29 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
     )
     refuses(r, "mutated-immutable-collection")
 
+  test("an empty array local the body returns is a buffer of the declared result's elements"):
+    val r = translate(
+      block(local("a", arr()), expr(call(prop(ident("a"), "push"), ident("p"))), ret(ident("a"))),
+      params = List("p"),
+      paramTypes = Map("p" -> "Point"),
+      returnType = Some("ArrayBuffer[Point]")
+    )
+    accepts(r)
+    assert(
+      r.scalaBody.contains("val a: scala.collection.mutable.ArrayBuffer[Point] = scala.collection.mutable.ArrayBuffer.empty[Point]"),
+      r.scalaBody
+    )
+
+  test("a number tested for truthiness is compared whole, whatever operator it holds"):
+    val and = node("BinaryExpression", ident("a"), ident("b")).copy(operator = Some("AmpersandToken"))
+    val r   = translate(
+      block(ret(node("ConditionalExpression", and, num(1), num(2)))),
+      params = List("a", "b"),
+      paramTypes = Map("a" -> "Int", "b" -> "Int"),
+      returnType = Some("Int")
+    )
+    assert(r.scalaBody.contains("(a & b) != 0"), r.scalaBody)
+
   test("push answers the new length, which no Scala append does"):
     refuses(
       translate(block(pointsLocal, ret(call(prop(ident("points"), "push"), arr(num(1), num(2))))), returnType = Some("Int")),

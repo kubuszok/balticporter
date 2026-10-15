@@ -57,6 +57,21 @@ private[dedicated] trait BodyArrays extends BodyScope:
         if !guardedBy(node, children.head, guard) then refuse("read-past-end")
         s"$obj($idx)"
 
+  /** The buffer type of `const xs = []` whose last read is the body's own `return xs`, read off the declared result: JS returns the array itself, and a buffer of the result's element type holds every
+    * element the result admits. None where the local or that return sits in a nested function, or the result names no element type the body can write.
+    */
+  protected def returnedBufferType(decl: RastNode, name: String): Option[String] =
+    val uses                     = allNodes.filter(n => n.kind == "Identifier" && n.text.contains(name) && !decl.children.headOption.exists(_ eq n) && isRead(n)).toList
+    def atBodyLevel(n: RastNode) = !ancestors(n).exists(a => functionKinds(a.kind))
+    for
+      last <- uses.lastOption
+      if atBodyLevel(decl) && atBodyLevel(last) && parentOf(last).exists(_.kind == "ReturnStatement")
+      rt <- declaredReturnType
+      if handOverConversions.contains(baseName(rt)) || baseName(rt) == "ArrayBuffer"
+      e <- extractElementType(rt)
+      if writableType(e)
+    yield s"scala.collection.mutable.ArrayBuffer[$e]"
+
   /** The local `id` reads, copied into the immutable collection `slot` declares; refused unless the copy is unobservable. */
   protected def handOver(id: RastNode, rendered: String, slot: String): String =
     if !isLastUseOfFreshLocal(id) then refuse("array-hand-over-not-last-use")

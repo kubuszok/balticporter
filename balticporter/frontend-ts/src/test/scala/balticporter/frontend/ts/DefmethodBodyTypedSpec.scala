@@ -126,7 +126,8 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       paramTypes = Map("flags" -> "Int", "f" -> "Int"),
       returnType = Some("Boolean")
     )
-    assertNoDiff(r.scalaBody.trim, "flags & f != 0")
+    // compared whole: `flags & f != 0` would read `flags & (f != 0)`
+    assertNoDiff(r.scalaBody.trim, "(flags & f) != 0")
 
   test("an assignment or a post-increment whose value is read is refused; as a statement each is kept"):
     refuses(translate(block(ret(bin("EqualsToken", ident("x"), num(1)))), params = List("x")), "assignment-as-value")
