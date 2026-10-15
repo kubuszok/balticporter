@@ -333,6 +333,14 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   `Throwable` catch, `ControlThrowable` — since `NonFatal` spares the sentinel but `case t:
   Throwable` does not. A spec that asserts the spelling of a jump asserts THIS one.
 
+- **A colon switch case falls through exactly when its statements CAN COMPLETE NORMALLY (JLS
+  14.22)**, decided by `SpoonCompletion` for both frontends: a trailing `continue`, labelled
+  `break`, an if/else whose branches both leave, an infinite loop with no break out, a `try` whose
+  `finally` cannot complete. Reading only the last statement's node kind duplicated the following
+  cases into arms java never runs them from (RegExodus `Matcher#search` duplicate declarations).
+  Where a rule is not modelled the answer is "can": a wrong "cannot" deletes code java runs, a wrong
+  "can" only duplicates unreachable code. Kind (a).
+
 ## Construction and generic arrays
 
 - `outer.new Inner()` names the enclosing instance; scala names it in the PATH, `new outer.Inner()`.

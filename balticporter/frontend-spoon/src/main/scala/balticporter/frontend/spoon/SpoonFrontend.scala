@@ -695,12 +695,7 @@ final private class UnitBuilder(sourcePath: String, source: String, preservedAnn
       val stmts = effStmts(c)
       stmts.reverse match
         case (_: CtBreak) :: rest => (rest.reverse, true)
-        case all                  =>
-          val terms = all.headOption.exists {
-            case _: CtReturn[?] | _: CtThrow => true
-            case _                           => false
-          }
-          (all.reverse, terms)
+        case all                  => (all.reverse, !SpoonCompletion.seqCompletes(all.reverse))
     }
     val closures = new Array[List[CtStatement]](cases.length)
     for i <- cases.indices.reverse do

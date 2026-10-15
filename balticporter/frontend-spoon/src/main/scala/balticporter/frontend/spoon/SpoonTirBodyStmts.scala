@@ -1149,16 +1149,12 @@ private[spoon] trait SpoonTirBodyStmts:
         // Read off the CASE KIND and not off the body: an arrow arm's body carries no
         // terminator to find, so a rule that only looked for one would duplicate the NEXT
         // arm's tail into every arrow arm in the switch.
-        case rest =>
-          (raw,
-           c.getCaseKind == CaseKind.ARROW || rest.headOption.exists {
-             // …and a `yield` terminates a colon-form EXPRESSION arm, exactly as a `return` and a
-             // `throw` terminate a statement one: JLS 14.21 completes the whole switch expression
-             // abruptly, so nothing after it in the next case can be reached from here.
-             case _: CtReturn[?] | _: CtThrow | _: CtYieldStatement => true
-             case _                                                 => false
-           }
-          )
+        // A colon arm runs on exactly when its statements CAN COMPLETE NORMALLY (JLS 14.22): a
+        // `continue`, a labelled `break`, an if/else whose branches both leave, a `yield`, a
+        // `return` or a `throw` all end it. Reading only the last statement's NODE KIND
+        // duplicated the next cases into arms java never runs them from.
+        case _ =>
+          (raw, c.getCaseKind == CaseKind.ARROW || !SpoonCompletion.seqCompletes(raw))
     }
     // JS-S07 — only an UNLABELLED trailing `break` terminates a case; a labelled one leaves the
     // enclosing LOOP, and stripping it as a terminator deletes the jump. Read off the split that
