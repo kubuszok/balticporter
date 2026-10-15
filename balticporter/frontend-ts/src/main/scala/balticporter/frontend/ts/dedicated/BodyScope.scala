@@ -22,7 +22,8 @@ abstract private[dedicated] class BodyScope(
   val oracle:             ReferenceSignatures.TypeOracle,
   val enclosingOwner:     Option[String],
   val conventions:        JsConventions,
-  val tsTypes:            Map[String, RastType]
+  val tsTypes:            Map[String, RastType],
+  val enclosingClass:     Option[String]
 ):
   val sb                 = new StringBuilder
   val refusals           = mutable.ListBuffer.empty[String]
@@ -140,9 +141,13 @@ abstract private[dedicated] class BodyScope(
         node.text.flatMap { name =>
           val scalaName = snakeToCamel(name)
           localTypes.get(scalaName).orElse(localTypes.get(name)).orElse(paramTypes.get(scalaName)).orElse(paramTypes.get(name)).orElse {
-            // a module-level value the reference declares, when nothing in the body binds the name
-            if declaredInBody(name) || entry.params.contains(name) || apiLookup.contains(name) then None
-            else calleeIndex.resolveMember(scalaName).toOption.flatMap(_.tpe)
+            outerBinding(name) match
+              // an enclosing function's binding, held by the class the body is emitted into
+              case Some(held) => held.flatMap(m => enclosingClass.flatMap(memberIndex.memberType(_, m)))
+              // a module-level value the reference declares, when nothing in the body binds the name
+              case None =>
+                if declaredInBody(name) || entry.params.contains(name) || apiLookup.contains(name) then None
+                else calleeIndex.resolveMember(scalaName).toOption.flatMap(_.tpe)
           }
         }
       // the literal's EMITTED spelling decides its Scala type: `2` is an Int, `2.5` a Double
@@ -188,9 +193,12 @@ abstract private[dedicated] class BodyScope(
             // Try apiLookup first (it disambiguates names the callee index
             // considers ambiguous, e.g. buildExpression in both BuildHTML
             // and BuildMathML)
-            apiLookup.get(rawName) match
-              case Some(q) if q.contains('.') => lookupCallee(q).map(_.returnType)
-              case _                          => calleeIndex.resolveMember(name).toOption.flatMap(signatureOf).map(_.returnType)
+            outerBinding(rawName) match
+              case Some(held) => held.flatMap(m => enclosingClass.flatMap(c => oracle.get(c, m).map(_.returnType).orElse(memberIndex.methodResult(c, m))))
+              case None       =>
+                apiLookup.get(rawName) match
+                  case Some(q) if q.contains('.') => lookupCallee(q).map(_.returnType)
+                  case _                          => calleeIndex.resolveMember(name).toOption.flatMap(signatureOf).map(_.returnType)
           case _ => None
       // a TS cast or `!` changes nothing at run time: the value keeps the type the body can see
       case "ParenthesizedExpression" | "AsExpression" | "TypeAssertionExpression" | "NonNullExpression" if node.children.nonEmpty => exprType(node.children.head)
@@ -224,9 +232,11 @@ abstract private[dedicated] class BodyScope(
       // `new C(…)` of a class the reference declares
       case "NewExpression" if node.children.nonEmpty =>
         node.children.head.text.filter(n => ctorSchema.get(n).isDefined || memberIndex.knowsType(n))
-      // `xs[i]` on a collection whose element type is declared
+      // `p[0]` on a tuple record is its field; `xs[i]` on a collection whose element type is declared
       case "ElementAccessExpression" if node.children.size >= 2 =>
-        exprType(node.children.head).flatMap(extractElementType)
+        tupleField(node.children.head, node.children(1)) match
+          case Some((cls, field)) => memberIndex.memberType(cls, field)
+          case None               => exprType(node.children.head).flatMap(extractElementType)
       // `xs.length` of a collection or a string
       case "PropertyAccessExpression"
           if node.children.size >= 2 && node.children.last.text.contains("length") &&
@@ -375,6 +385,25 @@ abstract private[dedicated] class BodyScope(
   protected def intLiteral(n: RastNode): Option[Int] =
     n.value.collect { case RastValue.Num(d) if d >= 0 && d == d.toInt => d.toInt }.filter(_ => n.kind == "NumericLiteral" || n.kind == "FirstLiteralToken")
 
+  /** The class and the field a constant index reads off a value whose declared class is one of the library's tuple records; none for any other receiver or index. */
+  protected def tupleField(recv: RastNode, idx: RastNode): Option[(String, String)] =
+    for
+      t <- exprType(recv)
+      cls = baseName(t)
+      fields <- conventions.tupleRecords.get(cls)
+      i <- intLiteral(idx)
+      field <- fields.lift(i)
+    yield (cls, field)
+
+  /** A name an enclosing JS function binds and this body does not: `Some(Some(m))` when the class the body is emitted into declares it as `m`, `Some(None)` when nothing can hold it, `None` for a name
+    * no enclosing function binds. Such a name shadows any module-level one, so it is never resolved there.
+    */
+  protected def outerBinding(n: String): Option[Option[String]] =
+    if !entry.outerScope.contains(n) || entry.params.contains(n) || declaredInBody(n) || isLocal(n) then None
+    else
+      val sc = memberRenames.getOrElse(snakeToCamel(n), snakeToCamel(n))
+      Some(enclosingClass.flatMap(c => List(sc, n).find(memberIndex.hasMember(c, _))))
+
   protected def refuse(reason: String): Unit =
     refusals += reason
     refusalSites += DefmethodBodyTranslator.RefusalSite(reason, site._1, site._2)
@@ -446,14 +475,12 @@ abstract private[dedicated] class BodyScope(
         narrowedBy(cond.children.head) ++ narrowedBy(cond.children.last)
       case "BinaryExpression" if cond.operator.contains("InstanceOfKeyword") =>
         cond.children.filterNot(_.kind == "InstanceOfKeyword") match
-          case (x @ RastNode("Identifier", _, _, _, _, _, _, _, Some(name), _, _, _)) :: (c @ RastNode("Identifier", _, _, _, _, _, _, _, Some(cls), _, _, _)) :: Nil =>
-            val scalaCls   = if conventions.isClassName(cls) then conventions.scalaClassName(cls) else cls
-            val narrowable =
-              (isLocal(name) || entry.params.contains(name)) && !reassignedNames.contains(name) && !reassignedNames.contains(snakeToCamel(name)) &&
-                memberIndex.knowsType(scalaCls) && memberIndex.testable(scalaCls) == scalaCls && !unwrappedIds.contains(snakeToCamel(name))
-            if narrowable then List(name -> scalaCls) else Nil
+          case RastNode("Identifier", _, _, _, _, _, _, _, Some(name), _, _, _) :: RastNode("Identifier", _, _, _, _, _, _, _, Some(cls), _, _, _) :: Nil =>
+            val scalaCls = if conventions.isClassName(cls) then conventions.scalaClassName(cls) else cls
+            if narrowable(name, scalaCls) then List(name -> scalaCls) else Nil
           case _ => Nil
-      case _ => Nil
+      case "BinaryExpression" if cond.operator.exists(op => op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") => tagNarrowing(cond)
+      case _                                                                                                              => Nil
 
   /** What `cond` proves when it FAILS: `!(x instanceof C)` failing makes `x` a `C`, and so does each operand of a failing `||`. */
   protected def refutedBy(cond: RastNode): List[(String, String)] =
@@ -462,7 +489,39 @@ abstract private[dedicated] class BodyScope(
       case "PrefixUnaryExpression" if cond.operator.contains("ExclamationToken")                  => cond.children.headOption.toList.flatMap(narrowedBy)
       case "BinaryExpression" if cond.operator.contains("BarBarToken") && cond.children.size >= 2 =>
         refutedBy(cond.children.head) ++ refutedBy(cond.children.last)
-      case _ => Nil
+      case "BinaryExpression" if cond.operator.exists(op => op == "ExclamationEqualsEqualsToken" || op == "ExclamationEqualsToken") => tagNarrowing(cond)
+      case _                                                                                                                        => Nil
+
+  // a local the body never reassigns, at a class the reference declares with no type parameters: the cast it renders is exactly the test JS made
+  private def narrowable(name: String, scalaCls: String): Boolean =
+    (isLocal(name) || entry.params.contains(name)) && !reassignedNames.contains(name) && !reassignedNames.contains(snakeToCamel(name)) &&
+      memberIndex.knowsType(scalaCls) && memberIndex.testable(scalaCls) == scalaCls && !unwrappedIds.contains(snakeToCamel(name))
+
+  /** `x.<tag> == "Y"` proves `x` is the ONE class whose tag the reference declares as `"Y"`; a value two classes declare proves nothing. */
+  private def tagNarrowing(cond: RastNode): List[(String, String)] =
+    if cond.children.size < 2 then Nil
+    else
+      val (l, r) = (cond.children.head, cond.children.last)
+      tagComparison(l, r).orElse(tagComparison(r, l)).toList.flatMap {
+        case (RastNode("Identifier", _, _, _, _, _, _, _, Some(name), _, _, _), tag) =>
+          conventions.typeTag.toList.flatMap((_, member) => memberIndex.classesDeclaring(member, tag)) match
+            case List(cls) if narrowable(name, cls) => List(name -> cls)
+            case _                                  => Nil
+        case _ => Nil
+      }
+
+  /** True for a read of the library's type-tag field (`node.<tag>`). */
+  protected def isTypePropertyAccess(node: RastNode): Boolean =
+    node.kind == "PropertyAccessExpression" && node.children.size >= 2 && conventions.tagField.exists(t => node.children.last.text.contains(t))
+
+  /** The receiver and the value when `access` reads the type tag and `literal` is a string literal. */
+  protected def tagComparison(access: RastNode, literal: RastNode): Option[(RastNode, String)] =
+    if !isTypePropertyAccess(access) || literal.kind != "StringLiteral" then None
+    else literal.value.collect { case RastValue.Str(s) => (access.children.head, s) }
+
+  /** The class a tag read's receiver is declared as; `this` is the body's own class. */
+  protected def tagReceiverType(recv: RastNode): Option[String] =
+    if recv.kind == "ThisKeyword" then Some(nodeScalaType).filter(_.nonEmpty) else exprType(recv).map(baseName)
 
   /** Renders under the narrowing `pairs` prove: each name reads as its class, and renders cast to it. */
   protected def underNarrowing[A](pairs: List[(String, String)])(render: => A): A =

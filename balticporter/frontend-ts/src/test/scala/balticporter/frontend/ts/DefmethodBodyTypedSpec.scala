@@ -277,8 +277,23 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     assertNoDiff(translate(block(ret(ident("N_Leaf"))), conventions = nodeLib).scalaBody.trim, "NLeaf")
 
   test("a library's type tag, node factory and moved method are read through its conventions"):
-    val tagTest = translate(block(ret(bin("EqualsEqualsEqualsToken", prop(ident("x"), "KIND"), str("Leaf")))), params = List("x"), conventions = nodeLib)
-    assertNoDiff(tagTest.scalaBody.trim, "x.isInstanceOf[NLeaf]")
+    // the tag is compared as JS compares it: a subclass carrying its own tag is no `Leaf`, though it is an `NLeaf`
+    val mi      = ReferenceSignatures.MemberIndex(Map("NBase" -> Set("kind"), "NLeaf" -> Set("kind", "v")), constants = Map(("kind", "Leaf") -> List("NLeaf")))
+    val isLeaf  = bin("EqualsEqualsEqualsToken", prop(ident("x"), "KIND"), str("Leaf"))
+    val tagTest = translate(block(ret(isLeaf)), params = List("x"), paramTypes = Map("x" -> "NBase"), memberIndex = mi, conventions = nodeLib)
+    assertNoDiff(tagTest.scalaBody.trim, "x.kind == \"Leaf\"")
+    refuses(translate(block(ret(isLeaf)), params = List("x"), conventions = nodeLib), "tag-on-untyped-receiver")
+    // where the test holds, `x` is the one class declaring that tag
+    val narrowed = translate(
+      block(node("IfStatement", isLeaf, block(ret(prop(ident("x"), "v")))), ret(num(0))),
+      params = List("x"),
+      paramTypes = Map("x" -> "NBase"),
+      returnType = Some("Int"),
+      memberIndex = mi,
+      conventions = nodeLib
+    )
+    accepts(narrowed)
+    assert(narrowed.scalaBody.contains("x.asInstanceOf[NLeaf].v"), narrowed.scalaBody)
     val built = translate(
       block(
         ret(
@@ -294,6 +309,8 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       conventions = nodeLib
     )
     assertNoDiff(built.scalaBody.trim, "{ val $n = new NLeaf(); $n.v = 1; $n }")
+    // what the factory takes from its origin node is the library's rule, not an assignment
+    refuses(built, "node-factory-origin")
     assertNoDiff(
       translate(block(ret(call(prop(ident("x"), "measure")))), params = List("x"), conventions = nodeLib).scalaBody.trim,
       "Sizes.of(x)"
@@ -537,6 +554,151 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
   test("a checker type that is a union, an unknown class or an anonymous shape says nothing"):
     for t <- List(RastType("union", "Token | undefined"), RastType("object", "Other"), RastType("object", "{ text: string; }")) do refuses(checkerTyped(t, "text"), "receiver-type-unknown")
 
+  test("a member a parent class or trait declares is a member of the class, even one declaring nothing of its own"):
+    val src           = "package p\ntrait Block extends Stmt {\n  var body: Int = 0\n}\ntrait Stmt\nclass BlockStatement extends Node with Block {}\nclass Node\n"
+    val (_, mi, _, _) = ReferenceSignatures.buildIndices(List("Ast" -> src))
+    val read          = (f: String) => translate(block(ret(prop(ident("b"), f))), params = List("b"), paramTypes = Map("b" -> "BlockStatement"), memberIndex = mi)
+    assertNoDiff(read("body").scalaBody.trim, "b.body")
+    refuses(read("bodies"), "wrong-member-access")
+    assert(mi.isMutable("BlockStatement", "body"))
+    assertEquals(mi.memberType("BlockStatement", "body"), Some("Int"))
+
+  test(
+    "a nested function carries the names its enclosing functions bind; a sibling's call reads the class the reference made of the enclosing function"
+  ):
+    val param   = node("Parameter", ident("text"))
+    val sVar    = local("S", num(0))
+    val isFn    = node("FunctionDeclaration", ident("is"), node("Parameter", ident("t")), block(ret(ident("t"))))
+    val callIs  = block(ret(call(ident("is"), str("x"))))
+    val nextFn  = node("FunctionDeclaration", ident("next"), callIs)
+    val parseFn = node("FunctionDeclaration", ident("parse"), param, block(sVar, isFn, nextFn))
+    val fns     = RastFunctions.of(RastFile(1, "x.js", "", List(parseFn), Map.empty, Map.empty))
+    val next    = fns.find(_.name == "next").get
+    assertEquals(next.outer, Set("text", "S", "is", "next"))
+    assert(fns.find(_.name == "parse").get.outer.isEmpty)
+    val mi       = ReferenceSignatures.MemberIndex(Map("Parser" -> Set("is", "next")))
+    val moduleIs = objectIndex("Helpers", "is")
+    val run      = (cls: Option[String]) =>
+      DefmethodBodyTranslator.translateBody(
+        DefmethodEntry(next.owner, next.name, next.params, next.body, next.outer),
+        Nil,
+        calleeIndex = moduleIs,
+        memberIndex = mi,
+        enclosingClass = cls
+      )
+    assertNoDiff(run(Some("Parser")).scalaBody.trim, "is(\"x\")")
+    // the enclosing function's `is` shadows the module-level one: with no class to hold it, nothing can
+    refuses(run(None), "enclosing-function-binding")
+
+  private val pointSrc                              = "package p\nfinal case class Point(var x: Double, var y: Double)\nfinal case class Line(p1: Point, p2: Point)\n"
+  private lazy val (_, pointMembers, pointCtors, _) = ReferenceSignatures.buildIndices(List("Geometry" -> pointSrc))
+  private val records                               = JsConventions(tupleRecords = Map("Point" -> List("x", "y"), "Line" -> List("p1", "p2")))
+
+  private def onPoints(body: RastNode, paramTypes: Map[String, String], returnType: Option[String] = None, conventions: JsConventions = records) =
+    translate(
+      body,
+      params = paramTypes.keys.toList,
+      paramTypes = paramTypes,
+      returnType = returnType,
+      memberIndex = pointMembers,
+      ctorSchema = pointCtors,
+      conventions = conventions
+    )
+
+  private def elem(recv: RastNode, i: Int): RastNode = node("ElementAccessExpression", recv, num(i))
+
+  test("a tuple record's constant index reads its field, a store writes it, and an array literal at its slot builds it"):
+    val read = onPoints(block(ret(bin("MinusToken", elem(elem(ident("l"), 0), 1), elem(elem(ident("l"), 1), 1)))), Map("l" -> "Line"))
+    assertNoDiff(read.scalaBody.trim, "l.p1.y - l.p2.y")
+    accepts(read)
+    val store = onPoints(block(expr(bin("EqualsToken", elem(ident("p"), 0), num(1))), ret(ident("p"))), Map("p" -> "Point"), Some("Point"))
+    accepts(store)
+    assert(store.scalaBody.contains("p.x = 1"), store.scalaBody)
+    refuses(
+      onPoints(
+        block(expr(bin("EqualsToken", elem(ident("l"), 0), ident("q"))), ret(ident("l"))),
+        Map("l" -> "Line", "q" -> "Point"),
+        Some("Line")
+      ),
+      "assign-to-immutable-field"
+    )
+    assertNoDiff(
+      onPoints(block(ret(node("ArrayLiteralExpression", num(1), num(2)))), Map.empty, Some("Point")).scalaBody.trim,
+      "Point(1, 2)"
+    )
+    // a position past the record's fields, and the same reads with no policy, stay refused
+    refuses(onPoints(block(ret(elem(ident("p"), 2))), Map("p" -> "Point")), "element-access-on-class")
+    refuses(onPoints(block(ret(elem(ident("p"), 0))), Map("p" -> "Point"), conventions = JsConventions.plain), "element-access-on-class")
+
+  private def pattern(kind: String, names: String*):        RastNode = node(kind, names.map(n => node("BindingElement", ident(n)))*)
+  private def destructuring(pat: RastNode, init: RastNode): RastNode =
+    node(
+      "VariableStatement",
+      node("VariableDeclarationList", RastNode("VariableDeclaration", 0, (0, 0), children = List(pat, init), flags = List("const")))
+    )
+
+  test("array destructuring reads a tuple record's fields, the source evaluated once; any other source is refused"):
+    val r = onPoints(
+      block(destructuring(pattern("ArrayBindingPattern", "a", "b"), ident("p")), ret(ident("a"))),
+      Map("p" -> "Point"),
+      Some("Double")
+    )
+    accepts(r)
+    assertNoDiff(r.scalaBody.trim, "{\n      val a = p.x\n      val b = p.y\n      a\n    }")
+    val once = onPoints(block(destructuring(pattern("ArrayBindingPattern", "a", "b"), call(ident("make"))), ret(ident("a"))), Map.empty)
+    refuses(once, "array-destructuring")
+    refuses(
+      onPoints(block(destructuring(pattern("ArrayBindingPattern", "a"), ident("xs")), ret(ident("a"))), Map("xs" -> "Vector[Double]")),
+      "array-destructuring"
+    )
+
+  test("object destructuring evaluates its source once and refuses a default, a rest, or a field the class lacks"):
+    val r = onPoints(
+      block(destructuring(pattern("ObjectBindingPattern", "x"), call(prop(ident("l"), "first"))), ret(ident("x"))),
+      Map("l" -> "Line")
+    )
+    assert(r.scalaBody.contains("val d$"), s"a call is bound once: ${r.scalaBody}")
+    refuses(
+      onPoints(block(destructuring(pattern("ObjectBindingPattern", "z"), ident("p")), ret(ident("z"))), Map("p" -> "Point")),
+      "wrong-member-access"
+    )
+    val rest = node("ObjectBindingPattern", RastNode("BindingElement", 0, (0, 0), children = List(ident("others")), flags = List("rest")))
+    refuses(onPoints(block(destructuring(rest, ident("p")), ret(ident("others"))), Map("p" -> "Point")), "destructuring-pattern")
+    val renamed = node("ObjectBindingPattern", RastNode("BindingElement", 0, (0, 0), children = List(ident("x"), ident("px")), flags = List("renamed")))
+    val ok      = onPoints(block(destructuring(renamed, ident("p")), ret(ident("px"))), Map("p" -> "Point"), Some("Double"))
+    accepts(ok)
+    assert(ok.scalaBody.contains("val px = p.x"), ok.scalaBody)
+
+  test(
+    "an object literal passed where the reference spells the options bag as parameters becomes named arguments; a key naming no parameter refuses"
+  ):
+    val sig = ReferenceSignatures.MethodSig(
+      "extend",
+      List(
+        ReferenceSignatures.ParamSig("color", "String", hasDefault = true),
+        ReferenceSignatures.ParamSig("size", "Int", hasDefault = true)
+      ),
+      "Opts"
+    )
+    val oracle = ReferenceSignatures.TypeOracle.fromEntries(List("Opts" -> sig))
+    val mi     = ReferenceSignatures.MemberIndex(Map("Opts" -> Set("extend")))
+    val bag    = (key: String) => node("ObjectLiteralExpression", node("PropertyAssignment", ident(key), ident("c")))
+    val run    = (key: String) =>
+      translate(
+        block(ret(call(prop(thisKw, "extend"), bag(key)))),
+        params = List("c"),
+        paramTypes = Map("c" -> "String"),
+        className = "Opts",
+        memberIndex = mi,
+        oracle = oracle
+      )
+    assertNoDiff(run("color").scalaBody.trim, "this.extend(color = c)")
+    refuses(run("colour"), "js-map-construction")
+
+  test("new Set and new Map of an iterable take its elements"):
+    val r = translate(block(ret(node("NewExpression", ident("Set"), ident("xs")))), params = List("xs"), paramTypes = Map("xs" -> "Vector[Int]"))
+    assertNoDiff(r.scalaBody.trim, "scala.collection.mutable.Set.from(xs)")
+
   test(
     "a last if with no else falls off the function's end: the else returns the absent value the result type spells, or refuses"
   ):
@@ -584,13 +746,23 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     val onS = translate(block(ret(call(prop(ident("s"), "charAt"), num(0)))), params = List("s"), paramTypes = Map("s" -> "String"))
     refuses(onS, "js-string-index")
 
-  test("an empty branch is no reason to fail: the early-return scan reads it as returning nothing"):
-    val r = translate(block(node("IfStatement", ident("c"), block())), params = List("c"), paramTypes = Map("c" -> "Boolean"), returnType = Some("Unit"))
+  test("an object literal carrying the type tag builds the one class declaring that tag, where the slot admits it"):
+    val src            = "package p\nsealed trait Node {\n  def kind: String\n}\nfinal case class Group(var body: Int = 0) extends Node {\n  override def kind: String = \"group\"\n}\n"
+    val (_, mi, cs, _) = ReferenceSignatures.buildIndices(List("Nodes" -> src))
+    val lit            = (tag: String) =>
+      node(
+        "ObjectLiteralExpression",
+        node("PropertyAssignment", ident("type"), str(tag)),
+        node("PropertyAssignment", ident("body"), num(1))
+      )
+    val conv = JsConventions(typeTag = Some("type" -> "kind"))
+    val r    = translate(block(ret(lit("group"))), returnType = Some("Node"), memberIndex = mi, ctorSchema = cs, conventions = conv)
     accepts(r)
-
-  test("new Set and new Map of an iterable take its elements"):
-    val r = translate(block(ret(node("NewExpression", ident("Set"), ident("xs")))), params = List("xs"), paramTypes = Map("xs" -> "Vector[Int]"))
-    assertNoDiff(r.scalaBody.trim, "scala.collection.mutable.Set.from(xs)")
+    assertNoDiff(r.scalaBody.trim, "Group(body = 1)")
+    refuses(
+      translate(block(ret(lit("other"))), returnType = Some("Node"), memberIndex = mi, ctorSchema = cs, conventions = conv),
+      "js-map-construction"
+    )
 
   test(
     "a condition on a call the reference declares Boolean on every class reads as its value; any other agreed result is still unknown"
@@ -607,6 +779,10 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       )
     assert(!cond("is_done").refusalReasons.contains("truthiness-unknown-type"), cond("is_done").refusalReasons.toString)
     refuses(cond("size"), "truthiness-unknown-type")
+
+  test("an empty branch is no reason to fail: the early-return scan reads it as returning nothing"):
+    val r = translate(block(node("IfStatement", ident("c"), block())), params = List("c"), paramTypes = Map("c" -> "Boolean"), returnType = Some("Unit"))
+    accepts(r)
 
   test("JS reads past an array's end as undefined: a read of reference elements answers null there, a store stays an update"):
     val read = translate(

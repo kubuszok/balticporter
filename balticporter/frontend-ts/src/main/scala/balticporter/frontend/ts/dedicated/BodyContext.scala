@@ -23,7 +23,8 @@ private[dedicated] class BodyContext(
   oracle:             ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
   enclosingOwner:     Option[String] = None,
   conventions:        JsConventions = JsConventions.plain,
-  tsTypes:            Map[String, RastType] = Map.empty
+  tsTypes:            Map[String, RastType] = Map.empty,
+  enclosingClass:     Option[String] = None
 ) extends BodyScope(
       entry,
       hierarchy,
@@ -41,8 +42,11 @@ private[dedicated] class BodyContext(
       oracle,
       enclosingOwner,
       conventions,
-      tsTypes
-    ):
+      tsTypes,
+      enclosingClass
+    )
+    with BodyBindings
+    with BodyObjects:
   /** Translate a JS expression used as a condition (if, while, ternary). Applies truthiness lowering when the operand has a known non-Boolean type.
     */
   private def translateCondition(node: RastNode): String = at(node)(renderCondition(node))
@@ -94,7 +98,7 @@ private[dedicated] class BodyContext(
   /** Translate an expression at a slot whose expected Scala type is known. A string literal at an enum/sealed-object slot becomes the qualified member. An array literal at a typed collection slot
     * carries the element type.
     */
-  private def translateExprAt(node: RastNode, expectedType: String): String =
+  protected def translateExprAt(node: RastNode, expectedType: String): String =
     val baseType = expectedType.takeWhile(c => c != '[' && c != ' ')
     node.kind match
       // both branches of `c ? a : b` take the slot's type
@@ -153,6 +157,15 @@ private[dedicated] class BodyContext(
           else
             val elems = node.children.map(c => translateExprAt(c, et))
             s"$coll$targ(${elems.mkString(", ")})"
+        else if conventions.tupleRecords.contains(baseName(expectedType)) then
+          val cls = baseName(expectedType)
+          // a fixed-length JS array at a tuple record's slot builds the record, position by position
+          ctorSchema.get(cls) match
+            case Some(ps) if ps.map(_.name) == conventions.tupleRecords(cls) && ps.size == node.children.size =>
+              node.children.zip(ps).map((c, p) => translateExprAt(c, p.tpe)).mkString(s"$cls(", ", ", ")")
+            case _ =>
+              refuse("array-literal-at-class-slot")
+              translateExpr(node)
         else
           tupleComponents(expectedType) match
             // a fixed-length JS array at a Scala tuple slot: the same values, by position
@@ -288,17 +301,13 @@ private[dedicated] class BodyContext(
           vdl <- node.children.find(_.kind == "VariableDeclarationList")
           vd <- vdl.children.filter(_.kind == "VariableDeclaration")
         do
-          val name = vd.children.headOption.flatMap(_.text).getOrElse("_")
+          val name           = vd.children.headOption.flatMap(_.text).getOrElse("_")
+          val bindingPattern = vd.children.headOption.filter(c => c.kind == "ObjectBindingPattern" || c.kind == "ArrayBindingPattern")
           // a local nothing writes after its declaration is a `val`, whether JS declared it `const`, `let` or `var`
-          val keyword   = if assignedAnywhere.contains(name) then "var" else "val"
+          val bound     = bindingPattern.fold(List(name))(bindingsDeclaredBy)
+          val keyword   = if bound.exists(assignedAnywhere.contains) then "var" else "val"
           val scalaName = snakeToCamel(name)
-          // Handle destructuring: { x, y } = obj
-          val hasObjectBinding = vd.children.exists(_.kind == "ObjectBindingPattern")
-          if hasObjectBinding then
-            val pattern  = vd.children.find(_.kind == "ObjectBindingPattern").get
-            val fields   = pattern.children.filter(_.kind == "BindingElement").flatMap(_.children.find(_.kind == "Identifier").flatMap(_.text))
-            val initExpr = vd.children.find(c => c.kind != "ObjectBindingPattern" && c.kind != "Identifier").map(translateExpr).getOrElse("???")
-            for f <- fields do sb.append(s"$indent$keyword ${snakeToCamel(f)} = $initExpr.${snakeToCamel(f)}\n")
+          if bindingPattern.isDefined then destructure(bindingPattern.get, vd.children.drop(1).lastOption, keyword, indent)
           else
             // `let x: T = e`: the annotation precedes the initialiser and is never one itself.
             val (annotation, initNode) = vd.children.drop(1) match
@@ -493,7 +502,9 @@ private[dedicated] class BodyContext(
 
       case "ElementAccessExpression" =>
         val children = node.children
-        if children.size >= 2 then
+        val field    = if children.size >= 2 then tupleField(children.head, children(1)) else None
+        if field.isDefined then s"${translateExpr(children.head)}.${field.get._2}"
+        else if children.size >= 2 then
           // indexing reads a collection, a map or a string; on a declared class (a tuple the port reshaped) it reads nothing
           exprType(children.head).foreach { t =>
             if isSpecificClassType(t) || isOptionLike(t) then refuse("element-access-on-class")
@@ -519,21 +530,29 @@ private[dedicated] class BodyContext(
         val rawArgs  = children.drop(1)
         // Apply expected-type propagation to constructor arguments via ctor schema
         val ctorParamTypes = ctorSchema.get(cls).getOrElse(Nil)
-        val args           = rawArgs.zipWithIndex.map { case (arg, i) =>
-          ctorParamTypes.lift(i) match
-            case Some(param) => translateExprAt(arg, param.tpe)
-            case None        => translateExpr(arg)
-        }
+        // `new C({ a: x })` where the constructor spells the options bag as parameters
+        val named = rawArgs match
+          case List(o) if o.kind == "ObjectLiteralExpression" =>
+            namedArguments(ctorParamTypes.map(p => ReferenceSignatures.ParamSig(p.name, p.tpe, p.hasDefault)), o)
+          case _ => None
+        val args = named.getOrElse(
+          rawArgs.zipWithIndex.map { case (arg, i) =>
+            ctorParamTypes.lift(i) match
+              case Some(param) => translateExprAt(arg, param.tpe)
+              case None        => translateExpr(arg)
+          }
+        )
         // Refuse when a constructor argument's known type differs from the
         // expected parameter type (e.g. passing Settings where Boolean is expected)
-        for (arg, i) <- rawArgs.zipWithIndex do
-          ctorParamTypes.lift(i).foreach { param =>
-            exprType(arg).foreach { argType =>
-              val expectedBase = param.tpe.takeWhile(c => c != '[' && c != ' ')
-              val argBase      = argType.takeWhile(c => c != '[' && c != ' ')
-              if expectedBase != argBase && expectedBase != "Any" && argBase != "Any" then refuse("constructor-arg-type-mismatch")
+        if named.isEmpty then
+          for (arg, i) <- rawArgs.zipWithIndex do
+            ctorParamTypes.lift(i).foreach { param =>
+              exprType(arg).foreach { argType =>
+                val expectedBase = param.tpe.takeWhile(c => c != '[' && c != ' ')
+                val argBase      = argType.takeWhile(c => c != '[' && c != ' ')
+                if expectedBase != argBase && expectedBase != "Any" && argBase != "Any" then refuse("constructor-arg-type-mismatch")
+              }
             }
-          }
         cls match
           case "Array" =>
             if args.isEmpty then "scala.collection.mutable.ArrayBuffer.empty[Any]"
@@ -767,7 +786,13 @@ private[dedicated] class BodyContext(
       case "arguments" =>
         refuse("ArgumentsObject")
         "??? /* arguments */"
-      case n if conventions.isClassName(n)                                                              => conventions.scalaClassName(n)
+      case n if conventions.isClassName(n) => conventions.scalaClassName(n)
+      // an enclosing function's binding: the class the body is emitted into holds it, or nothing does
+      case n if outerBinding(n).isDefined =>
+        outerBinding(n).flatten.getOrElse {
+          refuse("enclosing-function-binding")
+          snakeToCamel(n)
+        }
       case n if n.startsWith("_") && !apiLookup.contains(n) && !entry.params.contains(n) && !isLocal(n) =>
         // An underscore-prefixed name is usually a private helper: it is known only when the reference declares it under that same name.
         calleeIndex.resolveMember(snakeToCamel(n)) match
@@ -856,7 +881,8 @@ private[dedicated] class BodyContext(
     else if obj.kind == "PropertyAccessExpression" && obj.children.size >= 2 && obj.children.last.text.contains("prototype") then
       s"${conventions.scalaClassName(obj.children.head.text.getOrElse("?"))}.${snakeToCamel(prop)}"
     else
-      val renamedProp   = memberRenames.get(snakeToCamel(prop)).orElse(memberRenames.get(prop))
+      // the library's type-tag field is the member the reference spells it as
+      val renamedProp   = conventions.typeTag.collect { case (tag, member) if tag == prop => member }.orElse(memberRenames.get(snakeToCamel(prop))).orElse(memberRenames.get(prop))
       val effectiveProp = renamedProp.getOrElse(snakeToCamel(prop))
       // The spelling the receiver's declared type actually has, when its type is known.
       var declaredSpelling: Option[String] = None
@@ -1004,7 +1030,8 @@ private[dedicated] class BodyContext(
               oracle.get(cap, methName).orElse(oracle.get(oName, methName))
             else if obj.kind == "ThisKeyword" && memberIndex.knowsType(nodeScalaType) then oracle.get(nodeScalaType, snakeToCamel(method))
             else None
-          calleeSig.foreach { s =>
+          val named = optionsBag(calleeSig, args)
+          calleeSig.filter(_ => named.isEmpty).foreach { s =>
             val isVararg = s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq["))
             if args.length > s.params.length && !isVararg then refuse("callee-arity-mismatch")
             if args.length < s.params.length && !isVararg && omittedArgs(s, args.length).isEmpty then refuse("callee-arity-mismatch")
@@ -1022,17 +1049,19 @@ private[dedicated] class BodyContext(
           val isPredicate = predicateMethods.contains(method)
           val elemType: Option[String] =
             if isPredicate then exprType(obj).flatMap(extractElementType) else None
-          val scalaArgs = calleeSig match
-            case Some(s) =>
-              args.zipWithIndex.map { case (arg, i) =>
-                s.params.lift(i).map(p => translateExprAt(arg, p.tpe)).getOrElse(translateExpr(arg))
-              } ++ omittedArgs(s, args.length).getOrElse(Nil)
-            case None =>
-              if isPredicate then
+          val scalaArgs = named.getOrElse(
+            calleeSig match
+              case Some(s) =>
                 args.zipWithIndex.map { case (arg, i) =>
-                  if i == 0 then translatePredicateLambda(arg, elemType) else translateExpr(arg)
-                }
-              else args.map(translateExpr)
+                  s.params.lift(i).map(p => translateExprAt(arg, p.tpe)).getOrElse(translateExpr(arg))
+                } ++ omittedArgs(s, args.length).getOrElse(Nil)
+              case None =>
+                if isPredicate then
+                  args.zipWithIndex.map { case (arg, i) =>
+                    if i == 0 then translatePredicateLambda(arg, elemType) else translateExpr(arg)
+                  }
+                else args.map(translateExpr)
+          )
 
           if classMethod.isDefined && !conventions.methodRewrites.contains(method) then
             val name = classMethod.get
@@ -1266,9 +1295,10 @@ private[dedicated] class BodyContext(
             translateMakeNode(args)
           case _ =>
             val scalaName = translateIdentifier(name)
-            // Resolve the callee: try callee index for unqualified names
+            val outer     = outerBinding(name)
+            // Resolve the callee: try callee index for unqualified names; an enclosing function's binding shadows them all
             val resolvedCallee: Option[ReferenceSignatures.MemberRef] =
-              if !apiLookup.contains(name) && !entry.params.contains(name) &&
+              if outer.isEmpty && !apiLookup.contains(name) && !entry.params.contains(name) &&
                 !conventions.isClassName(name) && scalaName == snakeToCamel(name)
               then
                 calleeIndex.resolveMember(scalaName) match
@@ -1282,8 +1312,11 @@ private[dedicated] class BodyContext(
               else None
             val qualifiedCallee = resolvedCallee.fold(scalaName)(qualify)
             // Look up the callee's signature for expected-type propagation
-            val calleeSig = resolvedCallee.fold(lookupCallee(qualifiedCallee))(signatureOf)
-            calleeSig.foreach { s =>
+            val calleeSig = outer match
+              case Some(held) => held.flatMap(m => enclosingClass.flatMap(oracle.get(_, m)))
+              case None       => resolvedCallee.fold(lookupCallee(qualifiedCallee))(signatureOf)
+            val named = optionsBag(calleeSig, args)
+            calleeSig.filter(_ => named.isEmpty).foreach { s =>
               val isVararg = s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq["))
               if args.length > s.params.length && !isVararg then refuse("callee-arity-mismatch")
               if args.length < s.params.length && !isVararg && omittedArgs(s, args.length).isEmpty then refuse("callee-arity-mismatch")
@@ -1294,12 +1327,14 @@ private[dedicated] class BodyContext(
                   }
                 }
             }
-            val scalaArgs = calleeSig match
-              case Some(s) =>
-                args.zipWithIndex.map { case (arg, i) =>
-                  s.params.lift(i).map(p => translateExprAt(arg, p.tpe)).getOrElse(translateExpr(arg))
-                } ++ omittedArgs(s, args.length).getOrElse(Nil)
-              case None => args.map(translateExpr)
+            val scalaArgs = named.getOrElse(
+              calleeSig match
+                case Some(s) =>
+                  args.zipWithIndex.map { case (arg, i) =>
+                    s.params.lift(i).map(p => translateExprAt(arg, p.tpe)).getOrElse(translateExpr(arg))
+                  } ++ omittedArgs(s, args.length).getOrElse(Nil)
+                case None => args.map(translateExpr)
+            )
             s"$qualifiedCallee(${scalaArgs.mkString(", ")})"
 
       case _ =>
@@ -1348,37 +1383,12 @@ private[dedicated] class BodyContext(
 
         val isEq = op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken"
         val isNe = op == "ExclamationEqualsEqualsToken" || op == "ExclamationEqualsToken"
-        // x.TYPE === "Y" -> x.isInstanceOf[AstY]
-        if isEq && isTypePropertyAccess(lhs) then
-          val objExpr  = translateExpr(lhs.children.head)
-          val typeName = rhs.value match
-            case Some(RastValue.Str(s)) => s
-            case _                      => ""
-          if typeName.nonEmpty then return s"$objExpr.isInstanceOf[${tagClass(typeName)}]"
-
-        // x.TYPE !== "Y" -> !x.isInstanceOf[AstY]
-        if isNe && isTypePropertyAccess(lhs) then
-          val objExpr  = translateExpr(lhs.children.head)
-          val typeName = rhs.value match
-            case Some(RastValue.Str(s)) => s
-            case _                      => ""
-          if typeName.nonEmpty then return s"!$objExpr.isInstanceOf[${tagClass(typeName)}]"
-
-        // "Y" === x.TYPE -> x.isInstanceOf[AstY]
-        if isEq && isTypePropertyAccess(rhs) then
-          val objExpr  = translateExpr(rhs.children.head)
-          val typeName = lhs.value match
-            case Some(RastValue.Str(s)) => s
-            case _                      => ""
-          if typeName.nonEmpty then return s"$objExpr.isInstanceOf[${tagClass(typeName)}]"
-
-        // "Y" !== x.TYPE -> !x.isInstanceOf[AstY]
-        if isNe && isTypePropertyAccess(rhs) then
-          val objExpr  = translateExpr(rhs.children.head)
-          val typeName = lhs.value match
-            case Some(RastValue.Str(s)) => s
-            case _                      => ""
-          if typeName.nonEmpty then return s"!$objExpr.isInstanceOf[${tagClass(typeName)}]"
+        // `x.<tag> === "Y"` compares the tag x's class declares, as JS does: a subclass carries its own tag, so no type test reads the same
+        if isEq || isNe then
+          tagComparison(lhs, rhs).orElse(tagComparison(rhs, lhs)).foreach { (recv, tag) =>
+            if !tagReceiverType(recv).exists(t => conventions.typeTag.exists((_, member) => memberIndex.hasMember(t, member))) then refuse("tag-on-untyped-receiver")
+            return s"${translateExpr(recv)}.${conventions.typeTag.get._2} ${if isEq then "==" else "!="} \"${escapeString(tag)}\""
+          }
 
         // typeof X === "type" -> X.isInstanceOf[Type]
         if isEq && lhs.kind == "TypeOfExpression" then
@@ -1497,6 +1507,9 @@ private[dedicated] class BodyContext(
           owner.filter(memberIndex.knowsType).foreach { t =>
             if !List(field, snakeToCamel(field)).exists(memberIndex.isMutable(t, _)) then refuse("assign-to-immutable-field")
           }
+        // storing into a tuple record's position stores into its field
+        if isAssignment && lhs.kind == "ElementAccessExpression" && lhs.children.size >= 2 then
+          tupleField(lhs.children.head, lhs.children(1)).foreach((cls, field) => if !memberIndex.isMutable(cls, field) then refuse("assign-to-immutable-field"))
         // the stored value takes the target's declared type, an optional target included
         val lhsType = if op == "EqualsToken" || op == "FirstAssignment" then exprType(lhs) else None
         val left    = translateExpr(lhs)
@@ -1652,76 +1665,6 @@ private[dedicated] class BodyContext(
         // Not a lambda literal: translate as-is
         translateExpr(node)
 
-  /** A JS object literal builds the class its SLOT declares (`expected`); with no declared slot type there is no faithful Scala value. */
-  private def translateObjectLiteral(node: RastNode, expected: Option[String]): String =
-    val props = node.children.filter(c =>
-      c.kind == "PropertyAssignment" || c.kind == "ShorthandPropertyAssignment" ||
-        c.kind == "SpreadAssignment" || c.kind == "MethodDeclaration"
-    )
-    if props.isEmpty then
-      // `{}` is a map only where its slot declares one; elsewhere it is an object of a shape nothing names
-      if !expected.exists(rt => rt.contains("Map") || rt.contains("map")) then refuse("js-map-construction")
-      "scala.collection.mutable.Map.empty[String, Any]"
-    else
-      // Extract literal key-value pairs
-      val litEntries = props.flatMap { p =>
-        p.kind match
-          case "PropertyAssignment" =>
-            val key = p.children.headOption.flatMap(_.text).getOrElse("?")
-            Some((key, p.children.drop(1).headOption))
-          case "ShorthandPropertyAssignment" =>
-            val key = p.children.headOption.flatMap(_.text).getOrElse("?")
-            Some((key, Some(p.children.head)))
-          case _ => None
-      }
-      // Try to construct a typed class when the return type has a known schema
-      val typeName = expected.map(_.takeWhile(c => c != '[' && c != ' '))
-      typeName.flatMap(ctorSchema.get) match
-        case Some(ctorParams) =>
-          val keyMap          = litEntries.map { case (k, v) => snakeToCamel(k) -> v }.toMap
-          val missingRequired = ctorParams.filterNot(_.hasDefault).filterNot(p => keyMap.contains(p.name))
-          // A key the class has no field for would be dropped silently.
-          val unknownKeys = keyMap.keySet -- ctorParams.map(_.name)
-          if unknownKeys.nonEmpty || props.exists(p => p.kind != "PropertyAssignment" && p.kind != "ShorthandPropertyAssignment") then
-            refuse("object-literal-unknown-field")
-            emitObjectLiteralAsMap(props)
-          else if missingRequired.nonEmpty then
-            refuse("object-literal-missing-field")
-            emitObjectLiteralAsMap(props)
-          else
-            val args = ctorParams.flatMap { param =>
-              keyMap.get(param.name) match
-                case Some(Some(valueNode)) => Some(s"${param.name} = ${translateExprAt(valueNode, param.tpe)}")
-                case Some(None)            => Some(s"${param.name} = ???")
-                case None                  => None // has default, omitted
-            }
-            s"${typeName.get}(${args.mkString(", ")})"
-        case None =>
-          // No schema: fall back to mutable.Map, refuse unless the slot declares a Map
-          if !expected.exists(rt => rt.contains("Map") || rt.contains("map")) then refuse("js-map-construction")
-          emitObjectLiteralAsMap(props)
-
-  private def emitObjectLiteralAsMap(props: List[RastNode]): String =
-    val entries = props.map { p =>
-      p.kind match
-        case "PropertyAssignment" =>
-          val key   = p.children.headOption.flatMap(_.text).getOrElse("?")
-          val value = p.children.drop(1).headOption.map(translateExpr).getOrElse("???")
-          s"\"${escapeString(key)}\" -> $value"
-        case "ShorthandPropertyAssignment" =>
-          val key = p.children.headOption.flatMap(_.text).getOrElse("?")
-          s"\"${escapeString(key)}\" -> ${snakeToCamel(key)}"
-        case "SpreadAssignment" =>
-          val expr = p.children.headOption.map(translateExpr).getOrElse("???")
-          s"/* spread */ $expr"
-        case "MethodDeclaration" =>
-          val name = p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("?")
-          refuse(s"MethodInObject:$name")
-          s"\"$name\" -> ??? /* method */"
-        case _ => "??? /* unknown prop */"
-    }
-    s"scala.collection.mutable.Map(${entries.mkString(", ")})"
-
   /** JS `s.replace(p, r)`: a string pattern replaces its FIRST occurrence (`replaceAll`: every one), a `/regex/` its first match unless flagged `g`. Only a literal replacement is rendered: `$n` names
     * a group in both languages for a regex, every other `$` form and a backslash differ.
     */
@@ -1861,12 +1804,22 @@ private[dedicated] class BodyContext(
       val iterable = children(1)
       // `for (k in o)` walks an object's KEYS: only a map has keys to walk in Scala
       if node.kind == "ForInStatement" && !exprType(iterable).exists(_.contains("Map")) then refuse("for-in-over-object")
-      // `for (const {a, b} of xs)` reads fields by name off each element
-      if varDecl.children.exists(_.children.exists(_.kind == "ObjectBindingPattern")) then refuse("for-of-object-destructuring")
+      val elemType = if node.kind == "ForOfStatement" then exprType(iterable).flatMap(extractElementType) else None
+      // `for (const {a, b} of xs)` and `for (const [x, y] of points)` read fields off each element, by name or by a tuple record's position
+      val fieldPattern = varDecl.children.headOption.flatMap(
+        _.children.find { p =>
+          p.kind == "ObjectBindingPattern" || (p.kind == "ArrayBindingPattern" && elemType.exists(t => conventions.tupleRecords.contains(baseName(t))))
+        }
+      )
+      if node.kind == "ForInStatement" && fieldPattern.isDefined then refuse("for-in-over-object")
       // Detect array destructuring: `for (const [k, v] of map)`
-      val arrayBinding = varDecl.children.headOption.flatMap(_.children.find(_.kind == "ArrayBindingPattern"))
+      val arrayBinding = varDecl.children.headOption.flatMap(_.children.find(_.kind == "ArrayBindingPattern")).filter(_ => fieldPattern.isEmpty)
+      val elemVar      = fieldPattern.map(_ => freshLabel("e"))
       val varPattern   = arrayBinding match
-        case Some(abp) =>
+        case _ if elemVar.isDefined => elemVar.get
+        case Some(abp)              =>
+          // a hole, a default, a rest or a nested pattern is no tuple pattern's
+          if !abp.children.forall(e => e.kind == "BindingElement" && e.flags.isEmpty && e.children.size == 1 && e.children.head.kind == "Identifier") then refuse("destructuring-pattern")
           val elems = abp.children.filter(_.kind == "BindingElement").flatMap(_.children.find(_.kind == "Identifier").flatMap(_.text)).map(snakeToCamel)
           if elems.size == 2 then s"(${elems.head}, ${elems(1)})"
           else s"(${elems.mkString(", ")})"
@@ -1875,7 +1828,8 @@ private[dedicated] class BodyContext(
           localNames += snakeToCamel(varName)
           if node.kind == "ForOfStatement" then exprType(iterable).flatMap(extractElementType).foreach(t => localTypes(snakeToCamel(varName)) = t)
           snakeToCamel(varName)
-      val iterExpr      = translateExpr(iterable)
+      // `for (k in m)` binds the map's keys; iterating the map itself would bind its entries
+      val iterExpr      = if node.kind == "ForInStatement" then s"${translateExpr(iterable)}.keys" else translateExpr(iterable)
       val bodyNode      = children.find(_.kind == "Block").orElse(children.lift(2)).getOrElse(RastNode("Block", 0, (0, 0)))
       val hasBreak      = containsBreak(bodyNode)
       val hasContinue   = containsContinue(bodyNode)
@@ -1893,6 +1847,10 @@ private[dedicated] class BodyContext(
           s"${forIndent}for ($varPattern <- $iterExpr) scala.util.boundary { ($cntLbl: scala.util.boundary.Label[scala.Unit]) ?=>\n"
         )
       else sb.append(s"${forIndent}for ($varPattern <- $iterExpr) {\n")
+      fieldPattern.foreach { p =>
+        val keyword = if bindingsDeclaredBy(p).exists(reassignedNames.contains) then "var" else "val"
+        destructureFrom(p, elemVar.get, elemType, keyword, forIndent + "  ")
+      }
       translateStatementBody(bodyNode, forIndent + "  ", false)
       sb.append(s"$forIndent}\n")
       if hasBreak then sb.append(s"$indent}\n")
@@ -1929,42 +1887,3 @@ private[dedicated] class BodyContext(
     }
     if !hasDefault then sb.append(s"$indent  case _ => ()\n")
     sb.append(s"$indent}\n")
-
-  /** Translate a node-factory call `f(Cls, orig, { prop: val, ... })` to Scala: `{ val $n = new Cls(); $n.prop = val; $n }`. */
-  private def translateMakeNode(args: List[RastNode]): String =
-    if args.isEmpty then return "??? /* node factory: no args */"
-    val classArg   = args.head
-    val className  = classArg.text.getOrElse("")
-    val scalaClass = conventions.scalaClassName(className)
-
-    // Optional origin argument and props argument
-    val propsArg = args.find(_.kind == "ObjectLiteralExpression")
-
-    propsArg match
-      case Some(objLit) =>
-        val props = objLit.children.filter(c => c.kind == "PropertyAssignment" || c.kind == "ShorthandPropertyAssignment")
-        if props.isEmpty then s"new $scalaClass()"
-        else
-          val assignments = props.map { p =>
-            p.kind match
-              case "PropertyAssignment" =>
-                val key   = p.children.headOption.flatMap(_.text).getOrElse("?")
-                val value = p.children.drop(1).headOption.map(translateExpr).getOrElse("???")
-                s"$$n.${snakeToCamel(key)} = $value"
-              case "ShorthandPropertyAssignment" =>
-                val key = p.children.headOption.flatMap(_.text).getOrElse("?")
-                s"$$n.${snakeToCamel(key)} = ${snakeToCamel(key)}"
-              case _ => "???"
-          }
-          s"{ val $$n = new $scalaClass(); ${assignments.mkString("; ")}; $$n }"
-      case None =>
-        s"new $scalaClass()"
-
-  /** True for a read of the library's type-tag field (`node.<tag>`). */
-  private def isTypePropertyAccess(node: RastNode): Boolean =
-    node.kind == "PropertyAccessExpression" &&
-      node.children.size >= 2 &&
-      conventions.tagField.exists(t => node.children.last.text.contains(t))
-
-  /** The Scala class a type-tag value names. */
-  private def tagClass(tag: String): String = memberIndex.testable(conventions.classPrefix.fold(tag)((_, scalaPrefix) => scalaPrefix + tag))

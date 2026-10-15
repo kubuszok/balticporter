@@ -455,6 +455,10 @@ class TsExporter {
         else flags.push("var");
       }
     }
+    // the tokens a binding's meaning turns on, which the children alone cannot show: `...x`, `{ a: x }`, `{ x = d }`
+    if ((ts.isBindingElement(node) || ts.isParameter(node)) && node.dotDotDotToken) flags.push("rest");
+    if (ts.isBindingElement(node) && node.propertyName) flags.push("renamed");
+    if (ts.isBindingElement(node) && node.initializer) flags.push("default");
     return flags;
   }
 

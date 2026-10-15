@@ -406,3 +406,22 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   method returns `Boolean` (any other type then fails to compile rather than reading differently);
   a `.length` condition is `!= 0`. No other agreed result is read this way: an `Int` read as a
   truthiness `!= 0` would compile against an `Option` and always hold.
+- (a) A name a JS function's ENCLOSING function binds shadows every module-level name: it resolves
+  only to a member of the class the reference made of that function (`enclosingClass`, which the
+  consumer names), and is refused (`enclosing-function-binding`) where nothing holds it. Resolved
+  through the callee index, a nested parser's `is(...)` was refused as `wrong-function-ref`, and a
+  shadowed module-level namesake would have been called instead.
+- (b) A JS fixed-length array the reference reshaped into a record is `JsConventions.tupleRecords`
+  (class -> field per position, its constructor taking exactly those fields): `p[0]` reads the
+  field, `[a, b]` at its slot builds it, `const [a, b] = p` binds its fields. Every other array
+  destructuring is refused, since JS reads past an array's end as `undefined` (an unread pattern
+  was emitted `val _ = center`); a destructuring source is evaluated once, and the exporter flags a
+  binding's `rest`, `renamed` and `default` forms, which its children alone cannot show.
+- (a) A JS type tag is compared as the string it is (`x.nodeType == "Call"`), never as a type test:
+  a subclass carries its own tag, so `isInstanceOf[Call]` held for a `New` where JS said no. The
+  test narrows `x` only to the ONE class the reference declares with that string constant, and a
+  `{ <tag>: "Y", ... }` literal builds that class where the slot admits it.
+- (b) One object literal passed where the reference spells the options bag as named parameters
+  (`extend({ color })` against `extend(color = …, size = …)`) becomes named arguments, each at its
+  parameter's type; a key naming no parameter, or an omitted parameter with no default, keeps the
+  `js-map-construction` refusal.

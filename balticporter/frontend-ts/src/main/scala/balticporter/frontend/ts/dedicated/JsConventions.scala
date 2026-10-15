@@ -12,13 +12,17 @@ package balticporter.frontend.ts.dedicated
   *   functions called as `f(Class, origin, { field: value })` that build `Class` and assign its fields
   * @param methodRewrites
   *   a method the port moved into a helper, rendered from a template where `$receiver` is the receiver
+  * @param tupleRecords
+  *   a class the reference declares where JS writes a fixed-length array, with the field each position became: `p[0]` reads the first field, `[a, b]` at the class's slot builds it and `const [a, b] =
+  *   p` binds its fields; the class's constructor must take exactly those fields in that order
   */
 final case class JsConventions(
   classPrefix:    Option[(String, String)] = None,
   rootClass:      Option[String] = None,
   typeTag:        Option[(String, String)] = None,
   nodeFactories:  Set[String] = Set.empty,
-  methodRewrites: Map[String, String] = Map.empty
+  methodRewrites: Map[String, String] = Map.empty,
+  tupleRecords:   Map[String, List[String]] = Map.empty
 ):
 
   /** True for a JS name spelled as one of the library's own classes. */

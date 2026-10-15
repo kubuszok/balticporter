@@ -71,6 +71,8 @@ object DefmethodBodyTranslator:
     *   private member of any other object is refused, and so is every private member when absent. */
   /** @param tsTypes the checker's types of the body's file (`RastFile.types`), read where the
     *   reference says nothing about a value; empty reads none. */
+  /** @param enclosingClass the class the body is emitted into, when the reference made a JS function into that class: a name an
+    *   enclosing JS function binds is read as the class's member of that name, and refused when the class declares none. */
   def translateBody(
       entry: DefmethodEntry,
       hierarchy: List[DefnodeClass],
@@ -89,8 +91,9 @@ object DefmethodBodyTranslator:
       enclosingOwner: Option[String] = None,
       conventions: JsConventions = JsConventions.plain,
       tsTypes: Map[String, RastType] = Map.empty,
+      enclosingClass: Option[String] = None,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions, tsTypes)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions, tsTypes, enclosingClass)
     ctx.translateBlock(entry.bodyNode)
     ctx.checkUnresolvedReferences()
     TranslationResult(
