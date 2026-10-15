@@ -241,6 +241,40 @@ class TypeRedirectScopeSpec extends PortSuite:
     assertNotDecides(p, Decision.Kind.RetypedSignature, "com.base.Bits")
   }
 
+  test(
+    "an override OUTSIDE the scope follows the rename where it reaches the source only through a class the scope re-parents"
+  ) {
+    val srcs = List(
+      "com/base/Attr.java" ->
+        """package com.base;
+          |public abstract class Attr implements Comparable<Attr> {}
+          |""".stripMargin,
+      "com/ext/Fog.java" ->
+        """package com.ext;
+          |public class Fog extends com.base.Attr {
+          |  @Override public int compareTo(com.base.Attr o) { return 1; }
+          |}
+          |""".stripMargin,
+      "com/ext/Plain.java" ->
+        """package com.ext;
+          |public class Plain implements Comparable<Plain> {
+          |  @Override public int compareTo(Plain o) { return 2; }
+          |}
+          |""".stripMargin
+    )
+    val phase = new TypeRedirectTransform(
+      redirects = Map("java.lang.Comparable" -> "scala.math.Ordered"),
+      memberRenames = Map("java.lang.Comparable" -> Map("compareTo" -> "compare")),
+      scopes = Map("java.lang.Comparable" -> RuleScope.Only(Set("com.base")))
+    )
+    val p = portAll(srcs, phase)
+    // `Attr` is re-parented onto `Ordered`, so `Fog` no longer inherits `compareTo` at all
+    assertEmits(p, "def compare(o: com.base.Attr)")
+    // `Plain` names `Comparable` itself, outside the scope: it keeps java's type and name
+    assertEmits(p, "override def compareTo(o: Plain)")
+    assertEmits(p, "class Plain extends java.lang.Comparable[Plain]")
+  }
+
   test("`subjectScope` returns the entry's scope from `scopeOf`") {
     val phase = new TypeRedirectTransform(
       redirects = Map("com.base.Bits" -> "scala.collection.mutable.BitSet"),

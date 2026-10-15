@@ -281,6 +281,11 @@ sees the kind); the screen is *would a reader act differently*.
   anchored on `(source, member)`, within the redirect's scope, each request `detachedParents = Set(source)`.
   A second unknown parent's surface is PORT policy (`TypeRedirectTransform(external = default ++ …)`),
   never a new closed platform row. Walk such a policy on a spec before regenerating a consumer.
+- A SCOPED redirect's member rename also reaches an override OUTSIDE the scope whose class reaches the
+  source only through classes the scope admits: those are re-parented, so the override no longer has
+  the source member to override. A dependent's subclasses of a base's in-scope class are that shape
+  (gltf's `*Attribute#compareTo` under core's `Attribute -> Ordered`, 10 errors). A class naming the
+  source itself outside the scope keeps java's name. Kind (b), the scope is policy.
 - Under a named/Option null target a boxed element is the primitive (`Nullable[Int]`); union keeps
   the box. A wrapper over the box and over the primitive are one slot (`sameSlot`) — no ascription
   between them. A field's derived rows are keyed `fullName:field`; a qualified-private reference member

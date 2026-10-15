@@ -229,6 +229,20 @@ final class TypeRedirectTransform(
             case RuleScope.Everywhere(_) => true
             case RuleScope.Only(_)       => false
 
+  /** Does `cls` reach `source` only through classes the scope admits? Each of those has its parent re-pointed at the target, so `cls` — a dependent's subclass of an admitted base class included — no
+    * longer inherits the source member at all, and its override has to take the target's name whatever the scope says about `cls` itself.
+    */
+  private def reparentedInScope(sc: RuleScope, program: Program, graph: OverrideGraph, source: String, cls: SymId): Boolean =
+    // the bound SOURCE symbol, the one the redirect re-points: an edge the binding does not name is not moved either
+    bound.get(source).flatMap(_.toOption).exists { src =>
+      val declaring = (cls :: graph.ancestorsOf(cls)).filter(t => graph.parentsOf(t).contains(src))
+      declaring.nonEmpty && declaring.forall(inScope(sc, program, _))
+    }
+
+  /** Is this member's declaration one the entry's rename reaches — admitted by the scope, or declared in a class the redirect re-parents through admitted ancestors? */
+  private def renameReaches(sc: RuleScope, program: Program, graph: OverrideGraph, source: String, member: SymId): Boolean =
+    inScope(sc, program, member) || program.symbolOf(member).exists(s => reparentedInScope(sc, program, graph, source, s.owner))
+
   /** A source member re-homed under the target — under the name a held-back rename gave it, since the source declaration kept java's. */
   private def twinOf(m: Symbol, id: SymId, toType: SymId, fromFqn: String, toFqn: String): Symbol =
     val moved = m.copy(id = id, owner = toType, fullName = if m.fullName.startsWith(fromFqn) then toFqn + m.fullName.drop(fromFqn.length) else m.fullName)
@@ -420,7 +434,7 @@ final class TypeRedirectTransform(
           // …within the redirect's own scope: a class the redirect leaves on the source type keeps the source's spelling
           val sc   = scopeOf(r.source)
           val hits = program.symbols.all
-            .filter(s => s.name == member && program.owned(s.id) && inScope(sc, program, s.owner) && graph.closureOf(s.id).externalAnchors.contains((r.source, member)))
+            .filter(s => s.name == member && program.owned(s.id) && renameReaches(sc, program, graph, r.source, s.id) && graph.closureOf(s.id).externalAnchors.contains((r.source, member)))
             .map(_.id)
             .toList
             .sortBy(_.raw)
@@ -431,7 +445,7 @@ final class TypeRedirectTransform(
       // DROPPED source is emitted nowhere, so its whole component moves as before
       val scopedHits = anchoredHits.map { r =>
         val sc               = scopeOf(r.source)
-        val (kept, heldBack) = r.hits.partition(h => sc.isUnrestricted || inherited(r.source) || inScope(sc, program, h))
+        val (kept, heldBack) = r.hits.partition(h => sc.isUnrestricted || inherited(r.source) || renameReaches(sc, program, graph, r.source, h))
         heldBack.foreach { h =>
           twinNames = twinNames.updated(h, r.newName)
           // an override the scope admits would have to move with the held-back member, which is one override component
