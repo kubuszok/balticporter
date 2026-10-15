@@ -49,7 +49,8 @@ private[dedicated] class BodyContext(
     with BodyBindings
     with BodyObjects
     with BodyArrays
-    with BodySwitch:
+    with BodySwitch
+    with BodyLocals:
   /** Translate a JS expression used as a condition (if, while, ternary). Applies truthiness lowering when the operand has a known non-Boolean type.
     */
   private def translateCondition(node: RastNode): String = at(node)(renderCondition(node))
@@ -324,12 +325,14 @@ private[dedicated] class BodyContext(
               case Left(kind) => refuse(s"local-type-annotation:$kind")
               case Right(_)   => ()
             }
-            val declaredType = declared.flatMap(_.toOption)
-            // JS leaves an uninitialised local `undefined`; no Scala value of its type says that.
-            if initNode.isEmpty then refuse("uninitialised-local")
+            val annotated = declared.flatMap(_.toOption)
+            // JS leaves an uninitialised local `undefined`; no Scala value of its type says that, unless no read can see it
+            val definite     = if initNode.isEmpty then definitelyAssignedType(vd, name, annotated).filter(writableType) else None
+            val declaredType = annotated.orElse(definite)
+            if initNode.isEmpty && definite.isEmpty then refuse("uninitialised-local")
             // `let x = null` types the local as Null in Scala: nothing can be stored into it later
             if declaredType.isEmpty && initNode.exists(n => n.kind == "NullKeyword" || n.kind == "UndefinedKeyword" || n.text.contains("undefined")) then refuse("null-initialised-local")
-            val init = initNode.map(n => declaredType.fold(translateExpr(n))(translateExprAt(n, _))).getOrElse("null")
+            val init = initNode.map(n => declaredType.fold(translateExpr(n))(translateExprAt(n, _))).getOrElse(definite.fold("null")(unobservedValue))
             // Track local variable types from the annotation, else from an initialiser whose type is known
             localNames += scalaName
             declaredType.orElse(initNode.flatMap(exprType)).foreach(t => localTypes(scalaName) = t)

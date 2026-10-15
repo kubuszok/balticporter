@@ -481,3 +481,8 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   declaring `apply` is read through that `apply`, whose answer for an absent key is the
   reference's; the consumer names the object through `apiLookup`. A map key is checked against
   the map's key type.
+- (a) A local declared with no initialiser is `undefined` until assigned, which no Scala value of its
+  type says; where every path through the statements after it assigns it before any read (an `if`
+  with both branches assigning, a path that returns or throws first), no read sees that value and
+  the `var` starts from any value of its type, typed by its annotation or by what every
+  assignment stores. Any other first use keeps `uninitialised-local`. KaTeX 51 -> 53.
