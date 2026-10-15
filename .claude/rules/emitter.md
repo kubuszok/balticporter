@@ -486,3 +486,8 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   with both branches assigning, a path that returns or throws first), no read sees that value and
   the `var` starts from any value of its type, typed by its annotation or by what every
   assignment stores. Any other first use keeps `uninitialised-local`. KaTeX 51 -> 53.
+- (b) What the TARGET reference file names itself is one value, `ReferenceDeclarations.namesIn`
+  (`FileNames`), which the consumer passes per file: the type names it writes and the values it
+  declares at package level. Such a value is read bare (rough.js's `NOS`) only where no binding,
+  no member of the enclosing object or class and no object member of that name could be what the
+  bare name reaches instead. graphs-commons 44 -> 46.

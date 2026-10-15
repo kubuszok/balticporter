@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{ RastNode, RastType, RastValue, ReferenceSignatures }
+import balticporter.frontend.ts.{ RastNode, RastType, RastValue, ReferenceDeclarations, ReferenceSignatures }
 import BodySyntax.*
 import DefmethodBodyTranslator.ReturnTypePlaceholder
 
@@ -24,7 +24,7 @@ private[dedicated] class BodyContext(
   conventions:        JsConventions = JsConventions.plain,
   tsTypes:            Map[String, RastType] = Map.empty,
   enclosingClass:     Option[String] = None,
-  nameableTypes:      Set[String] = Set.empty
+  fileNames:          ReferenceDeclarations.FileNames = ReferenceDeclarations.FileNames.empty
 ) extends BodyScope(
       entry,
       hierarchy,
@@ -44,7 +44,7 @@ private[dedicated] class BodyContext(
       conventions,
       tsTypes,
       enclosingClass,
-      nameableTypes
+      fileNames
     )
     with BodyBindings
     with BodyObjects
@@ -791,7 +791,9 @@ private[dedicated] class BodyContext(
           case Left(_)    =>
             refuse("wrong-member-access")
             snakeToCamel(n)
-      case n =>
+      // a value the target file declares at package level
+      case n if !apiLookup.contains(n) && fileValue(n).isDefined => n
+      case n                                                     =>
         val scName = apiLookup.getOrElse(n, snakeToCamel(n))
         // Resolve unqualified identifiers through the callee index:
         // a TS module-level const referenced from a method body needs
@@ -1675,7 +1677,7 @@ private[dedicated] class BodyContext(
       oracle = oracle,
       conventions = conventions,
       tsTypes = tsTypes,
-      nameableTypes = nameableTypes
+      fileNames = fileNames
     )
     innerCtx.translateBlock(block)
     refusals ++= innerCtx.refusals

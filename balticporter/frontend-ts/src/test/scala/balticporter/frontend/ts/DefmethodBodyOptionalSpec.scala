@@ -83,4 +83,31 @@ class DefmethodBodyOptionalSpec extends munit.FunSuite:
     val one = translate(block(decl("s"), node("IfStatement", ident("c"), store("a")), ret(ident("s"))), Map("c" -> "Boolean", "a" -> "String"), "String")
     assert(one.refusalReasons.contains("uninitialised-local"), one.refusalReasons.toString)
 
+  test(
+    "a value the target file declares at package level is read bare, unless a member of that name could be what the name reaches"
+  ):
+    val names = ReferenceDeclarations.namesIn("Gen.scala", "package p\n\nfinal val NOS: String = \"none\"\n\nobject Gen {\n  def f(): Unit = ()\n}\n")
+    assertEquals(names.terms, Map("NOS" -> Some("String")))
+    def run(callees: ReferenceSignatures.CalleeIndex) =
+      DefmethodBodyTranslator.translateBody(
+        DefmethodEntry(
+          "_free_",
+          "test",
+          List("s"),
+          block(ret(node("BinaryExpression", ident("s"), ident("NOS")).copy(operator = Some("EqualsEqualsEqualsToken"))))
+        ),
+        Nil,
+        "    ",
+        returnType = Some("Boolean"),
+        paramTypes = Map("s" -> "String"),
+        calleeIndex = callees,
+        enclosingOwner = Some("Gen"),
+        fileNames = names
+      )
+    val bare = run(ReferenceSignatures.CalleeIndex(Nil, Set("Gen")))
+    assert(bare.isComplete, bare.refusalReasons.toString)
+    assertNoDiff(bare.scalaBody.trim, "s == NOS")
+    val member = run(ReferenceSignatures.CalleeIndex(List(ReferenceSignatures.MemberRef("Gen", "NOS", "Gen", isPrivate = false)), Set("Gen")))
+    assertNoDiff(member.scalaBody.trim, "s == Gen.NOS")
+
   extension (n: RastNode) private def pipe(f: RastNode => RastNode): RastNode = f(n)

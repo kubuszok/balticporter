@@ -177,6 +177,17 @@ object ReferenceDeclarations:
         tree.stats.foreach(member(_, "", true))
         Right(out.result())
 
+  /** What a body emitted into one reference file can name bare: the type names the file writes in a type position, and the values it declares at package level with their declared types. */
+  final case class FileNames(types: Set[String], terms: Map[String, Option[String]])
+
+  object FileNames:
+    val empty: FileNames = FileNames(Set.empty, Map.empty)
+
+  /** The [[FileNames]] of one reference source; empty when it does not parse. */
+  def namesIn(fileName: String, source: String): FileNames =
+    val terms = read(fileName, source).toOption.toList.flatten.collect { case d if d.owner.isEmpty && (d.kind == Kind.Val || d.kind == Kind.Var) => d.name -> d.tpe }
+    FileNames(typeNamesIn(fileName, source), terms.toMap)
+
   /** The simple type names `source` writes in a type position, never a type parameter, a declaration's own name or the last part of a qualified type: a body emitted into this file can write each one
     * and mean what the file's own signatures mean by it. Empty when the source does not parse.
     */

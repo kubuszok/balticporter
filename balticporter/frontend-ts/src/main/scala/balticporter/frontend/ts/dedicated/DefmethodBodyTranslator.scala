@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastType, RastValue, ReferenceSignatures}
+import balticporter.frontend.ts.{RastFile, RastNode, RastType, RastValue, ReferenceDeclarations, ReferenceSignatures}
 import scala.collection.mutable
 import BodySyntax.*
 
@@ -73,8 +73,8 @@ object DefmethodBodyTranslator:
     *   reference says nothing about a value; empty reads none. */
   /** @param enclosingClass the class the body is emitted into, when the reference made a JS function into that class: a name an
     *   enclosing JS function binds is read as the class's member of that name, and refused when the class declares none. */
-  /** @param nameableTypes the simple type names the target reference file writes itself (`ReferenceDeclarations.typeNamesIn`): the body may write
-    *   these as type arguments and ascriptions, besides the primitives and `String`; empty writes none. */
+  /** @param fileNames what the target reference file names itself (`ReferenceDeclarations.namesIn`): the body may write its type names as type
+    *   arguments and ascriptions, besides the primitives and `String`, and read its package-level values bare; empty names none. */
   def translateBody(
       entry: DefmethodEntry,
       hierarchy: List[DefnodeClass],
@@ -94,9 +94,9 @@ object DefmethodBodyTranslator:
       conventions: JsConventions = JsConventions.plain,
       tsTypes: Map[String, RastType] = Map.empty,
       enclosingClass: Option[String] = None,
-      nameableTypes: Set[String] = Set.empty,
+      fileNames: ReferenceDeclarations.FileNames = ReferenceDeclarations.FileNames.empty,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions, tsTypes, enclosingClass, nameableTypes)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions, tsTypes, enclosingClass, fileNames)
     ctx.translateBlock(entry.bodyNode)
     ctx.checkUnresolvedReferences()
     TranslationResult(

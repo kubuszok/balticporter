@@ -71,7 +71,7 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
       oracle = oracle,
       conventions = conventions,
       enclosingOwner = Some("Fill"),
-      nameableTypes = nameableTypes
+      fileNames = ReferenceDeclarations.FileNames(nameableTypes, Map.empty)
     )
 
   private def refuses(r: DefmethodBodyTranslator.TranslationResult, reason: String): Unit =

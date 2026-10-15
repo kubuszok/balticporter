@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{ RastNode, RastType, RastValue, ReferenceSignatures }
+import balticporter.frontend.ts.{ RastNode, RastType, RastValue, ReferenceDeclarations, ReferenceSignatures }
 import scala.collection.mutable
 import BodySyntax.*
 
@@ -24,8 +24,11 @@ abstract private[dedicated] class BodyScope(
   val conventions:        JsConventions,
   val tsTypes:            Map[String, RastType],
   val enclosingClass:     Option[String],
-  val nameableTypes:      Set[String]
+  val fileNames:          ReferenceDeclarations.FileNames
 ):
+  // the type names the target file writes itself
+  protected def nameableTypes: Set[String] = fileNames.types
+
   val sb                 = new StringBuilder
   val refusals           = mutable.ListBuffer.empty[String]
   val refusalSites       = mutable.ListBuffer.empty[DefmethodBodyTranslator.RefusalSite]
@@ -151,7 +154,7 @@ abstract private[dedicated] class BodyScope(
               // a module-level value the reference declares, when nothing in the body binds the name
               case None =>
                 if declaredInBody(name) || entry.params.contains(name) || apiLookup.contains(name) then None
-                else calleeIndex.resolveMember(scalaName).toOption.flatMap(_.tpe)
+                else calleeIndex.resolveMember(scalaName).toOption.flatMap(_.tpe).orElse(fileValue(name).flatten)
           }
         }
       // the literal's EMITTED spelling decides its Scala type: `2` is an Int, `2.5` a Double
@@ -271,6 +274,18 @@ abstract private[dedicated] class BodyScope(
         }
         viaInstance.orElse(viaObject)
       case _ => None
+
+  /** A package-level value the target file declares under the JS name, read bare, with its declared type: nothing the body binds, no member of the enclosing object or class and no object member of
+    * that name could be what the bare name reaches instead.
+    */
+  protected def fileValue(n: String): Option[Option[String]] =
+    fileNames.terms
+      .get(n)
+      .filter(_ =>
+        !declaredInBody(n) && !entry.params.contains(n) && !isLocal(n) && outerBinding(n).isEmpty && calleeIndex.resolveMember(n).isLeft &&
+          !enclosingOwner.exists(calleeIndex.declared(_, n).isDefined) && !enclosingClass.exists(memberIndex.hasMember(_, n)) &&
+          !(nodeScalaType.nonEmpty && memberIndex.hasMember(nodeScalaType, n))
+      )
 
   /** A JS module object indexed as a map (`o[k]`) that the reference made an object declaring `apply`: the object's Scala path and the result the reference's one-argument signature of `apply`
     * declares. None for a name the body binds or any other receiver.

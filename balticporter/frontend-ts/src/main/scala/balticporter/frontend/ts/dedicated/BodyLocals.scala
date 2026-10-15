@@ -36,10 +36,10 @@ private[dedicated] trait BodyLocals extends BodyScope:
   // the types stored by the first statements that mention `name`, when each path assigns it before any read; none when a read, a capture or a branch that can skip the assignment comes first
   private def assignsFirst(stmts: List[RastNode], name: String): Option[List[String]] =
     stmts match
-      case Nil => None
+      case Nil       => None
       case s :: rest =>
         // a path that returns or throws first reads nothing afterwards
-        if !mentions(s, name) then (if leavesFunction(s) then Some(Nil) else assignsFirst(rest, name))
+        if !mentions(s, name) then if leavesFunction(s) then Some(Nil) else assignsFirst(rest, name)
         else
           s.kind match
             case "ExpressionStatement" => s.children.headOption.flatMap(e => storeOf(unparenthesized(e), name))
