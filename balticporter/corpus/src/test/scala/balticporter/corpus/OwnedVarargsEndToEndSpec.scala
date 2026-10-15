@@ -81,8 +81,20 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
       |    return r.types + "," + Rooms.sum(nums) + "," + Rooms.sum(4, 5) + "," + Rooms.last("p", "q") + "," +
       |      slots[0] + slots[1] + "," + Rooms.count(nums) + "," + Rooms.count(1, 2) + "," + Rooms.count((Object[]) null) + "," +
       |      new Pair("h", "i", "j").size() + "," + Kind.A.n() + Kind.B.n() + "," + sink.take("u", "v") + "," + Tex.of(new String[] { "p", "q" }) + "," + new SubColl().n + new SubColl(Integer.class).n + "," +
-      |      new Single("a", "b").ms.size() + new TA("p", "q", "r").n;
+      |      new Single("a", "b").ms.size() + new TA("p", "q", "r").n + "," + Lay.V.conv("a", "b") + Lay.H.conv(1) + "," +
+      |      new Sub0().f("x") + new Sub0().f(1, 2);
       |  }
+      |}
+      |public interface Layout { int conv(String... xs); int conv(Integer... xs); }
+      |public enum Lay implements Layout {
+      |  V { @Override public int conv(Integer... xs) { return 10 + xs.length; } },
+      |  H { @Override public int conv(Integer... xs) { return 20 + xs.length; } };
+      |  @Override public int conv(String... xs) { Integer[] r = new Integer[xs.length]; for (int i = 0; i < r.length; i++) r[i] = i; return conv(r); }
+      |}
+      |public class Base0 { public int f(String... a) { return a.length; } }
+      |public class Sub0 extends Base0 {
+      |  @Override public int f(String... a) { return 100 + a.length; }
+      |  public int f(Integer... b) { return 200 + b.length; }
       |}
       |""".stripMargin
 
@@ -106,6 +118,17 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
     assertEmits(ported, "new Tex(ps)")
   }
 
+  test("an INHERITED overload counts, and an override takes the form of the member it overrides") {
+    // the enum's own `conv(String...)` sits beside the interface's `conv(Integer...)`, and each
+    // constant body overrides the interface's: all keep java's arrays
+    assertEmits(ported, "override def conv(xs: scala.Array[java.lang.String]): scala.Int")
+    assertEmits(ported, "override def conv(xs: scala.Array[java.lang.Integer]): scala.Int")
+    assertNotEmits(ported, "def conv(xs: java.lang.Integer*)")
+    // an override of a repeated parent member stays repeated; its new sibling takes the array
+    assertEmits(ported, "override def f(a: java.lang.String*): scala.Int")
+    assertEmits(ported, "def f(b: scala.Array[java.lang.Integer]): scala.Int")
+  }
+
   test("an anonymous implementation of a repeated SAM stays a class — a function literal cannot declare `T*`") {
     assertIdiomRefuses(ported, IdiomKind.SamLambda, "RepeatedParam")
     assertEmits(ported, "override def take(xs: java.lang.String*): scala.Int")
@@ -122,5 +145,5 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
     assert(!rep.hasErrors, s"the emission does not compile:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${ported.out}")
     val loader = new java.net.URLClassLoader(Array(out.toUri.toURL), getClass.getClassLoader)
     val got    = loader.loadClass("va.Run").getMethod("run").invoke(null).asInstanceOf[String]
-    assertEquals(got, "[a, b, c],6,9,q,zz,1,2,-1,3,20,12,107,12,23")
+    assertEquals(got, "[a, b, c],6,9,q,zz,1,2,-1,3,20,12,107,12,23,1221,101202")
   }

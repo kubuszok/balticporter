@@ -267,6 +267,10 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   vararg on Scala.js arrives as a JS-array-backed `Seq`. At an element whose `Object` bound the
   witness phase dropped, `toArray[Any]` builds boxes, and `System.arraycopy` into the `int[]`
   backing store throws (lls `DynamicArray` "addAll from plain array" on JS; on the JVM only a
+- The element-only overload test reads the overloads the class INHERITS as well as its own, and an
+  OVERRIDE takes the form of the member it overrides: an enum declaring `m(Actor...)` beside its
+  interface's `m(CellWidget...)` emitted `Actor*` there and `CellWidget*` in each constant body,
+  which then overrode nothing (visui `TableLayout`, 3 errors). Kind (a).
   non-array `Seq` spread reaches it). The phase that knows the representation tags the parameter
   (`VarargArrayFactory`, the witness's `create`) and the copy goes through it; no witness in scope is
   `witness` lane `VarargCopy`. Kind (a).

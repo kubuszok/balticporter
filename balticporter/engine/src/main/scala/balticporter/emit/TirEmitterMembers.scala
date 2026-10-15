@@ -1067,27 +1067,46 @@ private[emit] trait TirEmitterMembers:
         case TypeRepr.AppliedType(TypeRepr.TypeRef(_, a), List(el)) if sym(a).fullName == "scala.Array" => Some(el)
         case _                                                                                          => scala.None
 
-  /** does this vararg member share its owner with an overload that differs from it ONLY in the vararg's element type (`C(String...)` beside `C(FileHandle...)`)? Java tells the two apart by the array
-    * type; both repeated they erase to one `Seq` signature, so such a member keeps java's `Array[T]` and its calls the array.
+  /** does this vararg member sit beside an overload, declared in its owner or INHERITED, that differs from it ONLY in the vararg's element type (`C(String...)` beside `C(FileHandle...)`)? Java tells
+    * the two apart by the array type; both repeated they erase to one `Seq` signature, so such a member keeps java's `Array[T]` and its calls the array. An override takes the form of the member it
+    * overrides, or the pair would no longer override.
     */
   private[emit] def varargErasureClash(m: SymId): Boolean =
-    varargClashCache.getOrElseUpdate(
-      m, {
+    varargClashCache.get(m) match
+      case Some(b)    => b
+      case scala.None =>
         def shape(d: Tree.DefDef): Option[List[Option[SymId]]] =
           val ps = d.paramss.flatten.filterNot(v => sym(v.symbol).flags.isGiven)
           Option.when(ps.lastOption.exists(v => sym(v.symbol).flags.isVararg))(ps.init.map(v => headSymOf(v.tpt.tpe)))
-        (for
-          d <- program.definitionOf(m).collect { case d: Tree.DefDef => d }
-          own <- shape(d)
-          owner <- program.definitionOf(sym(m).owner).collect { case c: Tree.ClassDef => c }
-        yield owner.body.exists {
-          case o: Tree.DefDef => o.symbol != m && sym(o.symbol).name == sym(m).name && shape(o).contains(own)
-          case _ => false
-        }).getOrElse(false)
-      }
-    )
+        def declOf(x: SymId): Option[Tree.DefDef] = program.definitionOf(x).collect { case d: Tree.DefDef => d }
+        val clash = declOf(m).flatMap(shape) match
+          case scala.None => false
+          case Some(own)  =>
+            val parents = overrideGraph.overridden(m).filter(p => declOf(p).flatMap(shape).isDefined)
+            if parents.nonEmpty then parents.exists(varargErasureClash)
+            else
+              val owner = sym(m).owner
+              (owner :: overrideGraph.ancestorsOf(owner)).exists { t =>
+                program
+                  .definitionOf(t)
+                  .collect { case c: Tree.ClassDef => c }
+                  .exists(
+                    _.body.exists {
+                      case o: Tree.DefDef =>
+                        // an ancestor's private or static member is not inherited into the class scope
+                        val inherited = t == owner || !(sym(o.symbol).flags.isPrivate || sym(o.symbol).flags.isStatic)
+                        o.symbol != m && inherited && sym(o.symbol).name == sym(m).name && shape(o).contains(own)
+                      case _ => false
+                    }
+                  )
+              }
+        varargClashCache(m) = clash
+        clash
 
   private val varargClashCache = collection.mutable.Map.empty[SymId, Boolean]
+
+  /** the override edges among this program's declarations, built once for the emitter's member-form questions. */
+  private[emit] lazy val overrideGraph: balticporter.tir.OverrideGraph = balticporter.tir.OverrideGraph.build(program)
 
   /** is this member declared under a type the port DROPS for a hand-written replacement? The replacement states its own signature, java's `Array[T]` included, so a call keeps java's array. */
   private[emit] def substitutedDecl(m: SymId): Boolean =
