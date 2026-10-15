@@ -592,6 +592,22 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     val r = translate(block(ret(node("NewExpression", ident("Set"), ident("xs")))), params = List("xs"), paramTypes = Map("xs" -> "Vector[Int]"))
     assertNoDiff(r.scalaBody.trim, "scala.collection.mutable.Set.from(xs)")
 
+  test(
+    "a condition on a call the reference declares Boolean on every class reads as its value; any other agreed result is still unknown"
+  ):
+    val mi = ReferenceSignatures.MemberIndex(
+      Map("A" -> Set("isDone", "size"), "B" -> Set("isDone", "size")),
+      results = Map("A" -> Map("isDone" -> "Boolean", "size" -> "Int"), "B" -> Map("isDone" -> "Boolean", "size" -> "Int"))
+    )
+    val cond = (m: String) =>
+      translate(
+        block(node("IfStatement", call(prop(call(ident("pick")), m)), block(ret(num(1)))), ret(num(0))),
+        returnType = Some("Int"),
+        memberIndex = mi
+      )
+    assert(!cond("is_done").refusalReasons.contains("truthiness-unknown-type"), cond("is_done").refusalReasons.toString)
+    refuses(cond("size"), "truthiness-unknown-type")
+
   test("JS reads past an array's end as undefined: a read of reference elements answers null there, a store stays an update"):
     val read = translate(
       block(ret(node("ElementAccessExpression", ident("xs"), ident("i")))),

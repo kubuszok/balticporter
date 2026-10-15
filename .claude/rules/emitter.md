@@ -398,3 +398,11 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   where Java throws, and `charAt` is a String), `match`/`exec`, `parseInt`/`parseFloat`, a coercing
   global (`isNaN`, `Number`) on a non-number, `join` of non-strings (and `join()` joins with ","),
   `Object.create`, a `RegExp` constructor.
+- (a) The reference index reads ANCESTRY: a member read is checked against the receiver's class and
+  every class and trait it extends, nearest first, and a class declaring nothing of its own is still
+  a known type. Keyed by the declaring class only, `thing.body` on a block statement whose trait
+  declares `body` was refused as `wrong-member-access`.
+- (a) A call on a receiver of unknown type reads as `Boolean` only when every class declaring the
+  method returns `Boolean` (any other type then fails to compile rather than reading differently);
+  a `.length` condition is `!= 0`. No other agreed result is read this way: an `Int` read as a
+  truthiness `!= 0` would compile against an `Option` and always hold.

@@ -207,3 +207,21 @@ class ReferenceSignaturesSpec extends munit.FunSuite:
     assert(!ref.accessibleFrom(Some("A")))
     assert(!ref.accessibleFrom(Some("Bee")))
     assert(!ref.accessibleFrom(None))
+
+  private val hierarchySource =
+    "package demo\ntrait Node {\n  def kind: String\n  def done(): Boolean\n}\ntrait Body extends Node {\n  var body: Int = 0\n}\n" +
+      "class Leaf extends Body {\n  override def kind: String = \"leaf\"\n  def done(): Boolean = true\n}\nclass Twig extends Node {\n  override def kind: String = \"twig\"\n  def done(): Boolean = false\n}\n"
+
+  test("buildIndices: a class reads the members its parents declare, nearest first, and is known though it declares nothing"):
+    val (_, mi, _, _) = ReferenceSignatures.buildIndices(List(("Tree", hierarchySource + "class Bare extends Leaf\n")))
+    assertEquals(mi.ancestry("Leaf"), List("Leaf", "Body", "Node"))
+    assert(mi.hasMember("Bare", "body") && mi.isMutable("Bare", "body") && mi.knowsType("Bare"))
+    assertEquals(mi.memberType("Bare", "body"), Some("Int"))
+
+  test(
+    "buildIndices: a string-constant member indexes its classes by value, and a result every declaring class agrees on is the name's"
+  ):
+    val (_, mi, _, _) = ReferenceSignatures.buildIndices(List(("Tree", hierarchySource)))
+    assertEquals(mi.classesDeclaring("kind", "leaf"), List("Leaf"))
+    assertEquals(mi.classesDeclaring("kind", "none"), Nil)
+    assertEquals(mi.uniformResult("done"), Some("Boolean"))

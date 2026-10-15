@@ -27,7 +27,9 @@ object ReferenceDeclarations:
     tpe:           Option[String] = None,
     typeParams:    Int = 0,
     result:        Option[String] = None,
-    params:        List[String] = Nil
+    params:        List[String] = Nil,
+    parents:       List[String] = Nil,
+    constant:      Option[String] = None
   ):
     /** A member a reference skeleton emits as a method: a def, abstract or concrete, or a secondary constructor. */
     def isMethod: Boolean = kind == Kind.Def || kind == Kind.AbstractDef || kind == Kind.Constructor
@@ -57,7 +59,8 @@ object ReferenceDeclarations:
           body:   Option[BodySpan] = None,
           tpe:    Option[Type] = None,
           result: Option[Type] = None,
-          params: List[String] = Nil
+          params: List[String] = Nil,
+          value:  Option[Term] = None
         ): Unit =
           out += Declaration(
             owner,
@@ -69,7 +72,8 @@ object ReferenceDeclarations:
             body,
             tpe.map(_.syntax),
             result = result.map(_.syntax),
-            params = params
+            params = params,
+            constant = value.collect { case Lit.String(s) => s }
           )
 
         // the declared types of a method's explicit parameters, every clause but a `using` one, in order
@@ -92,6 +96,10 @@ object ReferenceDeclarations:
 
         def pats(ps: List[Pat]): List[Name] = ps.flatMap(_.collect { case Pat.Var(n) => n })
 
+        // the simple names of the classes and traits a template extends, type arguments dropped
+        def parentNames(t: Template): List[String] =
+          t.inits.map(_.tpe.syntax.takeWhile(c => c != '[' && c != '(').split('.').last.trim).filter(_.nonEmpty)
+
         def template(t: Template, owner: String, isObj: Boolean): Unit = t.body.stats.foreach(member(_, owner, isObj))
 
         def member(t: Tree, owner: String, isObj: Boolean): Unit = t match
@@ -101,17 +109,47 @@ object ReferenceDeclarations:
             add(owner, isObj, d.name, Kind.Object, d.mods)
             template(d.templ, child(owner, d.name.value), isObj)
           case d: Defn.Class =>
-            out += Declaration(owner, isObj, d.name.value, Kind.Class, closed(d.mods), d.name.pos.startLine, typeParams = d.tparamClause.values.size)
+            out += Declaration(
+              owner,
+              isObj,
+              d.name.value,
+              Kind.Class,
+              closed(d.mods),
+              d.name.pos.startLine,
+              typeParams = d.tparamClause.values.size,
+              parents = parentNames(d.templ)
+            )
             template(d.templ, child(owner, d.name.value), false)
           case d: Defn.Trait =>
-            out += Declaration(owner, isObj, d.name.value, Kind.Trait, closed(d.mods), d.name.pos.startLine, typeParams = d.tparamClause.values.size)
+            out += Declaration(
+              owner,
+              isObj,
+              d.name.value,
+              Kind.Trait,
+              closed(d.mods),
+              d.name.pos.startLine,
+              typeParams = d.tparamClause.values.size,
+              parents = parentNames(d.templ)
+            )
             template(d.templ, child(owner, d.name.value), false)
           case d: Defn.Enum =>
             add(owner, isObj, d.name, Kind.Enum, d.mods)
             template(d.templ, child(owner, d.name.value), false)
-          case d: Defn.Given     => template(d.templ, child(owner, d.name.value), false)
-          case d: Defn.EnumCase  => add(owner, isObj, d.name, Kind.EnumCase, d.mods)
-          case d: Defn.Def       => add(owner, isObj, d.name, Kind.Def, d.mods, span(d, d.body), valueType(d), d.decltpe, paramTypes(d.paramClauseGroups))
+          case d: Defn.Given    => template(d.templ, child(owner, d.name.value), false)
+          case d: Defn.EnumCase => add(owner, isObj, d.name, Kind.EnumCase, d.mods)
+          case d: Defn.Def      =>
+            add(
+              owner,
+              isObj,
+              d.name,
+              Kind.Def,
+              d.mods,
+              span(d, d.body),
+              valueType(d),
+              d.decltpe,
+              paramTypes(d.paramClauseGroups),
+              Option.when(d.paramClauseGroups.isEmpty)(d.body)
+            )
           case d: Ctor.Secondary => add(owner, isObj, d.name, Kind.Constructor, d.mods)
           case d: Decl.Def       =>
             add(
@@ -126,7 +164,7 @@ object ReferenceDeclarations:
             )
           case d: Defn.Type           => add(owner, isObj, d.name, Kind.Type, d.mods)
           case d: Decl.Type           => add(owner, isObj, d.name, Kind.Type, d.mods)
-          case d: Defn.Val            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Val, d.mods, tpe = d.decltpe))
+          case d: Defn.Val            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Val, d.mods, tpe = d.decltpe, value = Some(d.rhs)))
           case d: Decl.Val            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Val, d.mods, tpe = Some(d.decltpe)))
           case d: Defn.Var            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Var, d.mods, tpe = d.decltpe))
           case d: Decl.Var            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Var, d.mods, tpe = Some(d.decltpe)))

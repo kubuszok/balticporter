@@ -178,9 +178,10 @@ abstract private[dedicated] class BodyScope(
                     .map(_.returnType)
                     // a method of a value whose class the reference declares, by that class's own declaration
                     .orElse(exprType(obj).flatMap(t => memberIndex.methodResult(baseName(t), snakeToCamel(method))))
+                    .orElse(uniformBoolean(obj, method))
                 else if obj.kind == "ThisKeyword" && memberIndex.knowsType(nodeScalaType) then
                   oracle.get(nodeScalaType, snakeToCamel(method)).map(_.returnType).orElse(memberIndex.methodResult(nodeScalaType, snakeToCamel(method)))
-                else exprType(obj).flatMap(t => memberIndex.methodResult(baseName(t), snakeToCamel(method)))
+                else exprType(obj).flatMap(t => memberIndex.methodResult(baseName(t), snakeToCamel(method))).orElse(uniformBoolean(obj, method))
           case Some(id) if id.kind == "Identifier" =>
             val rawName = id.text.getOrElse("")
             val name    = snakeToCamel(rawName)
@@ -358,6 +359,13 @@ abstract private[dedicated] class BodyScope(
     val core = t.trim.stripSuffix("| Null").trim
     !core.contains('|') && !numericTypes(core) && !Set("String", "Boolean", "Char", "Unit", "Null").contains(core) && !isOptionLike(core) &&
     !Set("Any", "AnyRef", "Object", "Matchable", "Nullable").contains(baseName(core))
+
+  /** `Boolean` for a method call on a receiver of unknown type when every class the reference declares the method on returns `Boolean`: its truthiness is its value, and a receiver of any other type
+    * fails to compile rather than reading differently. No other result is read this way.
+    */
+  private def uniformBoolean(recv: RastNode, method: String): Option[String] =
+    if exprType(recv).isDefined then None
+    else memberIndex.uniformResult(memberRenames.getOrElse(snakeToCamel(method), snakeToCamel(method))).filter(_ == "Boolean")
 
   /** True when the checker types `node` as an array of strings, whose elements print as themselves. */
   protected def checkerStringArray(node: RastNode): Boolean =

@@ -119,15 +119,42 @@ object ReferenceSignatures:
   /** Index of class/object member names, built from the reference tree. Used to validate property access on typed parameters.
     */
   final case class MemberIndex(
-    byType:  Map[String, Set[String]],
-    vars:    Map[String, Set[String]] = Map.empty,
-    types:   Map[String, Map[String, String]] = Map.empty,
-    arity:   Map[String, Int] = Map.empty,
-    results: Map[String, Map[String, String]] = Map.empty
+    byType:    Map[String, Set[String]],
+    vars:      Map[String, Set[String]] = Map.empty,
+    types:     Map[String, Map[String, String]] = Map.empty,
+    arity:     Map[String, Int] = Map.empty,
+    results:   Map[String, Map[String, String]] = Map.empty,
+    parents:   Map[String, List[String]] = Map.empty,
+    constants: Map[(String, String), List[String]] = Map.empty
   ):
-    /** The declared result type of a method the class declares exactly once under that name (an overloaded name answers nothing). */
+    /** The result type every class declaring a method of this name declares for it, when they all agree and none overloads it; a call of the name returns that whichever class receives it. */
+    def uniformResult(method: String): Option[String] =
+      val declaring = byType.collect { case (t, ms) if ms.contains(method) => t }.toList
+      declaring.map(t => results.get(t).flatMap(_.get(method))).distinct match
+        case List(Some(r)) => Some(r)
+        case _             => None
+
+    /** The classes declaring `member` as the string constant `value` (`def nodeType = "ordgroup"`). */
+    def classesDeclaring(member: String, value: String): List[String] =
+      constants.getOrElse((member, value), Nil)
+
+    /** The type itself, then every class and trait it extends, nearest first: a member a parent declares is a member of the type. */
+    def ancestry(typeName: String): List[String] =
+      val seen = scala.collection.mutable.LinkedHashSet.empty[String]
+      var todo = List(typeName)
+      while todo.nonEmpty do
+        val t = todo.head
+        todo = todo.tail
+        if seen.add(t) then todo = todo ++ parents.getOrElse(t, Nil)
+      seen.toList
+
+    // the nearest type of the ancestry whose own declarations answer
+    private def nearest[A](typeName: String)(own: String => Option[A]): Option[A] =
+      ancestry(typeName).iterator.map(own).collectFirst { case Some(a) => a }
+
+    /** The declared result type of a method the class, or the nearest ancestor declaring the name, declares exactly once under that name (an overloaded name answers nothing). */
     def methodResult(typeName: String, method: String): Option[String] =
-      results.get(typeName).flatMap(_.get(method))
+      ancestry(typeName).find(t => byType.get(t).exists(_.contains(method))).flatMap(t => results.get(t).flatMap(_.get(method)))
 
     /** A class name as a runtime type test spells it: one wildcard per type parameter the reference declares. */
     def testable(typeName: String): String =
@@ -135,15 +162,15 @@ object ReferenceSignatures:
 
     /** The declared type of a value-like member (a field, a constructor parameter, a parameterless def), when the reference spells one. */
     def memberType(typeName: String, memberName: String): Option[String] =
-      types.get(typeName).flatMap(_.get(memberName))
+      ancestry(typeName).find(t => byType.get(t).exists(_.contains(memberName))).flatMap(t => types.get(t).flatMap(_.get(memberName)))
 
-    /** True when the given type declares the given member name. */
+    /** True when the given type, or a class or trait it extends, declares the given member name. */
     def hasMember(typeName: String, memberName: String): Boolean =
-      byType.get(typeName).exists(_.contains(memberName))
+      nearest(typeName)(t => byType.get(t).filter(_.contains(memberName))).isDefined
 
-    /** True when the given type declares the member as a `var`, so a body may store into it. */
+    /** True when the nearest type of the ancestry declaring the member declares it as a `var`, so a body may store into it. */
     def isMutable(typeName: String, memberName: String): Boolean =
-      vars.get(typeName).exists(_.contains(memberName))
+      ancestry(typeName).find(t => byType.get(t).exists(_.contains(memberName))).exists(t => vars.get(t).exists(_.contains(memberName)))
 
     /** True when the type is known (appears in the index). */
     def knowsType(typeName: String): Boolean = byType.contains(typeName)
@@ -185,16 +212,22 @@ object ReferenceSignatures:
     val results     = mutable.Map.empty[String, mutable.Map[String, List[String]]]
     val ctors       = mutable.Map.empty[String, List[CtorParam]]
     val enumVals    = mutable.Map.empty[(String, String), String]
+    val parents     = mutable.Map.empty[String, List[String]]
+    val constants   = mutable.Map.empty[(String, String), List[String]]
 
     for (objectName, source) <- sources do
       ReferenceDeclarations.read(objectName, source) match
         case Right(decls) =>
           calleeParts += CalleeIndex.of(objectName, decls)
           decls.filter(_.typeParams > 0).foreach(d => arity(d.name) = d.typeParams)
+          decls.filter(_.parents.nonEmpty).foreach(d => parents(d.name) = (parents.getOrElse(d.name, Nil) ++ d.parents).distinct)
+          // a class or trait that declares nothing of its own is still a known type: its members are its parents'
+          decls.filter(d => d.kind == ReferenceDeclarations.Kind.Class || d.kind == ReferenceDeclarations.Kind.Trait).foreach(d => members.getOrElseUpdate(d.name, mutable.Set.empty))
           // A class or trait member is reached through an instance (`this.x`, `p.x`): indexed under the template's simple name.
           for d <- decls if d.owner.nonEmpty && !d.ownerIsObject && d.kind != ReferenceDeclarations.Kind.Constructor do
             members.getOrElseUpdate(d.owner.split('.').last, mutable.Set.empty) += d.name
             if d.kind == ReferenceDeclarations.Kind.Var then vars.getOrElseUpdate(d.owner.split('.').last, mutable.Set.empty) += d.name
+            d.constant.foreach(c => constants((d.name, c)) = (constants.getOrElse((d.name, c), Nil) :+ d.owner.split('.').last).distinct)
             d.tpe.foreach(t => types.getOrElseUpdate(d.owner.split('.').last, mutable.Map.empty)(d.name) = t)
             if d.isMethod then
               val byName = results.getOrElseUpdate(d.owner.split('.').last, mutable.Map.empty)
@@ -222,7 +255,9 @@ object ReferenceSignatures:
         vars.map { case (k, v) => k -> v.toSet }.toMap,
         types.map { case (k, v) => k -> v.toMap }.toMap,
         arity.toMap,
-        results.map { case (k, v) => k -> v.collect { case (m, List(r)) if r.nonEmpty => m -> r }.toMap }.toMap
+        results.map { case (k, v) => k -> v.collect { case (m, List(r)) if r.nonEmpty => m -> r }.toMap }.toMap,
+        parents.toMap,
+        constants.toMap
       ),
       ConstructorSchema(ctors.toMap),
       EnumIndex(enumVals.toMap)
