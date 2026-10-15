@@ -494,3 +494,8 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 - (a) `const xs = []` whose last read is the body's own `return xs` is a buffer of the declared
   result's element type: JS returns the array itself. A truthiness test compares its operand
   WHOLE, parenthesised: `flags & f != 0` reads `flags & (f != 0)` in Scala. terser 34 -> 35.
+- (a) A JS parameter is a variable the body may assign, a Scala parameter is not: each parameter
+  the body itself writes is copied into a local `var` (`x$1`) that every read and write uses,
+  nested functions included; one a nested function writes stays refused (`reassigned-immutable`).
+  A local starting from an integer literal that a store makes fractional is declared `Double`, as
+  every JS number is. graphs-commons 46 -> 47, KaTeX 53 -> 54, terser 35 -> 36.

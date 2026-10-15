@@ -231,8 +231,12 @@ private[dedicated] class BodyContext(
     // the entry's own class is neither the library's nor one the reference declares
     if conventions.rootClass.contains(nodeScalaType) && !conventions.isClassName(entry.className) && !memberIndex.knowsType(entry.className) && memberIndex.byType.nonEmpty then
       if containsThisKeyword(block) then refuse("receiver-type-unknown")
-    // Refuse when a parameter is reassigned in the body: Scala parameters are vals
-    if reassignedParams.nonEmpty then refuse("reassigned-immutable")
+    // A JS parameter is a variable the body may assign, a Scala one is not: each the body itself writes is copied into a local `var` the body
+    // reads instead; one a nested function writes is refused, since that function's own context would write the parameter.
+    if topLevel then
+      for p <- entry.params if assignedAnywhere.contains(p) do
+        if !reassignedParams.contains(p) || writtenInNestedFunction(p) then refuse("reassigned-immutable")
+        else paramShadows(p) = freshLabel(snakeToCamel(p))
     // The body names its parameters as upstream does; a reference that renamed one leaves the body naming nothing.
     if paramTypes.nonEmpty && entry.params.exists(p => !paramTypes.contains(p) && !paramTypes.contains(snakeToCamel(p))) then refuse("parameter-name-mismatch")
 
@@ -242,7 +246,7 @@ private[dedicated] class BodyContext(
       return
 
     // Single-return optimization: unwrap `{ return expr; }` to just the expr
-    if stmts.size == 1 && stmts.head.kind == "ReturnStatement" then
+    if stmts.size == 1 && stmts.head.kind == "ReturnStatement" && (paramShadows.isEmpty || !topLevel) then
       val ret = stmts.head
       if ret.children.isEmpty then sb.append(s"${baseIndent}null\n")
       else
@@ -259,7 +263,7 @@ private[dedicated] class BodyContext(
       stmts.head.kind == "ForStatement" || stmts.head.kind == "ForInStatement" ||
       stmts.head.kind == "ForOfStatement" || stmts.head.kind == "WhileStatement" ||
       stmts.head.kind == "DoStatement" || stmts.head.kind == "SwitchStatement" ||
-      stmts.head.kind == "TryStatement"
+      stmts.head.kind == "TryStatement" || (topLevel && paramShadows.nonEmpty)
     if needsBoundary then
       val lbl = freshLabel("ret")
       returnLabel = lbl
@@ -269,6 +273,7 @@ private[dedicated] class BodyContext(
 
     val innerIndent = if needsBoundary || needsBraces then baseIndent + "  " else baseIndent
 
+    if topLevel then for p <- entry.params; shadow <- paramShadows.get(p) do sb.append(s"${innerIndent}var $shadow = ${snakeToCamel(p)}\n")
     translateSequence(stmts, innerIndent, true)
 
     if needsBoundary || needsBraces then sb.append(s"$baseIndent}\n")
@@ -329,8 +334,10 @@ private[dedicated] class BodyContext(
             // JS leaves an uninitialised local `undefined`; no Scala value of its type says that, unless no read can see it
             val definite = if initNode.isEmpty then definitelyAssignedType(vd, name, annotated).filter(writableType) else None
             // `const xs = []` the body returns is a buffer of the declared result's elements
-            val returned     = if annotated.isEmpty && initNode.exists(n => n.kind == "ArrayLiteralExpression" && n.children.isEmpty) then returnedBufferType(vd, name) else None
-            val declaredType = annotated.orElse(definite).orElse(returned)
+            val returned = if annotated.isEmpty && initNode.exists(n => n.kind == "ArrayLiteralExpression" && n.children.isEmpty) then returnedBufferType(vd, name) else None
+            // a local starting from an integer that later holds a fraction is a double, as every JS number is
+            val widened      = if initNode.exists(n => n.kind == "NumericLiteral" && exprType(n).contains("Int")) then widenedNumber(name) else None
+            val declaredType = annotated.orElse(definite).orElse(returned).orElse(widened)
             if initNode.isEmpty && definite.isEmpty then refuse("uninitialised-local")
             // `let x = null` types the local as Null in Scala: nothing can be stored into it later
             if declaredType.isEmpty && initNode.exists(n => n.kind == "NullKeyword" || n.kind == "UndefinedKeyword" || n.text.contains("undefined")) then refuse("null-initialised-local")
@@ -779,7 +786,9 @@ private[dedicated] class BodyContext(
       case "arguments" =>
         refuse("ArgumentsObject")
         "??? /* arguments */"
-      case n if conventions.isClassName(n) => conventions.scalaClassName(n)
+      // a parameter the body writes is read and written through its local `var`, unless a lambda parameter shadows it
+      case n if paramShadows.contains(n) && !localNames.contains(snakeToCamel(n)) => paramShadows(n)
+      case n if conventions.isClassName(n)                                        => conventions.scalaClassName(n)
       // an enclosing function's binding: the class the body is emitted into holds it, or nothing does
       case n if outerBinding(n).isDefined =>
         outerBinding(n).flatten.getOrElse {
@@ -1681,6 +1690,12 @@ private[dedicated] class BodyContext(
       tsTypes = tsTypes,
       fileNames = fileNames
     )
+    // the nested function renders inside this body: it reads this body's parameter copies and declares none of its own
+    innerCtx.topLevel = false
+    innerCtx.paramShadows ++= paramShadows
+    // its own parameters are locals of no known type there, shadowing every outer name
+    innerCtx.localNames ++= paramStrs
+    innerCtx.opaqueLocals ++= paramStrs
     innerCtx.translateBlock(block)
     refusals ++= innerCtx.refusals
     refusalSites ++= innerCtx.refusalSites
@@ -1821,10 +1836,14 @@ private[dedicated] class BodyContext(
         for d <- decls do
           val name     = d.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_i")
           val initNode = d.children.drop(1).find(c => !isTypeNode(c))
+          // JS leaves it `undefined`, which no Scala number says
+          if initNode.isEmpty then refuse("uninitialised-local")
           val initExpr = initNode.map(translateExpr).getOrElse("0")
+          // a counter starting from an integer that a step makes fractional is a double, as every JS number is
+          val widened = if initNode.exists(n => n.kind == "NumericLiteral" && exprType(n).contains("Int")) then widenedNumber(name) else None
           localNames += snakeToCamel(name)
-          initNode.flatMap(exprType).foreach(t => localTypes(snakeToCamel(name)) = t)
-          sb.append(s"$indent  var ${snakeToCamel(name)} = $initExpr\n")
+          widened.orElse(initNode.flatMap(exprType)).foreach(t => localTypes(snakeToCamel(name)) = t)
+          sb.append(s"$indent  var ${snakeToCamel(name)}${widened.fold("")(t => s": $t")} = $initExpr\n")
       else sb.append(s"$indent  ${withStatementRoot(unparenthesized(i))(translateExpr(i))}\n")
     }
     val condStr = cond.map(translateCondition).getOrElse("true")

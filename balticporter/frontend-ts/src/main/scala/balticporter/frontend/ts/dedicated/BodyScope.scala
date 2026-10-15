@@ -83,6 +83,21 @@ abstract private[dedicated] class BodyScope(
   // Parameter names that are reassigned in the body: refuse upfront
   protected val reassignedParams: Set[String] = entry.params.filter(reassignedNames.contains).toSet
 
+  // the local `var` standing for each parameter the body writes, by JS name; a nested function's context reads the same map
+  val paramShadows = mutable.Map.empty[String, String]
+
+  // false for the context of a nested function, which renders the body of its enclosing one
+  var topLevel = true
+
+  /** True when a function nested in the body writes the name. */
+  protected def writtenInNestedFunction(name: String): Boolean =
+    def walk(n: RastNode, nested: Boolean): Boolean =
+      val inside = nested || Set("ArrowFunction", "FunctionExpression", "FunctionDeclaration", "MethodDeclaration")(n.kind)
+      val writes = n.kind == "BinaryExpression" && n.operator.exists(op => (op.endsWith("EqualsToken") && !comparisonOps(op)) || op == "FirstAssignment" || op == "FirstCompoundAssignment") ||
+        ((n.kind == "PostfixUnaryExpression" || n.kind == "PrefixUnaryExpression") && n.operator.exists(op => op == "PlusPlusToken" || op == "MinusMinusToken"))
+      (inside && writes && n.children.headOption.exists(c => c.kind == "Identifier" && c.text.contains(name))) || n.children.exists(walk(_, inside))
+    walk(entry.bodyNode, false)
+
   // Local variable types, inferred from initialisers whose type is known
   protected val localTypes = mutable.Map.empty[String, String]
   // All locally declared variable names (even when the type is unknown)

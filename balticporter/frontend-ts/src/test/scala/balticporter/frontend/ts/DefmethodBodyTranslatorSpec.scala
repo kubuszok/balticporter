@@ -798,7 +798,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
     assert(result.scalaBody.contains("val x"), s"non-reassigned const should stay val: ${result.scalaBody}")
 
-  test("reassigned parameter refuses with reassigned-immutable"):
+  test("a reassigned parameter is written through a local var copy"):
     val body = block(
       node(
         "ExpressionStatement",
@@ -808,7 +808,9 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     )
     val entry  = DefmethodEntry("_free_", "test", List("extraVinculum"), body)
     val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-    assert(result.refusalReasons.contains("reassigned-immutable"), s"should refuse reassigned param: ${result.refusalReasons}")
+    assert(!result.refusalReasons.contains("reassigned-immutable"), s"a body-level write is copied: ${result.refusalReasons}")
+    assert(result.scalaBody.contains("var extraVinculum$1 = extraVinculum"), result.scalaBody)
+    assert(result.scalaBody.contains("extraVinculum$1 = 1000 * extraVinculum$1"), result.scalaBody)
 
   test("non-reassigned parameter does not refuse reassigned-immutable"):
     val body = block(

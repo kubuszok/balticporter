@@ -50,7 +50,7 @@ class DefmethodBodyOptionalSpec extends munit.FunSuite:
       "String"
     )
     assert(r.scalaBody.contains("if ((x.isDefined && x.get.nonEmpty)) {"), r.scalaBody)
-    assert(r.scalaBody.contains("t = x.get"), r.scalaBody)
+    assert(r.scalaBody.contains("t$1 = x.get"), r.scalaBody)
 
   test("an optional value stored where a value is required is refused"):
     val r = translate(block(expr(assign(ident("t"), ident("x"))), ret(ident("t"))), Map("x" -> "Nullable[String]", "t" -> "String"), "String")
@@ -109,5 +109,13 @@ class DefmethodBodyOptionalSpec extends munit.FunSuite:
     assertNoDiff(bare.scalaBody.trim, "s == NOS")
     val member = run(ReferenceSignatures.CalleeIndex(List(ReferenceSignatures.MemberRef("Gen", "NOS", "Gen", isPrivate = false)), Set("Gen")))
     assertNoDiff(member.scalaBody.trim, "s == Gen.NOS")
+
+  test("a parameter the body writes is copied into a local var; one a nested function writes is refused"):
+    val double = assign(ident("n"), node("BinaryExpression", ident("n"), ident("n")).copy(operator = Some("AsteriskToken")))
+    val r      = translate(block(expr(double), ret(ident("n"))), Map("n" -> "Double"), "Double")
+    assert(r.isComplete, r.refusalReasons.toString)
+    assertNoDiff(r.scalaBody.linesIterator.map(_.trim).filter(_.nonEmpty).mkString("\n"), "{\nvar n$1 = n\nn$1 = n$1 * n$1\nn$1\n}")
+    val nested = translate(block(expr(call(ident("f"), node("ArrowFunction", block(expr(double))))), ret(ident("n"))), Map("n" -> "Double"), "Double")
+    assert(nested.refusalReasons.contains("reassigned-immutable"), nested.refusalReasons.toString)
 
   extension (n: RastNode) private def pipe(f: RastNode => RastNode): RastNode = f(n)

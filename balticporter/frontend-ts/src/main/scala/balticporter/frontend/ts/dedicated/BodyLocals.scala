@@ -22,6 +22,21 @@ private[dedicated] trait BodyLocals extends BodyScope:
       if stored.forall(_ == tpe) || annotated.isDefined
     yield tpe
 
+  /** `Double` for a local initialised with an integer literal that the body later stores a fractional value into (`x = y / 2`, `x += 0.5`): every JS number is a double, and a Scala `Int` local could
+    * not hold it. None where every store is integral or of unknown type.
+    */
+  protected def widenedNumber(name: String): Option[String] =
+    def walk(n: RastNode): Boolean =
+      val stores = n.kind == "BinaryExpression" && n.children.size >= 2 && n.children.head.kind == "Identifier" && n.children.head.text.contains(name) &&
+        n.operator.exists(op => op == "EqualsToken" || op == "PlusEqualsToken" || op == "MinusEqualsToken" || op == "AsteriskEqualsToken" || op == "SlashEqualsToken")
+      (stores && (n.operator.contains("SlashEqualsToken") || exprType(n.children.last).exists(t => t == "Double" || t == "Float"))) || n.children.exists(walk)
+    // read as the integer it starts as, so that `x = x + 1` stays integral and `x = x + 0.5` does not
+    val sc    = snakeToCamel(name)
+    val saved = localTypes.get(sc)
+    localTypes(sc) = "Int"
+    try Option.when(walk(entry.bodyNode))("Double")
+    finally saved.fold(localTypes.remove(sc))(localTypes.put(sc, _))
+
   /** A value of `tpe` that no read observes: the local holds it only until the first assignment. */
   protected def unobservedValue(tpe: String): String =
     baseName(tpe) match

@@ -218,6 +218,21 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
     )
     assert(r.scalaBody.contains("(a & b) != 0"), r.scalaBody)
 
+  test("a local starting from an integer that later holds a fraction is a double; one that only counts stays an integer"):
+    def assign(op: String, l: RastNode, r: RastNode) = node("BinaryExpression", l, r).copy(operator = Some(op))
+    val half                                         = translate(
+      block(local("x", num(0)), expr(assign("EqualsToken", ident("x"), assign("SlashToken", ident("y"), num(2)))), ret(ident("x"))),
+      params = List("y"),
+      paramTypes = Map("y" -> "Int"),
+      returnType = Some("Double")
+    )
+    assert(half.scalaBody.contains("var x: Double = 0"), half.scalaBody)
+    val count = translate(
+      block(local("i", num(0)), expr(assign("EqualsToken", ident("i"), assign("PlusToken", ident("i"), num(1)))), ret(ident("i"))),
+      returnType = Some("Int")
+    )
+    assert(count.scalaBody.contains("var i = 0"), count.scalaBody)
+
   test("push answers the new length, which no Scala append does"):
     refuses(
       translate(block(pointsLocal, ret(call(prop(ident("points"), "push"), arr(num(1), num(2))))), returnType = Some("Int")),
