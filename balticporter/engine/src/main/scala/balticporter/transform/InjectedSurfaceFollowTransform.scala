@@ -9,9 +9,12 @@ import balticporter.tir.*
   */
 final class InjectedSurfaceFollowTransform(
   surface: InjectedSurface.Surface,
-  /** dropped upstream FQN -> the emitted FQN the injected file declares */
-  droppedEmitted: Map[String, String]
+  /** dropped upstream FQN -> the emitted FQN the injected file declares; read when the phase RUNS, since a type rename binds only once the pipeline starts */
+  emittedNames: => Map[String, String]
 ) extends Phase:
+
+  /** [[emittedNames]] as this run read it. */
+  private var droppedEmitted: Map[String, String] = Map.empty
   def name = "injected-surface-follow"
   override def runsAfter:  Set[String] = Set("bean-properties", "nullary-arity")
   override def runsBefore: Set[String] = Set("package-rename")
@@ -36,6 +39,7 @@ final class InjectedSurfaceFollowTransform(
     stem.toList.flatMap(x => List(decap(x), lowerAcronym(x)).distinct)
 
   override def run(program: Program): Program =
+    droppedEmitted = emittedNames
     if surface.isEmpty || droppedEmitted.isEmpty then return program
 
     /** the EMITTED owner of a member of a dropped type — the dropped top-level type's emitted name plus the nesting below it (`Pixmap$Format` -> `sge.graphics.Pixmap.Format`); None outside

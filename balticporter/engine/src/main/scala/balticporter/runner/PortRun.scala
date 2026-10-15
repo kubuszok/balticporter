@@ -1886,8 +1886,10 @@ final case class PortRun(
   private def injectedRowRoots: List[Path] =
     manifest.map(_.platformDirs.values.flatten.toList).getOrElse(Nil)
 
-  /** dropped upstream FQN -> the emitted FQN the injected replacement declares. */
-  private lazy val droppedEmittedNames: Map[String, String] =
+  /** dropped upstream FQN -> the emitted FQN the injected replacement declares — read LIVE, never cached: a type rename binds only once the pipeline starts, and a table taken before that spells a
+    * type-renamed drop at its package-renamed name.
+    */
+  private def droppedEmittedNames: Map[String, String] =
     policySubs.dropTypes.toList.map(fqn => fqn -> emittedName(fqn)).toMap
 
   /** the surface of `providedSources`: replacements the consumer compiles itself, read and never copied. */
@@ -1899,14 +1901,14 @@ final case class PortRun(
     balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ injectedRowRoots) ++ providedSurface
 
   /** dropped upstream FQN -> emitted FQN, for each drop whose replacement a `providedSources` root declares (nested types compared at `.`). */
-  private lazy val providedReplacements: Map[String, String] =
+  private def providedReplacements: Map[String, String] =
     val declared = providedSurface.typeForms.keySet
     droppedEmittedNames.filter((_, at) => declared(at.replace('$', '.')))
 
   /** calls into a dropped+injected type follow the injected file's spelling. */
   private lazy val injectedFollowPhase: List[Phase] =
     val roots = ownSubs.inject ++ injectedRowRoots ++ ownSubs.providedSources
-    if roots.isEmpty || droppedEmittedNames.isEmpty then Nil
+    if roots.isEmpty || policySubs.dropTypes.isEmpty then Nil
     else List(new balticporter.transform.InjectedSurfaceFollowTransform(replacementSurface, droppedEmittedNames))
 
   /** Remedies derived from what this run holds (phases + checks), never listed. */

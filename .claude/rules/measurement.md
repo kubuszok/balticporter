@@ -62,7 +62,10 @@ registers. Why the families are split:
   comment-only mention apart in the non-fatal `substitution(doc-mention)`, one row per type and file.
   The emitted name is read AFTER the rename phase binds its type renames, and a replacement a
   platform row or `providedSources` declares counts as present: read from the pre-binding
-  `droppedEmittedNames` and `outDir` alone, a consumer went 0 -> 4 false fatals.
+  `droppedEmittedNames` and `outDir` alone, a consumer went 0 -> 4 false fatals. The same table
+  feeds `injected-surface-follow`, the emitter's injected aliases and `providedReplacements`, so
+  it is a `def`, never cached: built while the phase list was assembled, a TYPE-RENAMED drop's
+  calls kept java's `getWidth()` against a replacement spelling `width` (spec 1 -> 0). Kind (a).
 - `dependency-coverage` is the OTHER half of `portability`: a finding needs three conjuncts (usage
   fired, no declared dependency covers it, no `verdictOverrides` alternative), read THROUGH the
   overrides not as a second filter. `(all)` is the enumeration behind the residue filtered by

@@ -208,6 +208,28 @@ class PortRunSpec extends munit.FunSuite:
     assertEquals(blob(provRep), blob(injRep))
   }
 
+  test("a TYPE-RENAMED drop is followed under its renamed name, injected and provided alike") {
+    val (root, src, replacement0) = providedFixture()
+    val replacement               = replacement0.replace("class Blob", "class Thing").replace("object Blob", "object Thing")
+    val inject                    = root.resolve("overrides")
+    val hand                      = root.resolve("hand/src")
+    java(inject, "com/demo/Thing.scala", replacement)
+    java(hand, "com/demo/Thing.scala", replacement)
+    val renamed: PortRun => PortRun = _.copy(typeRenames = Map("com.demo.Blob" -> "Thing"))
+    val injected = withReport(root.resolve("report-inject"))(
+      run(root, src, providedFiles)(p => renamed(p.copy(subs = Substitutions(dropTypes = Set("com.demo.Blob"), inject = List(inject)))))
+    )
+    val injectedUser = Files.readString(injected.outDir.resolve("com/demo/User.scala"))
+    assert(clue(injectedUser).contains(".width") && !injectedUser.contains("getWidth"), injectedUser)
+    assert(injectedUser.contains("com.demo.Thing.Data("), injectedUser)
+    val provided = withReport(root.resolve("report-provided"))(
+      run(root, src, providedFiles)(p => renamed(p.copy(subs = Substitutions(dropTypes = Set("com.demo.Blob"), providedSources = List(hand)))))
+    )
+    val providedUser = Files.readString(provided.outDir.resolve("com/demo/User.scala"))
+    assertEquals(providedUser, injectedUser)
+    assertEquals(emitted(provided.outDir), List("com/demo/User.scala"))
+  }
+
   test("a dropped type NO provided root declares is still a FATAL dangling substitution") {
     val (root, src, _) = providedFixture()
     val hand           = root.resolve("hand/src")
