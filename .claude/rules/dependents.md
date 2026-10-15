@@ -131,7 +131,13 @@ Detail for `CLAUDE.md` §1.5, §2, §2.1 and §3.5.
 - The follow renames a SYMBOL, so it reaches every call of it: a call on a receiver a dependent's
   SCOPED `type-redirect` moved must hold a TWIN under the target type (the redirect mints it), or the
   base's `isEmpty -> empty` lands on a `BitSet` (engine mechanism, (b)). The target's arity is the
-  port's `externalParenless`. A dependent's `call-site-substitution` keyed on a base member needs a
+  port's `externalParenless`. A SCOPED redirect's `memberRenames` rename only declarations the
+  scope admits — renaming the whole component reached the base's own `Bits.get` and every call on a
+  receiver the scope left on `Bits`, which then named a member the base does not have; a held-back
+  member keeps java's name, its TWIN takes the new one, an in-scope override of it is refused and
+  counted, and a receiver whose declaration returns a type variable (`masks.get(k)`) moves exactly
+  when the declaration it reads through does (sge-ecs: 0 lines moved). Kind (b), the scope is policy.
+  A dependent's `call-site-substitution` keyed on a base member needs a
   `scoped` entry outside the base's claim, or it is a fatal intrusion (policy, (b)). Outside means
   outside what the base's PUBLISHED MAP emits, not its `governs` claim: gdx-tools sits inside
   libGDX core's `com.badlogic.gdx` claim, and its entry scoped to `com.badlogic.gdx.tools`, where core

@@ -4,8 +4,9 @@ import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRe
 import balticporter.tir.*
 
 /** Re-points every reference to one type at another, differently-named type, whole-or-none — fills the gap a dependent has no other way to close (can't `inject` a base's dropped FQN twice). The
-  * target compiler is the gate on shape, never this phase. `memberRenames` renames the whole override component first, against the PRE-redirect graph. `scopes` is per-entry, so a dependent's own
-  * retyping cannot disagree with the base's published surface; safe unordered unlike `PackageRenameTransform` since the original symbol stays resolvable.
+  * target compiler is the gate on shape, never this phase. `memberRenames` renames the whole override component first, against the PRE-redirect graph, but only where the entry's scope admits the
+  * declaration — a held-back member keeps java's name and the target's twin takes the new one. `scopes` is per-entry, so a dependent's own retyping cannot disagree with the base's published surface;
+  * safe unordered unlike `PackageRenameTransform` since the original symbol stays resolvable.
   */
 final class TypeRedirectTransform(
   val redirects:     Map[String, String] = Map.empty,
@@ -228,10 +229,23 @@ final class TypeRedirectTransform(
             case RuleScope.Everywhere(_) => true
             case RuleScope.Only(_)       => false
 
+  /** A source member re-homed under the target — under the name a held-back rename gave it, since the source declaration kept java's. */
+  private def twinOf(m: Symbol, id: SymId, toType: SymId, fromFqn: String, toFqn: String): Symbol =
+    val moved = m.copy(id = id, owner = toType, fullName = if m.fullName.startsWith(fromFqn) then toFqn + m.fullName.drop(fromFqn.length) else m.fullName)
+    twinNames.get(m.id) match
+      case Some(n) =>
+        val i = moved.fullName.lastIndexOf('#')
+        moved.copy(name = n, fullName = if i >= 0 && moved.fullName.substring(i + 1) == m.name then moved.fullName.substring(0, i + 1) + n else moved.fullName)
+      case scala.None => moved
+
+  /** Source members a SCOPED rename held back (their declaration is outside the scope), to the name their twin takes. */
+  private var twinNames: Map[SymId, String] = Map.empty
+
   override def run(program0: Program): Program =
     runFindings = Nil
     scopeFired = Map.empty
     instanceTwins = Map.empty
+    twinNames = Map.empty
     if redirects.isEmpty then
       mapping = Map.empty; memberTwins = Map.empty
       return program0
@@ -279,14 +293,7 @@ final class TypeRedirectTransform(
       // static members only — an instance member's receiver TYPE has already moved
       program.symbols.all.filter(m => m.owner == fromType && m.flags.isStatic).toList.map { m =>
         val id = SymId(next); next += 1
-        table = table.updated(
-          m.copy(
-            id = id,
-            owner = toType,
-            fullName = if m.fullName.startsWith(fromFqn) then toFqn + m.fullName.drop(fromFqn.length)
-            else m.fullName
-          )
-        )
+        table = table.updated(twinOf(m, id, toType, fromFqn, toFqn))
         m.id -> id
       }
     }
@@ -300,9 +307,7 @@ final class TypeRedirectTransform(
       val toFqn   = table.get(toType).map(_.fullName).getOrElse("")
       program.symbols.all.filter(m => m.owner == fromType && !m.flags.isStatic && m.name != "<init>" && PolicyBinder.isExecutable(m.info)).toList.map { m =>
         val id = SymId(next); next += 1
-        table = table.updated(
-          m.copy(id = id, owner = toType, fullName = if m.fullName.startsWith(fromFqn) then toFqn + m.fullName.drop(fromFqn.length) else m.fullName)
-        )
+        table = table.updated(twinOf(m, id, toType, fromFqn, toFqn))
         m.id -> id
       }
     }
@@ -421,7 +426,27 @@ final class TypeRedirectTransform(
             .sortBy(_.raw)
           r.copy(hits = hits)
       }
-      val requests = anchoredHits.flatMap(r => r.hits.map(h => MemberRenamer.Request(h, r.newName, Reason.Configured(name, r.key), r.key, r.key, detachedParents = Set(r.source))))
+      // a SCOPED entry renames only the declarations its scope admits: a held-back source member keeps java's name, and the
+      // scope's calls on a moved receiver reach the target through the twin, which takes the new name instead. A base's
+      // DROPPED source is emitted nowhere, so its whole component moves as before
+      val scopedHits = anchoredHits.map { r =>
+        val sc               = scopeOf(r.source)
+        val (kept, heldBack) = r.hits.partition(h => sc.isUnrestricted || inherited(r.source) || inScope(sc, program, h))
+        heldBack.foreach { h =>
+          twinNames = twinNames.updated(h, r.newName)
+          // an override the scope admits would have to move with the held-back member, which is one override component
+          val admitted = graph.closureOf(h).members.toList.filter(m => m != h && program.owned(m) && inScope(sc, program, m))
+          if admitted.nonEmpty then
+            val names = admitted.flatMap(program.symbolOf(_).map(_.fullName)).sorted
+            refuseRename(
+              r,
+              s"${names.mkString(", ")} overrides a member this scope holds back, and an override component renames whole — " +
+                "renaming the override alone would orphan it, renaming the component would move declarations outside the scope"
+            )
+        }
+        r.copy(hits = kept)
+      }
+      val requests = scopedHits.flatMap(r => r.hits.map(h => MemberRenamer.Request(h, r.newName, Reason.Configured(name, r.key), r.key, r.key, detachedParents = Set(r.source))))
       if requests.isEmpty then program
       else
         val (out, refusals) = MemberRenamer.rename(program, graph, requests, MemberRenamer.OnCollision.Refuse, decisions)
@@ -513,7 +538,8 @@ final class TypeRedirectTransform(
     case _                                                => scala.None
 
   /** Did this pass move the receiver's type? Read through the DECLARATION the receiver names — a local, parameter, field or call result whose declared type is a redirected source and which the pass's
-    * scope admits; `this`/`super` never (a subclass keeps the source's members). Any other receiver asks its own already-rewritten node type.
+    * scope admits; `this`/`super` never (a subclass keeps the source's members). A declaration whose type names no source (a type variable's result) defers to its own receiver. Any other receiver
+    * asks its own already-rewritten node type.
     */
   private def receiverMoved(q: Term)(using p: Program): Boolean =
     def head(t: TypeRepr): Option[SymId] = t match
@@ -523,14 +549,33 @@ final class TypeRedirectTransform(
       case TypeRepr.MethodType(_, res, _) => head(res)
       case TypeRepr.PolyType(_, res)      => head(res)
       case _                              => scala.None
-    def declared(s: SymId): Boolean =
-      p.symbolOf(s).exists(d => head(d.info).exists(mapping.contains) && admits(passScope, passDropped, p, s))
-    Tree.uncomment(q) match
-      case _: Tree.This | _: Tree.Super => false
-      case Tree.Ident(s, _, _)          => declared(s)
-      case Tree.Select(_, s, _, _)      => declared(s)
-      case Tree.Apply(_, _, m, _, _)    => declared(m)
-      case other                        => head(other.tpe).exists(mapping.values.toSet)
+    // does the declared VALUE type name a redirected source anywhere — `Bits`, or `Map[String, Bits]` whose type variable
+    // a later call reads back?
+    def mentions(t: TypeRepr): Boolean = t match
+      case TypeRepr.TypeRef(_, s)          => mapping.contains(s)
+      case TypeRepr.AppliedType(tycon, as) => mentions(tycon) || as.exists(mentions)
+      case TypeRepr.OrType(l, r)           => mentions(l) || mentions(r)
+      case TypeRepr.AndType(l, r)          => mentions(l) || mentions(r)
+      case TypeRepr.TypeBounds(lo, hi)     => mentions(lo) || mentions(hi)
+      case TypeRepr.MethodType(_, res, _)  => mentions(res)
+      case TypeRepr.PolyType(_, res)       => mentions(res)
+      case _                               => false
+    // the first declaration down the receiver chain that names the source decides: a type variable's result (`get(k)`) defers
+    // to its own receiver, so `masks.get(k)` moved exactly when the field `masks` did
+    def moved(s: SymId, qual: Option[Term]): Boolean =
+      p.symbolOf(s) match
+        case Some(d) if mentions(d.info) => admits(passScope, passDropped, p, s)
+        case Some(_)                     => qual.exists(chain)
+        case scala.None                  => false
+    def chain(q: Term): Boolean = Tree.uncomment(q) match
+      case _: Tree.This | _: Tree.Super                                                => false
+      case Tree.Ident(s, _, _)                                                         => moved(s, scala.None)
+      case Tree.Select(qual, s, _, _)                                                  => moved(s, Some(qual))
+      case Tree.Apply(Tree.Select(qual, _, _, _), _, m, _, _)                          => moved(m, Some(qual))
+      case Tree.Apply(Tree.TypeApply(Tree.Select(qual, _, _, _), _, _, _), _, m, _, _) => moved(m, Some(qual))
+      case Tree.Apply(_, _, m, _, _)                                                   => moved(m, scala.None)
+      case other                                                                       => head(other.tpe).exists(mapping.values.toSet)
+    chain(q)
 
   /** A class literal names the type in its CONSTANT, which is where the printer reads it from, so `transformType` alone left `classOf[Old]` in the argument of a call whose SIGNATURE had already moved
     * (`convertValue(v, classOf[com.fasterxml.jackson.databind.JsonNode])` at a parameter of the replacement's own type). A REDIRECT may move it where a retyping may not: the declaration really is the

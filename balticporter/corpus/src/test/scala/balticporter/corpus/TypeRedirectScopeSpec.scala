@@ -146,14 +146,85 @@ class TypeRedirectScopeSpec extends PortSuite:
     // the base's own TYPE declaration is untouched — it still declares `class Bits`, not BitSet.
     // The redirect is scoped to `com.dep`, so `com.base.Bits`'s type references stay as `Bits`.
     assertEmits(p, "class Bits")
-    // The member rename fires on the override COMPONENT program-wide (the base's `get` is the
-    // declaration site), which is correct: in a dependent's run the rename precedes the redirect
-    // and applies to the whole component, then the redirect only moves types within the scope.
-    // The base's own independent run would not have this rename — that is why the rename is
-    // per-run, and the TYPE redirect is what the scope governs.
-    assertEmits(p, "def contains(")
+    // …and so are its MEMBERS: the rename exists because the TARGET spells the member differently,
+    // and outside the scope nothing was re-pointed at the target
+    assertEmits(p, "def get(")
+    assertNotEmits(p, "def contains(")
     assertEmits(p, "def set(")
     assertEmits(p, "def isEmpty(")
+  }
+
+  test("a SCOPED redirect's member rename leaves a call OUTSIDE the scope on the source's own name") {
+    val outside = baseSources :+ ("com/other/Plain.java" ->
+      """package com.other;
+        |import com.base.Bits;
+        |public class Plain {
+        |  public boolean probe(Bits b, int i) { return b.get(i); }
+        |}
+        |""".stripMargin)
+    val phase = new TypeRedirectTransform(
+      redirects = Map("com.base.Bits" -> "scala.collection.mutable.BitSet"),
+      memberRenames = Map("com.base.Bits" -> Map("get" -> "contains")),
+      scopes = Map("com.base.Bits" -> RuleScope.Only(Set("com.dep")))
+    )
+    val p = portAll(outside, phase)
+    // the receiver keeps `com.base.Bits`, which declares `get` and not `contains`
+    assertEmits(p, "b.get(i)")
+    assertNotEmits(p, "b.contains(i)")
+    // inside the scope the moved receiver takes the target's name
+    assertEmits(p, "componentBits.contains(idx)")
+  }
+
+  test("a receiver whose declaration returns a TYPE VARIABLE the scope filled with the source moves too") {
+    val generic = baseSources :+ ("com/dep/Masks.java" ->
+      """package com.dep;
+        |import com.base.Bits;
+        |public class Masks {
+        |  java.util.Map<String, Bits> masks = new java.util.HashMap<>();
+        |  void mark(String k, int i) { masks.get(k).set(i); }
+        |}
+        |""".stripMargin)
+    val phase = new TypeRedirectTransform(
+      redirects = Map("com.base.Bits" -> "scala.collection.mutable.BitSet"),
+      memberRenames = Map("com.base.Bits" -> Map("set" -> "addOne")),
+      scopes = Map("com.base.Bits" -> RuleScope.Only(Set("com.dep")))
+    )
+    val p = portAll(generic, phase)
+    assertEmits(p, ".addOne(i)")
+    assertNotEmits(p, ".set(i)")
+    // …and one read through a field the scope HOLDS BACK still holds the source's own object
+    val held = baseSources ++ List(
+      "com/base/Holder.java" ->
+        """package com.base;
+          |public class Holder { public java.util.Map<String, Bits> masks = new java.util.HashMap<>(); }
+          |""".stripMargin,
+      "com/dep/Reads.java" ->
+        """package com.dep;
+          |public class Reads { void mark(com.base.Holder h, String k, int i) { h.masks.get(k).set(i); } }
+          |""".stripMargin
+    )
+    val q = portAll(held, phase)
+    assertEmits(q, ".set(i)")
+    assertNotEmits(q, ".addOne(i)")
+  }
+
+  test("an in-scope override of a held-back source member is REFUSED and counted, never renamed out of scope") {
+    val sub = baseSources :+ ("com/dep/MyBits.java" ->
+      """package com.dep;
+        |public class MyBits extends com.base.Bits {
+        |  @Override public boolean get(int i) { return true; }
+        |}
+        |""".stripMargin)
+    val phase = new TypeRedirectTransform(
+      redirects = Map("com.base.Bits" -> "scala.collection.mutable.BitSet"),
+      memberRenames = Map("com.base.Bits" -> Map("get" -> "contains")),
+      scopes = Map("com.base.Bits" -> RuleScope.Only(Set("com.dep")))
+    )
+    val p = portAll(sub, phase)
+    assertNotEmits(p, "def contains(")
+    assert(
+      clue(phase.policyReport.findings).exists(f => f.key.startsWith("com.base.Bits#get") && f.detail.contains("com.dep.MyBits"))
+    )
   }
 
   test("a scoped redirect with memberRenames rewrites call sites inside the scope") {
