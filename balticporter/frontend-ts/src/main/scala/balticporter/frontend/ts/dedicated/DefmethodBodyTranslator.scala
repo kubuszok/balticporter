@@ -99,6 +99,8 @@ object DefmethodBodyTranslator:
   ): TranslationResult =
     val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions, tsTypes, enclosingClass, fileNames)
     ctx.paramRenames ++= positionalRenames(entry.params, paramNames)
+    // a parameter the reference spells exactly as JS does is read under that spelling, backticked, where the translator's own would differ (`end`, a soft keyword)
+    ctx.paramRenames ++= entry.params.filter(p => paramNames.contains(p) && snakeToCamel(p) != p).map(p => p -> s"`$p`")
     ctx.translateBlock(entry.bodyNode)
     ctx.checkUnresolvedReferences()
     TranslationResult(

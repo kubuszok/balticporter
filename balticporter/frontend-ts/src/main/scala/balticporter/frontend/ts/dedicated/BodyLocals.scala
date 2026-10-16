@@ -29,13 +29,31 @@ private[dedicated] trait BodyLocals extends BodyScope:
     def walk(n: RastNode): Boolean =
       val stores = n.kind == "BinaryExpression" && n.children.size >= 2 && n.children.head.kind == "Identifier" && n.children.head.text.contains(name) &&
         n.operator.exists(op => op == "EqualsToken" || op == "PlusEqualsToken" || op == "MinusEqualsToken" || op == "AsteriskEqualsToken" || op == "SlashEqualsToken")
-      (stores && (n.operator.contains("SlashEqualsToken") || exprType(n.children.last).exists(t => t == "Double" || t == "Float"))) || n.children.exists(walk)
+      (stores && (n.operator.contains("SlashEqualsToken") || storedType(n.children.last, 0).exists(t => t == "Double" || t == "Float"))) || n.children.exists(walk)
     // read as the integer it starts as, so that `x = x + 1` stays integral and `x = x + 0.5` does not
     val sc    = snakeToCamel(name)
     val saved = localTypes.get(sc)
     localTypes(sc) = "Int"
     try Option.when(walk(entry.bodyNode))("Double")
     finally saved.fold(localTypes.remove(sc))(localTypes.put(sc, _))
+
+  // the type of a stored value, a body local the translation has not reached yet read off its one initialiser
+  private def storedType(n: RastNode, depth: Int): Option[String] =
+    exprType(n).orElse {
+      if n.kind != "Identifier" || depth > 3 then None
+      else
+        val decls = allDeclarations.filter(d => d.children.headOption.exists(c => c.kind == "Identifier" && c.text == n.text))
+        decls match
+          case List(d) if !assignedAnywhere.contains(n.text.getOrElse("")) =>
+            d.children.drop(1).filterNot(isTypeNode).headOption.flatMap(storedType(_, depth + 1))
+          case _ => None
+    }
+
+  // every binder the body declares, in source order
+  private lazy val allDeclarations: List[RastNode] =
+    def walk(n: RastNode): Iterator[RastNode] =
+      (if Set("VariableDeclaration", "Parameter", "BindingElement", "FunctionDeclaration")(n.kind) then Iterator.single(n) else Iterator.empty) ++ n.children.iterator.flatMap(walk)
+    walk(entry.bodyNode).toList
 
   /** A value of `tpe` that no read observes: the local holds it only until the first assignment. */
   protected def unobservedValue(tpe: String): String =

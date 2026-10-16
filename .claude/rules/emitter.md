@@ -540,3 +540,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   (`paramNames`, empty = no-op): only where both lists are equally long and every name both spell
   alike sits at one index, so a reordered list renames nothing. graphs-commons 47 -> 54, KaTeX
   58 -> 63, terser 36 -> 38.
+- (a) A local starting from an integer is widened to `Double` by what it stores, a body local the
+  translation has not reached yet read off its one initialiser (`maxDistSq = distSq`). A parameter
+  the reference spells as JS does is read under that spelling, backticked (`end`, a soft keyword
+  the translator's own escape spelled `end_`). graphs-commons 54 -> 55.

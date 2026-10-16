@@ -1033,3 +1033,33 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       ),
       "buffer-at-immutable-slot"
     )
+
+  test("a local starting from an integer is a double where it later stores a body local holding a fraction"):
+    val oracle = ReferenceSignatures.TypeOracle(Map(("Geo", "dist") -> ReferenceSignatures.MethodSig("dist", Nil, "Double")))
+    val r      = translate(
+      block(
+        local("best", num(0)),
+        local("d", call(prop(ident("geo"), "dist"))),
+        expr(bin("EqualsToken", ident("best"), ident("d"))),
+        ret(ident("best"))
+      ),
+      params = List("geo"),
+      paramTypes = Map("geo" -> "Geo"),
+      returnType = Some("Double"),
+      oracle = oracle,
+      memberIndex = ReferenceSignatures.MemberIndex(Map("Geo" -> Set("dist")))
+    )
+    accepts(r)
+    assert(r.scalaBody.contains("var best: Double = 0"), r.scalaBody)
+
+  test("a parameter the reference spells as JS does is read under that spelling, a soft keyword backticked"):
+    val r = DefmethodBodyTranslator.translateBody(
+      DefmethodEntry("_free_", "test", List("end"), block(ret(bin("MinusToken", ident("end"), num(1))))),
+      Nil,
+      "    ",
+      returnType = Some("Int"),
+      paramTypes = Map("end" -> "Int"),
+      paramNames = List("end")
+    )
+    accepts(r)
+    assertNoDiff(r.scalaBody.trim, "`end` - 1")
