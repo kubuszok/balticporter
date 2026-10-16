@@ -382,6 +382,12 @@ sees the kind); the screen is *would a reader act differently*.
 - A METHOD's own type parameter that feeds a bound-dropped subject keeps java's `Object` bound where
   the method also hands it to a class that KEPT the bound (`copy[T](ObjectSet[T], DynamicArray[T])`):
   unbounded it no longer satisfies `ObjectSet[T <: Object]` (gltf, 1 E057). Kind (a).
+- `dropBound` works WITHOUT a witness: a type whose hand port admits any argument (`Task[Int]`) names
+  it, and a method handing its own type parameter to a position the run unbound drops that bound too
+  (`cloneTask[T](Task[T])`, 1 E007). A subclass passing its own parameter keeps its bound unless named
+  (it still compiles; only the hand API needs it). `this` handed to a wildcard formal the drop filled
+  to `C[Object]` takes java's unchecked conversion like any other argument, counted (`RawConversion`;
+  `orchestrator.execute(this)`, 3 E007). Kind (b): which types is policy.
 - `requiredGivens`' transitive closure threads a witness at EVERY type parameter a given-bound class
   is constructed at (`ValueArrayMap[K, V]` building `DynamicArray[K]` and `DynamicArray[V]`); the
   first parameter alone left the second construction without a given (gdx-vfx, 1 E172). Kind (a).

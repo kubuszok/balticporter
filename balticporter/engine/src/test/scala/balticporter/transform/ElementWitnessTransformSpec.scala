@@ -352,3 +352,43 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
     val t = new ElementWitnessTransform(witness = Witness, subjectTypes = Map("a.B" -> List(0)), dropBound = Set("a.C"), scope = RuleScope.Only(Set("a.d")))
     assertEquals(t.subjects, Set("a.B", "a.C", "a.d"))
   }
+
+  // ---- a bound drop with no witness ------------------------------------------------------------
+
+  private val unboundJava =
+    """package com.demo;
+      |class Task<E> { Task<E> copy () { return Cloner.copy(this); } }
+      |class Leaf<E> extends Task<E> {}
+      |class Cloner { static <T> Task<T> copy (Task<T> t) { return t; } static <T> T id (T t) { return t; } }
+      |class Holder<N> { Task<N> task; }
+      |class Kept<K> {}
+      |""".stripMargin
+
+  test(
+    "a bound drop alone is no no-op: it fingerprints and moves the named type and the methods handing it a parameter; a class applying it keeps its own"
+  ) {
+    val t = new ElementWitnessTransform(dropBound = Set("com.demo.Task"))
+    assert(!t.isNoOp)
+    assert(clue(t.surfaceFingerprint).contains("unbound=com.demo.Task"))
+    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(unboundJava, "Task.java"), List(t))
+    val out          = new TirEmitter(after, notes = log).emit
+    assert(clue(out).contains("class Task[E]"), out)
+    assert(out.contains("class Leaf[E <: java.lang.Object]"), out)
+    assert(out.contains("class Holder[N <: java.lang.Object]"), out)
+    assert(out.contains("def copy[T](t: com.demo.Task[T])"), out)
+    assert(out.contains("def id[T <: java.lang.Object]("), out)
+    assert(out.contains("Kept[K <: java.lang.Object]"), out)
+    assert(log.all.exists(d => d.subjectFqn == "com.demo.Task" && d.kind == balticporter.tir.Decision.Kind.RetypedSignature))
+  }
+
+  test("`this` handed to a wildcard formal the drop filled takes java's unchecked conversion, counted") {
+    val src =
+      """package com.demo;
+        |class Task<E> { void run (Runner r) { r.go(this); } }
+        |class Runner { void go (Task<?> t) {} }
+        |""".stripMargin
+    val t     = new ElementWitnessTransform(dropBound = Set("com.demo.Task"))
+    val after = Pipeline.run(SpoonTir.fromSource(src, "Task.java"), List(t))
+    assert(clue(new TirEmitter(after).emit).contains("r.go(this.asInstanceOf[Task[java.lang.Object]])"))
+    assertEquals(t.refusals(after, after.units).map(_.issue), List(ElementWitnessCheck.Issue.RawConversion))
+  }

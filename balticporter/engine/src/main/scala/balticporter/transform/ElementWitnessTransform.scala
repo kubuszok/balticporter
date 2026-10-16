@@ -55,8 +55,8 @@ final class ElementWitnessTransform(
   /** every seam this retyping opened and could not close. */
   def accountedBy: Set[String] = Set(ElementWitnessCheck.Name)
 
-  /** is this instance a no-op? Read by `PortRun` so an empty instance requires no lane. */
-  def isNoOp: Boolean = witness.isEmpty || subjectTypes.isEmpty
+  /** is this instance a no-op? Read by `PortRun` so an empty instance requires no lane. A `dropBound` alone still moves bounds. */
+  def isNoOp: Boolean = (witness.isEmpty || subjectTypes.isEmpty) && dropBound.isEmpty
 
   // ---- surface ------------------------------------------------------------------------------
 
@@ -215,7 +215,7 @@ final class ElementWitnessTransform(
 
   override def run(program0: Program): Program =
     refusalLog.clear()
-    if isNoOp || boundSubjects.isEmpty then return program0
+    if isNoOp || (boundSubjects.isEmpty && boundUnbound.isEmpty) then return program0
     given Program = program0
 
     val ownedClasses: List[Tree.ClassDef] =
@@ -291,6 +291,29 @@ final class ElementWitnessTransform(
                 case _                                 => ()
               }
             )
+          args.foreach(walk)
+        case TypeRepr.AppliedType(tc, args) => walk(tc); args.foreach(walk)
+        case TypeRepr.AndType(l, r)         => walk(l); walk(r)
+        case TypeRepr.OrType(l, r)          => walk(l); walk(r)
+        case TypeRepr.ByNameType(u)         => walk(u)
+        case TypeRepr.TypeBounds(lo, hi)    => walk(lo); walk(hi)
+        case _                              => ()
+      types.foreach(walk)
+      hit
+
+    /** Is `tp` handed, in `types`, to a class type-parameter position whose bound this run drops? Unbound there, a method's own `tp` that kept java's bound could not pass a value the class now admits
+      * (`cloneTask[T](Task[T])` beside an unbound `Task[E]`).
+      */
+    def feedsUnboundClass(types: List[TypeRepr], tp: SymId): Boolean =
+      var hit = false
+      def walk(t: TypeRepr): Unit = t match
+        case TypeRepr.AppliedType(TypeRepr.TypeRef(_, c), args) =>
+          tparamsOfClass.get(c).foreach { tps =>
+            args.zip(tps).foreach {
+              case (TypeRepr.TypeRef(_, s), ctp) if s == tp && unboundClassTparams(ctp) => hit = true
+              case _                                                                    => ()
+            }
+          }
           args.foreach(walk)
         case TypeRepr.AppliedType(tc, args) => walk(tc); args.foreach(walk)
         case TypeRepr.AndType(l, r)         => walk(l); walk(r)
@@ -800,9 +823,13 @@ final class ElementWitnessTransform(
             subjectFqn = fqn,
             detail = Map(
               "elements" -> cd.tparams.filter(td => unboundClassTparams(td.symbol)).flatMap(td => program0.symbolOf(td.symbol)).map(_.name).mkString(","),
-              "why" -> ("the element type's arrays are allocated by the witness, so java's implicit " +
-                "`<: java.lang.Object` bound is not the port's — a primitive or opaque element type " +
-                "is admissible")
+              "why" -> (if boundSubjects.contains(cd.symbol) then
+                          "the element type's arrays are allocated by the witness, so java's implicit " +
+                            "`<: java.lang.Object` bound is not the port's — a primitive or opaque element type " +
+                            "is admissible"
+                        else
+                          "the port admits any type argument here, a primitive or opaque one included, so java's " +
+                            "implicit `<: java.lang.Object` bound goes — named by the port, or reached from a type it named")
             ),
             reason = Reason.Configured(name, s"dropBound/$fqn"),
             origin = Decision.originOf(program0, cd.symbol)
@@ -850,7 +877,8 @@ final class ElementWitnessTransform(
         lazy val written = typesIn(d)
         val unboundHere  = d.tparams.filter(td =>
           inUnbound || (
-            (feedsSubject(signatureTypes(d), td.symbol, unboundOnly = true) || constructsSubjectAt(d, td.symbol, unboundOnly = true)) &&
+            (feedsSubject(signatureTypes(d), td.symbol, unboundOnly = true) || constructsSubjectAt(d, td.symbol, unboundOnly = true) ||
+              feedsUnboundClass(signatureTypes(d), td.symbol)) &&
               !keptBoundAt(written, td.symbol)
           )
         )
@@ -944,8 +972,15 @@ final class ElementWitnessTransform(
     // the fill mints its own `java.lang.Object` reference, absent from `program0`'s table
     def isFilledObject(t: TypeRepr): Boolean =
       t == TypeRepr.TypeRef(TypeRepr.NoPrefix, mint.javaObject) || ElementWitnessTransform.isObjectType(program0, t)
+
+    /** the argument's type as `C[args]` — `this` and a bare reference to a generic class stand at its own type parameters */
+    def asApplied(a: Term): TypeRepr = (Tree.uncomment(a), a.tpe) match
+      case (_, t: TypeRepr.AppliedType)                                        => t
+      case (Tree.This(c, _, _), _) if tparamsOfClass.get(c).exists(_.nonEmpty) =>
+        TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, c), tparamsOfClass(c).map(tp => TypeRepr.TypeRef(TypeRepr.NoPrefix, tp)))
+      case (_, t) => t
     def rawConvert(a: Term, formal: TypeRepr, o: Origin, owner: SymId, unit: SymId): Term =
-      (a.tpe, formal) match
+      (asApplied(a), formal) match
         case (TypeRepr.AppliedType(TypeRepr.TypeRef(_, c1), aa), TypeRepr.AppliedType(TypeRepr.TypeRef(_, c2), fa))
             if c1 == c2 && filledClasses(c1) && aa.sizeIs == fa.size && aa != fa &&
               fa.zip(aa).forall((f, x) => f == x || isFilledObject(f)) =>
