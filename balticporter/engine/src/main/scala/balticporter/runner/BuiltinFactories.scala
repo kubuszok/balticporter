@@ -535,7 +535,8 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       through = c.stringMap("through").getOrElse(Map.empty),
       capture = c.stringMap("capture").getOrElse(Map.empty),
       promoteToClass = c.strings("promoteToClass").getOrElse(Nil).toSet,
-      scope = TransformFactory.scopeOf(c)
+      scope = TransformFactory.scopeOf(c),
+      attachClass = c.strings("attachClass").getOrElse(Nil).toSet
     )
 
 /** `{ transform = "class-to-trait", specs { "a.Pool" { params = [ { index, name } ] } } }` */

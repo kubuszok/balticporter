@@ -397,6 +397,10 @@ sees the kind); the screen is *would a reader act differently*.
   operator characters): it is a valid Scala identifier that scalac encodes itself, so it takes no
   `@targetName`; refused as malformed, a hand port's setter-only property could not be reproduced.
   Kind (a).
+- A context holder that attaches on METHODS may still name types whose clause lands on the
+  CONSTRUCTOR (`attachClass`), the hand port's `Wander(owner)(using Timepiece)`: scoped out instead,
+  the type read the installed global and a hand suite's `given` went unused (5 `-Werror` warnings).
+  Empty is the no-op and fingerprints nothing. Kind (b).
 - A registry SEED that is generic registers under `classOf[X[?]]`: scala's `classOf` takes no raw
   type, and every seed of gdx-ai's generic task tree was E170 (19 errors). Kind (a).
 - `requiredGivens`' transitive closure threads a witness at EVERY type parameter a given-bound class

@@ -29,7 +29,10 @@ final case class ContextHolder(
   capture:        Map[String, String] = Map.empty,
   promoteToClass: Set[String] = Set.empty,
   forceThread:    Set[String] = Set.empty,
-  scope:          RuleScope = RuleScope.everywhere
+  scope:          RuleScope = RuleScope.everywhere,
+  /** TYPES whose clause lands on the CLASS (its constructors, `(using T)`) while the holder attaches on methods — a hand port's per-type choice (`Wander(owner)(using Timepiece)`). Empty is the no-op.
+    */
+  attachClass: Set[String] = Set.empty
 ):
   /** a stable, order-independent rendering — two modules that agree must compare equal. */
   def fingerprint: String =
@@ -41,7 +44,8 @@ final case class ContextHolder(
   def sharedSurface: String =
     val ms = members.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
     s"$holder|${context.token}|$ms|${attach.token}|${reader.token}|${boundary.token}|" +
-      s"${promoteToClass.toList.sorted.mkString(",")}|${forceThread.toList.sorted.mkString(",")}|${scope.fingerprint}"
+      s"${promoteToClass.toList.sorted.mkString(",")}|${forceThread.toList.sorted.mkString(",")}|${scope.fingerprint}" +
+      (if attachClass.isEmpty then "" else s"|class-attached=${attachClass.toList.sorted.mkString(",")}")
 
   /** this holder with a dependent's per-declaration entries folded in; clashing keys have already been refused by the caller, so this only composes.
     */

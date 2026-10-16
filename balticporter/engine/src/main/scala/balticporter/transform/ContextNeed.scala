@@ -37,6 +37,13 @@ final class ContextNeed(
 
   private given Program = program
 
+  private val classAttached = RuleScope.Only(holder.attachClass)
+
+  /** does a need inside `cls` land on its constructor — the holder's own `attach`, or the type is one `attachClass` names */
+  private def attachesOnClass(cls: SymId): Boolean =
+    holder.attach == ContextAttach.Class ||
+      (holder.attachClass.nonEmpty && program.symbolOf(cls).exists(s => classAttached.includes(program, s)))
+
   /** the `sites` keys something in this run decided through — FIRST, because [[policyFor]] writes to it while [[deferrals]] is still being built and a `val` declared later is `null` there.
     */
   private val firedS = collection.mutable.Set.empty[String]
@@ -110,7 +117,7 @@ final class ContextNeed(
         case Some(sym)  =>
           if isType(s) then
             if isDeclaredClass(s) then
-              if holder.attach == ContextAttach.Class then Site.Cls(s, captured)
+              if attachesOnClass(s) then Site.Cls(s, captured)
               else Site.Boundary(s, "it is a class body statement and `attach = method`")
             // an anonymous/enum-constant body: signature is fixed by what it implements, so the
             // need lands OUTSIDE and captures lexically.
@@ -121,9 +128,9 @@ final class ContextNeed(
           else if PolicyBinder.isExecutable(sym.info) then
             if sym.name == ClinitName then Site.Boundary(s, "a class initialiser has no signature")
             else if sym.name == InitBlockName then
-              if holder.attach == ContextAttach.Class && isDeclaredClass(sym.owner) then Site.Cls(sym.owner, captured)
+              if attachesOnClass(sym.owner) && isDeclaredClass(sym.owner) then Site.Cls(sym.owner, captured)
               else Site.Boundary(s, "an instance initialiser block has no signature and `attach = method`")
-            else if holder.attach == ContextAttach.Class && isDeclaredClass(sym.owner) &&
+            else if attachesOnClass(sym.owner) && isDeclaredClass(sym.owner) &&
               (sym.name == CtorName || !sym.flags.isStatic)
             then Site.Cls(sym.owner, captured)
             else Site.Method(s, captured)
@@ -133,7 +140,7 @@ final class ContextNeed(
             program.symbolOf(sym.owner) match
               case Some(o) if PolicyBinder.isExecutable(o.info) => climb(sym.owner, captured, fuel - 1, deferAware)
               case Some(_) if isType(sym.owner)                 =>
-                if !sym.flags.isStatic && holder.attach == ContextAttach.Class && isDeclaredClass(sym.owner) then Site.Cls(sym.owner, captured)
+                if !sym.flags.isStatic && attachesOnClass(sym.owner) && isDeclaredClass(sym.owner) then Site.Cls(sym.owner, captured)
                 else if sym.flags.isStatic then
                   Site.Boundary(s,
                                 "a static field's initialiser runs at class initialisation, before " +
