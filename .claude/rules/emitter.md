@@ -547,3 +547,6 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 - (a) The truthiness of a top type (`Any`, `AnyRef`) or of a union holding a string, a number or a
   boolean is refused: a presence test reads a held JS `false`, `0` or `""` as truthy, and it had
   been emitted as `!= null`. No translated body read one yet; terser 72 -> 75 refusing bodies.
+- (a) Definite assignment does not depend on knowing a store's type: an annotated local is typed
+  by its annotation and each store rendered at it, an unannotated one only by stores whose type
+  is known and agrees. KaTeX bodies refusing uninitialised-local 24 -> 23.

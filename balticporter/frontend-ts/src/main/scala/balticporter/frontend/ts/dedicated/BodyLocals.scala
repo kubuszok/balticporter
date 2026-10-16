@@ -17,10 +17,13 @@ private[dedicated] trait BodyLocals extends BodyScope:
       rest = block.children.dropWhile(c => !(c eq s)).drop(1)
       stored <- assignsFirst(rest, name)
       tpe <- annotated.orElse(stored.distinct match
-        case List(t) => Some(t)
-        case _       => None)
+        case List(t) if t != unknownStore => Some(t)
+        case _                            => None)
       if stored.forall(_ == tpe) || annotated.isDefined
     yield tpe
+
+  // a store whose value's type is unknown: it types nothing, so only an annotation can
+  private val unknownStore = "?"
 
   /** `Double` for a local initialised with an integer literal that the body later stores a fractional value into (`x = y / 2`, `x += 0.5`): every JS number is a double, and a Scala `Int` local could
     * not hold it. None where every store is integral or of unknown type.
@@ -94,11 +97,14 @@ private[dedicated] trait BodyLocals extends BodyScope:
       case "IfStatement" if s.children.size >= 3 => leavesFunction(s.children(1)) && leavesFunction(s.children(2))
       case _                                     => false
 
-  // `name = e` where `e` reads nothing of `name`: the type `e` has
+  // `name = e` where `e` reads nothing of `name`: the type `e` has, none where it is unknown (an annotation then types the local, the store rendered at it); a `null` stored is no assignment
   private def storeOf(e: RastNode, name: String): Option[List[String]] =
     if e.kind == "BinaryExpression" && e.operator.contains("EqualsToken") && e.children.size >= 2 &&
       e.children.head.kind == "Identifier" && e.children.head.text.contains(name) && !mentions(e.children.last, name)
-    then exprType(e.children.last).filter(_ != "Null").map(List(_))
+    then
+      exprType(e.children.last) match
+        case Some("Null") => None
+        case known        => Some(List(known.getOrElse(unknownStore)))
     else None
 
   private def mentions(n: RastNode, name: String): Boolean =

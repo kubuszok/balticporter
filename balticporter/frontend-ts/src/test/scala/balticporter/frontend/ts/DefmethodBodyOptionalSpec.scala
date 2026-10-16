@@ -142,3 +142,18 @@ class DefmethodBodyOptionalSpec extends munit.FunSuite:
     assert(run("buf", "scala.collection.mutable.ArrayBuffer[Sub]").refusalReasons.contains("argument-type-mismatch:Sub->Base"))
 
   extension (n: RastNode) private def pipe(f: RastNode => RastNode): RastNode = f(n)
+
+  test(
+    "an annotated local is definitely assigned by stores of any type, an unannotated one only by stores whose type is known"
+  ):
+    def decl(annotation: Option[RastNode]) =
+      node("VariableStatement", node("VariableDeclarationList", node("VariableDeclaration", (ident("s") :: annotation.toList)*)))
+    def store(v: RastNode)                 = block(expr(assign(ident("s"), v)))
+    def body(annotation: Option[RastNode]) =
+      block(decl(annotation), node("IfStatement", ident("c"), store(at(ident("m"), ident("k"))), store(ident("a"))), ret(ident("s")))
+    val types     = Map("c" -> "Boolean", "m" -> "Any", "k" -> "String", "a" -> "Double")
+    val annotated = translate(body(Some(node("NumberKeyword"))), types, "Double")
+    assert(!annotated.refusalReasons.contains("uninitialised-local"), annotated.refusalReasons.toString)
+    assert(annotated.scalaBody.contains("var s: Double = 0.0"), annotated.scalaBody)
+    val bare = translate(body(None), types, "Double")
+    assert(bare.refusalReasons.contains("uninitialised-local"), bare.refusalReasons.toString)
