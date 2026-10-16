@@ -39,3 +39,23 @@ class NullabilityBoxedSpec extends munit.FunSuite:
     val out = emit(NullabilityTransform.Target.Union)
     assert(clue(out).contains("java.lang.Integer | Null") || out.contains("java.lang.Integer | scala.Null"))
   }
+
+  test("a conditional yielding a box or java's null is the wrapped value or the empty, never the unboxed null") {
+    val src =
+      """package com.demo;
+        |import java.lang.annotation.*;
+        |@Retention(RetentionPolicy.CLASS) @interface Null {}
+        |class Rule {
+        |  public @Null Boolean decide(boolean done) { return done ? Boolean.TRUE : null; }
+        |}
+        |""".stripMargin
+    val phase = new NullabilityTransform(
+      annotations = Set("com.demo.Null"),
+      target = NullabilityTransform.Target.Named("demo.Nullable"),
+      scope = RuleScope.Everywhere(Set.empty)
+    )
+    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(src, "Rule.java"), List(phase))
+    val out          = new TirEmitter(after, notes = log).emit
+    assert(clue(out).contains("if (done) demo.Nullable(java.lang.Boolean.TRUE) else demo.Nullable.empty"), out)
+    assert(!out.contains("demo.Nullable(if"), out)
+  }

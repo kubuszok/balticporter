@@ -1178,6 +1178,12 @@ final class NullabilityTransform(
         val bare = Tree.Select(Tree.Ident(wrapperSym, TypeRepr.NoType, o), emptySym, want, o)
         val elem = if isWrapperType(tpt.tpe) then elementOf(tpt.tpe) else tpt.tpe
         if elem == TypeRepr.NoType then bare else Tree.TypeApply(bare, List(TypeTree(elem, o)), want, o)
+    // a branch that yields java's null is the EMPTY wrapper, decided per branch: wrapped whole, a boxed
+    // element's null (`c ? Boolean.TRUE : null` at `W[Boolean]`) would be unboxed on its way in
+    case x: Tree.If if isNullLiteral(x.thenp) || isNullLiteral(x.elsep) =>
+      x.copy(thenp = branchTo(want, x.thenp), elsep = branchTo(want, x.elsep), tpe = want)
+    case x: Tree.Match if x.cases.exists(c => isNullLiteral(c.body)) =>
+      x.copy(cases = x.cases.map(c => c.copy(body = branchTo(want, c.body))), tpe = want)
     case x: Tree.If =>
       val elem    = elementOf(want)
       val coerced = x.copy(thenp = coerceTo(elem, x.thenp), elsep = coerceTo(elem, x.elsep))
@@ -1192,6 +1198,10 @@ final class NullabilityTransform(
       Tree.Apply(Tree.Ident(wrapperSym, TypeRepr.NoType, e.origin), List(coerced), applySym, want, e.origin)
     case _ =>
       Tree.Apply(Tree.Ident(wrapperSym, TypeRepr.NoType, e.origin), List(e), applySym, want, e.origin)
+
+  /** one branch of a conditional at a wrapped slot: java's null is the empty wrapper, typed by the slot alone; any other value is coerced as a whole value is */
+  private def branchTo(want: TypeRepr, b: Term): Term =
+    if isNullLiteral(b) then wrap(want, Tree.Literal(Constant.NullC, TypeRepr.NoType, b.origin)) else coerceTo(want, b)
 
   /** `e.get` — the unchecked unwrap. NPE on empty IS Java's semantics at a DEREFERENCE (member access, method call, array element/length), and the contract asks for this member for exactly that case.
     * See [[unwrapOrNull]] for the slot-coercion counterpart.
