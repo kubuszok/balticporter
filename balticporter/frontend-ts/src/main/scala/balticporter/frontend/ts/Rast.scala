@@ -73,7 +73,7 @@ object RastValue:
       in.nextToken() match
         case '"' =>
           in.rollbackToken()
-          Str(in.readString(null))
+          Str(Rast.jsString.decodeValue(in, null))
         case 't' | 'f' =>
           in.rollbackToken()
           Bool(in.readBoolean())
@@ -87,6 +87,40 @@ object RastValue:
     def nullValue: RastValue = null
 
 object Rast:
+
+  /** A JSON string as JS reads it: a `\uXXXX` escape may name a lone surrogate, which a JS string holds and a Scala string can too, where the strict reader refuses the whole file. */
+  given jsString: JsonValueCodec[String] = new JsonValueCodec[String]:
+    def decodeValue(in: JsonReader, default: String): String =
+      if in.nextToken() != '"' then in.decodeError("expected a string")
+      in.rollbackToken()
+      decodeJsonString(in.readRawValAsBytes())
+    def encodeValue(x: String, out: JsonWriter): Unit   = out.writeVal(x)
+    def nullValue:                               String = null
+
+  /** The text of a quoted JSON string's bytes, every escape decoded and a lone surrogate kept as itself. */
+  def decodeJsonString(raw: Array[Byte]): String =
+    val sb  = new java.lang.StringBuilder(raw.length)
+    val end = raw.length - 1
+    var i   = 1
+    var run = 1
+    def flush(upTo: Int): Unit = if upTo > run then sb.append(new String(raw, run, upTo - run, java.nio.charset.StandardCharsets.UTF_8))
+    while i < end do
+      if raw(i) == '\\' then
+        flush(i)
+        raw(i + 1) match
+          case 'b' => sb.append('\b'); i += 2
+          case 'f' => sb.append('\f'); i += 2
+          case 'n' => sb.append('\n'); i += 2
+          case 'r' => sb.append('\r'); i += 2
+          case 't' => sb.append('\t'); i += 2
+          case 'u' =>
+            sb.append(Integer.parseInt(new String(raw, i + 2, 4, java.nio.charset.StandardCharsets.US_ASCII), 16).toChar); i += 6
+          case c => sb.append(c.toChar); i += 2
+        run = i
+      else i += 1
+    flush(end)
+    sb.toString
+
   given fileCodec: JsonValueCodec[RastFile] = JsonCodecMaker.make(
     CodecMakerConfig.withDiscriminatorFieldName(None).withAllowRecursiveTypes(true).withMapMaxInsertNumber(1000000).withSetMaxInsertNumber(1000000)
   )

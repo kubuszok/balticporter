@@ -388,8 +388,19 @@ private[dedicated] object BodySyntax:
   /** JS array methods whose callback takes an element and answers something other than a predicate: its parameter is of the array's element type. */
   val elementCallbacks: Set[String] = Set("forEach", "map", "flatMap")
 
+  /** `s` as the inside of a Scala string literal: a control character or a surrogate is written as its `\uXXXX` escape, since a lone surrogate has no UTF-8 spelling in the emitted file. */
   def escapeString(s: String): String =
-    s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t")
+    val sb = new java.lang.StringBuilder(s.length)
+    s.foreach {
+      case '\\'                                           => sb.append("\\\\")
+      case '"'                                            => sb.append("\\\"")
+      case '\n'                                           => sb.append("\\n")
+      case '\r'                                           => sb.append("\\r")
+      case '\t'                                           => sb.append("\\t")
+      case c if c < ' ' || c == '\u007f' || c.isSurrogate => sb.append(f"\\u${c.toInt}%04x")
+      case c                                              => sb.append(c)
+    }
+    sb.toString
 
   /** Escape a string for use as text inside an s"..." interpolator. Dollar signs must be doubled to avoid being read as interpolation.
     */
