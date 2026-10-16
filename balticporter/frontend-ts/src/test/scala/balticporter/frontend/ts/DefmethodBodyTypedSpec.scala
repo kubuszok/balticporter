@@ -579,6 +579,26 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     )
     assert(!reassigned.scalaBody.contains("asInstanceOf[Seq]"), reassigned.scalaBody)
 
+  test(
+    "a constant index below the length of a TypeScript tuple of plain elements is in range; past it, or on an optional element, it is not"
+  ):
+    def pairRead(targetText: String, i: Int) =
+      val recv = RastNode("Identifier", 0, (0, 0), text = Some("b"), `type` = Some("pair"))
+      DefmethodBodyTranslator.translateBody(
+        DefmethodEntry("_free_", "test", List("b"), block(ret(node("ElementAccessExpression", recv, num(i))))),
+        Nil,
+        "    ",
+        returnType = Some("Int"),
+        paramTypes = Map("b" -> "Array[Int]"),
+        tsTypes = Map(
+          "pair" -> RastType("reference", "[number, number]", target = Some("tup"), typeArguments = Some(List("n", "n"))),
+          "tup" -> RastType("reference", targetText, target = Some("tup"), typeArguments = Some(List("n", "n")))
+        )
+      )
+    accepts(pairRead("[?, ?]", 1))
+    refuses(pairRead("[?, ?]", 2), "read-past-end")
+    refuses(pairRead("[?, ??]", 1), "read-past-end")
+
   private def checkerTyped(tpe: RastType, member: String): DefmethodBodyTranslator.TranslationResult =
     val recv = RastNode("Identifier", 0, (0, 0), text = Some("tok"), `type` = Some("k"))
     DefmethodBodyTranslator.translateBody(

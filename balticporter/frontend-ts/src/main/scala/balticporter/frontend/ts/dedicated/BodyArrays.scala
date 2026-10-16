@@ -47,7 +47,7 @@ private[dedicated] trait BodyArrays extends BodyBounds:
       for t <- recvType; k <- mapKeyType(t); have <- exprType(children(1)) do checkTypeCompatibility(have, k)
       if isWriteTarget(node) then
         // JS grows an array stored to at or past its end, where Scala throws: a length test on the same receiver must prove the index inside it
-        if element.isDefined && !indexProven(node, children.head, children(1)) then refuse("write-past-end")
+        if element.isDefined && !indexProven(node, children.head, children(1)) && !tupleProven(children.head, children(1)) then refuse("write-past-end")
         if recvType.exists(t => handOverConversions.contains(baseName(t))) then refuse("mutated-immutable-collection")
         s"$obj($idx)"
       else if element.exists(absentIsNull) then s"$obj.lift($idx).orNull"
@@ -55,8 +55,8 @@ private[dedicated] trait BodyArrays extends BodyBounds:
       else
         val proven =
           if value.isDefined then keyProven(node, children.head, children(1))
-          else if element.isDefined then indexProven(node, children.head, children(1))
-          else indexProven(node, children.head, children(1)) || keyProven(node, children.head, children(1))
+          else if element.isDefined then indexProven(node, children.head, children(1)) || tupleProven(children.head, children(1))
+          else indexProven(node, children.head, children(1)) || tupleProven(children.head, children(1)) || keyProven(node, children.head, children(1))
         if !proven then refuse("read-past-end")
         s"$obj($idx)"
 

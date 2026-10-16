@@ -257,6 +257,15 @@ private[dedicated] trait BodyBounds extends BodyScope:
       }
     }
 
+  /** True when TypeScript itself bounds `recv[idx]`: the checker types `recv` as a tuple of plain elements (no optional or rest one) and `idx` is a constant below its length. */
+  protected def tupleProven(recv: RastNode, idx: RastNode): Boolean =
+    (for
+      t <- recv.`type`.flatMap(tsTypes.get)
+      target <- t.target.flatMap(tsTypes.get)
+      args <- t.typeArguments
+      i <- intLiteral(idx)
+    yield target.text.matches("""\[\?(, \?)*\]""") && target.text.count(_ == '?') == args.size && i < args.size).getOrElse(false)
+
   /** True when the key `key` of `recv` at `site` is proven present: a `has` or `in` test of the same key on the same receiver holds there, nothing moving either in between. */
   protected def keyProven(site: RastNode, recv: RastNode, key: RastNode): Boolean =
     isPath(recv) && (isPath(key) || linear(key).exists(_.isConst) || key.kind == "StringLiteral") && {

@@ -583,3 +583,8 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   (`new BigDecimal(NaN)` threw) and keeps the sign of a negative rounding to zero; `toString(radix)`
   is translated only on an integer (it had truncated a fraction); unary `+` of a string is refused
   (`numeric-coercion`: it had been rendered as a STRING). KaTeX 75 -> 82.
+- (a) `HashMap`, `LinkedHashMap` and `TreeMap` written bare are standard collections, not classes
+  of the reference: an element read or store on one had been refused as `element-access-on-class`.
+  A constant index below the length of a TypeScript tuple of plain elements (the checker's
+  `[?, ?]` target, no optional or rest element) is in range as TypeScript itself proves it. KaTeX
+  82 -> 86.
