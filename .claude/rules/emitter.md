@@ -518,3 +518,25 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   refused, a string at an enumeration's slot excepted. An object literal used as a map keys each
   entry by the string JS makes of it and parenthesises its value: a quoted key had been emitted
   as `"?"` and `"k" -> a + b` reads `("k" -> a) + b`. KaTeX 54 -> 58.
+- (a) A RAST string may hold a lone surrogate (a JS string can; KaTeX's Lexer matches surrogate
+  ranges), which the strict JSON reader refused for the whole file: the reader decodes `\uXXXX`
+  as JS does, and a literal writes every surrogate and control character as its `\uXXXX` escape,
+  since a lone surrogate has no UTF-8 spelling in the emitted file.
+- (a) JS evaluates the left of `x || y` once: a test and a yield of it bind it first unless it is
+  a plain path. `xs || []` builds the array at the left operand's collection type, `x || 0` on a
+  fractional `x` writes `0.0`, and the right of `||` is rendered once (the unwrapped rendering
+  `&&` needs had leaked a typed local's entry). Both branches of a `?:` at a typed slot read what
+  the condition proves, and an array literal's element is checked against the slot's element type
+  (an optional element had been emitted where a value was required). A buffer a call answers is
+  refused at an immutable slot (`buffer-at-immutable-slot`): only a local's last use is copied
+  unobservably.
+- (a) A type alias the reference declares is the type it names (`DomSpan` reads
+  `Span[HtmlDomNode]`, `MathNodeType` reads `String`) wherever a type is read or compared; an
+  alias to a union or a function is replaced only where it is the whole type. `{ ...src, k: v }`
+  and `Object.assign({}, src, { k: v })` at a case class `src` is of are `src.copy(k = v)`; a plain
+  class keeps `js-object-assign`.
+- (b) A JS parameter the reference renamed (`val` -> `value`, `distance` -> `distanceTolerance`)
+  is read under the reference's name by POSITION, given the reference's names in order
+  (`paramNames`, empty = no-op): only where both lists are equally long and every name both spell
+  alike sits at one index, so a reordered list renames nothing. graphs-commons 47 -> 54, KaTeX
+  58 -> 63, terser 36 -> 38.

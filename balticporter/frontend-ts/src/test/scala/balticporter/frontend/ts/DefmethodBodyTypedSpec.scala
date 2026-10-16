@@ -878,3 +878,158 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     val r = translate(block(expr(call(prop(ident("xs"), "pop")))), params = List("xs"), paramTypes = Map("xs" -> "ArrayBuffer[Int]"))
     accepts(r)
     assertNoDiff(r.scalaBody.trim, "{ val b$ = xs; if (b$.nonEmpty) b$.remove(b$.length - 1) }")
+
+  test("`xs || []` builds the empty array at the left operand's collection type, and reads the left operand once"):
+    def orEmpty(tpe: String, left: RastNode, params: List[String]) = translate(
+      block(
+        local("out", bin("BarBarToken", left, node("ArrayLiteralExpression"))),
+        expr(call(prop(ident("out"), "push"), num(1))),
+        ret(ident("out"))
+      ),
+      params = params,
+      paramTypes = Map("np" -> tpe),
+      returnType = Some("ArrayBuffer[Int]")
+    )
+    val opt = orEmpty("Option[ArrayBuffer[Int]]", ident("np"), List("np"))
+    accepts(opt)
+    assert(
+      opt.scalaBody.contains("val out = (if (np.isDefined) np.get else scala.collection.mutable.ArrayBuffer.empty[Int])"),
+      opt.scalaBody
+    )
+    val plain = orEmpty("ArrayBuffer[Int]", ident("np"), List("np"))
+    accepts(plain)
+    assert(
+      plain.scalaBody.contains("(if ((np != null)) np else scala.collection.mutable.ArrayBuffer.empty[Int])"),
+      plain.scalaBody
+    )
+    val oracle = ReferenceSignatures.TypeOracle(Map(("Src", "next") -> ReferenceSignatures.MethodSig("next", Nil, "ArrayBuffer[Int]")))
+    val called = translate(
+      block(local("out", bin("BarBarToken", call(prop(ident("src"), "next")), node("ArrayLiteralExpression"))), ret(ident("out"))),
+      params = List("src"),
+      paramTypes = Map("src" -> "Src"),
+      returnType = Some("ArrayBuffer[Int]"),
+      oracle = oracle
+    )
+    assert(called.scalaBody.contains("{ val v$1 = src.next(); if ((v$1 != null)) v$1 else"), called.scalaBody)
+
+  test("`x || 0` on a fractional value writes the fallback at that type"):
+    val r = translate(
+      block(ret(bin("BarBarToken", prop(ident("o"), "gap"), num(0)))),
+      params = List("o"),
+      paramTypes = Map("o" -> "Opts"),
+      returnType = Some("Double"),
+      memberIndex = ReferenceSignatures.MemberIndex(Map("Opts" -> Set("gap")), types = Map("Opts" -> Map("gap" -> "Double")))
+    )
+    accepts(r)
+    assertNoDiff(r.scalaBody.trim, "(if ((o.gap != 0 && !o.gap.isNaN)) o.gap else 0.0)")
+
+  private val optsSchema = ReferenceSignatures.ConstructorSchema(
+    Map(
+      "Opts" -> List(ReferenceSignatures.CtorParam("gap", "Double", false), ReferenceSignatures.CtorParam("angle", "Double", false))
+    ),
+    Set("Opts")
+  )
+  private def objLit(props: RastNode*):           RastNode = node("ObjectLiteralExpression", props*)
+  private def assignProp(k: String, v: RastNode): RastNode = node("PropertyAssignment", ident(k), v)
+
+  test("a spread of a case-class value with keys set is that value's copy, and so is Object.assign onto a fresh object"):
+    val spread = translate(
+      block(ret(objLit(node("SpreadAssignment", ident("o")), assignProp("angle", num(0))))),
+      params = List("o"),
+      paramTypes = Map("o" -> "Opts"),
+      returnType = Some("Opts"),
+      ctorSchema = optsSchema
+    )
+    accepts(spread)
+    assertNoDiff(spread.scalaBody.trim, "o.copy(angle = 0)")
+    val assign = translate(
+      block(ret(call(prop(ident("Object"), "assign"), objLit(), ident("o"), objLit(assignProp("gap", num(2)))))),
+      params = List("o"),
+      paramTypes = Map("o" -> "Opts"),
+      returnType = Some("Opts"),
+      ctorSchema = optsSchema
+    )
+    accepts(assign)
+    assertNoDiff(assign.scalaBody.trim, "o.copy(gap = 2)")
+    // a plain class has no copy, and a key the class has no field for would be dropped
+    refuses(
+      translate(
+        block(ret(call(prop(ident("Object"), "assign"), objLit(), ident("o")))),
+        params = List("o"),
+        paramTypes = Map("o" -> "Opts"),
+        returnType = Some("Opts"),
+        ctorSchema = optsSchema.copy(caseClasses = Set.empty)
+      ),
+      "js-object-assign"
+    )
+    refuses(
+      translate(
+        block(ret(objLit(node("SpreadAssignment", ident("o")), assignProp("other", num(0))))),
+        params = List("o"),
+        paramTypes = Map("o" -> "Opts"),
+        returnType = Some("Opts"),
+        ctorSchema = optsSchema
+      ),
+      "object-literal-unknown-field"
+    )
+
+  test("`x ? [x] : []` at a typed slot reads x present in its first branch, and an optional element is refused elsewhere"):
+    val guarded = translate(
+      block(
+        ret(node("ConditionalExpression", ident("g"), node("ArrayLiteralExpression", ident("g")), node("ArrayLiteralExpression")))
+      ),
+      params = List("g"),
+      paramTypes = Map("g" -> "Nullable[Int]"),
+      returnType = Some("ArrayBuffer[Int]")
+    )
+    accepts(guarded)
+    assert(guarded.scalaBody.contains("ArrayBuffer[Int](g.get)"), guarded.scalaBody)
+    refuses(
+      translate(
+        block(ret(node("ArrayLiteralExpression", ident("g")))),
+        params = List("g"),
+        paramTypes = Map("g" -> "Nullable[Int]"),
+        returnType = Some("ArrayBuffer[Int]")
+      ),
+      "optional-at-required-slot"
+    )
+
+  test("a parameter the reference renamed is read under its name by position, and a reordered list renames nothing"):
+    assertEquals(
+      DefmethodBodyTranslator.positionalRenames(List("points", "distance"), List("points", "tolerance")),
+      Map("distance" -> "tolerance")
+    )
+    assertEquals(DefmethodBodyTranslator.positionalRenames(List("a", "b"), List("b", "a")), Map.empty[String, String])
+    assertEquals(DefmethodBodyTranslator.positionalRenames(List("a", "b"), List("a")), Map.empty[String, String])
+    val r = DefmethodBodyTranslator.translateBody(
+      DefmethodEntry("_free_", "test", List("xs", "distance"), block(ret(bin("MinusToken", ident("distance"), num(1))))),
+      Nil,
+      "    ",
+      returnType = Some("Int"),
+      paramTypes = Map("xs" -> "Vector[Int]", "tolerance" -> "Int"),
+      paramNames = List("xs", "tolerance")
+    )
+    accepts(r)
+    assertNoDiff(r.scalaBody.trim, "tolerance - 1")
+    refuses(
+      translate(
+        block(ret(ident("distance"))),
+        params = List("xs", "distance"),
+        paramTypes = Map("xs" -> "Vector[Int]", "tolerance" -> "Int"),
+        returnType = Some("Int")
+      ),
+      "parameter-name-mismatch"
+    )
+
+  test("a buffer a call answers is refused at an immutable slot, where only a local's last use is copied unobservably"):
+    val oracle = ReferenceSignatures.TypeOracle(Map(("Src", "next") -> ReferenceSignatures.MethodSig("next", Nil, "ArrayBuffer[Int]")))
+    refuses(
+      translate(
+        block(ret(call(prop(ident("src"), "next")))),
+        params = List("src"),
+        paramTypes = Map("src" -> "Src"),
+        returnType = Some("Vector[Int]"),
+        oracle = oracle
+      ),
+      "buffer-at-immutable-slot"
+    )

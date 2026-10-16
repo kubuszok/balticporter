@@ -225,3 +225,24 @@ class ReferenceSignaturesSpec extends munit.FunSuite:
     assertEquals(mi.classesDeclaring("kind", "leaf"), List("Leaf"))
     assertEquals(mi.classesDeclaring("kind", "none"), Nil)
     assertEquals(mi.uniformResult("done"), Some("Boolean"))
+
+  test("a type alias is the type it names, and a case class is told from a plain class"):
+    val source =
+      """package demo
+        |
+        |trait Node
+        |class Span[T](var height: Double)
+        |final case class Opts(gap: Double)
+        |type DomSpan = Span[Node]
+        |type Kind = String
+        |type Child = Span[Node] | Opts
+        |""".stripMargin
+    val (_, mi, cs, _) = ReferenceSignatures.buildIndices(List(("Tree", source)))
+    assert(mi.knowsType("DomSpan"))
+    assert(mi.hasMember("DomSpan", "height"))
+    assertEquals(mi.memberType("DomSpan", "height"), Some("Double"))
+    assertEquals(mi.dealias("Nullable[Kind]"), "Nullable[String]")
+    assertEquals(mi.dealias("Child"), "Span[Node] | Opts")
+    assertEquals(mi.dealias("Vector[Child]"), "Vector[Child]")
+    assert(cs.isCase("Opts"))
+    assert(!cs.isCase("Span"))

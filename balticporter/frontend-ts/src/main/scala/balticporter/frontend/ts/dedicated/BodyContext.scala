@@ -102,15 +102,20 @@ private[dedicated] class BodyContext(
   /** Translate an expression at a slot whose expected Scala type is known. A string literal at an enum/sealed-object slot becomes the qualified member. An array literal at a typed collection slot
     * carries the element type.
     */
-  protected def translateExprAt(node: RastNode, expectedType: String): String =
-    val baseType = expectedType.takeWhile(c => c != '[' && c != ' ')
+  protected def translateExprAt(node: RastNode, slotType: String): String =
+    // an alias is the type it names
+    val expectedType = memberIndex.dealias(slotType)
+    val baseType     = expectedType.takeWhile(c => c != '[' && c != ' ')
     node.kind match
       // both branches of `c ? a : b` take the slot's type
       case "ConditionalExpression" if node.children.size >= 3 =>
         val condNode = node.children.head
         val combines = condNode.kind == "BinaryExpression" && condNode.operator.exists(op => op == "AmpersandAmpersandToken" || op == "BarBarToken")
         if exprType(condNode).isEmpty && !combines then refuse("truthiness-unknown-type")
-        s"(if (${translateCondition(condNode)}) ${translateExprAt(node.children(1), expectedType)} else ${translateExprAt(node.children(2), expectedType)})"
+        // each branch reads what the condition proves, as an untyped `?:` does
+        val thenE = underNarrowing(narrowedBy(condNode))(underPresence(condNode)(translateExprAt(node.children(1), expectedType)))
+        val elseE = underNarrowing(refutedBy(condNode))(translateExprAt(node.children(2), expectedType))
+        s"(if (${translateCondition(condNode)}) $thenE else $elseE)"
       // A present value at an optional slot is wrapped: JS stores the value itself, the reference's optional says it is there.
       case _ if isOptionLike(expectedType) && exprType(node).exists(t => !isOptionLike(t) && t != "Null") =>
         val inner = translateExprAt(node, optionInner(expectedType))
@@ -118,6 +123,10 @@ private[dedicated] class BodyContext(
       // a body-local JS array handed to an immutable slot is copied there
       case "Identifier" if exprType(node).exists(isMutableBuffer) && isHandOverSlot(expectedType) =>
         handOver(node, translateExpr(node), expectedType)
+      // any other buffer (a call's result, say) may be held elsewhere too, so no copy of it is unobservable
+      case _ if exprType(node).exists(isMutableBuffer) && isHandOverSlot(expectedType) =>
+        refuse("buffer-at-immutable-slot")
+        translateExpr(node)
       // A Boolean slot reads the JS value's truthiness, which is what the reference's Boolean records.
       case "BinaryExpression" | "ParenthesizedExpression" | "Identifier" | "PropertyAccessExpression" | "CallExpression" if expectedType == "Boolean" =>
         translateCondition(node)
@@ -162,7 +171,11 @@ private[dedicated] class BodyContext(
           val targ = if writableType(et) then s"[$et]" else ""
           if node.children.isEmpty then s"$coll.empty$targ"
           else
-            val elems = node.children.map(c => translateExprAt(c, et))
+            // each element is of the slot's element type, an optional one never where a value is required
+            val elems = node.children.map { c =>
+              exprType(c).foreach(checkTypeCompatibility(_, et))
+              translateExprAt(c, et)
+            }
             s"$coll$targ(${elems.mkString(", ")})"
         else if conventions.tupleRecords.contains(baseName(expectedType)) then
           val cls = baseName(expectedType)
@@ -238,7 +251,7 @@ private[dedicated] class BodyContext(
         if !reassignedParams.contains(p) || writtenInNestedFunction(p) then refuse("reassigned-immutable")
         else paramShadows(p) = freshLabel(snakeToCamel(p))
     // The body names its parameters as upstream does; a reference that renamed one leaves the body naming nothing.
-    if paramTypes.nonEmpty && entry.params.exists(p => !paramTypes.contains(p) && !paramTypes.contains(snakeToCamel(p))) then refuse("parameter-name-mismatch")
+    if paramTypes.nonEmpty && entry.params.exists(p => !paramTypes.contains(p) && !paramTypes.contains(referenceParam(p))) then refuse("parameter-name-mismatch")
 
     val stmts = block.children
     if stmts.isEmpty then
@@ -273,7 +286,7 @@ private[dedicated] class BodyContext(
 
     val innerIndent = if needsBoundary || needsBraces then baseIndent + "  " else baseIndent
 
-    if topLevel then for p <- entry.params; shadow <- paramShadows.get(p) do sb.append(s"${innerIndent}var $shadow = ${snakeToCamel(p)}\n")
+    if topLevel then for p <- entry.params; shadow <- paramShadows.get(p) do sb.append(s"${innerIndent}var $shadow = ${referenceParam(p)}\n")
     translateSequence(stmts, innerIndent, true)
 
     if needsBoundary || needsBraces then sb.append(s"$baseIndent}\n")
@@ -782,6 +795,8 @@ private[dedicated] class BodyContext(
         "??? /* arguments */"
       // a parameter the body writes is read and written through its local `var`, unless a lambda parameter shadows it
       case n if paramShadows.contains(n) && !localNames.contains(snakeToCamel(n)) => paramShadows(n)
+      // a parameter the reference renamed is read under the reference's name
+      case n if paramRenames.contains(n) && !localNames.contains(snakeToCamel(n)) => paramRenames(n)
       case n if conventions.isClassName(n)                                        => conventions.scalaClassName(n)
       // an enclosing function's binding: the class the body is emitted into holds it, or nothing does
       case n if outerBinding(n).isDefined =>
@@ -983,6 +998,11 @@ private[dedicated] class BodyContext(
         if calleeChildren.size >= 2 then
           val obj    = calleeChildren.head
           val method = calleeChildren.last.text.getOrElse("")
+
+          // a fresh copy of a case-class value with some fields set
+          if method == "assign" && obj.kind == "Identifier" && obj.text.contains("Object") && !declaredInBody("Object") then
+            val copied = objectAssignCopy(args)
+            if copied.isDefined then return copied.get
 
           // Handle special patterns
           // AST_X.prototype.method.apply(this, arguments)
@@ -1476,33 +1496,40 @@ private[dedicated] class BodyContext(
                 val lhsName = lhs.text.map(snakeToCamel)
                 // Translate the RHS with x unwrapped: inside the guarded
                 // operand, `x` renders as `x.get` (one level)
-                val rightWithUnwrap = lhsName match
+                // operand; the right of `||` runs only where x is absent, so it is rendered once, at the inner type below
+                def rightWithUnwrap = lhsName match
                   case Some(name) =>
                     val wasUnwrapped = unwrappedIds.contains(name)
-                    val inner        = optionInner(tpe)
+                    val saved        = localTypes.get(name)
                     unwrappedIds += name
-                    localTypes(name) = inner
+                    localTypes(name) = optionInner(tpe)
                     val r = translateExpr(rhs)
                     if !wasUnwrapped then unwrappedIds -= name
-                    localTypes.remove(name)
+                    saved.fold(localTypes.remove(name))(t => localTypes.put(name, t))
                     r
                   case None => translateExpr(rhs)
                 if op == "AmpersandAmpersandToken" then return s"($test && $rightWithUnwrap)"
                 else
                   // x || y: if x is truthy, yield x (unwrapped); else y
-                  val value = truthyValue(tpe, left)
-                  return s"(if ($test) $value else ${translateExprAt(rhs, optionInner(tpe))})"
+                  val inner    = optionInner(tpe)
+                  val fallback = (if inner == "Double" || inner == "Float" then fractionalLiteral(rhs, inner) else None).getOrElse(translateExprAt(rhs, inner))
+                  return onceBound(left)(l => s"if (${truthinessTest(tpe, l)}) ${truthyValue(tpe, l)} else $fallback")
               else
-                val right   = translateExpr(rhs)
                 val rhsType = exprType(rhs)
+                // `xs || []`: the fresh array takes the left operand's collection type, which is what JS yields either way
+                val emptyAtSlot = op == "BarBarToken" && rhsType.isEmpty && rhs.kind == "ArrayLiteralExpression" && rhs.children.isEmpty && extractElementType(tpe).isDefined
+                // `x || 0` on a fractional `x`: the literal is written at x's type, the number JS yields either way
+                val fractionalFallback = op == "BarBarToken" && (tpe == "Double" || tpe == "Float") && fractionalLiteral(rhs, tpe).isDefined
+                val right              =
+                  if emptyAtSlot then translateExprAt(rhs, tpe) else if fractionalFallback then fractionalLiteral(rhs, tpe).get else translateExpr(rhs)
                 if op == "AmpersandAmpersandToken" then
                   // Outside a condition JS yields one OPERAND, the falsy left one included: no Boolean says that.
                   refuse("truthiness-value-context")
                   return s"($test && $right)"
                 else
                   // x || y in value context: both sides must agree in type, which an unknown right side does not show
-                  if !rhsType.contains(tpe) then refuse("truthiness-value-context")
-                  return s"(if ($test) $left else $right)"
+                  if !rhsType.contains(tpe) && !emptyAtSlot && !fractionalFallback then refuse("truthiness-value-context")
+                  return onceBound(left)(l => s"if (${truthinessTest(tpe, l)}) $l else $right")
             case None =>
               refuse("truthiness-unknown-type")
             case _ => () // Boolean: emit normal && / ||
@@ -1687,6 +1714,7 @@ private[dedicated] class BodyContext(
     // the nested function renders inside this body: it reads this body's parameter copies and declares none of its own
     innerCtx.topLevel = false
     innerCtx.paramShadows ++= paramShadows
+    innerCtx.paramRenames ++= paramRenames
     // its own parameters are locals of no known type there, shadowing every outer name
     innerCtx.localNames ++= paramStrs
     innerCtx.opaqueLocals ++= paramStrs

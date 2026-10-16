@@ -29,7 +29,8 @@ object ReferenceDeclarations:
     result:        Option[String] = None,
     params:        List[String] = Nil,
     parents:       List[String] = Nil,
-    constant:      Option[String] = None
+    constant:      Option[String] = None,
+    alias:         Option[String] = None
   ):
     /** A member a reference skeleton emits as a method: a def, abstract or concrete, or a secondary constructor. */
     def isMethod: Boolean = kind == Kind.Def || kind == Kind.AbstractDef || kind == Kind.Constructor
@@ -60,7 +61,8 @@ object ReferenceDeclarations:
           tpe:    Option[Type] = None,
           result: Option[Type] = None,
           params: List[String] = Nil,
-          value:  Option[Term] = None
+          value:  Option[Term] = None,
+          alias:  Option[String] = None
         ): Unit =
           out += Declaration(
             owner,
@@ -73,7 +75,8 @@ object ReferenceDeclarations:
             tpe.map(_.syntax),
             result = result.map(_.syntax),
             params = params,
-            constant = value.collect { case Lit.String(s) => s }
+            constant = value.collect { case Lit.String(s) => s },
+            alias = alias
           )
 
         // the declared types of a method's explicit parameters, every clause but a `using` one, in order
@@ -162,7 +165,9 @@ object ReferenceDeclarations:
               result = Some(d.decltpe),
               params = paramTypes(d.paramClauseGroups)
             )
-          case d: Defn.Type           => add(owner, isObj, d.name, Kind.Type, d.mods)
+          case d: Defn.Type =>
+            // a type alias with no type parameters names its right-hand side
+            add(owner, isObj, d.name, Kind.Type, d.mods, alias = Option.when(d.tparamClause.values.isEmpty)(d.body.syntax))
           case d: Decl.Type           => add(owner, isObj, d.name, Kind.Type, d.mods)
           case d: Defn.Val            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Val, d.mods, tpe = d.decltpe, value = Some(d.rhs)))
           case d: Decl.Val            => pats(d.pats).foreach(add(owner, isObj, _, Kind.Val, d.mods, tpe = Some(d.decltpe)))

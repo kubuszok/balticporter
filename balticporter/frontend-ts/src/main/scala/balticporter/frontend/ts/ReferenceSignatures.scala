@@ -8,6 +8,9 @@ import scala.collection.mutable
   */
 object ReferenceSignatures:
 
+  // a capitalised type name not qualified by a prefix
+  private[ts] val aliasName = """(?<![\w.$])([A-Z][A-Za-z0-9_]*)(?![\w$])""".r
+
   /** A method parameter with its name and type annotation. */
   final case class ParamSig(name: String, tpe: String, hasDefault: Boolean = false)
 
@@ -125,8 +128,31 @@ object ReferenceSignatures:
     arity:     Map[String, Int] = Map.empty,
     results:   Map[String, Map[String, String]] = Map.empty,
     parents:   Map[String, List[String]] = Map.empty,
-    constants: Map[(String, String), List[String]] = Map.empty
+    constants: Map[(String, String), List[String]] = Map.empty,
+    aliases:   Map[String, String] = Map.empty
   ):
+    /** `t` with every type alias the reference declares replaced by what it names (`DomSpan` reads `Span[HtmlDomNode]`): the alias is the same type, and only its right-hand side declares members. An
+      * alias to a union or a function type is replaced only where it is the whole type, since inside another type it would need parentheses.
+      */
+    def dealias(t: String): String =
+      if aliases.isEmpty then t
+      else
+        var cur     = t
+        var rounds  = 0
+        var changed = true
+        while changed && rounds < 8 do
+          val whole = cur.trim
+          val next  = ReferenceSignatures.aliasName.replaceAllIn(
+            cur,
+            m =>
+              val body = aliases.get(m.group(1)).filter(b => whole == m.group(1) || !(b.contains('|') || b.contains("=>")))
+              scala.util.matching.Regex.quoteReplacement(body.getOrElse(m.matched))
+          )
+          changed = next != cur
+          cur = next
+          rounds += 1
+        cur
+
     /** The result type every class declaring a method of this name declares for it, when they all agree and none overloads it; a call of the name returns that whichever class receives it. */
     def uniformResult(method: String): Option[String] =
       val declaring = byType.collect { case (t, ms) if ms.contains(method) => t }.toList
@@ -141,7 +167,7 @@ object ReferenceSignatures:
     /** The type itself, then every class and trait it extends, nearest first: a member a parent declares is a member of the type. */
     def ancestry(typeName: String): List[String] =
       val seen = scala.collection.mutable.LinkedHashSet.empty[String]
-      var todo = List(typeName)
+      var todo = List(dealiasedBase(typeName))
       while todo.nonEmpty do
         val t = todo.head
         todo = todo.tail
@@ -173,7 +199,11 @@ object ReferenceSignatures:
       ancestry(typeName).find(t => byType.get(t).exists(_.contains(memberName))).exists(t => vars.get(t).exists(_.contains(memberName)))
 
     /** True when the type is known (appears in the index). */
-    def knowsType(typeName: String): Boolean = byType.contains(typeName)
+    def knowsType(typeName: String): Boolean = byType.contains(typeName) || byType.contains(dealiasedBase(typeName))
+
+    // the class an alias names, without its type arguments; any other name is itself
+    private def dealiasedBase(typeName: String): String =
+      if !aliases.contains(typeName) then typeName else dealias(typeName).takeWhile(c => c != '[' && c != ' ')
 
   object MemberIndex:
     val empty: MemberIndex = MemberIndex(Map.empty)
@@ -183,9 +213,13 @@ object ReferenceSignatures:
   final case class CtorParam(name: String, tpe: String, hasDefault: Boolean, isVar: Boolean = false)
 
   final case class ConstructorSchema(
-    byType: Map[String, List[CtorParam]]
+    byType:      Map[String, List[CtorParam]],
+    caseClasses: Set[String] = Set.empty
   ):
     def get(typeName: String): Option[List[CtorParam]] = byType.get(typeName)
+
+    /** True for a class the reference declares as a `case class`, whose `copy` takes every constructor parameter by name. */
+    def isCase(typeName: String): Boolean = caseClasses.contains(typeName)
 
   object ConstructorSchema:
     val empty: ConstructorSchema = ConstructorSchema(Map.empty)
@@ -211,6 +245,8 @@ object ReferenceSignatures:
     val arity       = mutable.Map.empty[String, Int]
     val results     = mutable.Map.empty[String, mutable.Map[String, List[String]]]
     val ctors       = mutable.Map.empty[String, List[CtorParam]]
+    val caseClasses = mutable.Set.empty[String]
+    val aliases     = mutable.Map.empty[String, Set[String]]
     val enumVals    = mutable.Map.empty[(String, String), String]
     val parents     = mutable.Map.empty[String, List[String]]
     val constants   = mutable.Map.empty[(String, String), List[String]]
@@ -219,6 +255,7 @@ object ReferenceSignatures:
       ReferenceDeclarations.read(objectName, source) match
         case Right(decls) =>
           calleeParts += CalleeIndex.of(objectName, decls)
+          for d <- decls; body <- d.alias do aliases(d.name) = aliases.getOrElse(d.name, Set.empty) + body
           decls.filter(_.typeParams > 0).foreach(d => arity(d.name) = d.typeParams)
           decls.filter(_.parents.nonEmpty).foreach(d => parents(d.name) = (parents.getOrElse(d.name, Nil) ++ d.parents).distinct)
           // a class or trait that declares nothing of its own is still a known type: its members are its parents'
@@ -239,6 +276,7 @@ object ReferenceSignatures:
       for line <- classLines do
         parseCaseClassLine(line).foreach { case (className, params) =>
           ctors(className) = params
+          if raw"\bcase\s+class\s+$className\b".r.findFirstIn(line).isDefined then caseClasses += className
           val memberSet = members.getOrElseUpdate(className, mutable.Set.empty)
           params.foreach(p => memberSet += p.name)
           params.filter(_.isVar).foreach(p => vars.getOrElseUpdate(className, mutable.Set.empty) += p.name)
@@ -257,9 +295,11 @@ object ReferenceSignatures:
         arity.toMap,
         results.map { case (k, v) => k -> v.collect { case (m, List(r)) if r.nonEmpty => m -> r }.toMap }.toMap,
         parents.toMap,
-        constants.toMap
+        constants.toMap,
+        // an alias spelled two ways, or named like a class, names nothing certain
+        aliases.collect { case (n, bodies) if bodies.size == 1 && !members.contains(n) => n -> bodies.head }.toMap
       ),
-      ConstructorSchema(ctors.toMap),
+      ConstructorSchema(ctors.toMap, caseClasses.toSet),
       EnumIndex(enumVals.toMap)
     )
 

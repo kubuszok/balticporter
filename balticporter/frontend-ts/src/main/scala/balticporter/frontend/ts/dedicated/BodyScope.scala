@@ -86,6 +86,12 @@ abstract private[dedicated] class BodyScope(
   // the local `var` standing for each parameter the body writes, by JS name; a nested function's context reads the same map
   val paramShadows = mutable.Map.empty[String, String]
 
+  // the reference's name for each JS parameter it renamed, by JS name; a nested function's context reads the same map
+  val paramRenames = mutable.Map.empty[String, String]
+
+  /** The name a JS parameter has in the reference: its renamed spelling, else its own. */
+  protected def referenceParam(p: String): String = paramRenames.getOrElse(p, snakeToCamel(p))
+
   // false for the context of a nested function, which renders the body of its enclosing one
   var topLevel = true
 
@@ -122,7 +128,7 @@ abstract private[dedicated] class BodyScope(
     * nothing in the reference saying otherwise, is a `Boolean`: its truthiness is its value, and a Scala type that disagrees fails to compile rather than reading differently.
     */
   protected def exprType(node: RastNode): Option[String] =
-    declaredType(node).orElse(checkerType(node))
+    declaredType(node).orElse(checkerType(node)).map(memberIndex.dealias)
 
   private val plainClassName = "[A-Za-z_][A-Za-z0-9_]*".r
 
@@ -162,15 +168,21 @@ abstract private[dedicated] class BodyScope(
       case "Identifier" =>
         node.text.filterNot(n => opaqueLocals(snakeToCamel(n))).flatMap { name =>
           val scalaName = snakeToCamel(name)
-          localTypes.get(scalaName).orElse(localTypes.get(name)).orElse(paramTypes.get(scalaName)).orElse(paramTypes.get(name)).orElse {
-            outerBinding(name) match
-              // an enclosing function's binding, held by the class the body is emitted into
-              case Some(held) => held.flatMap(m => enclosingClass.flatMap(memberIndex.memberType(_, m)))
-              // a module-level value the reference declares, when nothing in the body binds the name
-              case None =>
-                if declaredInBody(name) || entry.params.contains(name) || apiLookup.contains(name) then None
-                else calleeIndex.resolveMember(scalaName).toOption.flatMap(_.tpe).orElse(fileValue(name).flatten)
-          }
+          localTypes
+            .get(scalaName)
+            .orElse(localTypes.get(name))
+            .orElse(paramTypes.get(scalaName))
+            .orElse(paramTypes.get(name))
+            .orElse(paramRenames.get(name).filterNot(_ => localNames.contains(scalaName)).flatMap(paramTypes.get))
+            .orElse {
+              outerBinding(name) match
+                // an enclosing function's binding, held by the class the body is emitted into
+                case Some(held) => held.flatMap(m => enclosingClass.flatMap(memberIndex.memberType(_, m)))
+                // a module-level value the reference declares, when nothing in the body binds the name
+                case None =>
+                  if declaredInBody(name) || entry.params.contains(name) || apiLookup.contains(name) then None
+                  else calleeIndex.resolveMember(scalaName).toOption.flatMap(_.tpe).orElse(fileValue(name).flatten)
+            }
         }
       // the literal's EMITTED spelling decides its Scala type: `2` is an Int, `2.5` a Double
       case "NumericLiteral" | "FirstLiteralToken" =>
@@ -192,7 +204,10 @@ abstract private[dedicated] class BodyScope(
               case "toFixed" | "toString" | "substring" | "trim" | "toLowerCase" | "toUpperCase" | "replace" | "replaceAll" | "join" | "split" => Some("String")
               // a copy of the receiver's own collection or string
               case "concat" | "slice" | "filter" | "reverse" if exprType(obj).exists(t => t == "String" || extractElementType(t).isDefined) => exprType(obj)
-              case _ if obj.kind == "Identifier" && obj.text.contains("Math")                                                               =>
+              // `Object.assign({}, src, …)` read as a copy of a case-class `src`
+              case "assign" if obj.kind == "Identifier" && obj.text.contains("Object") && node.children.lift(1).exists(t => t.kind == "ObjectLiteralExpression" && t.children.isEmpty) =>
+                node.children.lift(2).flatMap(exprType).filter(t => ctorSchema.isCase(t))
+              case _ if obj.kind == "Identifier" && obj.text.contains("Math") =>
                 mathResultType(method, node.children.drop(1).map(exprType))
               case _ =>
                 // Look up the oracle for the callee's return type
@@ -239,6 +254,12 @@ abstract private[dedicated] class BodyScope(
             if l.contains("Boolean") && r.contains("Boolean") then Some("Boolean")
             // `opt || fallback` yields the present value or the fallback, both of the optional's inner type
             else if node.operator.contains("BarBarToken") && l.exists(isOptionLike) then l.map(optionInner)
+            // `xs || []` yields a collection of the left operand's type either way
+            else if node.operator.contains("BarBarToken") && r.isEmpty && node.children.last.kind == "ArrayLiteralExpression" && node.children.last.children.isEmpty then
+              l.filter(t => extractElementType(t).isDefined)
+            // `x || 0` on a fractional `x` is a number of x's type either way
+            else if node.operator.contains("BarBarToken") && l.exists(t => (t == "Double" || t == "Float") && fractionalLiteral(node.children.last, t).isDefined) then l
+            else if node.operator.contains("BarBarToken") && l.isDefined && l == r && !l.exists(isOptionLike) then l
             else None
           case "PlusToken" if l.contains("String") || r.contains("String") => Some("String")
           // JS division is always fractional; the emitted division widens an integral left operand
@@ -336,6 +357,13 @@ abstract private[dedicated] class BodyScope(
   protected def truthyValue(tpe: String, operand: String): String =
     if isOptionLike(tpe) then s"$operand.get"
     else operand
+
+  /** `use` applied to `operand` read ONCE: JS evaluates the left of `x || y` a single time, and a test and a yield of it would read it twice. */
+  protected def onceBound(operand: String)(use: String => String): String =
+    if isSimplePath(operand) then s"(${use(operand)})"
+    else
+      val v = freshLabel("v")
+      s"{ val $v = $operand; ${use(v)} }"
 
   /** Extract element type from Array[T], ArrayBuffer[T], List[T], Seq[T]. */
   /** The Scala type a local's TS annotation names, or the annotation's kind when it names none the translator can spell: a primitive keyword, or a type the reference declares under that name. */
@@ -529,6 +557,14 @@ abstract private[dedicated] class BodyScope(
   protected def checkerStringArray(node: RastNode): Boolean =
     node.`type`.flatMap(tsTypes.get).filter(_.kind == "array").flatMap(_.elementType).flatMap(tsTypes.get).exists(t => t.kind == "string" || t.kind == "stringLiteral")
 
+  /** A numeric literal, or its negation, written at the fractional type `tpe`: `0` is `0.0` at `Double` and `0.0f` at `Float`. */
+  protected def fractionalLiteral(n: RastNode, tpe: String): Option[String] =
+    val (negated, lit) = if n.kind == "PrefixUnaryExpression" && n.operator.contains("MinusToken") then (true, n.children.headOption) else (false, Some(n))
+    lit.filter(l => l.kind == "NumericLiteral" || l.kind == "FirstLiteralToken").flatMap(_.value).collect { case RastValue.Num(d) =>
+      val v = if negated then -d else d
+      if tpe == "Float" then s"${v.toFloat}f" else v.toString
+    }
+
   /** A non-negative integer literal's value. */
   protected def intLiteral(n: RastNode): Option[Int] =
     n.value.collect { case RastValue.Num(d) if d >= 0 && d == d.toInt => d.toInt }.filter(_ => n.kind == "NumericLiteral" || n.kind == "FirstLiteralToken")
@@ -579,7 +615,9 @@ abstract private[dedicated] class BodyScope(
   /** Check whether `have` is compatible with `want`. When both are known specific types with different base names that are not in a subtype relationship the member index can prove, refuse
     * argument-type-mismatch.
     */
-  protected def checkTypeCompatibility(have: String, want: String, subtypes: Boolean = true): Unit =
+  protected def checkTypeCompatibility(have0: String, want0: String, subtypes: Boolean = true): Unit =
+    val have     = memberIndex.dealias(have0)
+    val want     = memberIndex.dealias(want0)
     val haveBase = baseName(have)
     val wantBase = baseName(want)
     // a class the reference declares extending the slot's, at a slot that admits a subtype (a covariant element's or none at all)

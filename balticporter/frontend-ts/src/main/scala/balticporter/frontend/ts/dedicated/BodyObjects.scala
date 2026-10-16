@@ -80,8 +80,10 @@ private[dedicated] trait BodyObjects extends BodyScope:
           val keyed = entries.map((k, v) => (k, paramFor(k), v))
           // a field JS leaves out is optional in its interface, as the reference's default for it says
           val missing = ctorParams.filterNot(p => keyed.exists(_._2.contains(p))).filterNot(_.hasDefault)
+          val copied  = if tagged.isEmpty then caseCopy(props, typeName.get) else None
+          if copied.isDefined then copied.get
           // A key the class has no field for would be dropped silently.
-          if keyed.exists(k => k._2.isEmpty || k._3.isEmpty) || props.exists(p => p.kind != "PropertyAssignment" && p.kind != "ShorthandPropertyAssignment") then
+          else if keyed.exists(k => k._2.isEmpty || k._3.isEmpty) || props.exists(p => p.kind != "PropertyAssignment" && p.kind != "ShorthandPropertyAssignment") then
             refuse("object-literal-unknown-field")
             emitObjectLiteralAsMap(props, None)
           else if missing.nonEmpty || keyed.map(_._2).distinct.size != keyed.size then
@@ -99,6 +101,38 @@ private[dedicated] trait BodyObjects extends BodyScope:
           // No schema: fall back to mutable.Map, refuse unless the slot declares a Map
           if !expected.exists(rt => baseName(rt) == "Map" && mapValueType(rt).isDefined) then refuse("js-map-construction")
           emitObjectLiteralAsMap(props, expected)
+
+  /** `{ ...src, k: v }` at a slot of the case class `cls`, where `src` is of that class: JS copies src's fields and then sets each key, as `src.copy(k = v)` does, evaluating src and then the values
+    * in the literal's order. None unless the spread comes first and alone and every key names a distinct constructor parameter.
+    */
+  protected def caseCopy(props: List[RastNode], cls: String): Option[String] =
+    props match
+      case spread :: rest if spread.kind == "SpreadAssignment" && spread.children.nonEmpty && !rest.exists(_.kind == "SpreadAssignment") =>
+        val src = spread.children.head
+        for
+          params <- ctorSchema.get(cls)
+          if ctorSchema.isCase(cls) && exprType(src).contains(cls)
+          pairs <- plainProperties(RastNode("ObjectLiteralExpression", 0, spread.pos, children = rest))
+          keyed = pairs.map { (k, v) =>
+            val names = Set(snakeToCamel(k), k, memberRenames.getOrElse(snakeToCamel(k), snakeToCamel(k)))
+            (params.find(p => names(p.name.stripPrefix("`").stripSuffix("`"))), v)
+          }
+          if keyed.forall(_._1.isDefined) && keyed.map(_._1).distinct.size == keyed.size
+        yield
+          val args = keyed.collect { case (Some(p), v) =>
+            val name = p.name.stripPrefix("`").stripSuffix("`")
+            s"${if scalaKeywords.contains(name) then s"`$name`" else name} = ${translateExprAt(v, p.tpe)}"
+          }
+          s"${translateExpr(src)}.copy(${args.mkString(", ")})"
+      case _ => None
+
+  /** `Object.assign({}, src)` or `Object.assign({}, src, { k: v })`: a fresh copy of `src` with those keys set, read as the literal `{ ...src, k: v }`. None for any other argument list. */
+  protected def objectAssignCopy(args: List[RastNode]): Option[String] =
+    args match
+      case target :: src :: more if target.kind == "ObjectLiteralExpression" && target.children.isEmpty && more.forall(_.kind == "ObjectLiteralExpression") && more.size <= 1 =>
+        val spread = RastNode("SpreadAssignment", 0, src.pos, children = List(src))
+        exprType(src).map(baseName).flatMap(cls => caseCopy(spread :: more.flatMap(_.children), cls))
+      case _ => None
 
   /** The class a `{ <tag>: "Y", … }` literal builds: the ONE class the reference declares with that tag, when the slot names no type or a type the class extends. */
   private def taggedClass(entries: List[(String, Option[RastNode])], expected: Option[String]): Option[String] =

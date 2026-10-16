@@ -95,8 +95,10 @@ object DefmethodBodyTranslator:
       tsTypes: Map[String, RastType] = Map.empty,
       enclosingClass: Option[String] = None,
       fileNames: ReferenceDeclarations.FileNames = ReferenceDeclarations.FileNames.empty,
+      paramNames: List[String] = Nil,
   ): TranslationResult =
     val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName, apiLookup, returnType, paramTypes, calleeIndex, memberIndex, ctorSchema, enumIndex, memberRenames, oracle, enclosingOwner, conventions, tsTypes, enclosingClass, fileNames)
+    ctx.paramRenames ++= positionalRenames(entry.params, paramNames)
     ctx.translateBlock(entry.bodyNode)
     ctx.checkUnresolvedReferences()
     TranslationResult(
@@ -106,6 +108,17 @@ object DefmethodBodyTranslator:
       refusalReasons = ctx.refusals.toList,
       refusalSites = ctx.refusalSites.toList,
     )
+
+  /** The reference's own name for each JS parameter it renamed, read by POSITION (`end` -> `end_`): only where both lists are equally long and every parameter both spell alike sits at the same index,
+    * so a reordered list renames nothing. `reference` is the reference method's parameter names in order; empty, nothing is renamed.
+    */
+  def positionalRenames(js: List[String], reference: List[String]): Map[String, String] =
+    def same(j: String, r: String) = r == j || r == snakeToCamel(j)
+    if js.size != reference.size then Map.empty
+    else
+      val pairs   = js.zip(reference)
+      val aligned = pairs.forall((j, r) => same(j, r) || (!reference.exists(same(j, _)) && !js.exists(same(_, r))))
+      if !aligned then Map.empty else pairs.collect { case (j, r) if !same(j, r) => j -> r }.toMap
 
   /** Emit a complete DEFMETHOD family as Scala method declarations.
     *
