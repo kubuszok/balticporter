@@ -21,8 +21,13 @@ object PreInitReads:
         x match
           case Tree.Apply(Tree.Ident(m, _, _), _, _, _, _)                                => acc + m
           case Tree.Apply(Tree.Select(_: Tree.This | _: Tree.Super, m, _, _), _, _, _, _) => acc + m
-          case _                                                                          => acc
+          // a PARENLESS call (a nullary member an earlier phase made a property) is a bare selection
+          case Tree.Select(_: Tree.This | _: Tree.Super, m, _, _) if executable(m) => acc + m
+          case Tree.Ident(m, _, _) if executable(m)                                => acc + m
+          case _                                                                   => acc
       }
+
+    def executable(m: SymId): Boolean = p.symbolOf(m).exists(s => PolicyBinder.isExecutable(s.info))
 
     def bodyOf(m: SymId): Option[Term] = p.definitionOf(m).collect { case d: Tree.DefDef => d.rhs }.flatten
 
