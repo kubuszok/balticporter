@@ -19,6 +19,7 @@ class RegistryTransformSpec extends munit.FunSuite:
       |class Broken extends RuntimeException {}
       |class Other extends RuntimeException {}
       |class Widget { }
+      |class Box<E> { }
       |class Namer { static Object build(String s) { return null; } }
       |class NeedsArg { NeedsArg(int x) { } }
       |class ByString { Object make() { return Namer.build("x"); } }
@@ -219,6 +220,11 @@ class RegistryTransformSpec extends munit.FunSuite:
     val r = run(p)
     assert(clue(r.out).contains("locally { register(classOf[com.demo.Widget], () => new com.demo.Widget"))
     assertEquals(p.policyReport.findings.filter(_.key == "com.demo.Widget"), Nil)
+  }
+
+  test("a generic seed's class literal names its parameters as wildcards") {
+    val r = run(phase(entry(seeds = List("com.demo.Box"))))
+    assert(clue(r.out).contains("locally { register(classOf[com.demo.Box[?]], () => new com.demo.Box"))
   }
 
   test("a seed with no visible nilary constructor is reported, never silently dropped") {

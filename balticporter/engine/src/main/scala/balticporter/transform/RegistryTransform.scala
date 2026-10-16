@@ -256,7 +256,7 @@ final class RegistryTransform(
         mint(sp.table, MemberKey(ownerFqn, sp.table).render, ownerSym, Flags())
         created += createSym -> i
         boundCallees(i).foreach(c => mapping += c -> Rewritten(ownerSym, createSym, i))
-        val body = memberSources(e, sp, isObject, boundSeeds.getOrElse(i, Nil))
+        val body = memberSources(program, e, sp, isObject, boundSeeds.getOrElse(i, Nil))
         // `Origin.synthetic`, never a call site's java path: the trivia harvest is keyed by java
         // FILE, so a minted unit claiming `Engine.java` would report every comment in that file as
         // recovered-by-the-backstop. The licence header
@@ -439,7 +439,7 @@ final class RegistryTransform(
   /** The registry's three members as verbatim Scala (fully qualified, no imports), plus one `locally` per seed. A plain `mutable.HashMap` and never a concurrent one: `balticporter/runtime` ships no
     * threading, so a concurrent table is not portable.
     */
-  private def memberSources(e: Registry, sp: Spelling, isObject: Boolean, seeds: List[SymId]): List[Statement] =
+  private def memberSources(program: Program, e: Registry, sp: Spelling, isObject: Boolean, seeds: List[SymId]): List[Statement] =
     val o      = Origin.synthetic
     val tpar   = e.bound.fold("[T]")(b => s"[T <: $b]")
     val access = if isObject then "private " else "protected "
@@ -452,11 +452,14 @@ final class RegistryTransform(
       s"case scala.None => ${missArm(e.miss)} }"
     val seeded = seeds.map { s =>
       val ref = TypeRepr.TypeRef(TypeRepr.NoPrefix, s)
+      // a GENERIC seed's class literal names every parameter as a wildcard, as `classOf` requires
+      val arity = program.definitionOf(s).collect { case cd: Tree.ClassDef => cd.tparams.size }.getOrElse(0)
+      val lit   = if arity == 0 then ref else TypeRepr.AppliedType(ref, List.fill(arity)(TypeRepr.TypeBounds(NoType, NoType)))
       Tree.Opaque(
         s"locally { ${sp.register}(${Tree.Opaque.hole(0)}, () => ${Tree.Opaque.hole(1)}) }",
         NoType,
         o,
-        List(Tree.Literal(Constant.ClassOfC(ref), NoType, o), Tree.New(TypeTree(ref, o), ref, o))
+        List(Tree.Literal(Constant.ClassOfC(lit), NoType, o), Tree.New(TypeTree(ref, o), ref, o))
       )
     }
     List(Tree.Opaque(table, NoType, o), Tree.Opaque(register, NoType, o), Tree.Opaque(create, NoType, o)) ++ seeded
