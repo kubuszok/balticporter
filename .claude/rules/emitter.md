@@ -544,3 +544,6 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   translation has not reached yet read off its one initialiser (`maxDistSq = distSq`). A parameter
   the reference spells as JS does is read under that spelling, backticked (`end`, a soft keyword
   the translator's own escape spelled `end_`). graphs-commons 54 -> 55.
+- (a) The truthiness of a top type (`Any`, `AnyRef`) or of a union holding a string, a number or a
+  boolean is refused: a presence test reads a held JS `false`, `0` or `""` as truthy, and it had
+  been emitted as `!= null`. No translated body read one yet; terser 72 -> 75 refusing bodies.

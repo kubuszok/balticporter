@@ -350,7 +350,13 @@ abstract private[dedicated] class BodyScope(
     else if numericTypes.contains(tpe) then s"$p != 0"
     else if tpe == "Boolean" then operand
     else if tpe == "Null" then "false"
+    // a value of a top type may hold a JS false, 0, NaN or "", which a presence test reads as truthy
+    else if tpe.trim.stripSuffix("| Null").split('|').map(_.trim).exists(t => topTypes(t) || t == "String" || t == "Boolean" || numericTypes(t)) then
+      refuse("truthiness-unknown-type")
+      s"($p != null)"
     else s"($p != null)" // any other object, an array included, is truthy unless it is absent
+
+  private val topTypes = Set("Any", "AnyRef", "Object", "Matchable", "java.lang.Object")
 
   /** The JS truthiness value (the value that a truthy operand yields in `x && y` or `x || y`). For an optional value, this is `x.get`.
     */

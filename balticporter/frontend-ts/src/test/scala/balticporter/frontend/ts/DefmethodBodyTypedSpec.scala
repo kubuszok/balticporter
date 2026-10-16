@@ -1063,3 +1063,17 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     )
     accepts(r)
     assertNoDiff(r.scalaBody.trim, "`end` - 1")
+
+  test(
+    "the truthiness of a top type or a union holding a scalar is refused, since a presence test reads JS false, 0 and \"\" as truthy"
+  ):
+    def cond(tpe: String) = translate(
+      block(node("IfStatement", ident("v"), block(ret(num(1)))), ret(num(0))),
+      params = List("v"),
+      paramTypes = Map("v" -> tpe),
+      returnType = Some("Int")
+    )
+    refuses(cond("Any"), "truthiness-unknown-type")
+    refuses(cond("AnyRef"), "truthiness-unknown-type")
+    refuses(cond("String | Shape"), "truthiness-unknown-type")
+    accepts(cond("Shape | Line"))
