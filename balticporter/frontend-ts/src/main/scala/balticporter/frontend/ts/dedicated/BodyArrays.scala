@@ -6,7 +6,7 @@ import BodySyntax.*
 /** A JS array the body builds in a local and then hands to a slot the reference declares as an immutable collection. JS hands over the array itself; Scala must copy the buffer, and the copy is
   * unobservable only where the hand-over is the local's LAST use and nothing before it let the array escape.
   */
-private[dedicated] trait BodyArrays extends BodyScope:
+private[dedicated] trait BodyArrays extends BodyBounds:
 
   // array methods that answer the receiver itself, so their result aliases the array
   private val aliasingMethods = Set("sort", "reverse", "fill", "copyWithin")
@@ -46,15 +46,18 @@ private[dedicated] trait BodyArrays extends BodyScope:
       // a key of the map's key type: an optional one is a key JS read after a guard Scala does not see
       for t <- recvType; k <- mapKeyType(t); have <- exprType(children(1)) do checkTypeCompatibility(have, k)
       if isWriteTarget(node) then
-        // JS grows an array stored to at or past its end, where Scala throws: a length test on the same receiver must guard the store
-        if element.isDefined && !guardedBy(node, children.head, lengthTest) then refuse("write-past-end")
+        // JS grows an array stored to at or past its end, where Scala throws: a length test on the same receiver must prove the index inside it
+        if element.isDefined && !indexProven(node, children.head, children(1)) then refuse("write-past-end")
         if recvType.exists(t => handOverConversions.contains(baseName(t))) then refuse("mutated-immutable-collection")
         s"$obj($idx)"
       else if element.exists(absentIsNull) then s"$obj.lift($idx).orNull"
       else if value.exists(absentIsNull) then s"$obj.getOrElse($idx, null)"
       else
-        val guard = if value.isDefined then hasTest else if element.isDefined then lengthTest else (n: RastNode, w: String) => lengthTest(n, w) || hasTest(n, w)
-        if !guardedBy(node, children.head, guard) then refuse("read-past-end")
+        val proven =
+          if value.isDefined then keyProven(node, children.head, children(1))
+          else if element.isDefined then indexProven(node, children.head, children(1))
+          else indexProven(node, children.head, children(1)) || keyProven(node, children.head, children(1))
+        if !proven then refuse("read-past-end")
         s"$obj($idx)"
 
   /** The buffer type of `const xs = []` whose last read is the body's own `return xs`, read off the declared result: JS returns the array itself, and a buffer of the result's element type holds every

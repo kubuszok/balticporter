@@ -556,3 +556,13 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   behind, since the function may run where no guard holds. Rendered in a bare context, a
   `forEach((line) => { … line[0] … })` read its tuple record as an array. `this` under a nested
   `function` (not an arrow) is its caller's, refused (`function-own-this`). graphs-commons 55 -> 57.
+- (a) A guard PROVES a read inside its receiver only by bounding that very index: a condition
+  holding where the read runs (the taken branch, a loop's body, the right of `&&`/`||`, the rest of
+  a block after `if (c) <leave>`) states `len > index` on the same receiver, read as integer sums
+  (`i < xs.length`, `xs.length > 2`, `xs.length !== 0`); the index is a constant or a `let` counter
+  that starts non-negative and only counts up; and nothing run between the test and the read writes
+  the index, the receiver or a path it is read through, or calls anything but a pure collection or
+  string method. A `has`/`in` test proves a key the same way. A test merely MENTIONING the length
+  had passed `allBlocks[i + 1]` under `i < allBlocks.length`, a parameter index that may be
+  negative, and the else branch. Translated unchanged; bodies refusing a read past the end KaTeX
+  46 -> 50, terser 16 -> 17.

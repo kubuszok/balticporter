@@ -488,34 +488,6 @@ abstract private[dedicated] class BodyScope(
   // a node's shape without its source position: two reads of one receiver compare equal
   private def shape(n: RastNode): String = s"${n.kind}(${n.text.getOrElse("")}${n.value.fold("")(_.toString)}${n.children.map(shape).mkString(",")})"
 
-  /** True when a test on the SAME receiver encloses `site`: the condition of an enclosing `if`, loop or `?:`, or the left of an enclosing `&&`, mentions `test` of a node shaped as `recv`. */
-  protected def guardedBy(site: RastNode, recv: RastNode, test: (RastNode, String) => Boolean): Boolean =
-    val want = shape(recv)
-    def mentions(cond: RastNode): Boolean = test(cond, want) || cond.children.exists(mentions)
-    var child = site
-    var parent = parents.get(site)
-    var found = false
-    while !found && parent != null do
-      found = parent.kind match
-        case "IfStatement" | "WhileStatement" | "ConditionalExpression"                => parent.children.headOption.exists(c => (c ne child) && mentions(c))
-        case "ForStatement" | "DoStatement"                                            => parent.children.exists(c => (c ne child) && c.kind != "Block" && mentions(c))
-        case "BinaryExpression" if parent.operator.contains("AmpersandAmpersandToken") =>
-          parent.children.headOption.exists(c => (c ne child) && mentions(c))
-        case _ => false
-      child = parent
-      parent = parents.get(parent)
-    found
-
-  /** A test reading `X.length` of the receiver shaped `want`. */
-  protected val lengthTest: (RastNode, String) => Boolean = (n, want) =>
-    n.kind == "PropertyAccessExpression" && n.children.size >= 2 && n.children.last.text.contains("length") && shape(n.children.head) == want
-
-  /** A test asking the receiver shaped `want` whether it holds a key: `X.has(k)` or `k in X`. */
-  protected val hasTest: (RastNode, String) => Boolean = (n, want) =>
-    (n.kind == "CallExpression" && n.children.headOption.exists(c =>
-      c.kind == "PropertyAccessExpression" && c.children.size >= 2 && c.children.last.text.contains("has") && shape(c.children.head) == want
-    )) || (n.kind == "BinaryExpression" && n.operator.contains("InKeyword") && n.children.lastOption.exists(r => shape(r) == want))
-
   /** The key type of a Scala map type, when the type is one. */
   protected def mapKeyType(t: String): Option[String] =
     mapValueType(t).map { v =>

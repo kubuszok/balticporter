@@ -1116,7 +1116,7 @@ private[dedicated] class BodyContext(
             case "get" if exprType(obj).flatMap(mapValueType).isDefined =>
               if exprType(obj).flatMap(mapValueType).exists(absentIsNull) then s"$objExpr.getOrElse(${scalaArgs.mkString(", ")}, null)"
               else
-                if !guardedBy(node, obj, hasTest) then refuse("read-past-end")
+                if !args.headOption.exists(keyProven(node, obj, _)) then refuse("read-past-end")
                 s"$objExpr(${scalaArgs.mkString(", ")})"
             case "get" =>
               s"$objExpr.get(${scalaArgs.mkString(", ")})"
@@ -1156,7 +1156,8 @@ private[dedicated] class BodyContext(
               if statementRoot eq node then s"{ val b$$ = $objExpr; if (b$$.nonEmpty) b$$.remove(${at}) }"
               else if exprType(obj).flatMap(extractElementType).exists(absentIsNull) then s"{ val b$$ = $objExpr; if (b$$.isEmpty) null else b$$.remove(${at}) }"
               else
-                if !guardedBy(node, obj, lengthTest) then refuse("read-past-end")
+                // an element to remove is a first one there
+                if !indexProven(node, obj, RastNode("NumericLiteral", 0, node.pos, value = Some(RastValue.Num(0)))) then refuse("read-past-end")
                 s"{ val b$$ = $objExpr; b$$.remove(${at}) }"
             case "unshift" =>
               s"$objExpr.prepend(${scalaArgs.mkString(", ")})"

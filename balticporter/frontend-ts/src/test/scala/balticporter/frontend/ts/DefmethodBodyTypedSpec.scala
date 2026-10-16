@@ -849,25 +849,50 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
   private def lengthOf(r: RastNode):                  RastNode = prop(r, "length")
   private def ifThen(c:   RastNode, body: RastNode*): RastNode = node("IfStatement", c, block(body*))
 
-  test("a read of primitive elements is refused unless a length test on the same receiver guards it"):
-    val ints = Map("xs" -> "ArrayBuffer[Int]", "ys" -> "ArrayBuffer[Int]", "i" -> "Int")
-    val read = (r: String) => node("ElementAccessExpression", ident(r), ident("i"))
-    refuses(translate(block(ret(read("xs"))), params = List("xs", "i"), paramTypes = ints, returnType = Some("Int")), "read-past-end")
-    val guarded = translate(
-      block(ifThen(bin("LessThanToken", ident("i"), lengthOf(ident("xs"))), ret(read("xs"))), ret(num(0))),
-      params = List("xs", "i"),
-      paramTypes = ints,
-      returnType = Some("Int")
+  private def counted(cond: RastNode, body: RastNode*): RastNode =
+    node(
+      "ForStatement",
+      node("VariableDeclarationList", node("VariableDeclaration", ident("i"), num(0))),
+      cond,
+      postfixInc(ident("i")),
+      block(body*)
     )
-    accepts(guarded)
-    // a test on ANOTHER receiver guards nothing
+
+  test("a read of primitive elements is refused unless a condition on the same receiver proves its index inside it"):
+    val ints                             = Map("xs" -> "ArrayBuffer[Int]", "ys" -> "ArrayBuffer[Int]", "i" -> "Int", "s" -> "Int")
+    def at(r:     String, idx: RastNode) = node("ElementAccessExpression", ident(r), idx)
+    def sum(body: RastNode*)             = translate(block((local("s", num(0)) +: body :+ ret(ident("s")))*), params = List("xs", "ys"), paramTypes = ints, returnType = Some("Int"))
+    def add(e:    RastNode)              = expr(bin("PlusEqualsToken", ident("s"), e))
+    val iLtXs                            = bin("LessThanToken", ident("i"), lengthOf(ident("xs")))
+    // an index nothing bounds, and a parameter that may be negative, are refused
+    refuses(
+      translate(block(ret(at("xs", ident("i")))), params = List("xs", "i"), paramTypes = ints, returnType = Some("Int")),
+      "read-past-end"
+    )
     refuses(
       translate(
-        block(ifThen(bin("LessThanToken", ident("i"), lengthOf(ident("ys"))), ret(read("xs"))), ret(num(0))),
-        params = List("xs", "ys", "i"),
+        block(ifThen(iLtXs, ret(at("xs", ident("i")))), ret(num(0))),
+        params = List("xs", "i"),
         paramTypes = ints,
         returnType = Some("Int")
       ),
+      "read-past-end"
+    )
+    // a counter from zero below the receiver's length reads inside it
+    accepts(sum(counted(iLtXs, add(at("xs", ident("i"))))))
+    // one past the bound, ANOTHER receiver, and a receiver shrunk before the read are not proven
+    refuses(sum(counted(iLtXs, add(at("xs", bin("PlusToken", ident("i"), num(1)))))), "read-past-end")
+    refuses(sum(counted(bin("LessThanToken", ident("i"), lengthOf(ident("ys"))), add(at("xs", ident("i"))))), "read-past-end")
+    refuses(sum(counted(iLtXs, expr(call(prop(ident("xs"), "pop"))), add(at("xs", ident("i"))))), "read-past-end")
+    // a constant index under a length test, on the branch where it holds or after leaving where it fails
+    accepts(sum(ifThen(bin("GreaterThanToken", lengthOf(ident("xs")), num(1)), add(at("xs", num(1))))))
+    refuses(
+      sum(node("IfStatement", bin("GreaterThanToken", lengthOf(ident("xs")), num(1)), block(), block(add(at("xs", num(1)))))),
+      "read-past-end"
+    )
+    accepts(sum(ifThen(bin("EqualsEqualsEqualsToken", lengthOf(ident("xs")), num(0)), ret(num(0))), add(at("xs", num(0)))))
+    refuses(
+      sum(ifThen(bin("EqualsEqualsEqualsToken", lengthOf(ident("xs")), num(0)), ret(num(0))), add(at("xs", num(1)))),
       "read-past-end"
     )
 
