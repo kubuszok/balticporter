@@ -110,7 +110,12 @@ object ApiParityCheck:
     /** the receiver type of a member declared in an `extension (r: T)` group; empty elsewhere. `ReferencePolicy` reads it as a java STATIC's first parameter — `Align.isLeft(int)` is spelled
       * `extension (a: Align) def isLeft` — so the slot derives like any other.
       */
-    receiver: String = ""
+    receiver: String = "",
+    /** a constructor's parameter NAMES, in slot order (a named argument `new C(x = 1)` is surface); empty elsewhere. `ReferencePolicy` reads it; `compare` does not.
+      */
+    paramNames: List[String] = Nil,
+    /** a `val`/`var` declared as a CLASS PARAMETER (`class C(var x: T)`), the value the constructor takes as the property itself. */
+    classParam: Boolean = false
   ):
     /** the explicit (non-`using`) parameter types — what a java signature can be matched against. */
     def explicitParamTypes: List[String] = paramTypes.dropRight(usingCount)
@@ -336,7 +341,8 @@ object ApiParityCheck:
               arity = 0,
               resultType = renderType(p.decltpe, subst),
               modifiers = extractModifiers(p.mods),
-              accessLevel = extractAccessLevel(p.mods)
+              accessLevel = extractAccessLevel(p.mods),
+              classParam = true
             )
         }
       }
@@ -373,7 +379,8 @@ object ApiParityCheck:
           arity = defArity(d.ctor.paramClauses.toList),
           paramTypes = defParamTypes(d.ctor.paramClauses.toList, subst),
           usingCount = usingArity(d.ctor.paramClauses.toList),
-          defaults = trailingDefaults(d.ctor.paramClauses.toList)
+          defaults = trailingDefaults(d.ctor.paramClauses.toList),
+          paramNames = d.ctor.paramClauses.toList.flatMap(_.values).map(_.name.value)
         )
         walkTemplate(d.templ, s"$path/${d.name.value}", scope ++ own)
       case d: Defn.Trait if isAccessible(d.mods) =>
@@ -435,7 +442,7 @@ object ApiParityCheck:
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
           targetName = extractTargetName(d.mods),
-          parenless = clauses.isEmpty,
+          parenless = noValueClause(clauses),
           usingCount = usingArity(clauses),
           defaults = trailingDefaults(clauses),
           receiver = receiver
@@ -449,7 +456,8 @@ object ApiParityCheck:
           arity = defArity(d.paramClauses.toList),
           paramTypes = defParamTypes(d.paramClauses.toList, subst),
           usingCount = usingArity(d.paramClauses.toList),
-          defaults = trailingDefaults(d.paramClauses.toList)
+          defaults = trailingDefaults(d.paramClauses.toList),
+          paramNames = d.paramClauses.toList.flatMap(_.values).map(_.name.value)
         )
       case d: Decl.Def if isAccessible(d.mods) =>
         val clauses = d.paramClauseGroups.flatMap(_.paramClauses)
@@ -466,7 +474,7 @@ object ApiParityCheck:
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
           targetName = extractTargetName(d.mods),
-          parenless = clauses.isEmpty,
+          parenless = noValueClause(clauses),
           usingCount = usingArity(clauses)
         )
       case d: Defn.Val if isAccessible(d.mods) =>
@@ -579,13 +587,13 @@ object ApiParityCheck:
   /** parameters in `using`/`implicit` clauses (a clause-level modifier in scala 3; scala 2's `implicit` sits on the first parameter).
     */
   private def usingArity(clauses: List[Term.ParamClause]): Int =
-    clauses
-      .filter { c =>
-        c.mod.exists(m => m.is[Mod.Using] || m.is[Mod.Implicit]) ||
-        c.values.headOption.exists(_.mods.exists(_.is[Mod.Implicit]))
-      }
-      .map(_.values.length)
-      .sum
+    clauses.filter(isContextClause).map(_.values.length).sum
+
+  private def isContextClause(c: Term.ParamClause): Boolean =
+    c.mod.exists(m => m.is[Mod.Using] || m.is[Mod.Implicit]) || c.values.headOption.exists(_.mods.exists(_.is[Mod.Implicit]))
+
+  /** written without a VALUE parameter clause: `def x: T`, and `def x(using C): T` too, which a caller spells `x` */
+  private def noValueClause(clauses: List[Term.ParamClause]): Boolean = clauses.forall(isContextClause)
 
   /** The type a CONSTANT initialiser gives an unascribed `val` — a value literal, optionally negated. Empty where the rhs is not one: `null` and `()` are neither a primitive nor a String, so neither
     * is a java constant variable (JLS 4.12.4).

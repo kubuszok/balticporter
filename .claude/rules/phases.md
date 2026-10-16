@@ -295,6 +295,22 @@ sees the kind); the screen is *would a reader act differently*.
   is a derivation input, not a compared surface; a package-private java FIELD the reference ships public
   derives a `Public` row.
 - The bean fold's `setterOnly` guard reads an INHERITED getter as in scope (`graph.ancestorsOf`).
+- A constructor parameter's NAME is surface to a named argument (`new Buf(2, resizable = true)`). A
+  derived pair the reference declares as a class-parameter `var` (`Property` row spelled `(var x)`)
+  ASKS for the `var` collapse — `BeanCollapse`'s guards still decide, a refusal keeps the def pair —
+  so the field takes java's name and `CtorSupersede` makes the parameter that property; a ctor
+  parameter the reference names differently at its slot (`ParamName`, `_globalState`) is renamed by
+  `member-rename`'s `derive`. Without them the getter's property name took the field's, the field
+  went `x$field` and the parameter `x$p` (gdx-ai hand suite 5 named-argument errors). Kind (b): a
+  frozen derived file without those rows is unchanged.
+- A java STATIC the reference's companion spells parenless derives a `Parenless` row, and
+  `nullary-arity` converts a static it is told to (derived or `force`): the companion member is the
+  arity the hand callers were written against (vis-ui `OsUtils.isMac`, `VisUI.isLoaded`, 25 hand-suite
+  E100). An unlisted static keeps `()` (`StaticMember`).
+- Among same-arity reference overloads, a java primitive slot pairs with the reference's own
+  primitive (`int` is `Int`, weight 2) before an opaque target over it (weight 1): unnormalised, every
+  primitive tied and `setShortcut(int)` beside `setShortcut(Key)`/`setShortcut(String)` derived
+  nothing.
 - A nullability annotation the policy BINDS is stripped from every owned declaration, retyped or
   not; a declined retype (an override of an external `Iterator#next`, a primitive, a scoped-out
   member) is COUNTED instead. Left on the refused override, it named a class the port's build does
@@ -347,7 +363,7 @@ sees the kind); the screen is *would a reader act differently*.
 | `PrimitiveToOpaqueTransform(OpaqueSpec)` — seed, propagate along pure-move flows, retype (scalar, `Array[Prim]` and `Carrier[Prim]`, one container deep), coerce at the boundary | which primitive, name, mint site (`Mint`, `Existing`, or `OwnClass`: the java constants class itself becomes `opaque type` + `object`, its prim-first statics extensions; its own constants and receivers are EXACT seeds, never grown through; refused and counted for instance members, construction, subclassing, a type use), seed FQNs as an exact `Set[String]` (data, not a predicate function, so two specs seeding the same type from different declarations produce different policy fingerprints), scope, `carriers` (one-type-parameter wrappers such as the null model's, coerced through their `map`; a spec naming one runs AFTER `nullability`, which is what puts the carrier in the program; empty = none and no edge; a carrier inside a carrier is refused and counted — only one container depth is supported). A formal on a callee this run does not emit is read off the BASE'S PUBLISHED PORT MAP (`RunScope.baseMemberUpstream`), never re-derived — opaque propagation must follow array element reads, and a dependent must read the base's published map to know which base members were retyped before unwrapping opaque arguments; a symbol in a unit this run does not emit is never a SEED, must not treat a `using` clause as a formal, and must cast padded slots and unwrap funnelled constructor arguments on a dependent module. `OpaqueSpec.derive`: also seed where the REFERENCE port (`PortManifest.parity`) spells the slot at the target type — spelling read off signatures, never behaviour |
 | `PortabilityCheck(targets)` — match a rule against every external symbol, report each site | WHICH BACKENDS (`PortManifest.targets`); the rule list is derived from them |
 | `ApiParityCheck(ParityRef)` — parse both sides with scalameta, classify divergences by family | WHICH hand-port tree(s) (`PortManifest.parity`); `upstreamMarkers` decides which files are parties; empty = no-op `ParityRef.compare = false` keeps the tree as the DERIVATION source only (`RunScope.derived`, `derived-policy.tsv`, `derived(*)` lanes) |
-| `MemberRenameTransform(renames, derive)` — rename over the whole override component or refuse | which members, what name (symbolic emits `@targetName`); `derive` reads the reference's `TargetName`, underscore `FieldName` and parametrised-getter `Rename` rows |
+| `MemberRenameTransform(renames, derive)` — rename over the whole override component or refuse | which members, what name (symbolic emits `@targetName`); `derive` reads the reference's `TargetName`, underscore `FieldName`, parametrised-getter `Rename` and constructor `ParamName` rows |
 | `NullabilityTransform(annotations, target, scope, nullableMembers)` — move nullability into the type, strip annotation, coerce at seams, rewrite `== null` | which annotations, target shape (`Union`/`Named`/`OptionTarget`), `RuleScope`, `nullableMembers` exact FQNs (members that return null with no Java nullability annotation, listed by exact name and then treated as if annotated; empty = no-op); `MergeablePolicy` union `deriveMembers`: also the members the reference returns wrapped |
 | `BeanPropertyTransform(pairs, targets, scope)` — accessor pair → scala property over the override component, derive java-convention pairs in scope | explicit pairs, derivation scope; `Only(Set.empty)` = no-op; configured key wins; `derive`: a pair the reference keeps under its java accessor name is left alone (`KeepName` rows), one it spells as a `var`/`val` folds as if configured, fluent setter included (`Property` rows) |
 | `NullaryArityTransform(scope)` — drop `()` from getter-like nullary methods, whole-or-none per component | `RuleScope`; `Only(Set.empty)` default (it MINTS an arity) `force` exact FQNs, the whole override component following; `derive`: parenless where the reference is (its component follows), `def x()` kept where the reference keeps the parens (`KeepParens`) |

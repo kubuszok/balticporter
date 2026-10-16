@@ -137,8 +137,10 @@ final class NullaryArityTransform(
     program.symbols.all.foreach { s =>
       val ownerFqn = program.symbolOf(s.owner).map(_.fullName).getOrElse("")
       program.definitionOf(s.id) match
-        case Some(d: Tree.DefDef) if program.owned(s.id) && isNilary(d) && !isVoid(program, d.returnTpt.tpe) =>
-          if s.flags.isStatic then
+        case Some(d: Tree.DefDef) if program.owned(s.id) && isNilary(d)(using program) && !isVoid(program, d.returnTpt.tpe) =>
+          // a static the port names (forced, or derived from the reference's parenless companion member) states the
+          // arity those call sites were written against
+          if s.flags.isStatic && !forcedId(s.id, s.fullName) then
             refuse(
               program,
               s.id,
@@ -341,7 +343,7 @@ final class NullaryArityTransform(
   /** strip `()` from the declaration — only for methods this run EMITS. Base methods are in `converted` for call-site rewriting but their declarations are the base's published fact.
     */
   override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
-    if emittedConverted.contains(t.symbol) then t.copy(paramss = Nil) else t
+    if emittedConverted.contains(t.symbol) then t.copy(paramss = t.paramss.drop(1)) else t
 
   /** `o.x()` -> `o.x` for converted methods — keyed on both SymId (exact) and fullName (identity match for a base member whose SymId differs across dependent units).
     */
@@ -369,10 +371,11 @@ final class NullaryArityTransform(
     )
 
   /** a method with exactly one empty parameter clause: `paramss == List(Nil)`. */
-  private def isNilary(d: Tree.DefDef): Boolean =
+  /** `m()`, or `m()(using C)`: a context clause a phase threaded is no value parameter, and a caller spells the parenless form `m` */
+  private def isNilary(d: Tree.DefDef)(using p: Program): Boolean =
     d.paramss match
-      case List(Nil) => true
-      case _         => false
+      case Nil :: rest => rest.forall(ps => ps.nonEmpty && ps.forall(v => p.symbolOf(v.symbol).exists(s => s.flags.isGiven || s.flags.isImplicit)))
+      case _           => false
 
   /** the SYMBOL's own claim that it is a nilary method with a value result — asked only where the tree holds no `DefDef`, so the declaration's own shape cannot be read.
     */

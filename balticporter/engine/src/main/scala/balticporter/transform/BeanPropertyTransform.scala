@@ -44,7 +44,10 @@ final class BeanPropertyTransform(
 
   /** The shape an entry asked for; `DefPair` where it said nothing. */
   def targetOf(key: String): BeanPropertyTransform.Target =
-    targets.getOrElse(key, BeanPropertyTransform.Target.DefPair)
+    targets.getOrElse(key, derivedTargets.getOrElse(key, BeanPropertyTransform.Target.DefPair))
+
+  /** derived pairs the reference declares as a class-parameter `var`: the collapse is asked for, so the constructor can fill the property itself (its guards still decide) */
+  private var derivedTargets: Map[String, BeanPropertyTransform.Target] = Map.empty
 
   /** The pairs, sorted and rendered with their target — two modules that agree must compare equal; the target is rendered unconditionally or `SurfaceMissing` cannot see two configs naming the same
     * accessors at different shapes.
@@ -164,6 +167,8 @@ final class BeanPropertyTransform(
           val key = MemberKey(owner, prop).render
           Option.when(!configured.exists(_.key == key))(BeanPropertyTransform.Entry(key, g + s.fold("")("/" + _), owner, prop, g, s))
         }
+    val asParam = if derive then binder.run.derived.classParamProperties else Set.empty
+    derivedTargets = derivedEntries.collect { case e if asParam((e.owner, e.property)) => e.key -> BeanPropertyTransform.Target.Var }.toMap
     val entries = configured ++ derivedEntries
     parsed = entries
     ownFindings = malformed

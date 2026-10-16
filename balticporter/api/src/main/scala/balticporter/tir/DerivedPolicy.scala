@@ -45,6 +45,14 @@ final case class DerivedPolicy(
   def fieldNames: Map[SymId, String] =
     rows.filter(_.family == Family.FieldName).flatMap(r => ids.get(r.upstream).map(_ -> r.target)).toMap
 
+  /** constructor parameter id -> the name the reference gives it */
+  def paramNames: Map[SymId, String] =
+    rows.filter(_.family == Family.ParamName).flatMap(r => ids.get(r.upstream).map(_ -> r.target)).toMap
+
+  /** (owner upstream FQN, property) the reference declares as a class-parameter `var`: the pairs whose collapse the bean step requests */
+  def classParamProperties: Set[(String, String)] =
+    rows.iterator.filter(r => r.family == Family.Property && r.reference == classParamSpelling(r.target)).map(r => (r.upstream.take(r.upstream.lastIndexOf('#')), r.target)).toSet
+
   /** (owner upstream FQN, property, getter name, setter name) — the bean step's configured-pair shape */
   def propertyPairs: List[(String, String, String, Option[String])] =
     def split(up: String): (String, String) =
@@ -108,7 +116,14 @@ object DerivedPolicy:
       Rename,
       /** a java `protected` member the reference spells as plain `protected` (subclass-only, no package qualifier): the visibility step narrows its override component or refuses
         */
-      Protected
+      Protected,
+      /** a java CONSTRUCTOR parameter the reference names differently at the same slot (`_globalState` beside a `globalState` member): `target` is that name, which a named argument spells; the rename
+        * step moves the parameter ahead of the emitter's own `x$p` clash repair
+        */
+      ParamName
+
+  /** the reference spelling of a property declared as a CLASS PARAMETER (`class C(var x: T)`): the bean step asks for the `var` collapse, so the constructor fills the property itself. */
+  def classParamSpelling(prop: String): String = s"(var $prop)"
 
   /** @param upstream
     *   the java symbol's `fullName` @param reference the hand port's spelling at that slot (`Seconds`, `Nullable[Texture]`, `def x: T`) @param target the opaque target FQN for `OpaqueSlot`, empty

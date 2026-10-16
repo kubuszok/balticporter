@@ -195,15 +195,24 @@ object ReferencePolicy:
     def bestByParams(cands: List[SurfaceDecl], params: List[Tree.ValDef], tparams: Set[SymId] = Set.empty, static: Boolean = false): List[SurfaceDecl] =
       if cands.size <= 1 then cands
       else
-        val js     = params.map(p => javaSimple(p.tpt.tpe))
-        val tp     = params.map(isTypeParamTyped(_, tparams))
+        val js = params.map(p => javaSimple(p.tpt.tpe))
+        val tp = params.map(isTypeParamTyped(_, tparams))
+        // a PRIMITIVE java slot also matches the reference's opaque target over it (`setShortcut(int)` is `setShortcut(Key)`),
+        // half as strongly as the same type, so `set(int)` still pairs with a `set(Int)` beside a `set(Seconds)`
+        val pr     = params.map(p => prim(p.tpt.tpe))
         val scored = cands.map { c =>
           val rs = c.slotTypes(static).map(refSimple)
-          c -> js.zip(rs).zip(tp).count {
-            case ((_, r), true) if r.startsWith("$") => true // a type parameter matches the canonical `$N`
-            case ((Some(j), r), _)                   => j == r
-            case _                                   => false
-          }
+          c -> js
+            .zip(rs)
+            .zip(tp)
+            .zip(pr)
+            .map {
+              case (((_, r), true), _) if r.startsWith("$")                     => 2 // a type parameter matches the canonical `$N`
+              case (((Some(j), r), _), p) if j == r || (p && j.capitalize == r) => 2 // java's `int` is the reference's `Int`
+              case (((_, r), _), true) if targetBySimple.contains(r)            => 1
+              case _                                                            => 0
+            }
+            .sum
         }
         val top = scored.map(_._2).max
         scored.filter(_._2 == top).map(_._1)
@@ -249,8 +258,8 @@ object ReferencePolicy:
       if !setterAtProp then
         opaqueSlot(rowKey(ms, overloaded), r.resultType, res).foreach(out += _)
         if nullWrapped(r.resultType) && reference_(res) then out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, rowKey(ms, overloaded), r.resultType)
-      if !isProp && r.parenless && params.isEmpty && !isVoid(res) && !ms.flags.isStatic then
-        out += DerivedPolicy.Row(DerivedPolicy.Family.Parenless, rowKey(ms, overloaded), s"def ${r.name}: ${r.resultType}")
+      // a static too: the reference's companion member IS the arity its callers were written against
+      if !isProp && r.parenless && params.isEmpty && !isVoid(res) then out += DerivedPolicy.Row(DerivedPolicy.Family.Parenless, rowKey(ms, overloaded), s"def ${r.name}: ${r.resultType}")
       // java declares it narrower than public, the reference ships it public: widened
       if r.accessLevel == "public" && (ms.flags.isProtected || ms.flags.isPackagePrivate) then out += DerivedPolicy.Row(DerivedPolicy.Family.Public, rowKey(ms, overloaded), s"public ${r.name}")
       // java `protected`, the reference plain `protected` (no package qualifier): subclass-only
@@ -263,14 +272,26 @@ object ReferencePolicy:
       out.result()
 
     /** the parameter slots only — a constructor has no result and no arity to drop. */
-    def paramRows(d: Tree.DefDef, ms: Symbol, overloaded: Boolean, r: SurfaceDecl): List[DerivedPolicy.Row] =
-      val out = List.newBuilder[DerivedPolicy.Row]
-      d.paramss.flatten.zip(r.explicitParamTypes).foreach { (p, refType) =>
+    def paramRows(d: Tree.DefDef, ms: Symbol, overloaded: Boolean, r: SurfaceDecl, tparams: Set[SymId] = Set.empty): List[DerivedPolicy.Row] =
+      val out    = List.newBuilder[DerivedPolicy.Row]
+      val params = d.paramss.flatten
+      params.zip(r.explicitParamTypes).foreach { (p, refType) =>
         program.symbolOf(p.symbol).foreach { ps =>
           opaqueSlot(paramKey(ms, ps, overloaded), refType, p.tpt.tpe).foreach(out += _)
           if nullWrapped(refType) && reference_(p.tpt.tpe) then out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, paramKey(ms, ps, overloaded), refType)
         }
       }
+      // a named argument spells the parameter: the reference's name at a slot it declares as a constructor (an `apply` factory is a method of its own)
+      // only at a slot of the SAME type: a reference constructor with defaults answers several java arities, positionally unrelated
+      if r.kind == "ctor" && r.paramNames.sizeIs >= params.size then
+        params.zip(r.paramNames).zip(r.explicitParamTypes).foreach { case ((p, refName), refType) =>
+          val r0       = refSimple(refType)
+          val sameSlot = (isTypeParamTyped(p, tparams) && r0.startsWith("$")) ||
+            javaSimple(p.tpt.tpe).exists(j => j == r0 || (j == "Object" && (r0 == "AnyRef" || r0 == "Any")) || (prim(p.tpt.tpe) && (j.capitalize == r0 || targetBySimple.contains(r0))))
+          program.symbolOf(p.symbol).filter(ps => sameSlot && ps.name != refName && plainIdent(refName)).foreach { ps =>
+            out += DerivedPolicy.Row(DerivedPolicy.Family.ParamName, paramKey(ms, ps, overloaded), refName, refName)
+          }
+        }
       out.result()
 
     def fieldRows(v: Tree.ValDef, fs: Symbol, r: SurfaceDecl): List[DerivedPolicy.Row] =
@@ -337,7 +358,10 @@ object ReferencePolicy:
                     val asProp       = javaNameGone && (refProp ||
                       (n == 0 && !ms.name.startsWith("set") && refDefGetter) ||
                       (n == 1 && ms.name.startsWith("set") && refDefSetter))
-                    if asProp && n == 0 && !ms.name.startsWith("set") then rows += DerivedPolicy.Row(DerivedPolicy.Family.Property, rowKey(ms, overloaded), s"var $prop", prop)
+                    // a class-parameter `var` is the value the constructor takes as the property itself: spelled so, the bean step asks for the collapse
+                    val asParam  = lookup(mp, "prop", prop, 0, pkg).exists(_.exists(rd => rd.classParam && rd.kind == "var"))
+                    val spelling = if asParam then DerivedPolicy.classParamSpelling(prop) else s"var $prop"
+                    if asProp && n == 0 && !ms.name.startsWith("set") then rows += DerivedPolicy.Row(DerivedPolicy.Family.Property, rowKey(ms, overloaded), spelling, prop)
                     // a getter WITH parameters the reference spells under the property name, same
                     // parameter types (`x(pointer)` for `getX(int)`): a rename, not a property
                     else if javaNameGone && n >= 1 && !ms.name.startsWith("set") then
@@ -347,7 +371,7 @@ object ReferencePolicy:
                         .map((nm, cs) => nm -> bestByParams(cs, d.paramss.flatten, d.tparams.map(_.symbol).toSet))
                         .find(_._2.nonEmpty)
                         .foreach((nm, _) => rows += DerivedPolicy.Row(DerivedPolicy.Family.Rename, rowKey(ms, overloaded), s"def $nm", nm))
-                    else if asProp && n == 1 && ms.name.startsWith("set") then rows += DerivedPolicy.Row(DerivedPolicy.Family.PropertySetter, rowKey(ms, overloaded), s"var $prop", prop)
+                    else if asProp && n == 1 && ms.name.startsWith("set") then rows += DerivedPolicy.Row(DerivedPolicy.Family.PropertySetter, rowKey(ms, overloaded), spelling, prop)
                     // the reference spells the property with its acronym LOWERED (`gl30Available`): the
                     // pair folds to that name — a row carrying the target, since the detector's own
                     // spelling keeps the acronym
@@ -392,8 +416,9 @@ object ReferencePolicy:
                     case Nil => Nil
                     case all => val same = all.filter(_.pkg == pkg); if same.nonEmpty then same else all
                   if cands.nonEmpty then
-                    val best = bestByParams(cands, d.paramss.flatten)
-                    agree(ms, best, paramRows(d, ms, nameCounts.getOrElse("<init>", 0) > 1, _))
+                    val ctps = cd.tparams.map(_.symbol).toSet
+                    val best = bestByParams(cands, d.paramss.flatten, ctps)
+                    agree(ms, best, paramRows(d, ms, nameCounts.getOrElse("<init>", 0) > 1, _, ctps))
                     if best.forall(_.accessLevel == "public") && (ms.flags.isProtected || ms.flags.isPackagePrivate) then
                       rows += DerivedPolicy.Row(DerivedPolicy.Family.Public, rowKey(ms, nameCounts.getOrElse("<init>", 0) > 1), "public <init>")
                 }
@@ -424,6 +449,32 @@ object ReferencePolicy:
     val all         = rows.result().distinct
     val rowFindings = all.map(r => CheckReport.Finding(LaneRows, r.family.toString, r.upstream, "", 0, if r.target.isEmpty then r.reference else s"${r.reference} -> ${r.target}"))
     Result(DerivedPolicy(all), rowFindings ++ findings.result())
+
+  /** a name a parameter can take unquoted: a java-style identifier no scala keyword spells */
+  private def plainIdent(n: String): Boolean =
+    n.nonEmpty && (n.head.isLetter || n.head == '_') && n.forall(c => c.isLetterOrDigit || c == '_') && n != "_" &&
+      !Set(
+        "type",
+        "val",
+        "var",
+        "def",
+        "object",
+        "given",
+        "match",
+        "yield",
+        "then",
+        "with",
+        "lazy",
+        "implicit",
+        "override",
+        "sealed",
+        "trait",
+        "forSome",
+        "macro",
+        "end",
+        "enum",
+        "export"
+      )(n)
 
   private def kindClass(kind: String): String = kind match
     case "val" | "var" | "param" => "prop"

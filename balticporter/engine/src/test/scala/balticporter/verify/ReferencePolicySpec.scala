@@ -56,7 +56,13 @@ class ReferencePolicySpec extends FunSuite:
     val r = derive()
     assertEquals(
       r.policy.opaqueSeeds("sge.utils.Seconds"),
-      Set("com.example.gfx.Clock#delta", "com.example.gfx.Clock#getDelta", "com.example.gfx.Clock#update#dt")
+      // `set(float)` pairs with `set(Seconds)`, `set(int)` with the same-typed `set(Int)`
+      Set(
+        "com.example.gfx.Clock#delta",
+        "com.example.gfx.Clock#getDelta",
+        "com.example.gfx.Clock#update#dt",
+        "com.example.gfx.Clock#set(float)#a"
+      )
     )
     // `isWide(int)` is a STATIC the reference spells as an extension over the target: its receiver is slot 0
     assertEquals(r.policy.opaqueSeeds("sge.Pixels"), Set("com.example.gfx.Clock#update#width", "com.example.gfx.Clock#isWide#width"))
@@ -86,20 +92,32 @@ class ReferencePolicySpec extends FunSuite:
   test("a member the reference returns wrapped is a nullable member; a nullary def written without () is parenless") {
     val r = derive()
     assertEquals(r.policy.nullableMembers, Set("com.example.gfx.Clock#label"))
-    assertEquals(r.policy.parenless, Set("com.example.gfx.Clock#getDelta", "com.example.gfx.Clock#size"))
+    assertEquals(r.policy.parenless, Set("com.example.gfx.Clock#getDelta", "com.example.gfx.Clock#size", "com.example.gfx.Clock#count"))
   }
 
-  test("a static is never parenless (its arity lives on the companion, K51) and `label()` with parens is not") {
+  test("a static the companion spells parenless is parenless, and `label()` with parens is not") {
     val r = derive()
-    assert(!r.policy.parenless.contains("com.example.gfx.Clock#count"))
+    assert(r.policy.parenless.contains("com.example.gfx.Clock#count"))
     assert(!r.policy.parenless.contains("com.example.gfx.Clock#label"))
   }
 
   test("overloads at one key that disagree derive only the agreed rows and are counted") {
-    val r = derive()
-    // set(Seconds) vs set(Int): java's two `set(float)`/`set(int)` both see both candidates
-    assert(!r.policy.opaqueSeeds("sge.utils.Seconds").exists(_.startsWith("com.example.gfx.Clock#set")))
-    assertEquals(r.findings.count(_.check == ReferencePolicy.LaneAmbiguous), 2)
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class Span {
+        |  public void set(long a) {}
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |import sge.utils.Seconds
+        |class Span { def set(a: Seconds): Unit = (); def set(a: Pixels): Unit = () }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set("sge.utils.Seconds", "sge.Pixels"))
+    // two opaque targets at one primitive slot: neither is the reference's answer
+    assert(r.policy.opaqueSeeds("sge.utils.Seconds").isEmpty && r.policy.opaqueSeeds("sge.Pixels").isEmpty)
+    assertEquals(r.findings.count(_.check == ReferencePolicy.LaneAmbiguous), 1)
   }
 
   test("an OVERLOADED java name's rows are keyed by descriptor, so one overload's spelling never reaches another") {
@@ -253,6 +271,39 @@ class ReferencePolicySpec extends FunSuite:
     val p = SpoonTir.fromSource(javaSrc2)
     val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set("sge.Pixels"))
     assertEquals(r.policy.opaqueSeeds("sge.Pixels"), Set("com.example.gfx.In#getX()", "com.example.gfx.In#getX(int)"))
+  }
+
+  test("a def whose only clause is a `using` clause is parenless: its callers spell it without `()`") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class Bundles {
+        |  public static String getCommon() { return ""; }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |object Bundles { def getCommon(using s: Sge): String = "" }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    assert(r.policy.parenless.contains("com.example.gfx.Bundles#getCommon"), r.policy.rows.mkString("\n"))
+  }
+
+  test("among same-arity overloads, a primitive java slot pairs with the reference overload spelling its opaque target") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class Item {
+        |  public Item setShortcut(int keycode) { return this; }
+        |  public Item setShortcut(String text) { return this; }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |class Item { def setShortcut(keycode: Pixels): Item = this; def setShortcut(text: String): Item = this }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set("sge.Pixels"))
+    assertEquals(r.policy.opaqueSeeds("sge.Pixels"), Set("com.example.gfx.Item#setShortcut(int)#keycode"))
   }
 
   test("a java accessor pair the reference spells as a `var` derives a property pair, fluent setter included") {

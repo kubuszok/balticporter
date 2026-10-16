@@ -24,6 +24,7 @@ final class MemberRenameTransform(
   private var derivedTargetNames: Map[SymId, String] = Map.empty
   private var derivedFieldNames:  Map[SymId, String] = Map.empty
   private var derivedRenames:     Map[SymId, String] = Map.empty
+  private var derivedParamNames:  Map[SymId, String] = Map.empty
 
   /** exactly two edges needed; see the class note for why no others are declared. */
   override def runsBefore: Set[String] = Set("type-redirect", "package-rename")
@@ -124,6 +125,48 @@ final class MemberRenameTransform(
       derivedTargetNames = binder.run.derived.targetNames
       derivedFieldNames = binder.run.derived.fieldNames
       derivedRenames = binder.run.derived.renames
+      derivedParamNames = binder.run.derived.paramNames
+
+  /** A constructor parameter the reference names differently takes that name: a parameter is no member and overrides nothing, so the symbol alone moves. Refused, counted, where another parameter of
+    * the same constructor already holds the name.
+    */
+  private def renameParams(program: Program): Program =
+    val moves = derivedParamNames.filter((id, _) => program.owned(id) && scope.emitsSymbol(program, id))
+    if moves.isEmpty then program
+    else
+      val renamed = moves.flatMap { (id, to) =>
+        program.symbolOf(id).flatMap { s =>
+          val siblings = program.symbols.all.filter(o => o.owner == s.owner && o.flags.isParam && o.id != id).map(o => moves.getOrElse(o.id, o.name))
+          if siblings.exists(_ == to) then
+            runFindings :+= PolicyFinding(
+              name,
+              MemberRenameTransform.Setting,
+              "derive:" + s.fullName,
+              PolicyIssue.Unverifiable,
+              s"the reference names this constructor parameter `$to`, which another parameter of the constructor holds — so it keeps java's name",
+              PolicyFinding.About.ThisRun
+            )
+            scala.None
+          else
+            record(
+              Decision(
+                kind = Decision.Kind.RenamedMember,
+                subject = id,
+                subjectFqn = s.fullName,
+                detail = Map(
+                  "from" -> s.name,
+                  "to" -> to,
+                  "why" -> "a named argument spells the constructor parameter, and the reference port names it so"
+                ),
+                reason = Reason.Configured(name, "derive:" + s.fullName),
+                origin = Decision.originOf(program, id)
+              )
+            )
+            Some(id -> to)
+        }
+      }
+      if renamed.isEmpty then program
+      else program.rebuilt(symbols = SymbolTable(program.symbols.all.map(s => renamed.get(s.id).map(n => s.copy(name = n)).getOrElse(s))))
 
   /** refusals this run made — reset per run, since a phase instance is reused across translations. */
   private var runFindings: List[PolicyFinding] = Nil
@@ -136,9 +179,10 @@ final class MemberRenameTransform(
 
   // ---- the rename ----------------------------------------------------------------------------
 
-  override def run(program: Program): Program =
+  override def run(original: Program): Program =
     runFindings = Nil
-    val live = boundRenames.filter(_.hits.nonEmpty)
+    val program = renameParams(original)
+    val live    = boundRenames.filter(_.hits.nonEmpty)
     // a derive-only run (no configured rename) still annotates the reference's target names
     val configured = live.flatMap(_.hits).toSet
     val fieldMoves = (derivedFieldNames ++ derivedRenames).filter((id, _) => program.owned(id) && scope.emitsSymbol(program, id) && !configured(id))
