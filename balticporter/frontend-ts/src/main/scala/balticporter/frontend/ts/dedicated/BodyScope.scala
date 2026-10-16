@@ -792,12 +792,33 @@ abstract private[dedicated] class BodyScope(
       case Some("String")                                                     => text
       case Some("Int" | "Long" | "Short" | "Byte" | "Boolean" | "Char")       => s"$text.toString"
       case Some(t) if isSpecificClassType(t) && extractElementType(t).isEmpty => s"$text.toString"
-      case Some("Double" | "Float")                                           =>
+      case Some("Double")                                                     => jsNumberText(raw)
+      // a Float holds another value than the JS number it stands for
+      case Some("Float") =>
         refuse("number-to-string")
         s"$text.toString"
       case _ =>
         refuse("value-to-string")
         s"$text.toString"
+
+  /** The text JS's `Number.prototype.toString` makes of the Double `expr`: an integer without `.0`, the shortest digits that read back as the value, plain from `1e-6` up to `1e21` and in JS's own
+    * exponent form (`1.5e-7`, `1e+21`) beyond; `NaN` and the infinities as Scala spells them, a zero of either sign as `0`. Every platform's `Double.toString` gives the shortest digits of a normal
+    * value; of a subnormal one the JVM's keeps two, so those are searched for directly.
+    */
+  protected def jsNumberText(expr: String): String =
+    val d        = freshLabel("d")
+    val b        = freshLabel("b")
+    val e        = freshLabel("e")
+    val u        = freshLabel("u")
+    val p        = freshLabel("p")
+    val shortest =
+      s"if (math.abs($d) >= java.lang.Double.MIN_NORMAL) java.math.BigDecimal.valueOf($d) else { var $p = 1; " +
+        s"while (new java.math.BigDecimal($d).round(new java.math.MathContext($p, java.math.RoundingMode.HALF_EVEN)).doubleValue != $d) $p += 1; " +
+        s"new java.math.BigDecimal($d).round(new java.math.MathContext($p, java.math.RoundingMode.HALF_EVEN)) }"
+    s"{ val $d: Double = $expr; if ($d.isNaN || $d.isInfinite) $d.toString else if ($d == 0) \"0\" else { " +
+      s"val $b = ($shortest).stripTrailingZeros; val $e = $b.precision - $b.scale - 1; " +
+      s"if ($e >= -6 && $e < 21) $b.toPlainString else { val $u = $b.unscaledValue.abs.toString; " +
+      s"(if ($d < 0) \"-\" else \"\") + $u.substring(0, 1) + (if ($u.length > 1) \".\" + $u.substring(1) else \"\") + \"e\" + (if ($e >= 0) \"+\" else \"-\") + math.abs($e) } } }"
 
   // one parenthesised group from the first character to the last, so a member read binds to all of it
   private def enclosedInParens(s: String): Boolean =

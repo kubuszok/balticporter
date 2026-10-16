@@ -574,3 +574,12 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   one it imports whole); otherwise it is qualified by the ONE package the reference declares it in,
   and refused (`class-not-nameable`) where none or two do. Bare, `asInstanceOf[ParseNodeOrdgroup]`
   did not compile in a file importing only `AnyParseNode`. KaTeX 72 -> 75.
+- (a) A Double converted to text (`+ ""`, a template, `String(x)`, `x.toString()`) is written out as
+  JS's `Number.prototype.toString`: `BigDecimal.valueOf(d).stripTrailingZeros` gives the shortest
+  digits on all three platforms (checked against node on JVM, Scala.js and Native), plain for a
+  leading-digit exponent in `[-6, 21)` and `1.5e-7`/`1e+21` beyond; a SUBNORMAL is searched for by
+  rounding the exact value, since the JVM prints `4.9E-324` where JS prints `5e-324`. A Float is
+  still refused. `toFixed` answers JS's text for a non-finite value or one of `1e21` and more
+  (`new BigDecimal(NaN)` threw) and keeps the sign of a negative rounding to zero; `toString(radix)`
+  is translated only on an integer (it had truncated a fraction); unary `+` of a string is refused
+  (`numeric-coercion`: it had been rendered as a STRING). KaTeX 75 -> 82.

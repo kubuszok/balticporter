@@ -1144,5 +1144,6 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     assert(translate(call("isNaN", ident("s")), paramTypes = Map("s" -> "String")).refusalReasons.contains("js-builtin"))
     assert(translate(call("parseInt", ident("s")), paramTypes = Map("s" -> "String")).refusalReasons.contains("js-builtin"))
     assert(translate(call("Number", ident("s")), paramTypes = Map("s" -> "String")).refusalReasons.contains("js-builtin"))
-    // String(2.0) is "2" in JS and "2.0" in Scala
-    assert(translate(call("String", ident("d")), paramTypes = Map("d" -> "Double")).refusalReasons.contains("number-to-string"))
+    // String(2.0) is "2" in JS and "2.0" in Scala's toString: JS's own number text is written out
+    val str = translate(call("String", ident("d")), paramTypes = Map("d" -> "Double"))
+    assert(str.isComplete && str.scalaBody.contains("BigDecimal.valueOf"), str.scalaBody)

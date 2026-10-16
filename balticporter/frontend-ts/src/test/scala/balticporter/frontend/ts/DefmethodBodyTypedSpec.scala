@@ -403,7 +403,7 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     val r = translate(block(ret(call(prop(ident("s"), "split"), str(".")))), params = List("s"), paramTypes = Map("s" -> "String"))
     assertNoDiff(r.scalaBody.trim, "s.split(java.util.regex.Pattern.quote(\".\"), -1)")
 
-  test("a template substitutes each span; a Double or a value of unknown type is refused, since JS prints it differently"):
+  test("a template substitutes each span: a Double in JS's own number text, a Float or a value of unknown type refused"):
     def tmpl(tpe: String) =
       val t = node(
         "TemplateExpression",
@@ -412,7 +412,27 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       )
       translate(block(ret(t)), params = List("n"), paramTypes = Map("n" -> tpe))
     assertNoDiff(tmpl("Int").scalaBody.trim, "\"n=\" + n.toString + \"!\"")
-    refuses(tmpl("Double"), "number-to-string")
+    val d = tmpl("Double")
+    accepts(d)
+    assert(
+      d.scalaBody.contains("java.math.BigDecimal.valueOf(d$1)") && d.scalaBody.contains("\"e\" + (if (e$3 >= 0) \"+\" else \"-\")"),
+      d.scalaBody
+    )
+    refuses(tmpl("Float"), "number-to-string")
+    refuses(tmpl("Any"), "value-to-string")
+
+  test("toString reads a number as JS writes it, a radix only on an integer, and unary + of a string is refused"):
+    def onX(tpe: String, e: RastNode) = translate(block(ret(e)), params = List("x"), paramTypes = Map("x" -> tpe))
+    accepts(onX("Double", call(prop(ident("x"), "toString"))))
+    assert(onX("Double", call(prop(ident("x"), "toString"))).scalaBody.contains("BigDecimal.valueOf"))
+    assertNoDiff(onX("Int", call(prop(ident("x"), "toString"), num(16))).scalaBody.trim, "java.lang.Long.toString(x.toLong, 16)")
+    refuses(onX("Double", call(prop(ident("x"), "toString"), num(16))), "value-to-string")
+    refuses(
+      onX("String", RastNode("PrefixUnaryExpression", 0, (0, 0), children = List(ident("x")), operator = Some("PlusToken"))),
+      "numeric-coercion"
+    )
+    // toFixed answers JS's text for a value it does not format: non-finite, or 1e21 and more
+    assert(onX("Double", call(prop(ident("x"), "toFixed"), num(2))).scalaBody.contains("math.abs(d$1) >= 1e21"))
 
   test("a JS built-in's static with no Scala namesake is refused; java.lang.Math is used only where it agrees"):
     refuses(translate(block(ret(call(prop(ident("Object"), "getPrototypeOf"), ident("o")))), params = List("o")), "js-builtin")

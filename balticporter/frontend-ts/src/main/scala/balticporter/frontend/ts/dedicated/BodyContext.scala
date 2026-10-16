@@ -623,8 +623,9 @@ private[dedicated] class BodyContext(
               // concatenation, the JS round-trip `+s` strips trailing zeros and
               // the ".0" suffix for whole numbers. JVM Double.toString keeps
               // ".0", so use BigDecimal.stripTrailingZeros.toPlainString to match.
-              if operandType.contains("String") then s"new java.math.BigDecimal($operand).stripTrailingZeros.toPlainString"
-              else s"$operand.toDouble"
+              // JS reads a string as a number by its own grammar (`""` is 0, `"0x10"` 16, anything else NaN), where Scala's parsers throw
+              if operandType.contains("String") then refuse("numeric-coercion")
+              s"$operand.toDouble"
           case Some("TildeToken")      => s"~$operand"
           case Some("PlusPlusToken")   => s"{ $operand += 1; $operand }"
           case Some("MinusMinusToken") => s"{ $operand -= 1; $operand }"
@@ -1248,10 +1249,21 @@ private[dedicated] class BodyContext(
               // separator and half-away-from-zero rounding. java.lang.String.format
               // follows Locale.getDefault on the JVM (comma on comma-locale hosts).
               // BigDecimal HALF_UP matches JS rounding; toPlainString uses ".".
-              s"new java.math.BigDecimal($objExpr).setScale($precision, java.math.RoundingMode.HALF_UP).toPlainString"
+              // JS answers a non-finite value or one of 1e21 and more as its plain text, and keeps the sign of a negative that rounds to zero
+              if !exprType(obj).exists(Set("Double", "Int", "Long", "Short", "Byte")) then refuse("number-to-string")
+              val d = freshLabel("d")
+              val r = freshLabel("r")
+              s"{ val $d: Double = $objExpr; if ($d.isNaN || $d.isInfinite || math.abs($d) >= 1e21) ${jsNumberText(d)} else { " +
+                s"val $r = new java.math.BigDecimal($d).setScale($precision, java.math.RoundingMode.HALF_UP); if ($d < 0 && $r.signum == 0) \"-\" + $r.toPlainString else $r.toPlainString } }"
             case "toString" =>
-              if scalaArgs.nonEmpty then s"java.lang.Integer.toString($objExpr.toInt, ${scalaArgs.head})"
-              else s"$objExpr.toString"
+              // JS writes a number in its own form, and a radix only an integer's digits read the same in both
+              exprType(obj) match
+                case Some("Double") if scalaArgs.isEmpty                                                 => jsNumberText(objExpr)
+                case Some("Int" | "Long" | "Short" | "Byte") if scalaArgs.nonEmpty                       => s"java.lang.Long.toString($objExpr.toLong, ${scalaArgs.head})"
+                case Some("Int" | "Long" | "Short" | "Byte" | "String" | "Boolean") if scalaArgs.isEmpty => s"$objExpr.toString"
+                case _                                                                                   =>
+                  refuse("value-to-string")
+                  s"$objExpr.toString"
             // `match` and `exec` answer a match array or null, and a global regex keeps its position between calls
             case "match" =>
               refuse("regex-method")
