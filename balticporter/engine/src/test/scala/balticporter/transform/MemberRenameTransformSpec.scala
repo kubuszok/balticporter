@@ -392,6 +392,15 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assert(f.head.detail.contains("nullary"), f.head.detail)
   }
 
+  test("a setter's name (`scale_=`) is a valid target and, mixed rather than symbolic, emits no @targetName") {
+    val ph = new MemberRenameTransform(Map("com.math.Vec2#scl" -> "scale_="))
+    val r  = run(vectors, ph)
+    assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
+    assertEquals(r.nameOf("com.math.Vec2#scl"), Some("scale_="))
+    assert(clue(code(r.out)).contains("def scale_=(s"), r.out)
+    assert(!r.out.contains("@scala.annotation.targetName(\"scl\")"), r.out)
+  }
+
   test("an alphanumeric name does NOT emit @targetName — only symbolic ones do") {
     val ph = new MemberRenameTransform(Map("com.math.Vec2#add" -> "plus"))
     val r  = run(vectors, ph)

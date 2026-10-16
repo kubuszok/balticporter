@@ -393,6 +393,10 @@ sees the kind); the screen is *would a reader act differently*.
   that construction reaches (through `this`/`super` calls and every override) reads the empty instead,
   and a field such a method writes keeps the written value (its initialiser tests the JVM's null).
   vis-ui `MenuItem#isOver` needed a hand-written body for it. Kind (a).
+- A member-rename target may be a SETTER's name (`numberOfSlots_=`, an alphanumeric part, `_`, then
+  operator characters): it is a valid Scala identifier that scalac encodes itself, so it takes no
+  `@targetName`; refused as malformed, a hand port's setter-only property could not be reproduced.
+  Kind (a).
 - A registry SEED that is generic registers under `classOf[X[?]]`: scala's `classOf` takes no raw
   type, and every seed of gdx-ai's generic task tree was E170 (19 errors). Kind (a).
 - `requiredGivens`' transitive closure threads a witness at EVERY type parameter a given-bound class

@@ -269,7 +269,12 @@ object MemberRenamer:
     * Used by [[MemberRenameTransform]] to validate the rename target. This replaces the old `isPlain` and admits both families.
     */
   def isValidMemberName(name: String): Boolean =
-    isAlphanumericName(name) || isSymbolic(name)
+    isAlphanumericName(name) || isSymbolic(name) || isMixedName(name)
+
+  /** An alphanumeric identifier ending in `_` and operator characters — a property SETTER's name (`count_=`, SLS 1.1). Not symbolic: scalac encodes it itself, so it needs no `@targetName`. */
+  def isMixedName(name: String): Boolean =
+    val i = name.lastIndexOf('_')
+    i > 0 && i < name.length - 1 && isAlphanumericName(name.substring(0, i + 1)) && isOperatorName(name.substring(i + 1))
 
   /** An ALPHANUMERIC member name — the shape `isPlain` used to test for. */
   private[tir] def isAlphanumericName(name: String): Boolean =
