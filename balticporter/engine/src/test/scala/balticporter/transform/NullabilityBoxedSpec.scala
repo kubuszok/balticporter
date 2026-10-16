@@ -59,3 +59,25 @@ class NullabilityBoxedSpec extends munit.FunSuite:
     assert(clue(out).contains("if (done) demo.Nullable(java.lang.Boolean.TRUE) else demo.Nullable.empty"), out)
     assert(!out.contains("demo.Nullable(if"), out)
   }
+
+  test("a wrapped primitive read at a BOX slot is java's null when empty, never the primitive's default") {
+    val src =
+      """package com.demo;
+        |import java.lang.annotation.*;
+        |@Retention(RetentionPolicy.CLASS) @interface Null {}
+        |class Rule {
+        |  Boolean last;
+        |  public @Null Boolean decide(boolean done) { return done ? Boolean.TRUE : null; }
+        |  void keep(boolean d) { last = decide(d); }
+        |}
+        |""".stripMargin
+    val phase = new NullabilityTransform(
+      annotations = Set("com.demo.Null"),
+      target = NullabilityTransform.Target.Named("demo.Nullable"),
+      scope = RuleScope.Everywhere(Set.empty)
+    )
+    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(src, "Rule.java"), List(phase))
+    val out          = new TirEmitter(after, notes = log).emit
+    assert(clue(out).contains(".fold(null: scala.Any)(v => v).asInstanceOf[java.lang.Boolean]"), out)
+    assert(!out.contains("decide(d).orNull"), out)
+  }

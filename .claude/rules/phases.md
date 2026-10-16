@@ -400,6 +400,9 @@ sees the kind); the screen is *would a reader act differently*.
 - A conditional yielding java's `null` at a wrapped slot wraps PER BRANCH (`if (c) W(x) else
   W.empty`): wrapped whole, a boxed element's null (`done ? Boolean.TRUE : null` at `Nullable[Boolean]`)
   was unboxed on its way in and read as `false` (gdx-ai `Parallel`, 10 failing tests at 0 errors). Kind (a).
+- A wrapped PRIMITIVE element read at a BOX slot (`Boolean last = policy.decide(...)`) is
+  `.fold(null: Any)(v => v).asInstanceOf[Box]`, never `.orNull`: `orNull` at `Nullable[Boolean]` answers
+  the primitive's default, so "no decision" read as `false`. Kind (a).
 - A context holder that attaches on METHODS may still name types whose clause lands on the
   CONSTRUCTOR (`attachClass`), the hand port's `Wander(owner)(using Timepiece)`: scoped out instead,
   the type read the installed global and a hand suite's `given` went unused (5 `-Werror` warnings).

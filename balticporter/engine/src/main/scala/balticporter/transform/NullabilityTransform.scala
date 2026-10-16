@@ -176,6 +176,9 @@ final class NullabilityTransform(
     */
   private var boxedElem: Map[SymId, SymId] = Map.empty
 
+  /** each box symbol present in the run → its java FQN, the spelling a box slot's read is cast to */
+  private var boxFqn: Map[SymId, String] = Map.empty
+
   /** the wrapper type with a boxed element read as its primitive — the shape two spellings of one slot agree on. */
   private def sameSlot(a: TypeRepr, b: TypeRepr): Boolean =
     def norm(t: TypeRepr): TypeRepr = t match
@@ -264,6 +267,7 @@ final class NullabilityTransform(
     boxedElem = NullabilityTransform.BoxedToPrimitive.toList.flatMap { (boxed, prim) =>
       externalNamed(program, boxed).map(b => b -> mintOrReuse(prim, prim.split('.').last))
     }.toMap
+    boxFqn = NullabilityTransform.BoxedToPrimitive.keys.flatMap(boxed => externalNamed(program, boxed).map(_ -> boxed)).toMap
 
     /** java boxes a primitive ONLY to admit `null` (`Integer align`); under a wrapper that carries the absence, the element is the primitive again — `Nullable[Int]`, the reference's own spelling. A
       * read at an `int` slot coerces `.get` (a primitive, `coerceTo`), a write `Nullable(boxed)` unboxes through `Predef` at the expected type. The union target keeps the box: `Int | Null` is no
@@ -1220,7 +1224,14 @@ final class NullabilityTransform(
     * dereference throws on null (java does too); a slot coercion preserves it.
     */
   private def slotUnwrap(want: TypeRepr, e: Term): Term =
-    if isPrimitiveSlot(want) then unwrap(e) else unwrapOrNull(e)
+    if isPrimitiveSlot(want) then unwrap(e)
+    else
+      // a BOX slot over a primitive element: `orNull` answers the primitive's default, never java's null, so the
+      // absence is read as null and the value boxed — the wrapper evaluated once
+      // (the call node may still carry the box the callee declared before its element became the primitive)
+      headSym(want).filter(b => headSym(elementOf(e.tpe)).exists(el => boxedElem.get(b).contains(el) || el == b)).flatMap(boxFqn.get) match
+        case Some(box)  => Tree.Opaque.spliced(List("", s".fold(null: scala.Any)(v => v).asInstanceOf[$box]"), List(e), want, e.origin)
+        case scala.None => unwrapOrNull(e)
 
   /** Is the target slot a primitive (about the slot's FORMAL, not the annotated declaration — planning already refused annotated primitives). Checked against cached [[primSyms]] so no `Program` is
     * needed, keeping [[coerceTo]] a plain function passable to [[mapReturns]].
