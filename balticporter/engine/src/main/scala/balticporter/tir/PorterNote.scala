@@ -47,7 +47,8 @@ object PorterNote:
       AddedMember,
       ThreadConfinedStatic,
       CountedReflectionRisk,
-      NarrowedVisibility
+      NarrowedVisibility,
+      GuardedPreInitRead
     )
 
   /** Placement: [[AtDeclaration]] (emitted subject), [[InBody]] (dropped member, at body head), [[NotInTree]] (dropped type, carried by injected file). A kind in the wrong set never appears.

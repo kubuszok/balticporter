@@ -388,6 +388,11 @@ sees the kind); the screen is *would a reader act differently*.
   (it still compiles; only the hand API needs it). `this` handed to a wildcard formal the drop filled
   to `C[Object]` takes java's unchecked conversion like any other argument, counted (`RawConversion`;
   `orchestrator.execute(this)`, 3 E007). Kind (b): which types is policy.
+- A field java leaves to its DEFAULT that the null model gives an empty initialiser is still the JVM's
+  null while an ANCESTOR's constructor runs, and the wrapper reads that null as present: every method
+  that construction reaches (through `this`/`super` calls and every override) reads the empty instead,
+  and a field such a method writes keeps the written value (its initialiser tests the JVM's null).
+  vis-ui `MenuItem#isOver` needed a hand-written body for it. Kind (a).
 - `requiredGivens`' transitive closure threads a witness at EVERY type parameter a given-bound class
   is constructed at (`ValueArrayMap[K, V]` building `DynamicArray[K]` and `DynamicArray[V]`); the
   first parameter alone left the second construction without a given (gdx-vfx, 1 E172). Kind (a).

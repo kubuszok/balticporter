@@ -483,8 +483,14 @@ final class NullabilityTransform(
       case v if v.info.isInstanceOf[TypeRepr.TypeBounds] => v.id -> (v.name, unitOf(summon[Program], v.id))
     }.toMap
     recordDecisions(program, plan.toList, symbols)
+    // a field the phase gives an empty initialiser is still the JVM's null while an ancestor's constructor runs
+    val early = if isWrapper then PreInitReads.of(program, defaultedFields(program)) else Map.empty
+    writtenEarly = Set.empty
+    val guarded =
+      if early.isEmpty then program.units
+      else program.units.map(u => StandardTraversal.mapClassDef(new PreInitGuard(early), u))
     // unit is carried while walked so a seam inside a call (an external callee has no owning unit) attributes correctly.
-    val units = program.units.map { u => currentUnit = u.symbol; StandardTraversal.mapClassDef(this, u) }
+    val units = guarded.map { u => currentUnit = u.symbol; StandardTraversal.mapClassDef(this, u) }
     currentUnit = SymId.None
 
     // the `@nowarn("msg=deprecated")` scan lives in SuppressionPhase, which runs after every retyping phase.
@@ -829,11 +835,85 @@ final class NullabilityTransform(
             // …but not a FINAL one: java assigns it in every constructor before any read (definite
             // assignment), and an rhs here turns the emitter's var placeholder into a `final val`
             // the constructors can no longer assign (`AssetDescriptor.params`).
-            case scala.None if !p.symbolOf(v.symbol).exists(s => s.flags.isParam || (s.flags.isFinal && !s.flags.isMutable)) =>
+            // A field an ancestor's constructor may already have WRITTEN keeps that value: java has no
+            // initialiser to run over it
+            case scala.None if defaultsToEmpty(v) && writtenEarly(v.symbol) =>
+              p.symbolOf(v.symbol).map(_.owner) match
+                case Some(cls) =>
+                  val self = Tree.Select(Tree.This(cls, TypeRepr.NoType, v.origin), v.symbol, t, v.origin)
+                  out.copy(rhs = Some(emptyIfJvmNull(self, t, v.origin)))
+                case scala.None => out.copy(rhs = Some(wrap(t, Tree.Literal(Constant.NullC, TypeRepr.NoType, v.origin))))
+            case scala.None if defaultsToEmpty(v) =>
               out.copy(rhs = Some(wrap(t, Tree.Literal(Constant.NullC, TypeRepr.NoType, v.origin))))
             case _ =>
               out.copy(rhs = out.rhs.map(coerceTo(t, _)))
         else out
+
+  /** a retyped field java leaves to its default — the phase writes the wrapper's empty as its initialiser. */
+  private def defaultsToEmpty(v: Tree.ValDef)(using p: Program): Boolean =
+    v.rhs.isEmpty && newTypes.contains(v.symbol) &&
+      !p.symbolOf(v.symbol).exists(s => s.flags.isParam || (s.flags.isFinal && !s.flags.isMutable)) &&
+      p.symbolOf(v.symbol).exists(s => p.definitionOf(s.owner).exists(_.isInstanceOf[Tree.ClassDef]))
+
+  private def defaultedFields(p: Program): Set[SymId] =
+    given Program = p
+    p.units.flatMap(StandardTraversal.allClassDefs(_)).flatMap(_.body).collect { case v: Tree.ValDef if defaultsToEmpty(v) => v.symbol }.toSet
+
+  /** fields an ancestor's constructor may write before this class's initialisers run (filled by [[PreInitGuard]]) */
+  private var writtenEarly: Set[SymId] = Set.empty
+
+  /** `(if (read eq null) W.empty[T] else read)` — the wrapper's empty where the slot still holds the JVM's default. */
+  private def emptyIfJvmNull(read: Term, want: TypeRepr, o: Origin): Term =
+    val empty = wrap(want, Tree.Typed(Tree.Literal(Constant.NullC, TypeRepr.NoType, o), TypeTree(want, o), want, o))
+    Tree.Opaque.spliced(List("(if (", ".asInstanceOf[scala.AnyRef] eq null) ", " else ", ")"), List(read, empty, read), want, o)
+
+  /** Reads of a defaulted field inside a method an ancestor's constructor may reach take the empty for the JVM's null; a write there is left alone and remembered, so the field's initialiser keeps it.
+    */
+  final private class PreInitGuard(early: Map[SymId, Set[SymId]]) extends Phase:
+    def name: String = s"${NullabilityTransform.Name}/pre-init"
+
+    override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
+      early.get(d.symbol) match
+        case scala.None => d
+        case Some(fs)   =>
+          val produced = new java.util.IdentityHashMap[Term, Term]()
+          var restored = 0
+          val reads    = new Phase:
+            def name:                             String = s"${NullabilityTransform.Name}/pre-init-reads"
+            private def guard(t: Term, f: SymId): Term   =
+              val g = emptyIfJvmNull(t, newTypes(f), t.origin)
+              produced.put(g, t); g
+            override def transformIdent(t: Tree.Ident)(using Program):   Term = if fs(t.sym) then guard(t, t.sym) else t
+            override def transformSelect(t: Tree.Select)(using Program): Term = t.qual match
+              case _: Tree.This if fs(t.sym) => guard(t, t.sym)
+              case _ => t
+            override def transformTerm(t: Term)(using Program): Term = t match
+              case a: Tree.Assign if produced.containsKey(a.lhs) =>
+                val lhs = produced.get(a.lhs)
+                lhs match
+                  case Tree.Ident(f, _, _)     => writtenEarly += f
+                  case Tree.Select(_, f, _, _) => writtenEarly += f
+                  case _                       => ()
+                restored += 1
+                a.copy(lhs = lhs)
+              case other => other
+          val rhs = d.rhs.map(StandardTraversal.mapTerm(reads, _))
+          if produced.size > restored then
+            NullabilityTransform.this.record(
+              Decision(
+                kind = Decision.Kind.GuardedPreInitRead,
+                subject = d.symbol,
+                subjectFqn = Decision.fqnOf(p, d.symbol, "?"),
+                detail = Map(
+                  "fields" -> fs.toList.flatMap(p.symbolOf).map(_.name).sorted.mkString(","),
+                  "why" -> ("an ancestor's constructor may call this method before the field's initialiser ran, when java " +
+                    "reads the field's default null; the wrapper reads that as present, so the read answers the empty")
+                ),
+                reason = Reason.Universal("field-default-before-initialiser"),
+                origin = Decision.originOf(p, d.symbol)
+              )
+            )
+          d.copy(rhs = rhs)
 
   override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
     val ret  = newTypes.get(d.symbol)

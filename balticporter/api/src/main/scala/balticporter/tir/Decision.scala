@@ -158,6 +158,11 @@ object Decision:
       */
     case NarrowedVisibility
 
+    /** a method an ancestor's constructor may reach reads a field before the field's initialiser ran, and the port's representation of that field's default differs from the JVM's null — the read
+      * answers the port's own default instead. DETAIL: the fields.
+      */
+    case GuardedPreInitRead
+
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
   /** The DECLARATIONS a per-SITE rewrite reached, each with the earliest origin inside it. Recorded once per declaration (not per occurrence) since a site-level rewrite is already visible in the diff
