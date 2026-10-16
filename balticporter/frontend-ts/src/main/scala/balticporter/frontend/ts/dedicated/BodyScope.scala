@@ -29,6 +29,15 @@ abstract private[dedicated] class BodyScope(
   // the type names the target file writes itself
   protected def nameableTypes: Set[String] = fileNames.types
 
+  /** How the target file writes the class `cls`: by its simple name where it writes or imports that name, or `cls` is a top-level type of a package the file is in or imports whole; else qualified by
+    * the ONE package declaring it; none where no package or two do.
+    */
+  protected def spelled(cls: String): Option[String] =
+    val pkgs = memberIndex.packages.getOrElse(cls, Set.empty)
+    if nameableTypes(cls) || pkgs.exists(fileNames.scopes) then Some(cls)
+    else if pkgs.size == 1 then Some(s"${pkgs.head}.$cls")
+    else None
+
   val sb                 = new StringBuilder
   val refusals           = mutable.ListBuffer.empty[String]
   val refusalSites       = mutable.ListBuffer.empty[DefmethodBodyTranslator.RefusalSite]
@@ -692,7 +701,9 @@ abstract private[dedicated] class BodyScope(
   // a local the body never reassigns, at a class the reference declares with no type parameters: the cast it renders is exactly the test JS made
   private def narrowable(name: String, scalaCls: String): Boolean =
     (isLocal(name) || entry.params.contains(name)) && !reassignedNames.contains(name) && !reassignedNames.contains(snakeToCamel(name)) &&
-      memberIndex.knowsType(scalaCls) && memberIndex.testable(scalaCls) == scalaCls && !unwrappedIds.contains(snakeToCamel(name))
+      memberIndex.knowsType(scalaCls) && memberIndex.testable(scalaCls) == scalaCls && !unwrappedIds.contains(snakeToCamel(name)) &&
+      // the cast must be able to write the class
+      spelled(scalaCls).isDefined
 
   /** `x.<tag> == "Y"` proves `x` is the ONE class whose tag the reference declares as `"Y"`; a value two classes declare proves nothing. */
   private def tagNarrowing(cond: RastNode): List[(String, String)] =

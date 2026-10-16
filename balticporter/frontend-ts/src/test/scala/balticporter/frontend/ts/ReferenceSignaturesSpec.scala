@@ -69,6 +69,34 @@ class ReferenceSignaturesSpec extends munit.FunSuite:
     assertEquals(byName("multiLine").params.map(_.name), List("longParamName", "anotherParam"))
     assertEquals(byName("multiLine").returnType, "Boolean")
 
+  test("a comment after a parameter of a multi-line signature or constructor is no part of the next parameter"):
+    val src =
+      """object Tok:
+        |  def range(
+        |    endToken: Token, // last token of the range, inclusive
+        |    text:     String // the text of "the // new" token
+        |  ): Token =
+        |    ???
+        |final case class Span(
+        |  start: Int, // first, inclusive
+        |  end:   Int
+        |)
+        |""".stripMargin
+    val sig = ReferenceSignatures.parseFile("Tok", src).map(_._2).find(_.methodName == "range").get
+    assertEquals(sig.params.map(p => (p.name, p.tpe)), List(("endToken", "Token"), ("text", "String")))
+    val (_, _, ctors, _) = ReferenceSignatures.buildIndices(List("Tok" -> src))
+    assertEquals(ctors.get("Span").map(_.map(_.name)), Some(List("start", "end")))
+
+  test("a file sees bare the top-level types of its own package, of a package it imports whole, and each name it imports"):
+    val leaf  = "package p.q\nfinal case class Leaf(v: Int)\nobject Leaf:\n  final class Inner\n"
+    val user  = "package r\npackage s\nimport p.q.*\nimport t.{ One, Two => Deux }\nobject Use:\n  def f(x: Int): Int = x\n"
+    val names = ReferenceDeclarations.namesIn("Use", user)
+    assertEquals(names.scopes, Set("r.s", "p.q"))
+    assert(names.types("One") && !names.types("Two") && !names.types("Deux"), names.types.toString)
+    val (_, mi, _, _) = ReferenceSignatures.buildIndices(List("Leaf" -> leaf, "Use" -> user))
+    assertEquals(mi.packages.get("Leaf"), Some(Set("p.q")))
+    assertEquals(mi.packages.get("Inner"), None)
+
   test("TypeOracle: exact and case-insensitive lookup"):
     val sigs   = ReferenceSignatures.parseFile("Calculator", sampleSource)
     val oracle = ReferenceSignatures.TypeOracle.fromEntries(sigs)

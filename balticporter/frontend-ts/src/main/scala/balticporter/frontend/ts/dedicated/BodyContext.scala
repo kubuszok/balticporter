@@ -846,7 +846,7 @@ private[dedicated] class BodyContext(
     // When this identifier was tested for Nullable truthiness in an
     // enclosing && guard, it has been unwrapped and must be read as .get
     val scalaName = snakeToCamel(name)
-    if unwrappedIds.contains(scalaName) then s"$base.get" else narrowedIds.get(scalaName).fold(base)(cls => s"$base.asInstanceOf[$cls]")
+    if unwrappedIds.contains(scalaName) then s"$base.get" else narrowedIds.get(scalaName).fold(base)(cls => s"$base.asInstanceOf[${spelled(cls).getOrElse(cls)}]")
 
   private def translatePropertyAccess(node: RastNode): String =
     val children = node.children

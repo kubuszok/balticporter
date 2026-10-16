@@ -9,12 +9,12 @@ import balticporter.frontend.ts.{ RastNode, RastValue }
 private[dedicated] trait BodyBounds extends BodyScope:
 
   // an integer sum: receivers' lengths and variables by shape, each with its coefficient, and a constant
-  private final case class Lin(lens: Map[String, Int], vars: Map[String, Int], c: Int):
-    def +(o: Lin): Lin = Lin(merge(lens, o.lens), merge(vars, o.vars), c + o.c)
-    def unary_- : Lin  = Lin(lens.view.mapValues(-_).toMap, vars.view.mapValues(-_).toMap, -c)
-    def -(o: Lin): Lin = this + (-o)
-    def plus(k: Int): Lin = copy(c = c + k)
-    def isConst: Boolean = lens.isEmpty && vars.isEmpty
+  final private case class Lin(lens: Map[String, Int], vars: Map[String, Int], c: Int):
+    def +(o:    Lin): Lin     = Lin(merge(lens, o.lens), merge(vars, o.vars), c + o.c)
+    def unary_-     : Lin     = Lin(lens.view.mapValues(-_).toMap, vars.view.mapValues(-_).toMap, -c)
+    def -(o:    Lin): Lin     = this + (-o)
+    def plus(k: Int): Lin     = copy(c = c + k)
+    def isConst:      Boolean = lens.isEmpty && vars.isEmpty
 
   private def merge(a: Map[String, Int], b: Map[String, Int]): Map[String, Int] =
     (a.keySet ++ b.keySet).iterator.map(k => k -> (a.getOrElse(k, 0) + b.getOrElse(k, 0))).filter(_._2 != 0).toMap
@@ -29,7 +29,7 @@ private[dedicated] trait BodyBounds extends BodyScope:
       case "ParenthesizedExpression"              => n.children.headOption.flatMap(linear)
       case "NumericLiteral" | "FirstLiteralToken" =>
         n.value.collect { case RastValue.Num(d) if d == d.toInt.toDouble => Lin(Map.empty, Map.empty, d.toInt) }
-      case "PrefixUnaryExpression" if n.operator.contains("MinusToken") => n.children.headOption.flatMap(linear).map(-_)
+      case "PrefixUnaryExpression" if n.operator.contains("MinusToken")                                                             => n.children.headOption.flatMap(linear).map(-_)
       case "PropertyAccessExpression" if n.children.size == 2 && n.children.last.text.contains("length") && isPath(n.children.head) =>
         Some(Lin(Map(shapeOf(n.children.head) -> 1), Map.empty, 0))
       case "Identifier"                               => Some(Lin(Map.empty, Map(shapeOf(n) -> 1), 0))
@@ -52,8 +52,8 @@ private[dedicated] trait BodyBounds extends BodyScope:
   private def pathPrefixes(n: RastNode): List[String] =
     shapeOf(n) :: (if n.kind == "PropertyAccessExpression" then n.children.headOption.toList.flatMap(pathPrefixes) else Nil)
 
-  /** What `cond` evaluating to `holds` proves. A `<=` is read as `< + 1`: every value it compares in a proof is an integer (a length, an integer constant, or an index variable the proof requires to be
-    * an integer counter).
+  /** What `cond` evaluating to `holds` proves. A `<=` is read as `< + 1`: every value it compares in a proof is an integer (a length, an integer constant, or an index variable the proof requires to
+    * be an integer counter).
     */
   private def facts(cond: RastNode, holds: Boolean): List[Fact] =
     def cmp(op: String, a: Lin, b: Lin): List[Lin] =
@@ -69,18 +69,18 @@ private[dedicated] trait BodyBounds extends BodyScope:
           List(a - b, b - a).filter(d => d.vars.isEmpty && d.c == 0 && d.lens.size == 1 && d.lens.values.forall(_ == 1))
         case _ => Nil
     cond.kind match
-      case "ParenthesizedExpression"                                                         => cond.children.headOption.toList.flatMap(facts(_, holds))
-      case "PrefixUnaryExpression" if cond.operator.contains("ExclamationToken")             => cond.children.headOption.toList.flatMap(facts(_, !holds))
+      case "ParenthesizedExpression"                                                        => cond.children.headOption.toList.flatMap(facts(_, holds))
+      case "PrefixUnaryExpression" if cond.operator.contains("ExclamationToken")            => cond.children.headOption.toList.flatMap(facts(_, !holds))
       case "BinaryExpression" if cond.operator.contains("AmpersandAmpersandToken") && holds => cond.children.flatMap(facts(_, true))
       case "BinaryExpression" if cond.operator.contains("BarBarToken") && !holds            => cond.children.flatMap(facts(_, false))
-      case "BinaryExpression" if cond.operator.contains("InKeyword") =>
+      case "BinaryExpression" if cond.operator.contains("InKeyword")                        =>
         if holds && cond.children.size == 2 && isPath(cond.children(1)) then List(Fact.Holds(shapeOf(cond.children(1)), shapeOf(cond.children.head))) else Nil
       case "BinaryExpression" if cond.children.size == 2 =>
         for
           op <- cond.operator.toList
-          a  <- linear(cond.children.head).toList
-          b  <- linear(cond.children(1)).toList
-          d  <- cmp(op, a, b)
+          a <- linear(cond.children.head).toList
+          b <- linear(cond.children(1)).toList
+          d <- cmp(op, a, b)
         yield Fact.Positive(d)
       case "CallExpression" if holds && cond.children.size == 2 =>
         cond.children.head match
@@ -91,8 +91,16 @@ private[dedicated] trait BodyBounds extends BodyScope:
       case "PropertyAccessExpression" if holds => linear(cond).toList.filter(_.lens.nonEmpty).map(Fact.Positive(_))
       case _                                   => Nil
 
-  private val functionKinds = Set("ArrowFunction", "FunctionExpression", "FunctionDeclaration", "MethodDeclaration", "GetAccessor", "SetAccessor", "Constructor")
-  private val loopKinds     = Set("ForStatement", "ForInStatement", "ForOfStatement", "WhileStatement", "DoStatement")
+  private val functionKinds = Set(
+    "ArrowFunction",
+    "FunctionExpression",
+    "FunctionDeclaration",
+    "MethodDeclaration",
+    "GetAccessor",
+    "SetAccessor",
+    "Constructor"
+  )
+  private val loopKinds = Set("ForStatement", "ForInStatement", "ForOfStatement", "WhileStatement", "DoStatement")
 
   private def ancestorsOf(n: RastNode): List[RastNode] = Iterator.iterate(parentOf(n))(_.flatMap(parentOf)).takeWhile(_.isDefined).flatten.toList
 
@@ -101,7 +109,10 @@ private[dedicated] trait BodyBounds extends BodyScope:
   // a `for`'s condition: the first child after its initialiser that is not its body, where it has one
   private def forCondition(loop: RastNode): Option[RastNode] =
     val body = loop.children.lastOption
-    loop.children.filterNot(c => body.exists(_ eq c)).filterNot(c => c.kind == "VariableDeclarationList" || c.kind == "FirstStatement" || c.kind == "BinaryExpression" && c.operator.contains("EqualsToken")).headOption
+    loop.children
+      .filterNot(c => body.exists(_ eq c))
+      .filterNot(c => c.kind == "VariableDeclarationList" || c.kind == "FirstStatement" || c.kind == "BinaryExpression" && c.operator.contains("EqualsToken"))
+      .headOption
 
   /** Each condition holding wherever `site` is reached, with its polarity and the statements or expressions that run after the test, the one holding `site` last. */
   private def guards(site: RastNode): List[(RastNode, Boolean, List[RastNode])] =
@@ -110,8 +121,8 @@ private[dedicated] trait BodyBounds extends BodyScope:
       parent.kind match
         case "IfStatement" | "ConditionalExpression" if parent.children.size >= 2 && !(parent.children.head eq child) =>
           List((parent.children.head, parent.children(1) eq child, List(child)))
-        case "WhileStatement" if parent.children.size == 2 && (parent.children(1) eq child) => List((parent.children.head, true, List(child)))
-        case "ForStatement" if parent.children.lastOption.exists(_ eq child)                => forCondition(parent).toList.map(c => (c, true, List(child)))
+        case "WhileStatement" if parent.children.size == 2 && (parent.children(1) eq child)   => List((parent.children.head, true, List(child)))
+        case "ForStatement" if parent.children.lastOption.exists(_ eq child)                  => forCondition(parent).toList.map(c => (c, true, List(child)))
         case "BinaryExpression" if parent.children.size == 2 && (parent.children(1) eq child) =>
           parent.operator match
             case Some("AmpersandAmpersandToken") => List((parent.children.head, true, List(child)))
@@ -142,7 +153,14 @@ private[dedicated] trait BodyBounds extends BodyScope:
           all.drop(idx + 1).filter(n => loops.exists(l => ancestorsOf(n).exists(_ eq l)))
     }
 
-  private val comparisons = Set("EqualsEqualsToken", "EqualsEqualsEqualsToken", "ExclamationEqualsToken", "ExclamationEqualsEqualsToken", "LessThanEqualsToken", "GreaterThanEqualsToken")
+  private val comparisons = Set(
+    "EqualsEqualsToken",
+    "EqualsEqualsEqualsToken",
+    "ExclamationEqualsToken",
+    "ExclamationEqualsEqualsToken",
+    "LessThanEqualsToken",
+    "GreaterThanEqualsToken"
+  )
 
   // the node an assignment, a compound assignment or an increment writes
   private def written(n: RastNode): Option[RastNode] =
@@ -159,7 +177,25 @@ private[dedicated] trait BodyBounds extends BodyScope:
 
   // methods of a JS array, string or map that change no array's length and remove no key
   private val pureMethods =
-    Set("indexOf", "lastIndexOf", "includes", "slice", "concat", "charCodeAt", "charAt", "toString", "startsWith", "endsWith", "trim", "toLowerCase", "toUpperCase", "join", "has", "get", "push")
+    Set(
+      "indexOf",
+      "lastIndexOf",
+      "includes",
+      "slice",
+      "concat",
+      "charCodeAt",
+      "charAt",
+      "toString",
+      "startsWith",
+      "endsWith",
+      "trim",
+      "toLowerCase",
+      "toUpperCase",
+      "join",
+      "has",
+      "get",
+      "push"
+    )
 
   // a call or construction that may shrink an array or drop a key: anything but a pure method of a collection or a string, or a `Math` function
   private def mayMutate(n: RastNode): Boolean =
@@ -180,9 +216,8 @@ private[dedicated] trait BodyBounds extends BodyScope:
     */
   private def counterFloor(v: String, site: RastNode): Option[Int] =
     def declares(n: RastNode) = n.kind == "VariableDeclaration" && n.children.headOption.exists(c => shapeOf(c) == v)
-    val loop = ancestorsOf(site).find(a =>
-      a.kind == "ForStatement" && a.children.headOption.exists(l => l.kind == "VariableDeclarationList" && l.children.exists(d => declares(d) && d.flags.contains("let")))
-    )
+    val loop                  =
+      ancestorsOf(site).find(a => a.kind == "ForStatement" && a.children.headOption.exists(l => l.kind == "VariableDeclarationList" && l.children.exists(d => declares(d) && d.flags.contains("let"))))
     val all   = subtree(loop.getOrElse(entry.bodyNode))
     val decls = all.filter(declares)
     val start = decls match
@@ -200,15 +235,17 @@ private[dedicated] trait BodyBounds extends BodyScope:
   private def runsInPlace(site: RastNode, region: List[RastNode]): Boolean =
     !ancestorsOf(site).takeWhile(a => !region.exists(_ eq a)).exists(a => functionKinds(a.kind))
 
-  /** True when `recv[idx]` at `site` is proven inside the receiver: an integer index no lower than zero, bounded by a condition on the same receiver that holds there, nothing moving either in between. */
+  /** True when `recv[idx]` at `site` is proven inside the receiver: an integer index no lower than zero, bounded by a condition on the same receiver that holds there, nothing moving either in
+    * between.
+    */
   protected def indexProven(site: RastNode, recv: RastNode, idx: RastNode): Boolean =
     isPath(recv) && linear(idx).exists { i =>
       val r        = shapeOf(recv)
       val prefixes = pathPrefixes(recv)
       val floor    = i.vars.toList match
-        case Nil                       => Some(i.c)
-        case List((v, 1))              => counterFloor(v, site).map(_ + i.c)
-        case _                         => None
+        case Nil          => Some(i.c)
+        case List((v, 1)) => counterFloor(v, site).map(_ + i.c)
+        case _            => None
       i.lens.isEmpty && floor.exists(_ >= 0) &&
       guards(site).exists { (cond, holds, region) =>
         runsInPlace(site, region) && !subtree(cond).exists(mayMutate) &&

@@ -129,7 +129,8 @@ object ReferenceSignatures:
     results:   Map[String, Map[String, String]] = Map.empty,
     parents:   Map[String, List[String]] = Map.empty,
     constants: Map[(String, String), List[String]] = Map.empty,
-    aliases:   Map[String, String] = Map.empty
+    aliases:   Map[String, String] = Map.empty,
+    packages:  Map[String, Set[String]] = Map.empty
   ):
     /** `t` with every type alias the reference declares replaced by what it names (`DomSpan` reads `Span[HtmlDomNode]`): the alias is the same type, and only its right-hand side declares members. An
       * alias to a union or a function type is replaced only where it is the whole type, since inside another type it would need parentheses.
@@ -250,10 +251,21 @@ object ReferenceSignatures:
     val enumVals    = mutable.Map.empty[(String, String), String]
     val parents     = mutable.Map.empty[String, List[String]]
     val constants   = mutable.Map.empty[(String, String), List[String]]
+    val packages    = mutable.Map.empty[String, Set[String]]
 
     for (objectName, source) <- sources do
       ReferenceDeclarations.read(objectName, source) match
         case Right(decls) =>
+          // a top-level type is a member of the file's package, named bare wherever that package is in scope
+          val own      = ReferenceDeclarations.scopesIn(objectName, source)._1
+          val topTypes = Set(
+            ReferenceDeclarations.Kind.Class,
+            ReferenceDeclarations.Kind.Trait,
+            ReferenceDeclarations.Kind.Object,
+            ReferenceDeclarations.Kind.Enum,
+            ReferenceDeclarations.Kind.Type
+          )
+          for p <- own; d <- decls if d.owner.isEmpty && topTypes(d.kind) do packages(d.name) = packages.getOrElse(d.name, Set.empty) + p
           calleeParts += CalleeIndex.of(objectName, decls)
           for d <- decls; body <- d.alias do aliases(d.name) = aliases.getOrElse(d.name, Set.empty) + body
           decls.filter(_.typeParams > 0).foreach(d => arity(d.name) = d.typeParams)
@@ -297,7 +309,8 @@ object ReferenceSignatures:
         parents.toMap,
         constants.toMap,
         // an alias spelled two ways, or named like a class, names nothing certain
-        aliases.collect { case (n, bodies) if bodies.size == 1 && !members.contains(n) => n -> bodies.head }.toMap
+        aliases.collect { case (n, bodies) if bodies.size == 1 && !members.contains(n) => n -> bodies.head }.toMap,
+        packages.toMap
       ),
       ConstructorSchema(ctors.toMap, caseClasses.toSet),
       EnumIndex(enumVals.toMap)
@@ -335,7 +348,9 @@ object ReferenceSignatures:
     var accum: StringBuilder = null
     var depth = 0
 
-    for line <- source.linesIterator do
+    for raw <- source.linesIterator do
+      // a comment after a parameter would otherwise run into the next one, its commas splitting it
+      val line = withoutLineComment(raw)
       if accum != null then
         accum.append(" ").append(line.trim)
         for ch <- line do
@@ -448,7 +463,9 @@ object ReferenceSignatures:
     var accumulator: StringBuilder = null
     var parenDepth = 0
 
-    for line <- source.linesIterator do
+    for raw <- source.linesIterator do
+      // a comment after a parameter would otherwise run into the next one, its commas splitting it
+      val line = withoutLineComment(raw)
       if accumulator != null then
         accumulator.append(" ")
         accumulator.append(line.trim)
@@ -480,6 +497,21 @@ object ReferenceSignatures:
 
     if accumulator != null then result += accumulator.toString
     result.toList
+
+  // `line` without a trailing `//` comment, a `//` inside a string or character literal kept
+  private def withoutLineComment(line: String): String =
+    var quote: Char = 0
+    var i   = 0
+    var cut = line.length
+    while i < line.length && cut == line.length do
+      val c = line.charAt(i)
+      if quote != 0 then
+        if c == '\\' then i += 1
+        else if c == quote then quote = 0
+      else if c == '"' || c == '\'' then quote = c
+      else if c == '/' && i + 1 < line.length && line.charAt(i + 1) == '/' then cut = i
+      i += 1
+    line.substring(0, cut)
 
   private def parseParams(paramStr: String): List[ParamSig] =
     if paramStr.trim.isEmpty then return Nil

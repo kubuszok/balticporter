@@ -182,16 +182,32 @@ object ReferenceDeclarations:
         tree.stats.foreach(member(_, "", true))
         Right(out.result())
 
-  /** What a body emitted into one reference file can name bare: the type names the file writes in a type position, and the values it declares at package level with their declared types. */
-  final case class FileNames(types: Set[String], terms: Map[String, Option[String]])
+  /** What a body emitted into one reference file can name bare: the type names the file writes in a type position or imports by name, the values it declares at package level with their declared
+    * types, and the packages whose top-level types it sees bare (its own and each it imports whole).
+    */
+  final case class FileNames(types: Set[String], terms: Map[String, Option[String]], scopes: Set[String] = Set.empty)
 
   object FileNames:
     val empty: FileNames = FileNames(Set.empty, Map.empty)
 
   /** The [[FileNames]] of one reference source; empty when it does not parse. */
   def namesIn(fileName: String, source: String): FileNames =
-    val terms = read(fileName, source).toOption.toList.flatten.collect { case d if d.owner.isEmpty && (d.kind == Kind.Val || d.kind == Kind.Var) => d.name -> d.tpe }
-    FileNames(typeNamesIn(fileName, source), terms.toMap)
+    val terms                  = read(fileName, source).toOption.toList.flatten.collect { case d if d.owner.isEmpty && (d.kind == Kind.Val || d.kind == Kind.Var) => d.name -> d.tpe }
+    val (own, whole, imported) = scopesIn(fileName, source)
+    FileNames(typeNamesIn(fileName, source) ++ imported, terms.toMap, own.toSet ++ whole)
+
+  /** The package `source` declares (its clauses joined), the packages it imports whole, and the simple names it imports one by one under their own names. Empty when it does not parse. */
+  def scopesIn(fileName: String, source: String): (Option[String], Set[String], Set[String]) =
+    dialects.Scala3(Input.VirtualFile(fileName, source)).parse[Source] match
+      case _: Parsed.Error => (None, Set.empty, Set.empty)
+      case Parsed.Success(tree) =>
+        def pkg(stats: List[Stat], prefix: List[String]): List[String] =
+          stats.collectFirst { case p: Pkg => pkg(p.stats, prefix ++ p.ref.syntax.split('.').toList) }.getOrElse(prefix)
+        val own       = pkg(tree.stats, Nil)
+        val importers = tree.collect { case i: Import => i.importers }.flatten
+        val whole     = importers.collect { case i if i.importees.exists(_.is[Importee.Wildcard]) => i.ref.syntax }.toSet
+        val imported  = importers.flatMap(_.importees.collect { case Importee.Name(n) => n.value }).toSet
+        (Option.when(own.nonEmpty)(own.mkString(".")), whole, imported)
 
   /** The simple type names `source` writes in a type position, never a type parameter, a declaration's own name or the last part of a qualified type: a body emitted into this file can write each one
     * and mean what the file's own signatures mean by it. Empty when the source does not parse.

@@ -566,3 +566,11 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   had passed `allBlocks[i + 1]` under `i < allBlocks.length`, a parameter index that may be
   negative, and the else branch. Translated unchanged; bodies refusing a read past the end KaTeX
   46 -> 50, terser 16 -> 17.
+- (a) The reference signature reader drops a `//` comment before joining a multi-line parameter
+  list: `endToken: Token, // …, inclusive` ran into the next parameter, read as `inclusive text`,
+  and its commas split it further (KaTeX `Token.range` emitted `new Token(inclusive text, …)`).
+- (a) A class the body writes (a tag narrowing's cast, a tagged literal's constructor) is spelled
+  bare only where the target file writes or imports that name or sees its package (its own, or
+  one it imports whole); otherwise it is qualified by the ONE package the reference declares it in,
+  and refused (`class-not-nameable`) where none or two do. Bare, `asInstanceOf[ParseNodeOrdgroup]`
+  did not compile in a file importing only `AnyParseNode`. KaTeX 72 -> 75.

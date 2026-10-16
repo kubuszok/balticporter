@@ -31,7 +31,8 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     memberIndex: ReferenceSignatures.MemberIndex = ReferenceSignatures.MemberIndex.empty,
     ctorSchema:  ReferenceSignatures.ConstructorSchema = ReferenceSignatures.ConstructorSchema.empty,
     oracle:      ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
-    conventions: JsConventions = JsConventions.plain
+    conventions: JsConventions = JsConventions.plain,
+    writes:      Set[String] = Set.empty
   ): DefmethodBodyTranslator.TranslationResult =
     DefmethodBodyTranslator.translateBody(
       DefmethodEntry(className, "test", params, body),
@@ -43,7 +44,8 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       memberIndex = memberIndex,
       ctorSchema = ctorSchema,
       oracle = oracle,
-      conventions = conventions
+      conventions = conventions,
+      fileNames = ReferenceDeclarations.FileNames(writes, Map.empty)
     )
 
   private def refuses(r: DefmethodBodyTranslator.TranslationResult, reason: String): Unit =
@@ -298,10 +300,33 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       paramTypes = Map("x" -> "NBase"),
       returnType = Some("Int"),
       memberIndex = mi,
-      conventions = nodeLib
+      conventions = nodeLib,
+      writes = Set("NLeaf")
     )
     accepts(narrowed)
     assert(narrowed.scalaBody.contains("x.asInstanceOf[NLeaf].v"), narrowed.scalaBody)
+    // the cast names the class bare, which the target file must write itself: elsewhere nothing narrows
+    val unnamed = translate(
+      block(node("IfStatement", isLeaf, block(ret(prop(ident("x"), "v")))), ret(num(0))),
+      params = List("x"),
+      paramTypes = Map("x" -> "NBase"),
+      returnType = Some("Int"),
+      memberIndex = mi,
+      conventions = nodeLib
+    )
+    assert(!unnamed.scalaBody.contains("asInstanceOf[NLeaf]"), unnamed.scalaBody)
+    refuses(unnamed, "wrong-member-access")
+    // unless the one package declaring it qualifies it
+    val qualified = translate(
+      block(node("IfStatement", isLeaf, block(ret(prop(ident("x"), "v")))), ret(num(0))),
+      params = List("x"),
+      paramTypes = Map("x" -> "NBase"),
+      returnType = Some("Int"),
+      memberIndex = mi.copy(packages = Map("NLeaf" -> Set("lib.nodes"))),
+      conventions = nodeLib
+    )
+    accepts(qualified)
+    assert(qualified.scalaBody.contains("x.asInstanceOf[lib.nodes.NLeaf].v"), qualified.scalaBody)
     val built = translate(
       block(
         ret(
@@ -497,7 +522,8 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       block(node("IfStatement", not(isSeq("x")), ret(num(0))), ret(prop(ident("x"), "items"))),
       params = List("x"),
       paramTypes = Map("x" -> "Node"),
-      memberIndex = seqIndex
+      memberIndex = seqIndex,
+      writes = Set("Seq")
     )
     accepts(early)
     assert(early.scalaBody.contains("x.asInstanceOf[Seq].items"), early.scalaBody)
@@ -505,7 +531,8 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       block(ret(bin("AmpersandAmpersandToken", isSeq("x"), prop(ident("x"), "items")))),
       params = List("x"),
       paramTypes = Map("x" -> "Node"),
-      memberIndex = seqIndex
+      memberIndex = seqIndex,
+      writes = Set("Seq")
     )
     assert(conj.scalaBody.contains("x.isInstanceOf[Seq] && x.asInstanceOf[Seq].items"), conj.scalaBody)
 
@@ -800,9 +827,24 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
         node("PropertyAssignment", ident("body"), num(1))
       )
     val conv = JsConventions(typeTag = Some("type" -> "kind"))
-    val r    = translate(block(ret(lit("group"))), returnType = Some("Node"), memberIndex = mi, ctorSchema = cs, conventions = conv)
+    val r    = translate(block(ret(lit("group"))), returnType = Some("Node"), memberIndex = mi, ctorSchema = cs, conventions = conv, writes = Set("Group"))
     accepts(r)
     assertNoDiff(r.scalaBody.trim, "Group(body = 1)")
+    // a file that does not see the class bare writes it qualified by its package, and one no package declares is refused
+    assertNoDiff(
+      translate(block(ret(lit("group"))), returnType = Some("Node"), memberIndex = mi, ctorSchema = cs, conventions = conv).scalaBody.trim,
+      "p.Group(body = 1)"
+    )
+    refuses(
+      translate(
+        block(ret(lit("group"))),
+        returnType = Some("Node"),
+        memberIndex = mi.copy(packages = Map.empty),
+        ctorSchema = cs,
+        conventions = conv
+      ),
+      "class-not-nameable"
+    )
     refuses(
       translate(block(ret(lit("other"))), returnType = Some("Node"), memberIndex = mi, ctorSchema = cs, conventions = conv),
       "js-map-construction"

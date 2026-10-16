@@ -68,7 +68,9 @@ private[dedicated] trait BodyObjects extends BodyScope:
           case _ => None
       }
       // A literal carrying the library's type tag builds the one class declaring that tag, where the slot admits it; any other builds the slot's class
-      val tagged   = taggedClass(litEntries, expected)
+      val tagged = taggedClass(litEntries, expected)
+      // the target file must be able to write the class
+      if tagged.exists(c => spelled(c).isEmpty) then refuse("class-not-nameable")
       val typeName = tagged.orElse(expected.map(_.takeWhile(c => c != '[' && c != ' ')))
       val entries  = if tagged.isDefined then litEntries.filterNot((k, _) => conventions.tagField.contains(k)) else litEntries
       typeName.flatMap(ctorSchema.get) match
@@ -96,7 +98,7 @@ private[dedicated] trait BodyObjects extends BodyScope:
               val name = param.name.stripPrefix("`").stripSuffix("`")
               s"${if scalaKeywords.contains(name) then s"`$name`" else name} = ${translateExprAt(valueNode, param.tpe)}"
             }
-            s"${typeName.get}(${args.mkString(", ")})"
+            s"${tagged.flatMap(spelled).getOrElse(typeName.get)}(${args.mkString(", ")})"
         case None =>
           // No schema: fall back to mutable.Map, refuse unless the slot declares a Map
           if !expected.exists(rt => baseName(rt) == "Map" && mapValueType(rt).isDefined) then refuse("js-map-construction")
