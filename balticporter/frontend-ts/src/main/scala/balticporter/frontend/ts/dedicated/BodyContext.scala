@@ -293,6 +293,13 @@ private[dedicated] class BodyContext(
 
   private val voidValue: String = if declaredReturnType.contains("Unit") then "()" else "null"
 
+  // the nested functions that bind a `this` of their own: every kind but an arrow
+  private val ownThisKinds = Set("FunctionExpression", "FunctionDeclaration", "MethodDeclaration", "GetAccessor", "SetAccessor", "Constructor")
+
+  /** A `function` nested in the body binds its own `this`, whatever its caller calls it on; only an arrow reads the body's, so a `this` under any other is refused. */
+  private def refuseOwnThis(thisNode: RastNode): Unit =
+    if Iterator.iterate(parentOf(thisNode))(_.flatMap(parentOf)).takeWhile(_.isDefined).flatten.exists(a => ownThisKinds(a.kind)) then refuse("function-own-this")
+
   def translateStatement(node: RastNode, indent: String, isLast: Boolean): Unit = at(node)(renderStatement(node, indent, isLast))
 
   private def renderStatement(node: RastNode, indent: String, isLast: Boolean): Unit =
@@ -521,7 +528,9 @@ private[dedicated] class BodyContext(
           case Some(RastValue.Bool(b)) => b.toString
           case _                       => node.text.getOrElse("false")
 
-      case "ThisKeyword"     => thisBinding
+      case "ThisKeyword" =>
+        refuseOwnThis(node)
+        thisBinding
       case "SuperExpression" => "super"
 
       case "Identifier" =>
@@ -867,6 +876,7 @@ private[dedicated] class BodyContext(
     // this.x -> check apiLookup first, then translate known properties.
     // When the member index knows the class, validate the property.
     if obj.kind == "ThisKeyword" then
+      refuseOwnThis(obj)
       conventions.typeTag match
         case Some((tag, scalaTag)) if tag == prop => s"$thisBinding.$scalaTag"
         case _                                    =>
@@ -1661,7 +1671,7 @@ private[dedicated] class BodyContext(
             val expr = block.children.head.children.headOption.map(effect).getOrElse("()")
             if paramStrs.isEmpty then s"(() => $expr)"
             else s"((${paramStrs.mkString(", ")}) => $expr)"
-          else translateFunctionBlock(block, paramStrs, discardsResult)
+          else translateFunctionBlock(block, paramStrs, paramTypes, discardsResult)
         case None =>
           // Arrow without block: single expression body
           val exprBody = node.children.find(c => c.kind != "Parameter")
@@ -1695,8 +1705,10 @@ private[dedicated] class BodyContext(
         if unwrapped then unwrappedIds += n else unwrappedIds -= n
       }
 
-  // a multi-statement function body, in a fresh context for the lambda's own scope
-  private def translateFunctionBlock(block: RastNode, paramStrs: List[String], discardsResult: Boolean): String =
+  /** A multi-statement function body, in a context of its own for the lambda's scope that knows everything this body's does: the reference's declarations, the enclosing class, and the locals in scope
+    * where the function is written with their types. Only the result type and the guards' narrowings stay behind, since the function may run where no guard holds.
+    */
+  private def translateFunctionBlock(block: RastNode, paramStrs: List[String], lambdaTypes: List[Option[String]], discardsResult: Boolean): String =
     // a body that can run off its end answers `undefined` there, which only a caller discarding the result never sees
     if !discardsResult && !block.children.lastOption.exists(exitsAlways) then refuse("function-returns-undefined")
     val innerIndent = baseIndent + "    "
@@ -1704,21 +1716,44 @@ private[dedicated] class BodyContext(
       entry,
       hierarchy,
       innerIndent,
-      apiLookup = apiLookup,
-      memberRenames = memberRenames,
-      oracle = oracle,
-      conventions = conventions,
-      tsTypes = tsTypes,
-      fileNames = fileNames
+      thisBinding,
+      nodeParamName,
+      apiLookup,
+      None,
+      paramTypes,
+      calleeIndex,
+      memberIndex,
+      ctorSchema,
+      enumIndex,
+      memberRenames,
+      oracle,
+      enclosingOwner,
+      conventions,
+      tsTypes,
+      enclosingClass,
+      fileNames
     )
-    // the nested function renders inside this body: it reads this body's parameter copies and declares none of its own
+    // the nested function renders inside this body: it reads this body's parameter copies and locals, and declares none of its own
     innerCtx.topLevel = false
+    innerCtx.labelSeq = labelSeq
     innerCtx.paramShadows ++= paramShadows
     innerCtx.paramRenames ++= paramRenames
-    // its own parameters are locals of no known type there, shadowing every outer name
-    innerCtx.localNames ++= paramStrs
-    innerCtx.opaqueLocals ++= paramStrs
+    innerCtx.localNames ++= localNames
+    innerCtx.localTypes ++= localTypes
+    innerCtx.opaqueLocals ++= opaqueLocals
+    // its own parameters shadow every outer name, each of the type the caller gives or of none
+    paramStrs.zipWithIndex.foreach { (n, i) =>
+      innerCtx.localNames += n
+      lambdaTypes.lift(i).flatten match
+        case Some(t) =>
+          innerCtx.localTypes(n) = t
+          innerCtx.opaqueLocals -= n
+        case None =>
+          innerCtx.localTypes.remove(n)
+          innerCtx.opaqueLocals += n
+    }
     innerCtx.translateBlock(block)
+    labelSeq = innerCtx.labelSeq
     refusals ++= innerCtx.refusals
     refusalSites ++= innerCtx.refusalSites
     val bodyStr = innerCtx.result().stripTrailing()

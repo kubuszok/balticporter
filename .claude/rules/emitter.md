@@ -550,3 +550,9 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 - (a) Definite assignment does not depend on knowing a store's type: an annotated local is typed
   by its annotation and each store rendered at it, an unannotated one only by stores whose type
   is known and agrees. KaTeX bodies refusing uninitialised-local 24 -> 23.
+- (a) A callback of several statements renders in a context that knows everything the body's does
+  (the reference's indices, the enclosing class, the locals in scope and their types, its own
+  parameters typed by the array it walks); only the result type and the guards' narrowings stay
+  behind, since the function may run where no guard holds. Rendered in a bare context, a
+  `forEach((line) => { … line[0] … })` read its tuple record as an array. `this` under a nested
+  `function` (not an arrow) is its caller's, refused (`function-own-this`). graphs-commons 55 -> 57.

@@ -638,6 +638,42 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     refuses(onPoints(block(ret(elem(ident("p"), 2))), Map("p" -> "Point")), "element-access-on-class")
     refuses(onPoints(block(ret(elem(ident("p"), 0))), Map("p" -> "Point"), conventions = JsConventions.plain), "element-access-on-class")
 
+  private def arrow(param: String, body: RastNode): RastNode = node("ArrowFunction", node("Parameter", ident(param)), body)
+
+  test(
+    "a callback of several statements knows what the body knows: its parameter is the walked array's element, and an outer local keeps its type"
+  ):
+    val r = onPoints(
+      block(
+        local("first", elem(ident("l0"), 0)),
+        expr(
+          call(
+            prop(ident("lines"), "forEach"),
+            arrow(
+              "line",
+              block(
+                local("p", elem(ident("line"), 0)),
+                expr(call(prop(ident("out"), "push"), ident("p"))),
+                expr(call(prop(ident("out"), "push"), ident("first")))
+              )
+            )
+          )
+        )
+      ),
+      Map("lines" -> "Vector[Line]", "out" -> "scala.collection.mutable.ArrayBuffer[Point]", "l0" -> "Line")
+    )
+    accepts(r)
+    assert(r.scalaBody.contains("val p = line.p1"), r.scalaBody)
+    assert(r.scalaBody.contains("out += first"), r.scalaBody)
+
+  test(
+    "`this` in a nested `function` is whatever its caller calls it on, so it is refused; in an arrow it is the body's own"
+  ):
+    def withFn(kind: String) =
+      translate(block(local("f", node(kind, block(ret(prop(thisKw, "gen"))))), ret(num(0))), className = "Svg", returnType = Some("Int"))
+    refuses(withFn("FunctionExpression"), "function-own-this")
+    assert(!withFn("ArrowFunction").refusalReasons.contains("function-own-this"), withFn("ArrowFunction").refusalReasons)
+
   private def pattern(kind: String, names: String*):        RastNode = node(kind, names.map(n => node("BindingElement", ident(n)))*)
   private def destructuring(pat: RastNode, init: RastNode): RastNode =
     node(
