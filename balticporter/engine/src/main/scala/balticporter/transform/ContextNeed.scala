@@ -37,11 +37,13 @@ final class ContextNeed(
 
   private given Program = program
 
-  private val classAttached = RuleScope.Only(holder.attachClass)
+  private val classAttached  = RuleScope.Only(holder.attachClass)
+  private val methodAttached = RuleScope.Only(holder.attachMethod)
 
-  /** does a need inside `cls` land on its constructor — the holder's own `attach`, or the type is one `attachClass` names */
+  /** does a need inside `cls` land on its constructor — the holder's own `attach` unless `attachMethod` names the type, or the type is one `attachClass` names */
   private def attachesOnClass(cls: SymId): Boolean =
-    holder.attach == ContextAttach.Class ||
+    (holder.attach == ContextAttach.Class &&
+      !(holder.attachMethod.nonEmpty && program.symbolOf(cls).exists(s => methodAttached.includes(program, s)))) ||
       (holder.attachClass.nonEmpty && program.symbolOf(cls).exists(s => classAttached.includes(program, s)))
 
   /** the `sites` keys something in this run decided through — FIRST, because [[policyFor]] writes to it while [[deferrals]] is still being built and a `val` declared later is `null` there.

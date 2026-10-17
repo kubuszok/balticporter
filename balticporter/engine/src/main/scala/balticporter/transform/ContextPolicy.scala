@@ -32,11 +32,15 @@ final case class ContextHolder(
   scope:          RuleScope = RuleScope.everywhere,
   /** TYPES whose clause lands on the CLASS (its constructors, `(using T)`) while the holder attaches on methods — a hand port's per-type choice (`Wander(owner)(using Timepiece)`). Empty is the no-op.
     */
-  attachClass: Set[String] = Set.empty
+  attachClass: Set[String] = Set.empty,
+  /** TYPES whose clause lands on their MEMBERS (each constructor and method that needs it) while the holder attaches on the class — a hand port's per-type choice (`new Font()` built with no context).
+    * Per-declaration, so a dependent may name its own types. Empty is the no-op.
+    */
+  attachMethod: Set[String] = Set.empty
 ):
   /** a stable, order-independent rendering — two modules that agree must compare equal. */
   def fingerprint: String =
-    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through, capture)}"
+    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through, capture, attachMethod)}"
 
   /** THE HALF A DEPENDENT MAY NOT RESTATE. These fields are facts about the EMITTED SIGNATURES of the types this policy threads, so a base and dependent must AGREE — except `promoteToClass`/`scope`,
     * which compose by ENTRY since both key on types a dependent may itself own.
@@ -56,7 +60,8 @@ final case class ContextHolder(
       retain = retain ++ e.retain,
       cache = cache ++ e.cache,
       through = through ++ e.through,
-      capture = capture ++ e.capture
+      capture = capture ++ e.capture,
+      attachMethod = attachMethod ++ e.attachMethod
     )
 
 object ContextHolder:
@@ -70,7 +75,8 @@ object ContextHolder:
     retain:       Map[String, String],
     cache:        Map[String, String],
     through:      Map[String, String] = Map.empty,
-    capture:      Map[String, String] = Map.empty
+    capture:      Map[String, String] = Map.empty,
+    attachMethod: Set[String] = Set.empty
   ): String =
     val ss = sites.toList.map((k, v) => s"$k->${v.token}").sorted.mkString(",")
     val fs = selfSupplied.toList.map((k, v) => s"$k=>${v.hashCode.toHexString}").sorted.mkString(",")
@@ -82,7 +88,8 @@ object ContextHolder:
     val ts = through.toList.map((k, v) => s"$k@$v").sorted.mkString(",")
     val ps = capture.toList.map((k, v) => s"$k!$v").sorted.mkString(",")
     s"$ss|$fs|$rs" + (if cs.isEmpty then "" else s"|$cs") + (if ts.isEmpty then "" else s"|$ts") +
-      (if ps.isEmpty then "" else s"|$ps")
+      (if ps.isEmpty then "" else s"|$ps") +
+      (if attachMethod.isEmpty then "" else s"|method-attached=${attachMethod.toList.sorted.mkString(",")}")
 
 /** WHAT A DEPENDENT MAY ADD to a base's holder. [[ContextHolder]] is SHARED SURFACE; `sites`/`selfSupplied` key on DECLARATIONS a dependent may itself own, so an extension has no field to restate the
   * shared half in — structural, not convention. In config, a `holders` entry with no `context` block IS an extension. A holder no chain manifest declares is a counted `Malformed`.
@@ -94,14 +101,15 @@ final case class ContextHolderExtension(
   retain:       Map[String, String] = Map.empty,
   cache:        Map[String, String] = Map.empty,
   through:      Map[String, String] = Map.empty,
-  capture:      Map[String, String] = Map.empty
+  capture:      Map[String, String] = Map.empty,
+  attachMethod: Set[String] = Set.empty
 ):
   /** `+` marks it as an EXTENSION, so it can never fingerprint-collide with the holder it names. */
   def fingerprint: String =
-    s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through, capture)}"
+    s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through, capture, attachMethod)}"
 
   /** every per-declaration key, for the never-fired report and for the `governs` screen. */
-  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet ++ retain.keySet ++ cache.keySet ++ through.keySet ++ capture.keySet
+  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet ++ retain.keySet ++ cache.keySet ++ through.keySet ++ capture.keySet ++ attachMethod
 
 /** WHERE the context type comes from: `Injected` (the port wrote the Scala by hand — member paths are unvalidated, so a bad path is a compile error at that line) or `Minted` (the engine synthesises
   * one mutable member per mapped field — member paths ARE validated; a two-hop path is refused at bind time, since there is no intermediate type to hang the second hop off).

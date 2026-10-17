@@ -407,6 +407,10 @@ sees the kind); the screen is *would a reader act differently*.
   CONSTRUCTOR (`attachClass`), the hand port's `Wander(owner)(using Timepiece)`: scoped out instead,
   the type read the installed global and a hand suite's `given` went unused (5 `-Werror` warnings).
   Empty is the no-op and fingerprints nothing. Kind (b).
+- The reverse: a holder that attaches on the CLASS may name types whose clause lands on their
+  MEMBERS (`attachMethod`, per-declaration, so a dependent names its own), the hand port's `new Font()`
+  built with no context beside `Font(fntName)(using Sge)`: class-attached, every construction needed a
+  given (sge textra 11 hand-suite E172). Empty is the no-op and fingerprints nothing. Kind (b).
 - A registry SEED that is generic registers under `classOf[X[?]]`: scala's `classOf` takes no raw
   type, and every seed of gdx-ai's generic task tree was E170 (19 errors). Kind (a).
 - `requiredGivens`' transitive closure threads a witness at EVERY type parameter a given-bound class

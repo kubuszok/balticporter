@@ -468,7 +468,7 @@ final class NullaryArityFactory extends TransformFactory:
     )
 
 /** `.conf` shape for `globals-to-implicits`: `holders` (each an entry with `holder`, `context` — `inject`/`mint` — `members`, `attach`/`reader`/`boundary`, `sites`, `selfSupplied`, `retain`, `cache`,
-  * `promoteToClass`, `scope`). No `context` block = an extension (dependent's per-declaration keys only). `holders` is required; absent is refused.
+  * `promoteToClass`, `scope`, `attachClass`, `attachMethod`). No `context` block = an extension (dependent's per-declaration keys only). `holders` is required; absent is refused.
   */
 final class GlobalsToImplicitsFactory extends TransformFactory:
   def name = "globals-to-implicits"
@@ -496,7 +496,8 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       retain = c.stringMap("retain").getOrElse(Map.empty),
       cache = c.stringMap("cache").getOrElse(Map.empty),
       through = c.stringMap("through").getOrElse(Map.empty),
-      capture = c.stringMap("capture").getOrElse(Map.empty)
+      capture = c.stringMap("capture").getOrElse(Map.empty),
+      attachMethod = c.strings("attachMethod").getOrElse(Nil).toSet
     )
 
   private def sites(c: ConfigView): Map[String, ContextSite] =
@@ -536,7 +537,8 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       capture = c.stringMap("capture").getOrElse(Map.empty),
       promoteToClass = c.strings("promoteToClass").getOrElse(Nil).toSet,
       scope = TransformFactory.scopeOf(c),
-      attachClass = c.strings("attachClass").getOrElse(Nil).toSet
+      attachClass = c.strings("attachClass").getOrElse(Nil).toSet,
+      attachMethod = c.strings("attachMethod").getOrElse(Nil).toSet
     )
 
 /** `{ transform = "class-to-trait", specs { "a.Pool" { params = [ { index, name } ] } } }` */

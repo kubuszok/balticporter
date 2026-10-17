@@ -58,7 +58,7 @@ final class GlobalsToImplicitsTransform(
   def subjects: Set[String] =
     val fromHolders = holders.flatMap(h =>
       Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.retain.keySet ++
-        h.cache.keySet ++ h.through.keySet ++ h.capture.keySet ++ h.promoteToClass ++ h.forceThread ++ h.attachClass ++ h.scope.entries
+        h.cache.keySet ++ h.through.keySet ++ h.capture.keySet ++ h.promoteToClass ++ h.forceThread ++ h.attachClass ++ h.attachMethod ++ h.scope.entries
     )
     val fromExts   = extensions.flatMap(e => Set(e.holder) ++ e.keys)
     val fromGivens = requiredGivens.keySet
@@ -137,7 +137,8 @@ final class GlobalsToImplicitsTransform(
                   retain = a.retain ++ b.retain,
                   cache = a.cache ++ b.cache,
                   through = a.through ++ b.through,
-                  capture = a.capture ++ b.capture
+                  capture = a.capture ++ b.capture,
+                  attachMethod = a.attachMethod ++ b.attachMethod
                 )
               case (Some(a), None) => a
               case (None, Some(b)) => b
@@ -384,6 +385,7 @@ final class GlobalsToImplicitsTransform(
         h.forceThread.flatMap(t => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.forceThread", t).toOption)
       )
       h.attachClass.foreach(t => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.attachClass", t))
+      h.attachMethod.foreach(t => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.attachMethod", t))
 
       h.scope.entries.foreach(e => binder.bindScope(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.scope", e))
     }
