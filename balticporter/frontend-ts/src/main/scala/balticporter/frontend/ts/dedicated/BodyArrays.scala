@@ -132,7 +132,7 @@ private[dedicated] trait BodyArrays extends BodyBounds:
       last <- uses.lastOption
       if atBodyLevel(decl) && atBodyLevel(last) && parentOf(last).exists(_.kind == "ReturnStatement")
       rt <- declaredReturnType
-      if handOverConversions.contains(baseName(rt)) || baseName(rt) == "ArrayBuffer"
+      if handOverCopies.contains(baseName(rt)) || baseName(rt) == "ArrayBuffer"
       e <- extractElementType(rt)
       if writableType(e)
     yield s"scala.collection.mutable.ArrayBuffer[$e]"
@@ -140,7 +140,7 @@ private[dedicated] trait BodyArrays extends BodyBounds:
   /** The local `id` reads, copied into the immutable collection `slot` declares; refused unless the copy is unobservable. */
   protected def handOver(id: RastNode, rendered: String, slot: String): String =
     if !isLastUseOfFreshLocal(id) then refuse("array-hand-over-not-last-use")
-    s"$rendered.${handOverConversions(baseName(slot))}"
+    s"$rendered.${handOverCopies(baseName(slot))}"
 
   private def ancestors(n: RastNode): List[RastNode] =
     Iterator.iterate(parentOf(n))(p => p.flatMap(parentOf)).takeWhile(_.isDefined).flatten.toList

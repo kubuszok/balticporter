@@ -518,8 +518,11 @@ abstract private[dedicated] class BodyScope(
   /** True for the type of a mutable buffer a JS array local is kept in. */
   protected def isMutableBuffer(t: String): Boolean = baseName(t) == "ArrayBuffer" && extractElementType(t).isDefined
 
-  /** True when a buffer handed to `slot` is copied there: the slot is an immutable sequence. */
-  protected def isHandOverSlot(slot: String): Boolean = handOverConversions.contains(baseName(slot)) && extractElementType(slot).isDefined
+  /** The conversion that copies a buffer into the sequence a slot declares: an immutable one, or an array, which a JS array cannot be either since it does not grow. */
+  protected val handOverCopies: Map[String, String] = handOverConversions + ("Array" -> "toArray")
+
+  /** True when a buffer handed to `slot` is copied there: the slot is an immutable sequence or an array. */
+  protected def isHandOverSlot(slot: String): Boolean = handOverCopies.contains(baseName(slot)) && extractElementType(slot).isDefined
 
   /** `n` without its source position: two reads of one receiver compare equal. */
   protected def shapeOf(n: RastNode): String = shape(n)

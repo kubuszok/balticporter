@@ -208,6 +208,19 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
       r.scalaBody
     )
 
+  test("an empty array local the body returns at an Array result is copied at its last use"):
+    val r = translate(
+      block(local("a", arr()), expr(call(prop(ident("a"), "push"), ident("p"))), ret(ident("a"))),
+      params = List("p"),
+      paramTypes = Map("p" -> "Boolean"),
+      returnType = Some("Array[Boolean]")
+    )
+    accepts(r)
+    assert(
+      r.scalaBody.contains("ArrayBuffer.empty[Boolean]") && r.scalaBody.trim.linesIterator.toList.reverse(1).trim == "a.toArray",
+      r.scalaBody
+    )
+
   test("a number tested for truthiness is compared whole, whatever operator it holds"):
     val and = node("BinaryExpression", ident("a"), ident("b")).copy(operator = Some("AmpersandToken"))
     val r   = translate(

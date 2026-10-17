@@ -633,3 +633,6 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   `while (i--)` reads), on a numeric path only; a step whose lvalue holds a call or anything but
   names, member reads and literal indices is refused in any position, since `xs(f()) += 1` and the
   prefix form's re-read evaluate it twice. Terser 39 -> 40.
+- (a) A JS array local handed to an `Array` slot at its last use is copied there (`toArray`), as
+  at an immutable one: nothing else holds the buffer, and a Scala array cannot grow. Writes to an
+  `Array`-typed receiver stay allowed; only the hand-over copies. KaTeX 91 -> 93.
