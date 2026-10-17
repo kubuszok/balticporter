@@ -308,6 +308,18 @@ private[dedicated] class BodyContext(
 
   def translateStatement(node: RastNode, indent: String, isLast: Boolean): Unit = at(node)(renderStatement(node, indent, isLast))
 
+  /** A function running off its end after its last loop returns `undefined`: the absent value the declared result spells, refused where it has none. A `while (true)` no `break` leaves never ends, so
+    * nothing after it runs.
+    */
+  private def fallOffEnd(indent: String, isLast: Boolean, loop: Option[RastNode] = None): Unit =
+    if isLast && declaredReturnType.exists(rt => rt != "Unit" && rt != ReturnTypePlaceholder) then
+      // any `break` at all, a labelled one or one of a nested loop included, keeps the end reachable for this test
+      def breaks(n: RastNode): Boolean = n.kind == "BreakStatement" || n.children.exists(breaks)
+      // `while (true)`, `do … while (true)`, or a `for (;;)` holding nothing but its body
+      val endless = loop.exists(l => (l.children.exists(_.kind == "TrueKeyword") || l.kind == "ForStatement" && l.children.size == 1) && !breaks(l))
+      if endless then sb.append(s"${indent}throw new IllegalStateException(\"unreachable: the loop above leaves only by return\")\n")
+      else sb.append(s"$indent${translateExprAt(RastNode("UndefinedKeyword", 0, (0, 0)), declaredReturnType.get)}\n")
+
   private def renderStatement(node: RastNode, indent: String, isLast: Boolean): Unit =
     node.kind match
       case "ReturnStatement" =>
@@ -404,15 +416,18 @@ private[dedicated] class BodyContext(
 
       case "ForStatement" =>
         translateForStatement(node, indent)
+        fallOffEnd(indent, isLast, Some(node))
 
       case "ForInStatement" | "ForOfStatement" =>
         translateForInOfStatement(node, indent)
+        fallOffEnd(indent, isLast)
 
       case "WhileStatement" =>
         val children = node.children
         if children.size >= 2 then
           val bodyNode = children(1)
           emitLoop(indent, translateCondition(children.head), bodyNode, isDoWhile = false)
+          fallOffEnd(indent, isLast, Some(node))
         else
           refuse("MalformedWhile")
           sb.append(s"$indent??? /* malformed while */\n")
@@ -424,7 +439,9 @@ private[dedicated] class BodyContext(
       case "TryStatement" =>
         sb.append(s"${indent}try {\n")
         val tryBlock = node.children.headOption
-        tryBlock.foreach(b => translateStatementBody(b, indent + "  ", false))
+        // the body's last `try` answers the function's value where neither its block nor its catch falls off the end
+        val tail = isLast && tryIsTail(node)
+        tryBlock.foreach(b => translateStatementBody(b, indent + "  ", tail))
         sb.append(s"$indent}")
         node.children.find(_.kind == "CatchClause").foreach { catchClause =>
           val param     = catchClause.children.find(_.kind == "VariableDeclaration").orElse(catchClause.children.find(_.kind == "Identifier"))
@@ -434,7 +451,7 @@ private[dedicated] class BodyContext(
           sb.append(s"$indent  case b: scala.util.boundary.Break[?] => throw b\n")
           sb.append(s"$indent  case ${snakeToCamel(paramName)}: Throwable =>\n")
           catchClause.children.find(_.kind == "Block").foreach { b =>
-            for stmt <- b.children do translateStatement(stmt, indent + "    ", false)
+            for (stmt, i) <- b.children.zipWithIndex do translateStatement(stmt, indent + "    ", tail && i == b.children.size - 1)
           }
           sb.append(s"$indent}")
         }
@@ -454,6 +471,7 @@ private[dedicated] class BodyContext(
         if children.size >= 2 then
           val bodyNode = children.head
           emitLoop(indent, translateExpr(children(1)), bodyNode, isDoWhile = true)
+          fallOffEnd(indent, isLast, Some(node))
         else sb.append(s"$indent??? /* malformed do-while */\n")
 
       case "FunctionDeclaration" =>

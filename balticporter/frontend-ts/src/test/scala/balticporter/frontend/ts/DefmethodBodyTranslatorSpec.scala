@@ -16,6 +16,9 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
   private def ret(expr: RastNode): RastNode =
     node("ReturnStatement", expr)
 
+  private def expr(e: RastNode): RastNode =
+    node("ExpressionStatement", e)
+
   private def retVoid: RastNode =
     RastNode("ReturnStatement", 0, (0, 0))
 
@@ -70,6 +73,40 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     assert(!result.scalaBody.contains("return"), s"tail return should not contain 'return': ${result.scalaBody}")
     assert(!result.scalaBody.contains("boundary"), s"single return should not need boundary: ${result.scalaBody}")
     assert(result.scalaBody.trim == "42", s"unexpected body: ${result.scalaBody}")
+
+  test(
+    "a return inside the body's last loop leaves early; after an endless loop nothing runs, after any other the absent value is answered"
+  ):
+    def loop(cond: RastNode) = node("WhileStatement", cond, block(node("IfStatement", ident("c"), block(ret(ident("t"))))))
+    val types                = Map("c" -> "Boolean", "t" -> "Token")
+    val endless              = translate(block(loop(RastNode("TrueKeyword", 0, (0, 0)))), params = List("c", "t"), paramTypes = types, returnType = Some("Token"))
+    assert(endless.isComplete, s"should translate: ${endless.refusalReasons}")
+    assert(endless.scalaBody.contains("scala.util.boundary.break(t)(using ret$"), endless.scalaBody)
+    assert(endless.scalaBody.contains("throw new IllegalStateException(\"unreachable"), endless.scalaBody)
+    val forever = node("ForStatement", block(node("IfStatement", ident("c"), block(ret(ident("t"))))))
+    assert(
+      translate(block(forever), params = List("c", "t"), paramTypes = types, returnType = Some("Token")).scalaBody.contains("unreachable")
+    )
+    val ending = translate(block(loop(ident("c"))), params = List("c", "t"), paramTypes = types, returnType = Some("Nullable[Token]"))
+    assert(ending.scalaBody.contains("Nullable.Null") && !ending.scalaBody.contains("unreachable"), ending.scalaBody)
+
+  test("the body's last try answers the function's value where its block and its catch both end in a return or a throw"):
+    val tryStmt = node(
+      "TryStatement",
+      block(expr(node("CallExpression", ident("f"))), ret(ident("t"))),
+      block(expr(node("CallExpression", ident("g"))))
+    )
+    val result = translate(block(tryStmt), params = List("t", "f", "g"), paramTypes = Map("t" -> "Token"), returnType = Some("Token"))
+    assert(!result.refusalReasons.contains("early-return-no-boundary"), result.refusalReasons.toString)
+    assert(!result.scalaBody.contains("boundary"), result.scalaBody)
+    // a catch that falls off its end is no tail: its return leaves early
+    val catching = node(
+      "TryStatement",
+      block(ret(ident("t"))),
+      node("CatchClause", node("VariableDeclaration", ident("e")), block(expr(node("CallExpression", ident("g")))))
+    )
+    val early = translate(block(catching, ret(ident("t"))), params = List("t", "g"), paramTypes = Map("t" -> "Token"), returnType = Some("Token"))
+    assert(early.scalaBody.contains("scala.util.boundary.break(t)(using ret$"), early.scalaBody)
 
   test("early return wraps body in named boundary and emits break with using"):
     val body = block(

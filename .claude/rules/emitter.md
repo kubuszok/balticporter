@@ -616,3 +616,9 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   other. A consumer's name-wide `apiLookup` must leave out the names a file declares itself, or
   `buildExpression` in a MathML builder resolves to the HTML builder's (refused only because the
   types differed). KaTeX 89 -> 90 with the consumer's per-file lookup.
+- (a) A return anywhere in the body's last LOOP leaves early (a boundary), and so does any return
+  of a last `try` unless its block and its catch each end in a `return` or `throw` and its
+  `finally` returns nothing, when the try's value is the function's. After a last loop a
+  non-`Unit` function answers the absent value its result spells (it runs off its end), except
+  after `while (true)` / `for (;;)` with no `break` at all, which never ends: an `unreachable`
+  throw types the tail. KaTeX 90 -> 92.

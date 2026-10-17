@@ -65,6 +65,16 @@ private[dedicated] object BodySyntax:
     * sibling positions AND returns inside non-tail branches of the last statement (e.g. the then-branch of an if-else, or a non-last case of a switch). A return inside a nested function expression or
     * arrow function is not counted.
     */
+  /** True for a `try` whose own block and catch block each end in a `return` or a `throw`, and whose `finally` returns nothing: as the body's last statement its value is the function's, since no path
+    * falls off its end.
+    */
+  def tryIsTail(node: RastNode): Boolean =
+    def ends(b: Option[RastNode]) = b.exists(_.children.lastOption.exists(s => s.kind == "ReturnStatement" || s.kind == "ThrowStatement"))
+    def returns(n: RastNode): Boolean =
+      n.kind == "ReturnStatement" || (!Set("ArrowFunction", "FunctionExpression", "FunctionDeclaration")(n.kind) && n.children.exists(returns))
+    val catchBlock = node.children.find(_.kind == "CatchClause").map(_.children.find(_.kind == "Block"))
+    ends(node.children.headOption.filter(_.kind == "Block")) && catchBlock.forall(ends) && !node.children.drop(1).filter(_.kind == "Block").exists(returns)
+
   def hasEarlyReturn(stmts: List[RastNode]): Boolean =
     def containsReturn(node: RastNode): Boolean =
       node.kind match
@@ -96,6 +106,16 @@ private[dedicated] object BodySyntax:
         case "Block" =>
           val ch = node.children
           ch.dropRight(1).exists(containsReturn) || ch.lastOption.exists(lastStmtHasNonTailReturn)
+        // a loop runs on after its body, so a return anywhere in it leaves early
+        case "WhileStatement" | "DoStatement" | "ForStatement" | "ForInStatement" | "ForOfStatement" => containsReturn(node)
+        // a tail try's own block and catch end in their returns; a `finally` return leaves early, and so does any return of a try that is not a tail
+        case "TryStatement" =>
+          if tryIsTail(node) then
+            node.children.filter(c => c.kind == "Block" || c.kind == "CatchClause").zipWithIndex.exists { (c, i) =>
+              val b = if c.kind == "CatchClause" then c.children.find(_.kind == "Block") else Some(c)
+              if c.kind == "Block" && i > 0 then containsReturn(c) else b.exists(lastStmtHasNonTailReturn)
+            }
+          else containsReturn(node)
         case _ => false
     val nonLastHasReturn = stmts.size > 1 && stmts.init.exists(containsReturn)
     nonLastHasReturn || stmts.lastOption.exists(lastStmtHasNonTailReturn)
