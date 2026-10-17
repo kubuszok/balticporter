@@ -6,7 +6,7 @@ import BodySyntax.*
 /** A JS array the body builds in a local and then hands to a slot the reference declares as an immutable collection. JS hands over the array itself; Scala must copy the buffer, and the copy is
   * unobservable only where the hand-over is the local's LAST use and nothing before it let the array escape.
   */
-private[dedicated] trait BodyArrays extends BodyBounds:
+private[dedicated] trait BodyArrays extends BodyBounds with BodyStrings:
 
   // array methods that answer the receiver itself, so their result aliases the array
   private val aliasingMethods = Set("sort", "reverse", "fill", "copyWithin")
@@ -37,7 +37,11 @@ private[dedicated] trait BodyArrays extends BodyBounds:
       // a JS index is a number; a Scala index must be an Int
       if exprType(children(1)).exists(t => t == "Double" || t == "Float") then refuse("fractional-index")
       // a JS string indexes to a one-character string, or `undefined` past its end; Scala's to a Char, or a throw
-      if exprType(children.head).contains("String") then refuse("js-string-index")
+      if exprType(children.head).contains("String") then
+        return if isWriteTarget(node) then
+          refuse("js-string-index")
+          s"${translateExpr(children.head)}(${translateExpr(children(1))})"
+        else stringCharAt(children.head, children(1), "null")
       val obj      = translateExpr(children.head)
       val idx      = translateExpr(children(1))
       val recvType = exprType(children.head)

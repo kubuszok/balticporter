@@ -933,8 +933,34 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     assert(translate(block(decl("a"), ret(ident("a")))).scalaBody.contains("val a = 1"))
     val bump = node("ArrowFunction", block(expr(bin("PlusEqualsToken", ident("a"), num(1)))))
     assert(translate(block(decl("a"), expr(bump), ret(ident("a")))).scalaBody.contains("var a = 1"))
+    // JS answers "" past the end for charAt, `undefined` for an index, and NaN for charCodeAt
     val onS = translate(block(ret(call(prop(ident("s"), "charAt"), num(0)))), params = List("s"), paramTypes = Map("s" -> "String"))
-    refuses(onS, "js-string-index")
+    accepts(onS)
+    assert(onS.scalaBody.contains("if (i$2 >= 0 && i$2 < s$1.length) s$1.charAt(i$2).toString else \"\""), onS.scalaBody)
+    val code = translate(
+      block(ret(call(prop(ident("s"), "charCodeAt"), ident("i")))),
+      params = List("s", "i"),
+      paramTypes = Map("s" -> "String", "i" -> "Int")
+    )
+    assert(code.scalaBody.contains("charAt(i$2).toDouble else Double.NaN"), code.scalaBody)
+    refuses(
+      translate(
+        block(ret(call(prop(ident("s"), "charAt"), ident("f")))),
+        params = List("s", "f"),
+        paramTypes = Map("s" -> "String", "f" -> "Double")
+      ),
+      "js-string-index"
+    )
+    val sub = translate(
+      block(ret(call(prop(ident("s"), "substring"), ident("i"), num(2)))),
+      params = List("s", "i"),
+      paramTypes = Map("s" -> "String", "i" -> "Int")
+    )
+    accepts(sub)
+    assert(
+      sub.scalaBody.contains("substring(math.min(a$2, b$3), math.max(a$2, b$3))") && sub.scalaBody.contains("math.max(i, 0)"),
+      sub.scalaBody
+    )
 
   test("an object literal carrying the type tag builds the one class declaring that tag, where the slot admits it"):
     val src            = "package p\nsealed trait Node {\n  def kind: String\n}\nfinal case class Group(var body: Int = 0) extends Node {\n  override def kind: String = \"group\"\n}\n"
@@ -1002,10 +1028,10 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       paramTypes = Map("xs" -> "ArrayBuffer[Node]", "i" -> "Int", "n" -> "Node")
     )
     assert(store.scalaBody.contains("xs(i) = n"), store.scalaBody)
-    refuses(
-      translate(block(ret(node("ElementAccessExpression", ident("s"), num(0)))), params = List("s"), paramTypes = Map("s" -> "String")),
-      "js-string-index"
-    )
+    // a string indexes to a one-character string, or undefined (null) past its end
+    val char = translate(block(ret(node("ElementAccessExpression", ident("s"), num(0)))), params = List("s"), paramTypes = Map("s" -> "String"))
+    accepts(char)
+    assert(char.scalaBody.contains("s$1.charAt(i$2).toString else null"), char.scalaBody)
 
   private def lengthOf(r: RastNode):                  RastNode = prop(r, "length")
   private def ifThen(c:   RastNode, body: RastNode*): RastNode = node("IfStatement", c, block(body*))

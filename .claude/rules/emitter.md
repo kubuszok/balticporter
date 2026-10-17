@@ -644,3 +644,9 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   is ignored where the local is never written after an initialiser that types itself (a typed
   value, or an object literal, which builds its tag's class or is refused); an empty array still
   needs the annotation to name its elements. KaTeX 94 -> 96.
+- (a) A JS string's character is written out with JS's answer past either end: `s[i]` is a
+  one-character string or `null` (standing for `undefined`), `charAt` answers `""`, `charCodeAt`
+  answers `NaN` and is therefore a `Double` (refused at an `Int` slot, as terser's
+  `getFullChar` is), `substring` clamps both bounds and swaps them; each takes an `Int` index (`substring`
+  also a truncated `Double`), `substr` stays refused. Checked against node. String methods live in
+  `BodyStrings`. Bodies refusing `js-string-index` 16 -> 6.

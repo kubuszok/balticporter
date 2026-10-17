@@ -211,6 +211,9 @@ abstract private[dedicated] class BodyScope(
             val method = prop.children.last.text.getOrElse("")
             method match
               case "toFixed" | "toString" | "substring" | "trim" | "toLowerCase" | "toUpperCase" | "replace" | "replaceAll" | "join" | "split" => Some("String")
+              case "charAt" if exprType(obj).contains("String")                                                                                => Some("String")
+              // JS answers NaN past the end, so the code is a number, not an Int
+              case "charCodeAt" if exprType(obj).contains("String") => Some("Double")
               // a copy of the receiver's own collection or string
               case "concat" | "slice" | "filter" | "reverse" if exprType(obj).exists(t => t == "String" || extractElementType(t).isDefined) => exprType(obj)
               // `Object.assign({}, src, …)` read as a copy of a case-class `src`
@@ -296,7 +299,9 @@ abstract private[dedicated] class BodyScope(
           case None =>
             objectApply(node.children.head) match
               case Some((_, result)) => result
-              case None              => exprType(node.children.head).flatMap(t => extractElementType(t).orElse(mapValueType(t)))
+              // a string's character is a one-character string
+              case None if exprType(node.children.head).contains("String") => Some("String")
+              case None                                                    => exprType(node.children.head).flatMap(t => extractElementType(t).orElse(mapValueType(t)))
       // `xs.length` of a collection or a string
       case "PropertyAccessExpression"
           if node.children.size >= 2 && node.children.last.text.contains("length") &&
