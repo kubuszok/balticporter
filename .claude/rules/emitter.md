@@ -599,3 +599,11 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   its entries in the literal's order, as JS iterates an object's keys, refused where a key is
   integer-like (JS iterates those first, ascending). KaTeX 86 -> 87, bodies refusing
   `js-map-construction` 34 -> 25.
+- (a) A read past the end is falsy where JS reads `undefined`: an unproven read of primitive
+  elements tested for truthiness (`if (xs[i])`, `!m[k]`) asks for a present truthy element
+  (`xs.lift(i).exists(…)`); as a value it still needs its guard. `xs[xs.length - k]` (k >= 1) is
+  below the length by construction and needs only a guard proving `xs.length >= k`. Measured on
+  ssg's three ports, the guard was rarely what refused a read: of the reads refused under a guard,
+  3 had a call between the test and the read, and every other refused read had no guard on its
+  receiver at all (most on an untyped receiver), so an aliasing analysis to admit intervening calls
+  would move at most 3 bodies. Read-past-end refusal sites 359 -> 355.

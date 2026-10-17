@@ -60,6 +60,29 @@ private[dedicated] trait BodyArrays extends BodyBounds:
         if !proven then refuse("read-past-end")
         s"$obj($idx)"
 
+  /** The truthiness of a read `xs[i]` or `m[k]` of primitive elements that no guard proves present: JS reads an absent one as `undefined`, which is falsy, so the test asks for a present truthy
+    * element (`xs.lift(i).exists(…)`). None for any other read, which renders as before.
+    */
+  protected def absentFalsyRead(node: RastNode): Option[() => String] =
+    val children = node.children
+    if node.kind != "ElementAccessExpression" || children.size < 2 || isWriteTarget(node) then None
+    else
+      val (recv, idx) = (children.head, children(1))
+      val recvType    = exprType(recv)
+      val plain       =
+        tupleField(recv, idx).isDefined || objectApply(recv).isDefined || recvType.contains("String") ||
+          recvType.exists(t => isSpecificClassType(t) || isOptionLike(t)) || exprType(idx).exists(t => t == "Double" || t == "Float")
+      val element = recvType.flatMap(extractElementType)
+      val value   = recvType.flatMap(mapValueType)
+      val read    = element.map(("lift", _)).orElse(value.map(("get", _))).filterNot((_, t) => absentIsNull(t))
+      val proven  =
+        if value.isDefined then keyProven(node, recv, idx) else indexProven(node, recv, idx) || tupleProven(recv, idx)
+      read.filter(_ => !plain && !proven).map { (how, t) => () =>
+        for rt <- recvType; k <- mapKeyType(rt); have <- exprType(idx) do checkTypeCompatibility(have, k)
+        val e = freshLabel("e")
+        s"${translateExpr(recv)}.$how(${translateExpr(idx)}).exists($e => ${truthinessTest(t, e)})"
+      }
+
   /** The buffer type of `const xs = []` whose last read is the body's own `return xs`, read off the declared result: JS returns the array itself, and a buffer of the result's element type holds every
     * element the result admits. None where the local or that return sits in a nested function, or the result names no element type the body can write.
     */

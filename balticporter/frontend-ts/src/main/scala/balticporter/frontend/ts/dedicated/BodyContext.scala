@@ -85,6 +85,8 @@ private[dedicated] class BodyContext(
         truthinessTest(exprType(node).get, translateExpr(node))
       case "PrefixUnaryExpression" | "BinaryExpression" | "ConditionalExpression" =>
         translateExpr(node) // these already handle truthiness internally
+      case "ElementAccessExpression" if absentFalsyRead(node).isDefined =>
+        absentFalsyRead(node).get()
       case _ =>
         exprType(node) match
           case Some(tpe) if tpe != "Boolean" =>
@@ -600,6 +602,9 @@ private[dedicated] class BodyContext(
       case "BinaryExpression" =>
         translateBinaryExpr(node)
 
+      // an absent element is `undefined`, so `!xs[i]` holds for it
+      case "PrefixUnaryExpression" if node.operator.contains("ExclamationToken") && node.children.headOption.flatMap(absentFalsyRead).isDefined =>
+        s"!(${node.children.headOption.flatMap(absentFalsyRead).get()})"
       case "PrefixUnaryExpression" =>
         val children = node.children
         val operand  = if children.nonEmpty then translateExpr(children.head) else "???"

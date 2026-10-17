@@ -246,12 +246,15 @@ private[dedicated] trait BodyBounds extends BodyScope:
         case Nil          => Some(i.c)
         case List((v, 1)) => counterFloor(v, site).map(_ + i.c)
         case _            => None
-      i.lens.isEmpty && floor.exists(_ >= 0) &&
+      // `xs[xs.length - k]`, k >= 1, is below the length by construction and needs only `xs.length >= k`
+      val fromEnd = i.lens == Map(r -> 1) && i.vars.isEmpty && i.c <= -1
+      (i.lens.isEmpty && floor.exists(_ >= 0) || fromEnd) &&
       guards(site).exists { (cond, holds, region) =>
         runsInPlace(site, region) && !subtree(cond).exists(mayMutate) &&
         facts(cond, holds).exists {
-          case Fact.Positive(d) => d.lens == Map(r -> 1) && d.vars == (-i).vars && d.c + i.c <= 0
-          case _                => false
+          case Fact.Positive(d) if fromEnd => d.lens == Map(r -> 1) && d.vars.isEmpty && d.c <= i.c + 1
+          case Fact.Positive(d)            => d.lens == Map(r -> 1) && d.vars == (-i).vars && d.c + i.c <= 0
+          case _                           => false
         } &&
         runBefore(region, site).forall(h => !mayMutate(h) && !moves(h, prefixes) && i.vars.keys.forall(v => !written(h).exists(t => shapeOf(t) == v)))
       }

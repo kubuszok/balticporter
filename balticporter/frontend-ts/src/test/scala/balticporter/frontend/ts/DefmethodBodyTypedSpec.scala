@@ -1006,6 +1006,37 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       sum(ifThen(bin("EqualsEqualsEqualsToken", lengthOf(ident("xs")), num(0)), ret(num(0))), add(at("xs", num(1)))),
       "read-past-end"
     )
+    // counted from the end: `xs[xs.length - k]` needs only a length of at least k
+    val last = (k: Int) => at("xs", bin("MinusToken", lengthOf(ident("xs")), num(k)))
+    accepts(sum(ifThen(lengthOf(ident("xs")), add(last(1)))))
+    accepts(sum(ifThen(bin("GreaterThanEqualsToken", lengthOf(ident("xs")), num(2)), add(last(2)))))
+    refuses(sum(ifThen(lengthOf(ident("xs")), add(last(2)))), "read-past-end")
+    refuses(sum(ifThen(lengthOf(ident("ys")), add(last(1)))), "read-past-end")
+    refuses(sum(add(last(1))), "read-past-end")
+    refuses(sum(ifThen(lengthOf(ident("xs")), add(at("xs", lengthOf(ident("xs")))))), "read-past-end")
+
+  test("an unguarded read tested for truthiness is falsy where JS reads undefined past the end or for an absent key"):
+    val types             = Map("xs" -> "ArrayBuffer[Double]", "m" -> "mutable.Map[String, Int]", "i" -> "Int", "k" -> "String")
+    def test(c: RastNode) =
+      translate(block(ifThen(c, ret(num(1))), ret(num(0))), params = List("xs", "m", "i", "k"), paramTypes = types, returnType = Some("Int"))
+    val read = test(node("ElementAccessExpression", ident("xs"), ident("i")))
+    accepts(read)
+    assert(read.scalaBody.contains("xs.lift(i).exists(e$") && read.scalaBody.contains("isNaN"), read.scalaBody)
+    val negated = test(
+      node("PrefixUnaryExpression", node("ElementAccessExpression", ident("m"), ident("k"))).copy(operator = Some("ExclamationToken"))
+    )
+    accepts(negated)
+    assert(negated.scalaBody.contains("!(m.get(k).exists(e$"), negated.scalaBody)
+    // the same read as a value still needs its guard
+    refuses(
+      translate(
+        block(ret(node("ElementAccessExpression", ident("xs"), ident("i")))),
+        params = List("xs", "i"),
+        paramTypes = types,
+        returnType = Some("Double")
+      ),
+      "read-past-end"
+    )
 
   test("a map read answers null for an absent key of reference values, and needs a has test otherwise"):
     val refs = translate(
