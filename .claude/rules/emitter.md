@@ -588,3 +588,9 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   A constant index below the length of a TypeScript tuple of plain elements (the checker's
   `[?, ?]` target, no optional or rest element) is in range as TypeScript itself proves it. KaTeX
   82 -> 86.
+- (a) `padStart`/`padEnd` repeat a fill of several characters and cut it to the missing length (a
+  `""` fill pads nothing); `padTo` with a string counted the whole fill as ONE element. Only a
+  literal fill is read, since a null string stands for JS's `undefined` (a space) or its `null`
+  (the text "null"). `repeat` throws for a negative count as JS's RangeError does, where Scala's
+  `*` answered "". Each takes an `Int` or integer-literal count on a `String` receiver, or is
+  refused (`js-string-pad`); checked against node.

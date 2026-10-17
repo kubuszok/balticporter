@@ -1235,14 +1235,23 @@ private[dedicated] class BodyContext(
               s"$objExpr.toLowerCase"
             case "toUpperCase" =>
               s"$objExpr.toUpperCase"
+            // JS throws a RangeError for a negative count, where Scala's `*` answers ""; an absent count is zero
             case "repeat" =>
-              s"$objExpr * ${scalaArgs.headOption.getOrElse("1")}"
-            case "padStart" =>
-              if scalaArgs.length >= 2 then s"$objExpr.reverse.padTo(${scalaArgs.head}, ${scalaArgs(1)}).reverse.mkString"
-              else s"$objExpr.padStart(${scalaArgs.mkString(", ")})"
-            case "padEnd" =>
-              if scalaArgs.length >= 2 then s"$objExpr.padTo(${scalaArgs.head}, ${scalaArgs(1)}).mkString"
-              else s"$objExpr.padEnd(${scalaArgs.mkString(", ")})"
+              if !exprType(obj).contains("String") || args.size != 1 || !(intLiteral(args.head).isDefined || exprType(args.head).contains("Int")) then refuse("js-string-pad")
+              if args.headOption.forall(intLiteral(_).isDefined) then s"$objExpr * ${scalaArgs.headOption.getOrElse("0")}"
+              else
+                val n = freshLabel("n")
+                s"$objExpr * { val $n: Int = ${scalaArgs.head}; if ($n < 0) throw new RuntimeException(\"Invalid count value: \" + $n); $n }"
+            // JS repeats a fill of several characters and cuts it to the missing length, and a "" fill pads nothing
+            case "padStart" | "padEnd" =>
+              val fill = args.lift(1)
+              if !exprType(obj).contains("String") || args.isEmpty || args.size > 2 || !(intLiteral(args.head).isDefined || exprType(args.head).contains("Int")) then refuse("js-string-pad")
+              // a string value may be null standing for `undefined` (a space fill) or be JS's own null (the fill "null"): only a literal fill reads alike
+              if fill.exists(_.kind != "StringLiteral") then refuse("js-string-pad")
+              val (s, w, f, k) = (freshLabel("s"), freshLabel("w"), freshLabel("f"), freshLabel("k"))
+              val pad          = s"($f * ($k / $f.length + 1)).substring(0, $k)"
+              s"{ val $s: String = $objExpr; val $w: Int = ${scalaArgs.headOption.getOrElse("0")}; val $f: String = ${scalaArgs.lift(1).getOrElse("\" \"")}; " +
+                s"if ($w <= $s.length || $f.isEmpty) $s else { val $k = $w - $s.length; ${if method == "padStart" then s"$pad + $s" else s"$s + $pad"} } }"
             case "toFixed" =>
               val precision = scalaArgs.headOption.getOrElse("0")
               // JS toFixed returns a String with locale-independent "." decimal

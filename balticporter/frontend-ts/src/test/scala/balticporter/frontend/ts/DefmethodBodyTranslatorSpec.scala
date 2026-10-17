@@ -747,6 +747,54 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = translate(body, paramTypes = Map("x" -> "Double"))
     assert(result.scalaBody.contains("setScale(1"), s"precision should be passed to setScale: ${result.scalaBody}")
 
+  // ---- JS string padding and repetition ----
+
+  private def strLit(s: String): RastNode = RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str(s)))
+
+  test("padStart with a fill of several characters repeats it and cuts it to the missing length"):
+    val call   = node("CallExpression", propAccess(ident("s"), "padStart"), ident("w"), strLit("ab"))
+    val result = translate(block(ret(call)), paramTypes = Map("s" -> "String", "w" -> "Int"))
+    assert(result.refusalReasons.isEmpty, s"should translate: ${result.refusalReasons}")
+    assert(
+      result.scalaBody.contains(".substring(0, k$") && result.scalaBody.contains("isEmpty"),
+      s"fill must be repeated and cut: ${result.scalaBody}"
+    )
+    assert(!result.scalaBody.contains("padTo"), s"padTo counts a string fill as one element: ${result.scalaBody}")
+
+  test("padEnd with no fill pads with spaces, after the receiver"):
+    val call   = node("CallExpression", propAccess(ident("s"), "padEnd"), num(4))
+    val result = translate(block(ret(call)), paramTypes = Map("s" -> "String"))
+    assert(result.refusalReasons.isEmpty, s"should translate: ${result.refusalReasons}")
+    assert(
+      result.scalaBody.contains("\" \"") && result.scalaBody.matches("(?s).*s\\$\\d+ \\+ \\(f.*"),
+      s"padEnd appends the fill: ${result.scalaBody}"
+    )
+
+  test("padStart with a fill that is not a literal is refused: a null string stands for undefined or for null"):
+    val call   = node("CallExpression", propAccess(ident("s"), "padStart"), num(4), ident("f"))
+    val result = translate(block(ret(call)), paramTypes = Map("s" -> "String", "f" -> "String"))
+    assert(result.refusalReasons.contains("js-string-pad"), s"should refuse: ${result.refusalReasons}")
+
+  test("padStart to a fractional length is refused"):
+    val call   = node("CallExpression", propAccess(ident("s"), "padStart"), ident("w"))
+    val result = translate(block(ret(call)), paramTypes = Map("s" -> "String", "w" -> "Double"))
+    assert(result.refusalReasons.contains("js-string-pad"), s"should refuse: ${result.refusalReasons}")
+
+  test("repeat with a count that may be negative throws as JS's RangeError does"):
+    val call   = node("CallExpression", propAccess(ident("s"), "repeat"), ident("n"))
+    val result = translate(block(ret(call)), paramTypes = Map("s" -> "String", "n" -> "Int"))
+    assert(result.refusalReasons.isEmpty, s"should translate: ${result.refusalReasons}")
+    assert(
+      result.scalaBody.contains("< 0) throw new RuntimeException(\"Invalid count value: \""),
+      s"a negative count must throw: ${result.scalaBody}"
+    )
+
+  test("repeat with a literal count is the plain product, and with no count is refused"):
+    val lit = translate(block(ret(node("CallExpression", propAccess(ident("s"), "repeat"), num(3)))), paramTypes = Map("s" -> "String"))
+    assert(lit.refusalReasons.isEmpty && lit.scalaBody.trim == "s * 3", s"literal count: ${lit.scalaBody} ${lit.refusalReasons}")
+    val none = translate(block(ret(node("CallExpression", propAccess(ident("s"), "repeat")))), paramTypes = Map("s" -> "String"))
+    assert(none.refusalReasons.contains("js-string-pad"), s"an absent count is zero in JS: ${none.refusalReasons}")
+
   // ---- int-division-on-number ----
 
   test("division in a method with Int return type refuses int-division-on-number"):
