@@ -8,6 +8,11 @@ private[dedicated] trait BodyObjects extends BodyScope:
 
   protected def translateExprAt(node: RastNode, expectedType: String): String
 
+  // a literal's value at the parameter it fills, checked as a call's argument is: an optional value where one is required is refused
+  private def valueAt(v: RastNode, tpe: String): String =
+    exprType(v).foreach(checkTypeCompatibility(_, tpe))
+    translateExprAt(v, tpe)
+
   /** The `(key, value)` pairs of an object literal whose every property is a plain `k: v` or `k`; none when one is a spread, a method or a computed key, each of which builds what a key list cannot
     * say.
     */
@@ -34,7 +39,7 @@ private[dedicated] trait BodyObjects extends BodyScope:
       val known  = byName.forall((k, _) => params.exists(_.name == k))
       val filled = params.forall(p => p.hasDefault || byName.exists(_._1 == p.name))
       if params.size < 2 || !known || !filled || byName.map(_._1).distinct.size != byName.size then None
-      else Some(byName.map((k, v) => s"$k = ${translateExprAt(v, params.find(_.name == k).get.tpe)}"))
+      else Some(byName.map((k, v) => s"$k = ${valueAt(v, params.find(_.name == k).get.tpe)}"))
     }
 
   /** The named arguments of a call passing one object literal to a signature that spells it as parameters; none for any other call. */
@@ -99,7 +104,7 @@ private[dedicated] trait BodyObjects extends BodyScope:
             val args = keyed.collect { case (_, Some(param), Some(valueNode)) =>
               // a parameter the reference names with a keyword is written backticked, as the reference writes it
               val name = param.name.stripPrefix("`").stripSuffix("`")
-              s"${if scalaKeywords.contains(name) then s"`$name`" else name} = ${translateExprAt(valueNode, param.tpe)}"
+              s"${if scalaKeywords.contains(name) then s"`$name`" else name} = ${valueAt(valueNode, param.tpe)}"
             }
             s"${tagged.flatMap(spelled).getOrElse(typeName.get)}(${args.mkString(", ")})"
         case None =>
@@ -126,7 +131,7 @@ private[dedicated] trait BodyObjects extends BodyScope:
         yield
           val args = keyed.collect { case (Some(p), v) =>
             val name = p.name.stripPrefix("`").stripSuffix("`")
-            s"${if scalaKeywords.contains(name) then s"`$name`" else name} = ${translateExprAt(v, p.tpe)}"
+            s"${if scalaKeywords.contains(name) then s"`$name`" else name} = ${valueAt(v, p.tpe)}"
           }
           s"${translateExpr(src)}.copy(${args.mkString(", ")})"
       case _ => None

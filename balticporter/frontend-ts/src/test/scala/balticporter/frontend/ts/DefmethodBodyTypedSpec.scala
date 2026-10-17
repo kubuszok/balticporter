@@ -210,6 +210,22 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     )
     refuses(plain, "argument-type-mismatch:Int->String")
 
+  test("an object literal's value is checked at its field, and an optional left by `if (!x) return` is present after it"):
+    val cs   = ReferenceSignatures.ConstructorSchema(Map("Box" -> List(ReferenceSignatures.CtorParam("w", "Double", false))))
+    val lit  = node("ObjectLiteralExpression", node("ShorthandPropertyAssignment", ident("w")))
+    val bare = translate(block(ret(lit)), params = List("w"), paramTypes = Map("w" -> "Nullable[Double]"), returnType = Some("Box"), ctorSchema = cs)
+    refuses(bare, "optional-at-required-slot")
+    val leave   = node("IfStatement", node("PrefixUnaryExpression", ident("w")).copy(operator = Some("ExclamationToken")), block(ret(ident("d"))))
+    val guarded = translate(
+      block(leave, ret(lit)),
+      params = List("w", "d"),
+      paramTypes = Map("w" -> "Nullable[Double]", "d" -> "Box"),
+      returnType = Some("Box"),
+      ctorSchema = cs
+    )
+    accepts(guarded)
+    assert(guarded.scalaBody.contains("Box(w = w.get)"), guarded.scalaBody)
+
   test("an object literal at an optional slot builds the inner class, present"):
     val cs  = ReferenceSignatures.ConstructorSchema(Map("Box" -> List(ReferenceSignatures.CtorParam("w", "Double", false))))
     val lit = node("ObjectLiteralExpression", node("PropertyAssignment", ident("w"), num(2)))

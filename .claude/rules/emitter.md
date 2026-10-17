@@ -636,3 +636,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 - (a) A JS array local handed to an `Array` slot at its last use is copied there (`toArray`), as
   at an immutable one: nothing else holds the buffer, and a Scala array cannot grow. Writes to an
   `Array`-typed receiver stay allowed; only the hand-over copies. KaTeX 91 -> 93.
+- (a) An object literal's value is checked at the field or parameter it fills, as a call's
+  argument is (an optional where a value is required is refused; it had been rendered bare and
+  failed to compile), and after `if (!x) <leave>` an optional local or parameter the body never
+  reassigns reads as its value for the rest of the block. KaTeX 93 -> 94.

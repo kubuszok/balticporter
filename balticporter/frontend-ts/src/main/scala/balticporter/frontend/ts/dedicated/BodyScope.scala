@@ -796,9 +796,11 @@ abstract private[dedicated] class BodyScope(
       case Nil          => ()
       case stmt :: rest =>
         translateStatement(stmt, indent, isLast && rest.isEmpty)
-        val proven =
-          if stmt.kind == "IfStatement" && stmt.children.size == 2 && exitsAlways(stmt.children(1)) then refutedBy(stmt.children.head) else Nil
-        underNarrowing(proven)(translateSequence(rest, indent, isLast))
+        val leaves = stmt.kind == "IfStatement" && stmt.children.size == 2 && exitsAlways(stmt.children(1))
+        val proven = if leaves then refutedBy(stmt.children.head) else Nil
+        // after `if (!x) <leave>` an optional `x` is present for the rest of the block
+        val present = Option.when(leaves)(unparenthesized(stmt.children.head)).filter(c => c.kind == "PrefixUnaryExpression" && c.operator.contains("ExclamationToken")).flatMap(_.children.headOption)
+        underNarrowing(proven)(present.fold(translateSequence(rest, indent, isLast))(p => underPresence(p)(translateSequence(rest, indent, isLast))))
 
   /** The arguments a JS call leaves out, as Scala must still pass them: a parameter with a default is skipped, an optional one is passed absent by name (JS passes `undefined`), and any other missing
     * one leaves the call untranslatable (`None`).
