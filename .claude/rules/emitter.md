@@ -359,6 +359,13 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   `Throwable` catch, `ControlThrowable` — since `NonFatal` spares the sentinel but `case t:
   Throwable` does not. A spec that asserts the spelling of a jump asserts THIS one.
 
+- A java `return` in a SECONDARY constructor leaves a named boundary around the constructor's own
+  statements (`boundary[Unit] { ctorRet$ ?=> … break(())(using ctorRet$) }`), never scala's
+  `return`: the JVM accepts it, but the Scala.js optimizer crashes on it (`key not found:
+  LabelName<_return>`, textra `Font.FontFamily`, the whole test link). The returns are matched by
+  identity, so a lambda's own `return` stays its own, and a broad catch they cross gets the re-throw
+  arm. Kind (a).
+
 - **A colon switch case falls through exactly when its statements CAN COMPLETE NORMALLY (JLS
   14.22)**, decided by `SpoonCompletion` for both frontends: a trailing `continue`, labelled
   `break`, an if/else whose branches both leave, an infinite loop with no break out, a `try` whose

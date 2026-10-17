@@ -379,6 +379,9 @@ object TirEmitter:
     */
   val BreakGuard = "brkThru$"
 
+  /** the label of the boundary a secondary constructor's early `return` leaves. */
+  val CtorReturn = "ctorRet$"
+
   /** the emitted types a JAVA PRIMITIVE renders as — "this value cannot be null". Spelled ONCE and read by both the emitter and `SwitchNullCheck`, in EMITTED names (a java int arrives here as
     * scala.Int after retyping).
     */

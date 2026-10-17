@@ -716,6 +716,10 @@ private[emit] trait TirEmitterMembers:
   /** the value-carrying `Label` a non-tail `yield` must name — a switch EXPRESSION's arm boundary. Kept apart from [[breakTarget]]: a `break` carries `Unit` and a `yield` the switch's own type, so
     * one boundary cannot serve both (and JLS 15.28 keeps them from ever coexisting). ALWAYS named, so nothing nearer can steal `break(v)(using n)`.
     */
+  /** the secondary constructor's own `return`s (by identity) and the label of the boundary standing for its end; a nested lambda's or method's `return` is not among them.
+    */
+  private[emit] var ctorReturns: Option[(String, java.util.Set[Tree.Return])] = scala.None
+
   private[emit] var yieldTarget:                            Option[String] = scala.None
   private[emit] def inYield[A](y: Option[String])(f: => A): A              =
     val sy = yieldTarget
@@ -984,7 +988,21 @@ private[emit] trait TirEmitterMembers:
     // the block's END-OF-BODY comments: this rendering reconstructs braces from stmtsOf's list
     // rather than the body Tree.Block, so no other path carries this slot.
     val trail = CtorFunnel.trailingOf(cdef).map(triviaText(_, i + 1))
-    val lines = (head :: (replay ++ inlined ++ body).map(stat(_, i + 1)).filter(_.trim.nonEmpty)) ++ trail
+    val pre   = (replay ++ inlined).map(stat(_, i + 1)).filter(_.trim.nonEmpty)
+    val own   = collectReturns(body) match
+      case Nil  => body.map(stat(_, i + 1)).filter(_.trim.nonEmpty) ++ trail
+      case rets =>
+        // scala's `return` belongs to a METHOD: in a constructor Scala.js cannot link it, so java's
+        // early return leaves a boundary around the constructor's own statements instead.
+        val set = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[Tree.Return, java.lang.Boolean])
+        rets.foreach(set.add)
+        val saved = ctorReturns
+        ctorReturns = Some((TirEmitter.CtorReturn, set))
+        val inner =
+          try body.map(stat(_, i + 2)).filter(_.trim.nonEmpty) ++ CtorFunnel.trailingOf(cdef).map(triviaText(_, i + 2))
+          finally ctorReturns = saved
+        List(s"${ind(i + 1)}scala.util.boundary[scala.Unit] { ${TirEmitter.CtorReturn} ?=>\n${joinStats(inner)}\n${ind(i + 1)}}")
+    val lines = (head :: pre) ++ own
     s"{\n${joinStats(lines)}\n${ind(i)}}"
 
   /** A secondary constructor's `super(args)` — which scala cannot write — expressed as a delegation to the PRIMARY, whose own `extends Parent(…)` makes the call. The DECISION is

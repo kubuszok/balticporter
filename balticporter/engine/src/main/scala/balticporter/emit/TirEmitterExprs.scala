@@ -169,6 +169,7 @@ private[emit] trait TirEmitterExprs:
     case s @ Tree.Spread(e, _, _) =>
       Obligations.consult(JS.G(40), s.origin)(Some(()))
       s"${operand(e, i)}*"
+    case r: Tree.Return if ctorReturns.exists(_._2.contains(r)) => s"scala.util.boundary.break(())(using ${TirEmitter.CtorReturn})"
     case Tree.Return(e, _, _)        => "return" + e.map(x => " " + term(x, i)).getOrElse("")
     case Tree.While(c, b, _, _, lbl) =>
       loopWithJumps(b, lbl, bd => s"while (${term(c, i)}) $bd", term(b, i))
@@ -973,7 +974,8 @@ private[emit] trait TirEmitterExprs:
     * opened by a construct enclosing this try. A label bound INSIDE the body is not in these maps yet, so the labelled lanes need no extra test to exclude it.
     */
   private[emit] def crossesCatch(body: Term): Boolean =
-    (breakTarget.isDefined && Jumps.breaksOut(body)) ||
+    ctorReturns.exists((_, s) => collectReturns(body).exists(s.contains)) ||
+      (breakTarget.isDefined && Jumps.breaksOut(body)) ||
       (contTarget.isDefined && Jumps.continuesIn(body)) ||
       labelBreak.keysIterator.exists(l => Jumps.jumpsTo(body, l, brk = true)) ||
       labelCont.keysIterator.exists(l => Jumps.jumpsTo(body, l, brk = false))
