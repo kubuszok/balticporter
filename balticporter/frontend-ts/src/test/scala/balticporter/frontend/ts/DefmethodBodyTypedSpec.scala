@@ -207,6 +207,18 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     assert(run("String").scalaBody.contains(".nonEmpty"), run("String").scalaBody)
     refuses(run("Double"), "truthiness-unknown-type")
 
+  test("an optional compared with a present value compares the value it holds, absent equal to none"):
+    val types                                 = Map("f" -> "Nullable[String]", "s" -> "String", "o" -> "Nullable[Shape]", "p" -> "Shape")
+    def cmp(op: String, l: String, r: String) = translate(block(ret(bin(op, ident(l), ident(r)))), params = List("f", "s", "o", "p"), paramTypes = types, returnType = Some("Boolean"))
+    val ne                                    = cmp("ExclamationEqualsEqualsToken", "f", "s")
+    accepts(ne)
+    assert(ne.scalaBody.contains("val a$1 = f; val b$2 = s; !(a$1.isDefined && a$1.get == b$2)"), ne.scalaBody)
+    assert(
+      cmp("EqualsEqualsEqualsToken", "s", "f").scalaBody.contains("val b$2 = s; val a$1 = f;"),
+      cmp("EqualsEqualsEqualsToken", "s", "f").scalaBody
+    )
+    refuses(cmp("EqualsEqualsEqualsToken", "o", "p"), "optional-comparison")
+
   test("an optional chain is refused: the plain read it renders as throws where JS answers undefined"):
     val chain = node("PropertyAccessExpression", ident("s"), node("QuestionDotToken"), ident("length"))
     refuses(translate(block(ret(chain)), params = List("s"), paramTypes = Map("s" -> "String")), "optional-chain")

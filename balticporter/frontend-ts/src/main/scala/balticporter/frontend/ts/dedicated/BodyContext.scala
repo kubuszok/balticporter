@@ -1527,6 +1527,17 @@ private[dedicated] class BodyContext(
 
         val isEq = op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken"
         val isNe = op == "ExclamationEqualsEqualsToken" || op == "ExclamationEqualsToken"
+        // an optional against a present value: JS compares the value it holds, and `undefined` equals no string, number or boolean; Scala's `==` would compare the wrapper
+        if (isEq || isNe) && !isNullish(lhs) && !isNullish(rhs) then
+          val (lt, rt) = (exprType(lhs), exprType(rhs))
+          if lt.isDefined && rt.isDefined && lt.exists(isOptionLike) != rt.exists(isOptionLike) then
+            val (opt, plain) = if lt.exists(isOptionLike) then (lt.get, rt.get) else (rt.get, lt.get)
+            val inner        = optionInner(opt)
+            if !(inner == plain && (inner == "String" || inner == "Boolean") || numericTypes(inner) && numericTypes(plain)) then refuse("optional-comparison")
+            val (a, b)       = (freshLabel("a"), freshLabel("b"))
+            val (first, sec) =
+              if lt.exists(isOptionLike) then (s"val $a = ${translateExpr(lhs)}", s"val $b = ${translateExpr(rhs)}") else (s"val $b = ${translateExpr(lhs)}", s"val $a = ${translateExpr(rhs)}")
+            return s"{ $first; $sec; ${if isNe then "!" else ""}($a.isDefined && $a.get == $b) }"
         // `x.<tag> === "Y"` compares the tag x's class declares, as JS does: a subclass carries its own tag, so no type test reads the same
         if isEq || isNe then
           tagComparison(lhs, rhs).orElse(tagComparison(rhs, lhs)).foreach { (recv, tag) =>

@@ -687,3 +687,8 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   qualified, so once they replace every user of `import scala.util.boundary` the import is unused,
   an error under `-Wunused:imports -Werror` (KaTeX's `UnicodeScripts`). An import read only
   implicitly is read in neither text and stays. Emitted-file compile errors 1 -> 0.
+- (a) An optional compared with a present string, number or boolean compares the value it holds
+  (`!(a.isDefined && a.get == b)` for `!==`), both operands evaluated once in order: Scala's `==`
+  compared the wrapper, so rough.js's `o.fill !== NOS` had been emitted always true (in bodies
+  declined for other reasons). Any other optional-against-value comparison is refused
+  (`optional-comparison`).
