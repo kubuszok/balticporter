@@ -1368,6 +1368,10 @@ private[dedicated] class BodyContext(
               conventions.methodRewrites(m).replace("$receiver", objExpr)
             case "clone" =>
               s"$objExpr.clone()"
+            // each code is cut to its low 16 bits (ToUint16) and becomes one UTF-16 unit
+            case "fromCharCode" if obj.kind == "Identifier" && obj.text.contains("String") =>
+              if args.isEmpty || !args.forall(a => intLiteral(a).isDefined || exprType(a).contains("Int")) then refuse("js-builtin")
+              scalaArgs.map(c => s"String.valueOf((($c) & 0xFFFF).toChar)").mkString("(", " + ", ")")
             // General method
             case _ =>
               // a JS built-in's static the cases above do not render has no Scala namesake; `Math`'s read through java.lang.Math only where they agree

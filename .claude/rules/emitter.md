@@ -650,3 +650,5 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   `getFullChar` is), `substring` clamps both bounds and swaps them; each takes an `Int` index (`substring`
   also a truncated `Double`), `substr` stays refused. Checked against node. String methods live in
   `BodyStrings`. Bodies refusing `js-string-index` 16 -> 6.
+- (a) `String.fromCharCode(c, …)` of `Int` codes cuts each to its low 16 bits (JS's ToUint16) and
+  joins the UTF-16 units; a fractional code is refused (`js-builtin`). Terser 40 -> 41.

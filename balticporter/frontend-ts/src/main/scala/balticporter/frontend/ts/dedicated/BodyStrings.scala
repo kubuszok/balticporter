@@ -2,8 +2,8 @@ package balticporter.frontend.ts.dedicated
 
 import balticporter.frontend.ts.{ RastNode, RastValue }
 
-/** JS string methods whose Scala namesakes answer differently: JS clamps an index or answers `undefined`, `""` or `NaN` past an end where Java throws, pads with a fill of several characters,
-  * replaces the first occurrence of a literal, and throws a RangeError for a negative repeat count. Each is written out with JS's answer or refused.
+/** JS string methods whose Scala namesakes answer differently: JS clamps an index or answers `undefined`, `""` or `NaN` past an end where Java throws, pads with a fill of several characters, replaces
+  * the first occurrence of a literal, and throws a RangeError for a negative repeat count. Each is written out with JS's answer or refused.
   */
 private[dedicated] trait BodyStrings extends BodyScope:
 
@@ -28,7 +28,7 @@ private[dedicated] trait BodyStrings extends BodyScope:
           // JS truncates toward zero and reads NaN as 0, as `toInt` does; an infinity saturates and is clamped alike
           if t.contains("Double") then s"($text).toInt" else text
         }
-        val (s, a, b) = (freshLabel("s"), freshLabel("a"), freshLabel("b"))
+        val (s, a, b)        = (freshLabel("s"), freshLabel("a"), freshLabel("b"))
         def clamp(v: String) = s"math.min(math.max($v, 0), $s.length)"
         s"{ val $s: String = $recvText; val $a: Int = ${clamp(bounds.headOption.getOrElse("0"))}; val $b: Int = ${bounds.lift(1).fold(s"$s.length")(clamp)}; " +
           s"$s.substring(math.min($a, $b), math.max($a, $b)) }"
@@ -49,8 +49,8 @@ private[dedicated] trait BodyStrings extends BodyScope:
         s"{ val $s: String = $recvText; val $w: Int = ${argTexts.headOption.getOrElse("0")}; val $f: String = ${argTexts.lift(1).getOrElse("\" \"")}; " +
           s"if ($w <= $s.length || $f.isEmpty) $s else { val $k = $w - $s.length; ${if method == "padStart" then s"$pad + $s" else s"$s + $pad"} } }"
 
-  /** A JS string's character at `idx` as a one-character string, `absent` past either end (`undefined` for `s[i]`, `""` for `charAt`), or its code as a number (`NaN` past an end) when `code`.
-    * The index must be an `Int`: a fractional one names no character for `s[i]`.
+  /** A JS string's character at `idx` as a one-character string, `absent` past either end (`undefined` for `s[i]`, `""` for `charAt`), or its code as a number (`NaN` past an end) when `code`. The
+    * index must be an `Int`: a fractional one names no character for `s[i]`.
     */
   protected def stringCharAt(recv: RastNode, idx: RastNode, absent: String, code: Boolean = false): String =
     if !(intLiteral(idx).isDefined || exprType(idx).contains("Int")) then refuse("js-string-index")

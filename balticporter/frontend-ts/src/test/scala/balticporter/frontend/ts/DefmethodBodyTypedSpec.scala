@@ -951,6 +951,13 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       ),
       "js-string-index"
     )
+    val chars = translate(block(ret(call(prop(ident("String"), "fromCharCode"), ident("i"), num(65)))), params = List("i"), paramTypes = Map("i" -> "Int"))
+    accepts(chars)
+    assertNoDiff(chars.scalaBody.trim, "(String.valueOf(((i) & 0xFFFF).toChar) + String.valueOf(((65) & 0xFFFF).toChar))")
+    refuses(
+      translate(block(ret(call(prop(ident("String"), "fromCharCode"), ident("f")))), params = List("f"), paramTypes = Map("f" -> "Double")),
+      "js-builtin"
+    )
     val sub = translate(
       block(ret(call(prop(ident("s"), "substring"), ident("i"), num(2)))),
       params = List("s", "i"),

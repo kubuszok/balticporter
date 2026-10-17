@@ -212,6 +212,7 @@ abstract private[dedicated] class BodyScope(
             method match
               case "toFixed" | "toString" | "substring" | "trim" | "toLowerCase" | "toUpperCase" | "replace" | "replaceAll" | "join" | "split" => Some("String")
               case "charAt" if exprType(obj).contains("String")                                                                                => Some("String")
+              case "fromCharCode" if obj.kind == "Identifier" && obj.text.contains("String")                                                   => Some("String")
               // JS answers NaN past the end, so the code is a number, not an Int
               case "charCodeAt" if exprType(obj).contains("String") => Some("Double")
               // a copy of the receiver's own collection or string
