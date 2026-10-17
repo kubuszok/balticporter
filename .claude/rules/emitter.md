@@ -661,3 +661,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   renderings never read, so it was emitted as the plain read, which throws on an absent `x` where
   JS answers `undefined`. No body ssg's ports translate held one (translated unchanged); bodies
   that did were refused for other reasons only by luck.
+- (a) A switch whose string labels name every member of an enumeration selector (the enum index's
+  values) falls out — or runs `default` — only for an absent selector, so that arm is `case null`:
+  a `case _` there is Scala's unreachable-case warning, an error under `-Werror` (graphs-commons'
+  `toPaths` over `OpSetType`). Emitted-body compile errors 1 -> 0.

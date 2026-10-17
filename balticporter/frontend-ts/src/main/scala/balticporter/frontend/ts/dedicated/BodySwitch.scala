@@ -34,8 +34,11 @@ private[dedicated] trait BodySwitch extends BodyScope:
         for (c, i) <- clauses.zipWithIndex if c.node.kind == "CaseClause" do
           sb.append(s"$indent  ${pattern(c.node.children.head, selType)} =>\n")
           renderArm(arm(i), indent + "    ", isLast)
-        // `default` is tried only after every label, wherever it stands; without one nothing runs
-        sb.append(s"$indent  case _ =>\n")
+        // `default` is tried only after every label, wherever it stands; without one nothing runs. Where the labels name every member of an
+        // enumeration selector, only an absent selector reaches it, and Scala reports a `case _` there unreachable
+        val members = selType.toList.flatMap(t => enumIndex.byValue.keys.filter(_._1 == baseName(t)).map(_._2)).toSet
+        val labels  = clauses.filter(_.node.kind == "CaseClause").flatMap(_.node.children.headOption).flatMap(_.value.collect { case balticporter.frontend.ts.RastValue.Str(s) => s }).toSet
+        sb.append(s"$indent  ${if members.nonEmpty && members.subsetOf(labels) then "case null" else "case _"} =>\n")
         clauses.indexWhere(_.node.kind == "DefaultClause") match
           case -1 => renderArm(Nil, indent + "    ", isLast)
           case d  => renderArm(arm(d), indent + "    ", isLast)

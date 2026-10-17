@@ -573,6 +573,25 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     assert(result.scalaBody.contains("Mode.Math"), s"should resolve to Mode.Math: ${result.scalaBody}")
     assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
 
+  test("a switch whose labels name every member of an enumeration selector falls out only for an absent selector"):
+    def str(s:    String) = RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str(s)))
+    def clause(s: String) = node("CaseClause", str(s), expr(node("CallExpression", ident("f"))), node("BreakStatement"))
+    val ei                = ReferenceSignatures.EnumIndex(Map(("Mode", "math") -> "Math", ("Mode", "text") -> "Text"))
+    val full              = translate(
+      block(node("SwitchStatement", ident("m"), node("CaseBlock", clause("math"), clause("text")))),
+      params = List("m", "f"),
+      paramTypes = Map("m" -> "Mode"),
+      enumIndex = ei
+    )
+    assert(full.scalaBody.contains("case null =>") && !full.scalaBody.contains("case _ =>"), full.scalaBody)
+    val part = translate(
+      block(node("SwitchStatement", ident("m"), node("CaseBlock", clause("math")))),
+      params = List("m", "f"),
+      paramTypes = Map("m" -> "Mode"),
+      enumIndex = ei
+    )
+    assert(part.scalaBody.contains("case _ =>"), part.scalaBody)
+
   test("array literal at typed ArrayBuffer slot carries element type"):
     val arr    = node("ArrayLiteralExpression", num(1), num(2))
     val schema = ReferenceSignatures.ConstructorSchema(
