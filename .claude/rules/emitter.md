@@ -622,3 +622,10 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   non-`Unit` function answers the absent value its result spells (it runs off its end), except
   after `while (true)` / `for (;;)` with no `break` at all, which never ends: an `unreachable`
   throw types the tail. KaTeX 90 -> 92.
+- (a) A method called on a receiver whose class the reference declares takes that class's
+  signature: its arguments are checked and rendered at the parameters' types. Without it a call
+  on a member path (`this.gullet.macros.set(k, "x")`) passed arguments unchecked, and KaTeX's
+  `parse` compiled a String into `Nullable[MacroDefinition]` only after an earlier riser let the
+  body through. A parameter typed by the receiver class's own type parameter
+  (`Namespace[V]#set(v: Nullable[V])`) is refused (`generic-receiver-parameter`): the slot names
+  no type the body can check. KaTeX 92 -> 91, compile errors in emitted bodies 1 -> 0.

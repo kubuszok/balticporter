@@ -186,6 +186,30 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     val extra = node("ObjectLiteralExpression", node("PropertyAssignment", ident("w"), num(2)), node("PropertyAssignment", ident("h"), num(1)))
     refuses(translate(block(ret(extra)), returnType = Some("Box"), ctorSchema = cs), "object-literal-unknown-field")
 
+  test("a method of a receiver whose class the reference declares checks its arguments against that class's signature"):
+    val mi     = ReferenceSignatures.MemberIndex(Map("Ns" -> Set("put"), "Box" -> Set.empty))
+    val oracle = ReferenceSignatures.TypeOracle.fromEntries(
+      List(
+        "Ns" -> ReferenceSignatures.MethodSig("put", List(ReferenceSignatures.ParamSig("k", "String"), ReferenceSignatures.ParamSig("v", "Nullable[Value]")), "Unit")
+      )
+    )
+    val local = translate(
+      block(expr(call(prop(ident("n"), "put"), str("a"), str("b")))),
+      params = List("n"),
+      paramTypes = Map("n" -> "Ns[Box]"),
+      memberIndex = mi,
+      oracle = oracle
+    )
+    refuses(local, "generic-receiver-parameter")
+    val plain = translate(
+      block(expr(call(prop(ident("n"), "put"), num(1), str("b")))),
+      params = List("n"),
+      paramTypes = Map("n" -> "Ns"),
+      memberIndex = mi,
+      oracle = oracle
+    )
+    refuses(plain, "argument-type-mismatch:Int->String")
+
   test("an object literal at an optional slot builds the inner class, present"):
     val cs  = ReferenceSignatures.ConstructorSchema(Map("Box" -> List(ReferenceSignatures.CtorParam("w", "Double", false))))
     val lit = node("ObjectLiteralExpression", node("PropertyAssignment", ident("w"), num(2)))

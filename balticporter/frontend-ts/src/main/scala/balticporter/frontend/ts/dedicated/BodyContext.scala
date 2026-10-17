@@ -1078,7 +1078,7 @@ private[dedicated] class BodyContext(
           }
           val objExpr = translateExpr(obj)
           // Look up the callee's parameter types for expected-type propagation
-          val calleeSig: Option[ReferenceSignatures.MethodSig] =
+          val moduleSig: Option[ReferenceSignatures.MethodSig] =
             if obj.kind == "Identifier" then
               val oName    = snakeToCamel(obj.text.getOrElse(""))
               val cap      = if oName.nonEmpty then oName.take(1).toUpperCase + oName.drop(1) else ""
@@ -1086,6 +1086,10 @@ private[dedicated] class BodyContext(
               oracle.get(cap, methName).orElse(oracle.get(oName, methName))
             else if obj.kind == "ThisKeyword" && memberIndex.knowsType(nodeScalaType) then oracle.get(nodeScalaType, snakeToCamel(method))
             else None
+          // a method of a receiver whose class the reference declares takes that class's parameters
+          val calleeSig = moduleSig.orElse(for c <- classReceiver; m <- classMethod; s <- oracle.get(c, m) yield s)
+          // a parameter typed by the receiver class's own type parameter (`Namespace[V]#set(v: Nullable[V])`) names a type the slot cannot check
+          if exprType(obj).exists(_.contains('[')) && calleeSig.exists(_.params.exists(p => typeVariableIn(p.tpe))) then refuse("generic-receiver-parameter")
           val named = optionsBag(calleeSig, args)
           calleeSig.filter(_ => named.isEmpty).foreach { s =>
             val isVararg = s.params.exists(p => p.tpe.contains("*") || p.tpe.startsWith("Seq["))

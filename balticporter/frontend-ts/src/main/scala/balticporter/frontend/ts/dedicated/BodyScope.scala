@@ -404,6 +404,32 @@ abstract private[dedicated] class BodyScope(
     val names       = "[A-Za-z_][A-Za-z0-9_]*".r.findAllIn(unqualified).toList
     names.nonEmpty && !unqualified.contains('.') && names.forall(n => portableType(n) || standardCollections(n) || n == "ArrayBuffer" && t.contains("scala.collection.mutable.") || nameableTypes(n))
 
+  /** True when `t` names a type nothing declares: no primitive, standard collection, `Nullable` or class the reference declares, so it is a type parameter of the declaring class or method. */
+  protected def typeVariableIn(t: String): Boolean =
+    val known = Set(
+      "Nullable",
+      "ArrayBuffer",
+      "Array",
+      "Function0",
+      "Function1",
+      "Function2",
+      "Function3",
+      "Any",
+      "AnyRef",
+      "Unit",
+      "Null",
+      "Nothing",
+      "Char",
+      "Iterable",
+      "Iterator",
+      "LinkedHashMap",
+      "HashMap",
+      "TreeMap"
+    )
+    "[A-Za-z_][A-Za-z0-9_]*".r.findAllIn(t.replace("scala.collection.mutable.", "").replace("scala.collection.immutable.", "")).exists { n =>
+      !(portableType(n) || standardCollections(n) || known(n) || memberIndex.knowsType(n) || nameableTypes(n))
+    }
+
   protected def extractElementType(tpe: String): Option[String] =
     val bracketIdx = tpe.indexOf('[')
     if bracketIdx < 0 then None
