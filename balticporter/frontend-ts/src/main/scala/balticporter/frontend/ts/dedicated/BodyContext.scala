@@ -115,7 +115,7 @@ private[dedicated] class BodyContext(
         val combines = condNode.kind == "BinaryExpression" && condNode.operator.exists(op => op == "AmpersandAmpersandToken" || op == "BarBarToken")
         if exprType(condNode).isEmpty && !combines then refuse("truthiness-unknown-type")
         // each branch reads what the condition proves, as an untyped `?:` does
-        val thenE = underNarrowing(narrowedBy(condNode))(underPresence(condNode)(translateExprAt(node.children(1), expectedType)))
+        val thenE = underNarrowing(narrowedBy(condNode))(underPresence(condNode, List(node.children(1)))(translateExprAt(node.children(1), expectedType)))
         val elseE = underNarrowing(refutedBy(condNode))(translateExprAt(node.children(2), expectedType))
         s"(if (${translateCondition(condNode)}) $thenE else $elseE)"
       // an object literal is never absent: at an optional slot it builds the inner type, present
@@ -381,7 +381,9 @@ private[dedicated] class BodyContext(
             }
             val annotated = declared.flatMap(_.toOption)
             // JS leaves an uninitialised local `undefined`; no Scala value of its type says that, unless no read can see it
-            val definite = if initNode.isEmpty then definitelyAssignedType(vd, name, annotated).filter(writableType) else None
+            // an optional annotation holds `undefined` as its absent value, so such a local needs no assignment before it is read
+            val definite =
+              if initNode.isEmpty then annotated.filter(t => isOptionLike(t) && writableType(t)).orElse(definitelyAssignedType(vd, name, annotated).filter(writableType)) else None
             // `const xs = []` the body returns is a buffer of the declared result's elements
             val returned = if annotated.isEmpty && initNode.exists(n => n.kind == "ArrayLiteralExpression" && n.children.isEmpty) then returnedBufferType(vd, name) else None
             // a local starting from an integer that later holds a fraction is a double, as every JS number is
@@ -413,7 +415,7 @@ private[dedicated] class BodyContext(
             // Both branches are in value position when the if-else is the last
             // expression; passing isLast to the then-branch prevents emitting a
             // boundary.break with an empty label when both branches return.
-            underNarrowing(narrowedBy(children.head))(underPresence(children.head)(translateStatementBody(children(1), indent + "  ", isLast)))
+            underNarrowing(narrowedBy(children.head))(underPresence(children.head, List(children(1)))(translateStatementBody(children(1), indent + "  ", isLast)))
           if children.size > 2 then
             sb.append(s"$indent} else {\n")
             underNarrowing(refutedBy(children.head))(translateStatementBody(children(2), indent + "  ", isLast))
@@ -693,7 +695,7 @@ private[dedicated] class BodyContext(
       case "ConditionalExpression" =>
         val children = node.children
         if children.size >= 3 then
-          val thenE = underNarrowing(narrowedBy(children(0)))(underPresence(children(0))(translateExpr(children(1))))
+          val thenE = underNarrowing(narrowedBy(children(0)))(underPresence(children(0), List(children(1)))(translateExpr(children(1))))
           val elseE = underNarrowing(refutedBy(children(0)))(translateExpr(children(2)))
           // JS `x ? a : b` uses truthiness of x. Lower the condition based
           // on the operand's declared type.

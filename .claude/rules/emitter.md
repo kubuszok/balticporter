@@ -652,3 +652,8 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   `BodyStrings`. Bodies refusing `js-string-index` 16 -> 6.
 - (a) `String.fromCharCode(c, …)` of `Int` codes cuts each to its low 16 bits (JS's ToUint16) and
   joins the UTF-16 units; a fractional code is refused (`js-builtin`). Terser 40 -> 41.
+- (a) A `T | null | undefined` annotation on a local is an optional `T` (`Nullable` where the
+  target file writes that name, `Option` elsewhere), absent until assigned, so such a local needs
+  no definite assignment. Under `if (x)`, a ternary's test or after `if (!x) <leave>`, an optional
+  local reads as its value even where the body reassigns it elsewhere, provided nothing in the
+  guarded part writes it and no nested function does. graphs-commons 57 -> 58.

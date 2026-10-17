@@ -181,6 +181,37 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     )
     refuses(written, "local-type-annotation:TypeReference")
 
+  test("a `T | null | undefined` annotation is an optional T, absent until assigned"):
+    val union = node(
+      "UnionType",
+      node("TypeReference", ident("Shape")),
+      node("LiteralType", RastNode("NullKeyword", 0, (0, 0))),
+      node("UndefinedKeyword")
+    )
+    val decl = node("VariableStatement", node("VariableDeclarationList", node("VariableDeclaration", ident("g"), union)))
+    val mi   = ReferenceSignatures.MemberIndex(Map("Shape" -> Set.empty))
+    val r    = translate(block(decl, ret(ident("g"))), memberIndex = mi, writes = Set("Shape", "Nullable"))
+    accepts(r)
+    assert(r.scalaBody.contains("val g: Nullable[Shape] = Nullable.Null"), r.scalaBody)
+    val elsewhere = translate(block(decl, ret(ident("g"))), memberIndex = mi, writes = Set("Shape"))
+    assert(elsewhere.scalaBody.contains("val g: Option[Shape] = None"), elsewhere.scalaBody)
+    // a local written before `if (g)` and not inside it reads present there
+    val stored = translate(
+      block(
+        decl,
+        ifThen(ident("c"), expr(bin("EqualsToken", ident("g"), ident("s")))),
+        ifThen(ident("g"), ret(ident("g"))),
+        ret(ident("s"))
+      ),
+      params = List("c", "s"),
+      paramTypes = Map("c" -> "Boolean", "s" -> "Shape"),
+      returnType = Some("Shape"),
+      memberIndex = mi,
+      writes = Set("Shape", "Nullable")
+    )
+    accepts(stored)
+    assert(stored.scalaBody.contains("break(g.get)"), stored.scalaBody)
+
   test("a name nothing declares is refused, a module member is qualified"):
     refuses(translate(block(ret(call(prop(ident("html"), "build"), num(1))))), "unresolved-identifier")
     assertNoDiff(translate(block(ret(ident("limit"))), calleeIndex = objectIndex("Consts", "limit")).scalaBody.trim, "Consts.limit")

@@ -402,6 +402,14 @@ abstract private[dedicated] class BodyScope(
       // `T[]` is a JS array: a mutable buffer of `T`, kept only where the body can write `T`, since `[]` must name it
       case "ArrayType" if t.children.size == 1 =>
         annotationType(t.children.head).toOption.filter(writableType).map(e => s"scala.collection.mutable.ArrayBuffer[$e]").toRight("ArrayType")
+      // `T | null | undefined` is an optional `T`, spelled `Nullable` where the target file writes that name and `Option` elsewhere
+      case "UnionType" =>
+        val absent         = (u: RastNode) => u.kind == "UndefinedKeyword" || u.kind == "LiteralType" && u.children.exists(_.kind == "NullKeyword")
+        val (gaps, values) = t.children.partition(absent)
+        values match
+          case List(v) if gaps.nonEmpty =>
+            annotationType(v).toOption.filter(e => writableType(e) && !isOptionLike(e)).map(e => if nameableTypes("Nullable") then s"Nullable[$e]" else s"Option[$e]").toRight("UnionType")
+          case _ => Left("UnionType")
       case other => Left(other)
 
   private val standardCollections = Set("Vector", "List", "Seq", "IndexedSeq", "Option", "Map", "Set")
@@ -712,10 +720,16 @@ abstract private[dedicated] class BodyScope(
       case "BinaryExpression" if cond.operator.exists(op => op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") => tagNarrowing(cond)
       case _                                                                                                              => Nil
 
-  /** Renders `render` where `cond` holding proves an optional local present: under `if (x)` on a `Nullable`/`Option` local or parameter the body never reassigns, `x` reads as its value. */
-  protected def underPresence[A](cond: RastNode)(render: => A): A =
-    val id      = unparenthesized(cond)
-    val present = id.text.filter(n => id.kind == "Identifier" && (isLocal(n) || entry.params.contains(n)) && !reassignedNames.contains(n) && !reassignedNames.contains(snakeToCamel(n)))
+  /** Renders `render` where `cond` holding proves an optional local present: under `if (x)` on a `Nullable`/`Option` local or parameter, `x` reads as its value, where the body never reassigns it or
+    * nothing in `scope` (what `render` renders) and no nested function writes it.
+    */
+  protected def underPresence[A](cond: RastNode, scope: List[RastNode] = Nil)(render: => A): A =
+    val id = unparenthesized(cond)
+    def writes(n: String)(at: RastNode): Boolean =
+      at.kind == "Identifier" && at.text.contains(n) && isWriteTarget(at) || at.children.exists(writes(n))
+    def stays(n: String) =
+      !reassignedNames.contains(n) && !reassignedNames.contains(snakeToCamel(n)) || scope.nonEmpty && !scope.exists(writes(n)) && !writtenInNestedFunction(n)
+    val present = id.text.filter(n => id.kind == "Identifier" && (isLocal(n) || entry.params.contains(n)) && stays(n))
     present.map(snakeToCamel).filterNot(unwrappedIds.contains).flatMap(n => exprType(id).filter(isOptionLike).map(n -> _)) match
       case None           => render
       case Some((n, tpe)) =>
@@ -806,7 +820,7 @@ abstract private[dedicated] class BodyScope(
         val proven = if leaves then refutedBy(stmt.children.head) else Nil
         // after `if (!x) <leave>` an optional `x` is present for the rest of the block
         val present = Option.when(leaves)(unparenthesized(stmt.children.head)).filter(c => c.kind == "PrefixUnaryExpression" && c.operator.contains("ExclamationToken")).flatMap(_.children.headOption)
-        underNarrowing(proven)(present.fold(translateSequence(rest, indent, isLast))(p => underPresence(p)(translateSequence(rest, indent, isLast))))
+        underNarrowing(proven)(present.fold(translateSequence(rest, indent, isLast))(p => underPresence(p, rest)(translateSequence(rest, indent, isLast))))
 
   /** The arguments a JS call leaves out, as Scala must still pass them: a parameter with a default is skipped, an optional one is passed absent by name (JS passes `undefined`), and any other missing
     * one leaves the call untranslatable (`None`).
