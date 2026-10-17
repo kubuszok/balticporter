@@ -616,7 +616,10 @@ object CtorFunnel:
                   val after = stats ++ stmtsOf(d).tail
                   // deferred prologue is shared (java ran it too), so skip that prefix
                   val shared = e.deferredTo.flatMap(prologueOf(_, 0)).map(_.size).getOrElse(0)
-                  if usable(cd, d, stats, touched) && supersedes(after, prologue.get.drop(shared)) then
+                  // this class's own promoted body runs on every path, replay or not (`promotedBodyOnEveryPath`
+                  // counts it), so only what the PARENT ran before the replay must be superseded
+                  val parentPrologue = prologue.get.dropRight(p.primaryBody.size).drop(shared)
+                  if usable(cd, d, stats, touched) && supersedes(after, parentPrologue) then
                     out((cd.symbol, d.symbol)) = retyped(stats, parentTypeSubst(cd))
                     touched.foreach { case (s, viaPrefix) =>
                       if program.symbolOf(s).exists(sy => sy.flags.isPrivate && sy.owner != cd.symbol) then widened(s) = widened.getOrElse(s, false) || viaPrefix

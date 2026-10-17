@@ -415,6 +415,11 @@ sees the kind); the screen is *would a reader act differently*.
   synthesised primary, which then takes no clause while each root keeps its own: refused, the class
   fell back to scala's implicit nilary primary and java's delegating `Font()` was dropped, so
   `new Font()` built an object with null tables (sge textra 51 hand-suite failures). Kind (a).
+- A subclass whose roots reach DIFFERENT parent constructors replays the parent constructor after
+  `this()`; the replay need only supersede what the PARENT ran before it, never the class's own
+  promoted nilary body, which runs on every path either way and is counted on its own. Read as part
+  of the prologue, a promoted `setText("", true)` refused every replay and textra's
+  `TypingLabel(text, style)` built on the default font (32 `super(args) dropped`). Kind (a).
 - A member-rename key names a field ALONE as `owner#name:field`: the bare key binds the executables
   first, so a java field beside an inherited `layout()` bound the method, whose component reached the
   base's declarations and was refused (sge textra `TextraLabel#layout` -> `baseLayout`, 5 hand-suite
