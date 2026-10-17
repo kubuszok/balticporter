@@ -582,6 +582,17 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       onX("String", RastNode("PrefixUnaryExpression", 0, (0, 0), children = List(ident("x")), operator = Some("PlusToken"))),
       "numeric-coercion"
     )
+    refuses(
+      onX("Boolean", RastNode("PrefixUnaryExpression", 0, (0, 0), children = List(ident("x")), operator = Some("PlusToken"))),
+      "numeric-coercion"
+    )
+    // `+x.toFixed(k)` parses the decimal toFixed wrote back to the double JS reads
+    val fixed = onX(
+      "Double",
+      RastNode("PrefixUnaryExpression", 0, (0, 0), children = List(call(prop(ident("x"), "toFixed"), num(4))), operator = Some("PlusToken"))
+    )
+    accepts(fixed)
+    assert(fixed.scalaBody.trim.startsWith("java.lang.Double.parseDouble({ val d$"), fixed.scalaBody)
     // toFixed answers JS's text for a value it does not format: non-finite, or 1e21 and more
     assert(onX("Double", call(prop(ident("x"), "toFixed"), num(2))).scalaBody.contains("math.abs(d$1) >= 1e21"))
 

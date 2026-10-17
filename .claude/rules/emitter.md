@@ -678,3 +678,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 - (a) A relational test (`<`, `<=`, `>`, `>=`) of a number against an unproven read of numeric
   elements answers false where the element is absent, as JS's comparison with `undefined` (NaN)
   does: `{ val v = x; xs.lift(i).exists(v <= _) }`, both operands evaluated in order. KaTeX 98 -> 100.
+- (a) Unary `+` of `x.toFixed(k)` parses the decimal text back (`Double.parseDouble`, as JS reads
+  it: a decimal, NaN or an infinity), so `+n.toFixed(4) + "em"` writes JS's text; unary `+` of
+  any operand neither a number nor such a call is refused (`numeric-coercion`: a Boolean or an
+  unknown value had been rendered `.toDouble`). KaTeX 100 -> 101.

@@ -665,13 +665,11 @@ private[dedicated] class BodyContext(
             // JS unary + is numeric coercion. Skip when the operand is already numeric.
             val operandType = if children.nonEmpty then exprType(children.head) else None
             if operandType.exists(numericTypes.contains) then operand
+            // the text `toFixed` writes is a decimal, NaN or an infinity, which Java parses to the same double JS does
+            else if children.headOption.exists(numberToFixed) then s"java.lang.Double.parseDouble($operand)"
             else
-              // When the operand is a String and the result is used in string
-              // concatenation, the JS round-trip `+s` strips trailing zeros and
-              // the ".0" suffix for whole numbers. JVM Double.toString keeps
-              // ".0", so use BigDecimal.stripTrailingZeros.toPlainString to match.
-              // JS reads a string as a number by its own grammar (`""` is 0, `"0x10"` 16, anything else NaN), where Scala's parsers throw
-              if operandType.contains("String") then refuse("numeric-coercion")
+              // JS reads a string as a number by its own grammar (`""` is 0, `"0x10"` 16, anything else NaN), where Scala's parsers throw; any other value converts by its own rule
+              refuse("numeric-coercion")
               s"$operand.toDouble"
           case Some("TildeToken") => s"~$operand"
           // the answer re-reads the operand, which only a path reads alike twice

@@ -264,8 +264,9 @@ abstract private[dedicated] class BodyScope(
           case _                                                => None
       case "PrefixUnaryExpression" if node.children.nonEmpty =>
         node.operator match
-          case Some("ExclamationToken")               => Some("Boolean")
-          case Some("MinusToken") | Some("PlusToken") => exprType(node.children.head).filter(numericTypes.contains)
+          case Some("ExclamationToken")                                            => Some("Boolean")
+          case Some("PlusToken") if node.children.headOption.exists(numberToFixed) => Some("Double")
+          case Some("MinusToken") | Some("PlusToken")                              => exprType(node.children.head).filter(numericTypes.contains)
           // an increment answers a number of the operand's type
           case Some("PlusPlusToken") | Some("MinusMinusToken") => exprType(node.children.head).filter(numericTypes.contains)
           case _                                               => None
@@ -431,6 +432,13 @@ abstract private[dedicated] class BodyScope(
     val unqualified = t.replace("scala.collection.mutable.", "").replace("scala.collection.immutable.", "")
     val names       = "[A-Za-z_][A-Za-z0-9_]*".r.findAllIn(unqualified).toList
     names.nonEmpty && !unqualified.contains('.') && names.forall(n => portableType(n) || standardCollections(n) || n == "ArrayBuffer" && t.contains("scala.collection.mutable.") || nameableTypes(n))
+
+  /** True for `x.toFixed(…)` on a number: its text is a decimal, `NaN` or an infinity. */
+  protected def numberToFixed(n: RastNode): Boolean =
+    val call = unparenthesized(n)
+    call.kind == "CallExpression" && call.children.headOption.exists { c =>
+      c.kind == "PropertyAccessExpression" && c.children.size == 2 && c.children.last.text.contains("toFixed") && exprType(c.children.head).exists(numericTypes)
+    }
 
   /** True when `t` names a type nothing declares: no primitive, standard collection, `Nullable` or class the reference declares, so it is a type parameter of the declaring class or method. */
   protected def typeVariableIn(t: String): Boolean =
