@@ -1306,7 +1306,6 @@ object CtorFunnel:
         .orElse(Option.when(throwablePad)(throwablePadding(program, roots)).flatten)
     if roots.sizeIs < 2 || roots.exists(_.tparams.nonEmpty) then scala.None
     else if slotArgs.isEmpty then scala.None
-    else if rootGivens.map(_.map(_.map(_.tpt.tpe))).distinct.sizeIs != 1 then scala.None
     else
       val (target, superValues) = slotArgs.get
       // a PADDED plan is one whose roots do NOT all reach the same parent constructor, which is
@@ -1474,9 +1473,10 @@ object CtorFunnel:
             notSlot = refusedFields,
             postBodySlots = pbSlots,
             primaryPostBody = pbPostBody,
-            // the roots agree (checked above), so any one of them names the clause the
-            // synthesised primary must carry for every secondary's `this(...)` to resolve.
-            givens = rootGivens.headOption.getOrElse(Nil),
+            // roots that agree name the clause the synthesised primary carries for every secondary's
+            // `this(...)`; roots that DISAGREE (a context threaded onto some constructors only) keep their
+            // own clauses and the primary takes none, so a delegating nilary constructor still has a home
+            givens = if rootGivens.map(_.map(_.map(_.tpt.tpe))).distinct.sizeIs == 1 then rootGivens.headOption.getOrElse(Nil) else Nil,
             rootArgs = ra
           )
         )

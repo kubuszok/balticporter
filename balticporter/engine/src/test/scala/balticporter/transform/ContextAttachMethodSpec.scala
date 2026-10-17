@@ -62,3 +62,25 @@ class ContextAttachMethodSpec extends munit.FunSuite:
       holder.extendedBy(ContextHolderExtension("com.demo.App", attachMethod = Set("com.demo.Glyphs"))).fingerprint
     )
   }
+
+  test("a delegating nilary constructor survives when only some constructors take the clause") {
+    val src =
+      """package com.demo;
+        |interface Files { String read (String name); }
+        |class App { public static Files files; }
+        |class Glyphs {
+        |  String text;
+        |  Glyphs () { this("default"); }
+        |  Glyphs (String name) { text = App.files.read(name); }
+        |  Glyphs (Glyphs other) { text = other.text; }
+        |}
+        |""".stripMargin
+    val h            = holder.extendedBy(ContextHolderExtension("com.demo.App", attachMethod = Set("com.demo.Glyphs")))
+    val phase        = new GlobalsToImplicitsTransform(holders = List(h))
+    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(src, "Demo.java"), List(phase))
+    val out          = new TirEmitter(after, notes = log).emit
+    val nilary       = out.linesIterator.filter(_.contains("def this()")).toList
+    assert(clue(nilary).exists(l => l.contains("(using com.demo.Ctx)")), out)
+    assert(out.contains("\"default\""), out)
+    assert(!out.contains("nilary constructor dropped") && !out.contains("scala's implicit nilary primary runs nothing"), out)
+  }
