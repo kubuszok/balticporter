@@ -422,7 +422,13 @@ sees the kind); the screen is *would a reader act differently*.
   `TypingLabel(text, style)` built on the default font (32 `super(args) dropped`). A replayed body
   whose `null` argument meets java's own `if (c != null)` folds that test to java's branch (`==`
   holds, `!=` does not): scalac folds `null.asInstanceOf[T] != null` to `false` and reads the
-  following block as its application (sge textra 1 error). Kind (a).
+  following block as its application (sge textra 1 error). Still refused, textra 32 -> 28 `super(args)
+  dropped`: an argument that is not simple and is read twice further down the parent's delegation
+  chain (`new Font(style.font)` read twice by the root, `TypingButton`), since java evaluated it once
+  and the plan cannot mint the local that would hold it; and a parent root holding an anonymous class
+  that calls `super.draw` (`TypingWindow`, `TypingDialog`, 18), which the scan reads as the
+  constructor's own `super.m()` — an anonymous body naming the outer `this` would not replay either.
+  Kind (a).
 - A member-rename key names a field ALONE as `owner#name:field`: the bare key binds the executables
   first, so a java field beside an inherited `layout()` bound the method, whose component reached the
   base's declarations and was refused (sge textra `TextraLabel#layout` -> `baseLayout`, 5 hand-suite
