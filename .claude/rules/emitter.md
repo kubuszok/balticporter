@@ -332,8 +332,14 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 - An emitter decision is recorded at CONSTRUCTION, never while rendering: `PortRun` records
   `ownDecisions` before emission so porter notes can be derived (the constructor `@nowarn` set).
 - One scan owns "deprecated use": `DeprecatedUseScan` (class-file `@Deprecated` interned by the
-  frontend, lls `orNull`, anon bodies belong to their own members); the phase annotates members,
-  the emitter annotates what it renders (secondaries, promoted bodies, super args).
+  frontend, the port's OWN `@Deprecated`, lls `orNull`, a `new` of a deprecated class, anon bodies
+  belong to their own members); the phase annotates members, the emitter annotates what it renders
+  (secondaries, promoted bodies, super args), neither inside a deprecated declaration, where scalac
+  reports no use and the `@nowarn` would be unused.
+- An owned java `@Deprecated` is emitted as scala's `@deprecated`: `@java.lang.Deprecated` on a
+  scala definition warns no caller, where java warns every one (sge textra's hand suites suppressed
+  warnings the generated `Font.extractScale` no longer raised, 4 unused `@nowarn` under `-Werror`).
+  Kind (a).
 - A rewrite that keeps a list's SIZE is still a change: compare lists, never sizes
   (`UnusedSymbolTransform`'s discard was a no-op for 15 locals while its decision was recorded).
 - scalac's `-Wunused` texts: a write-only `var` (local or private) is "not read", an unreferenced

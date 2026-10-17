@@ -1382,12 +1382,19 @@ private[emit] trait TirEmitterMembers:
     if s.annotations.isEmpty then ""
     else
       s.annotations.map { a =>
-        val args = if a.args.isEmpty then ""
-        // Java's single-element @A(x) names its value `value`; scala takes it positionally.
-        else if a.args.sizeIs == 1 && a.args.head._1 == "value" then s"(${term(a.args.head._2, i)})"
-        // a NAMED arg goes through esc — a java element name may be a scala keyword.
-        else s"(${a.args.map((k, v) => s"${esc(k)} = ${term(v, i)}").mkString(", ")})"
-        s"${ind(i)}@${tpe(a.tpe)}$args\n"
+        val name = tpe(a.tpe)
+        // java's `@Deprecated` warns every caller; scala's `@java.lang.Deprecated` warns none, `@deprecated` does (and still
+        // writes the class file's Deprecated attribute)
+        if name == "java.lang.Deprecated" then
+          val since = a.args.collectFirst { case ("since", v) => s"(since = ${term(v, i)})" }.getOrElse("")
+          s"${ind(i)}@scala.deprecated$since\n"
+        else
+          val args = if a.args.isEmpty then ""
+          // Java's single-element @A(x) names its value `value`; scala takes it positionally.
+          else if a.args.sizeIs == 1 && a.args.head._1 == "value" then s"(${term(a.args.head._2, i)})"
+          // a NAMED arg goes through esc — a java element name may be a scala keyword.
+          else s"(${a.args.map((k, v) => s"${esc(k)} = ${term(v, i)}").mkString(", ")})"
+          s"${ind(i)}@$name$args\n"
       }.mkString
 
   /** The top-level type a symbol lives in, when it is NOT that type itself — the qualifier a nested class's `private` member needs. Java scopes `private` to the enclosing TOP-LEVEL class; scala's

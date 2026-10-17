@@ -23,7 +23,8 @@ final class SuppressionPhase extends Phase:
     // Scan 1: members whose bodies call `.orNull` (deprecated); DeprecatedUseScan owns the counting
     val deprecatedMembers = collection.mutable.Set[SymId]()
 
-    def hasOrNull(body: Term): Boolean = DeprecatedUseScan.count(body) > 0
+    // a deprecated declaration's (or a member of a deprecated class's) uses draw no warning, so they take no `@nowarn`
+    def hasOrNull(body: Term, at: SymId): Boolean = DeprecatedUseScan.count(body) > 0 && !DeprecatedUseScan.withinDeprecated(at)
 
     // Scan 2: members whose bodies contain a match on an enum type where all constants are
     // covered and a `case _ =>` exists — scalac's E030 fires where java's own switch has no
@@ -45,18 +46,18 @@ final class SuppressionPhase extends Phase:
         case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => ()
         case d: Tree.DefDef                                                          =>
           d.rhs.foreach { body =>
-            if hasOrNull(body) then deprecatedMembers += d.symbol
+            if hasOrNull(body, d.symbol) then deprecatedMembers += d.symbol
             if hasExhaustiveEnumDefault(body) then unreachableCaseMembers += d.symbol
           }
         case v: Tree.ValDef =>
           v.rhs.foreach { body =>
-            if hasOrNull(body) then deprecatedMembers += v.symbol
+            if hasOrNull(body, v.symbol) then deprecatedMembers += v.symbol
             if hasExhaustiveEnumDefault(body) then unreachableCaseMembers += v.symbol
           }
         case _: Tree.ClassDef | _: Tree.TypeDef => ()
         case t: Term =>
           // a class-body statement (ctor code, or an inlined test body) — annotate the class
-          if hasOrNull(t) then deprecatedMembers += classSym
+          if hasOrNull(t, classSym) then deprecatedMembers += classSym
           if hasExhaustiveEnumDefault(t) then unreachableCaseMembers += classSym
       }
 

@@ -105,12 +105,12 @@ final class TirEmitter(
       StandardTraversal.allClassDefs(u).foreach { cd =>
         val s    = sym(cd.symbol)
         val plan = if s.flags.isModule then CtorFunnel.Plan.none else plans(cd)
-        if !hasDeprecatedNowarn(s) && DeprecatedUseScan.count(plan.primaryBody ++ plan.superArgs) > 0 then
+        if !hasDeprecatedNowarn(s) && !DeprecatedUseScan.withinDeprecated(cd.symbol) && DeprecatedUseScan.count(plan.primaryBody ++ plan.superArgs) > 0 then
           classes += cd.symbol
           record(cd.symbol, "this class's promoted constructor body or super arguments", "ctor-promoted-orNull-suppression")
         CtorFunnel.ctorsOf(program, cd.body).foreach { d =>
           val ds = sym(d.symbol)
-          if ds.name == "<init>" && !hasDeprecatedNowarn(ds) && DeprecatedUseScan.count(ctorRendered(cd, d)) > 0 then
+          if ds.name == "<init>" && !hasDeprecatedNowarn(ds) && !DeprecatedUseScan.withinDeprecated(d.symbol) && DeprecatedUseScan.count(ctorRendered(cd, d)) > 0 then
             ctors += d.symbol
             record(
               d.symbol,
