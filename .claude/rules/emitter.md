@@ -640,3 +640,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   argument is (an optional where a value is required is refused; it had been rendered bare and
   failed to compile), and after `if (!x) <leave>` an optional local or parameter the body never
   reassigns reads as its value for the rest of the block. KaTeX 93 -> 94.
+- (a) A local's TS annotation is no run-time fact: one no Scala name spells (`ParseNode<"atom">`)
+  is ignored where the local is never written after an initialiser that types itself (a typed
+  value, or an object literal, which builds its tag's class or is refused); an empty array still
+  needs the annotation to name its elements. KaTeX 94 -> 96.

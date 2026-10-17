@@ -170,6 +170,16 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       "local-type-annotation:ArrayType"
     )
     refuses(translate(block(local("v", RastNode("NullKeyword", 0, (0, 0))), ret(ident("v")))), "null-initialised-local")
+    // an annotation no Scala name spells is no run-time fact where a typed initialiser and no later write decide the local
+    val generic = node("TypeReference", ident("Node"), node("LiteralType", str("styling")))
+    val kept    = translate(block(local("w", generic, ident("p")), ret(ident("w"))), params = List("p"), paramTypes = Map("p" -> "Double"))
+    assert(!kept.refusalReasons.exists(_.startsWith("local-type-annotation")), kept.refusalReasons.toString)
+    val written = translate(
+      block(local("w", generic, ident("p")), expr(bin("EqualsToken", ident("w"), ident("p"))), ret(ident("w"))),
+      params = List("p"),
+      paramTypes = Map("p" -> "Double")
+    )
+    refuses(written, "local-type-annotation:TypeReference")
 
   test("a name nothing declares is refused, a module member is qualified"):
     refuses(translate(block(ret(call(prop(ident("html"), "build"), num(1))))), "unresolved-identifier")

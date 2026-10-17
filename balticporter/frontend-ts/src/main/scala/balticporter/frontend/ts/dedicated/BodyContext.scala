@@ -372,9 +372,12 @@ private[dedicated] class BodyContext(
               case t :: rest if isTypeNode(t) => (Some(t), rest.headOption)
               case rest                       => (None, rest.headOption)
             val declared = annotation.map(t => annotationType(t))
+            // an annotation is no run-time fact: a local nothing writes after an initialiser that types itself (a typed value, or an object literal, which builds its tag's class or is refused) is what
+            // that initialiser is; an empty array needs the annotation to name its elements
+            val selfTyped = initNode.exists(n => exprType(n).isDefined || n.kind == "ObjectLiteralExpression") && !bound.exists(assignedAnywhere.contains)
             declared.foreach {
-              case Left(kind) => refuse(s"local-type-annotation:$kind")
-              case Right(_)   => ()
+              case Left(kind) if !selfTyped => refuse(s"local-type-annotation:$kind")
+              case _                        => ()
             }
             val annotated = declared.flatMap(_.toOption)
             // JS leaves an uninitialised local `undefined`; no Scala value of its type says that, unless no read can see it
