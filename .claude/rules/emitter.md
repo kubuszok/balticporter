@@ -682,3 +682,8 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   it: a decimal, NaN or an infinity), so `+n.toFixed(4) + "em"` writes JS's text; unary `+` of
   any operand neither a number nor such a call is refused (`numeric-coercion`: a Boolean or an
   unknown value had been rendered `.toDouble`). KaTeX 100 -> 101.
+- (a) Parity derive drops a single-name import the reference reads unqualified outside its
+  imports and the derived file no longer does: translated bodies write every name fully
+  qualified, so once they replace every user of `import scala.util.boundary` the import is unused,
+  an error under `-Wunused:imports -Werror` (KaTeX's `UnicodeScripts`). An import read only
+  implicitly is read in neither text and stays. Emitted-file compile errors 1 -> 0.

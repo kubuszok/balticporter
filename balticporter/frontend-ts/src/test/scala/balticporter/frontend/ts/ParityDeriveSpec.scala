@@ -37,6 +37,32 @@ class ParityDeriveSpec extends munit.FunSuite:
     assertEquals(result.rastCount, 2)
     assertEquals(result.referenceCount, 3) // inline, priv, afterVal
 
+  test("derive: an import only the replaced bodies read is dropped; one still read, or read only implicitly, stays"):
+    val reference =
+      """package test
+        |
+        |import scala.util.boundary
+        |import scala.util.boundary.break
+        |import scala.collection.mutable
+        |import p.Instances.given_Ord
+        |
+        |object Foo {
+        |
+        |  def first(xs: Array[Int]): Int = boundary {
+        |    for (x <- xs) if (x > 0) break(x)
+        |    0
+        |  }
+        |
+        |  def kept(): mutable.Buffer[Int] = mutable.Buffer.empty
+        |}
+        |""".stripMargin
+    val translated = Map(
+      "first" -> List(("    scala.util.boundary { (r: scala.util.boundary.Label[Int]) ?=> scala.util.boundary.break(0)(using r) }\n", 0))
+    )
+    val emitted = ParityDerive.derive(reference, translated).emittedSource
+    assert(!emitted.contains("import scala.util.boundary\n") && !emitted.contains("import scala.util.boundary.break"), emitted)
+    assert(emitted.contains("import scala.collection.mutable") && emitted.contains("import p.Instances.given_Ord"), emitted)
+
   test("derive: uncompilable pattern blocks substitution"):
     val rastBodies = Map(
       "braced" -> List(("    badPattern( x )\n", 0))

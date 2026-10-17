@@ -173,7 +173,7 @@ object ParityDerive:
     }
 
     ParityResult(
-      emittedSource = sb.toString,
+      emittedSource = withoutOrphanedImports(referenceSource, sb.toString),
       bodies = bodyEntries.toList,
       totalMethods = methods.size,
       rastCount = bodyEntries.count(_.source == Source.Translated),
@@ -181,6 +181,23 @@ object ParityDerive:
       totalRefusals = totalRefusals,
       unoffered = unoffered
     )
+
+  private val singleImport = """^\s*import\s+[\w.`]+\.([\w`]+)\s*$""".r
+
+  /** `derived` without each single-name import whose name the reference reads unqualified outside its imports and the derived file no longer does: a translated body writes every name it needs fully
+    * qualified, so replacing the bodies that used an import leaves it unused, an error under `-Wunused:imports` with `-Werror`. An import read only implicitly is never read in either text and stays.
+    */
+  private def withoutOrphanedImports(reference: String, derived: String): String =
+    def reads(text: String, name: String): Boolean =
+      val code = text.linesIterator.filterNot(l => singleImport.matches(l) || l.trim.startsWith("import ")).mkString("\n")
+      s"(?<![\\w$$.])${java.util.regex.Pattern.quote(name)}(?![\\w$$])".r.findFirstIn(code).isDefined
+    derived
+      .split("\n", -1)
+      .filterNot {
+        case singleImport(name) => reads(reference, name) && !reads(derived, name)
+        case _                  => false
+      }
+      .mkString("\n")
 
   /** Extract the return type from a method signature: the text between the last `)` and `:` before `=`. For `def f(x: Int): String =` the result is `Some("String")`.
     */
