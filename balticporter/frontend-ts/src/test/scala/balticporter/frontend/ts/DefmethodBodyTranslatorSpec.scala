@@ -108,6 +108,16 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val early = translate(block(catching, ret(ident("t"))), params = List("t", "g"), paramTypes = Map("t" -> "Token"), returnType = Some("Token"))
     assert(early.scalaBody.contains("scala.util.boundary.break(t)(using ret$"), early.scalaBody)
 
+  test("a postfix step as a value answers the value before the step, and an lvalue with a call in it is refused"):
+    def post(op: String, e: RastNode) = RastNode("PostfixUnaryExpression", 0, (0, 0), children = List(e), operator = Some(op))
+    val loop                          = node("WhileStatement", post("MinusMinusToken", ident("n")), block(expr(node("CallExpression", ident("f")))))
+    val r                             = translate(block(loop), params = List("n", "f"), paramTypes = Map("n" -> "Double"), returnType = Some("Unit"))
+    assert(!r.refusalReasons.contains("increment-as-value"), r.refusalReasons.toString)
+    assert(r.scalaBody.contains("{ val p$") && r.scalaBody.contains("-= 1; p$") && r.scalaBody.contains("isNaN"), r.scalaBody)
+    val impure = node("ElementAccessExpression", ident("xs"), node("CallExpression", ident("f")))
+    val stmt   = translate(block(expr(post("PlusPlusToken", impure))), params = List("xs", "f"), paramTypes = Map("xs" -> "ArrayBuffer[Int]"))
+    assert(stmt.refusalReasons.contains("increment-as-value"), stmt.refusalReasons.toString)
+
   test("early return wraps body in named boundary and emits break with using"):
     val body = block(
       node("IfStatement", binOp("EqualsEqualsEqualsToken", ident("x"), num(0)), block(ret(num(-1)))),

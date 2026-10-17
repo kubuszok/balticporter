@@ -308,6 +308,14 @@ private[dedicated] class BodyContext(
 
   def translateStatement(node: RastNode, indent: String, isLast: Boolean): Unit = at(node)(renderStatement(node, indent, isLast))
 
+  // an lvalue built of names, member reads and literal or name indices: evaluating it twice reads the same place
+  private def readsAlikeTwice(n: RastNode): Boolean =
+    n.kind match
+      case "Identifier" | "ThisKeyword" | "NumericLiteral" | "StringLiteral" => true
+      case "ParenthesizedExpression"                                         => n.children.forall(readsAlikeTwice)
+      case "PropertyAccessExpression" | "ElementAccessExpression"            => n.children.forall(readsAlikeTwice)
+      case _                                                                 => false
+
   /** A function running off its end after its last loop returns `undefined`: the absent value the declared result spells, refused where it has none. A `while (true)` no `break` leaves never ends, so
     * nothing after it runs.
     */
@@ -653,7 +661,11 @@ private[dedicated] class BodyContext(
               // JS reads a string as a number by its own grammar (`""` is 0, `"0x10"` 16, anything else NaN), where Scala's parsers throw
               if operandType.contains("String") then refuse("numeric-coercion")
               s"$operand.toDouble"
-          case Some("TildeToken")      => s"~$operand"
+          case Some("TildeToken") => s"~$operand"
+          // the answer re-reads the operand, which only a path reads alike twice
+          case Some("PlusPlusToken" | "MinusMinusToken") if !children.headOption.exists(readsAlikeTwice) || !isSimplePath(operand) && (statementRoot ne node) =>
+            refuse("increment-as-value")
+            s"{ $operand ${if node.operator.contains("PlusPlusToken") then "+=" else "-="} 1; $operand }"
           case Some("PlusPlusToken")   => s"{ $operand += 1; $operand }"
           case Some("MinusMinusToken") => s"{ $operand -= 1; $operand }"
           case Some(op)                => s"/* $op */$operand"
@@ -661,15 +673,19 @@ private[dedicated] class BodyContext(
 
       case "PostfixUnaryExpression" =>
         val children = node.children
-        // `x++` yields the value BEFORE the update; the emitted `x += 1` yields Unit
-        if statementRoot ne node then refuse("increment-as-value")
-        val operand = if children.nonEmpty then translateExpr(children.head) else "???"
-        node.operator match
-          case Some("PlusPlusToken") =>
-            s"$operand += 1"
-          case Some("MinusMinusToken") =>
-            s"$operand -= 1"
-          case _ => s"$operand /* postfix */"
+        val operand  = if children.nonEmpty then translateExpr(children.head) else "???"
+        val step     = node.operator match
+          case Some("PlusPlusToken")   => Some("+=")
+          case Some("MinusMinusToken") => Some("-=")
+          case _                       => None
+        // `xs(i) += 1` reads and writes its lvalue's parts twice, which only names and literals read alike
+        if !children.headOption.exists(readsAlikeTwice) then refuse("increment-as-value")
+        if statementRoot eq node then step.fold(s"$operand /* postfix */")(op => s"$operand $op 1")
+        else
+          // `x++` yields the value BEFORE the update: read once into a temporary, on a path that reads alike twice
+          if !isSimplePath(operand) || step.isEmpty || !children.headOption.flatMap(exprType).exists(numericTypes) then refuse("increment-as-value")
+          val p = freshLabel("p")
+          s"{ val $p = $operand; $operand ${step.getOrElse("+=")} 1; $p }"
 
       case "ConditionalExpression" =>
         val children = node.children

@@ -629,3 +629,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   body through. A parameter typed by the receiver class's own type parameter
   (`Namespace[V]#set(v: Nullable[V])`) is refused (`generic-receiver-parameter`): the slot names
   no type the body can check. KaTeX 92 -> 91, compile errors in emitted bodies 1 -> 0.
+- (a) `x++`/`x--` as a value answers the value before the step (`{ val p = x; x -= 1; p }`, so
+  `while (i--)` reads), on a numeric path only; a step whose lvalue holds a call or anything but
+  names, member reads and literal indices is refused in any position, since `xs(f()) += 1` and the
+  prefix form's re-read evaluate it twice. Terser 39 -> 40.

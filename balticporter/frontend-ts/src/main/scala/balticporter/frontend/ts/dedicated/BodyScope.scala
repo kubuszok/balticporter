@@ -252,7 +252,11 @@ abstract private[dedicated] class BodyScope(
         node.operator match
           case Some("ExclamationToken")               => Some("Boolean")
           case Some("MinusToken") | Some("PlusToken") => exprType(node.children.head).filter(numericTypes.contains)
-          case _                                      => None
+          // an increment answers a number of the operand's type
+          case Some("PlusPlusToken") | Some("MinusMinusToken") => exprType(node.children.head).filter(numericTypes.contains)
+          case _                                               => None
+      case "PostfixUnaryExpression" if node.children.nonEmpty && node.operator.exists(op => op == "PlusPlusToken" || op == "MinusMinusToken") =>
+        exprType(node.children.head).filter(numericTypes.contains)
       case "BinaryExpression" if node.children.size >= 2 =>
         val (l, r) = (exprType(node.children.head), exprType(node.children.last))
         node.operator.getOrElse("") match
