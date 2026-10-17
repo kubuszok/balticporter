@@ -667,3 +667,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   `toPaths` over `OpSetType`). Emitted-body compile errors 1 -> 0.
 - (a) Every operand of a holding `&&` proves its optional present, as a bare `if (x)` does
   (`if (accept && replace) symbols[replace] = …` reads `replace.get`). KaTeX 96 -> 97.
+- (a) `c ? a : b` is typed where its branches agree, each read as the test leaves it (narrowed,
+  present), and `null` beside a reference type is that type; numbers of two types are left
+  untyped, since Scala widens only literals and infers `AnyVal` for an `Int` beside a `Double`.
+  KaTeX 97 -> 98.

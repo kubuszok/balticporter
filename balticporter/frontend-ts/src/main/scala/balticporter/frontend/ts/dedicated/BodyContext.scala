@@ -81,8 +81,12 @@ private[dedicated] class BodyContext(
       case "ParenthesizedExpression" if node.children.nonEmpty =>
         s"(${translateCondition(node.children.head)})"
       // a number-valued `a & b` tested for truthiness
-      case "BinaryExpression" if exprType(node).exists(_ != "Boolean") =>
+      case "BinaryExpression" | "ConditionalExpression" if exprType(node).exists(_ != "Boolean") =>
         truthinessTest(exprType(node).get, translateExpr(node))
+      // a `?:` tested for truthiness yields one of its branches, whose test is unknown unless both are booleans
+      case "ConditionalExpression" if exprType(node).isEmpty =>
+        refuse("truthiness-unknown-type")
+        translateExpr(node)
       case "PrefixUnaryExpression" | "BinaryExpression" | "ConditionalExpression" =>
         translateExpr(node) // these already handle truthiness internally
       case "ElementAccessExpression" if absentFalsyRead(node).isDefined =>

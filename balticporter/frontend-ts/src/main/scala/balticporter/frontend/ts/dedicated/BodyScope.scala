@@ -252,7 +252,17 @@ abstract private[dedicated] class BodyScope(
           case _ => None
       // a TS cast or `!` changes nothing at run time: the value keeps the type the body can see
       case "ParenthesizedExpression" | "AsExpression" | "TypeAssertionExpression" | "NonNullExpression" if node.children.nonEmpty => exprType(node.children.head)
-      case "PrefixUnaryExpression" if node.children.nonEmpty                                                                      =>
+      // `c ? a : b` is of the type both branches agree on, each read as the test leaves it; `null` beside a reference is that reference's type
+      case "ConditionalExpression" if node.children.size >= 3 =>
+        val cond = node.children.head
+        val a    = underNarrowing(narrowedBy(cond))(underPresence(cond, List(node.children(1)))(exprType(node.children(1))))
+        val b    = underNarrowing(refutedBy(cond))(exprType(node.children(2)))
+        (a, b) match
+          case (Some(x), Some(y)) if x == y                     => Some(x)
+          case (Some("Null"), Some(y)) if comparesByIdentity(y) => Some(y)
+          case (Some(x), Some("Null")) if comparesByIdentity(x) => Some(x)
+          case _                                                => None
+      case "PrefixUnaryExpression" if node.children.nonEmpty =>
         node.operator match
           case Some("ExclamationToken")               => Some("Boolean")
           case Some("MinusToken") | Some("PlusToken") => exprType(node.children.head).filter(numericTypes.contains)

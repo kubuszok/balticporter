@@ -181,6 +181,18 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     )
     refuses(written, "local-type-annotation:TypeReference")
 
+  test("a conditional expression is of the type its branches agree on, and untyped where they do not"):
+    def run(t: String) =
+      translate(
+        block(ifThen(node("ConditionalExpression", ident("c"), ident("s"), ident("t")), ret(num(1))), ret(num(0))),
+        params = List("c", "s", "t"),
+        paramTypes = Map("c" -> "Boolean", "s" -> "String", "t" -> t),
+        returnType = Some("Int")
+      )
+    accepts(run("String"))
+    assert(run("String").scalaBody.contains(".nonEmpty"), run("String").scalaBody)
+    refuses(run("Double"), "truthiness-unknown-type")
+
   test("an optional chain is refused: the plain read it renders as throws where JS answers undefined"):
     val chain = node("PropertyAccessExpression", ident("s"), node("QuestionDotToken"), ident("length"))
     refuses(translate(block(ret(chain)), params = List("s"), paramTypes = Map("s" -> "String")), "optional-chain")
