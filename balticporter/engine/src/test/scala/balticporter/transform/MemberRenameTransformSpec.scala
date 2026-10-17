@@ -587,3 +587,27 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assert(code(out).contains("s.head()"), s"subclass call should be head:\n$out")
     assert(code(out).contains("c.head()"), s"base call should be head:\n$out")
   }
+
+  test("a `:field` key renames the field alone, beside a same-named method an ancestor declares") {
+    val java =
+      """package com.demo;
+        |class Widget { public void layout() {} }
+        |class Label extends Widget {
+        |  public String layout = "";
+        |  public void layout() { layout = "done"; }
+        |  String read() { return layout; }
+        |}
+        |""".stripMargin
+    val ph = new MemberRenameTransform(Map("com.demo.Label#layout:field" -> "baseLayout"))
+    val r  = run(java, ph)
+    assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
+    assert(clue(code(r.out)).contains("var baseLayout"), r.out)
+    assert(code(r.out).contains("def layout()"), r.out)
+    assert(code(r.out).contains("this.baseLayout = \"done\"") || code(r.out).contains("baseLayout = \"done\""), r.out)
+  }
+
+  test("a `:field` key naming no field is a never-matched finding") {
+    val ph = new MemberRenameTransform(Map("com.demo.Window#close:field" -> "shut"))
+    run(windows, ph)
+    assert(ph.policyReport.findings.exists(_.issue == PolicyIssue.NeverMatched), ph.policyReport.render)
+  }

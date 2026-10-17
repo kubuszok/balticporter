@@ -411,6 +411,10 @@ sees the kind); the screen is *would a reader act differently*.
   MEMBERS (`attachMethod`, per-declaration, so a dependent names its own), the hand port's `new Font()`
   built with no context beside `Font(fntName)(using Sge)`: class-attached, every construction needed a
   given (sge textra 11 hand-suite E172). Empty is the no-op and fingerprints nothing. Kind (b).
+- A member-rename key names a field ALONE as `owner#name:field`: the bare key binds the executables
+  first, so a java field beside an inherited `layout()` bound the method, whose component reached the
+  base's declarations and was refused (sge textra `TextraLabel#layout` -> `baseLayout`, 5 hand-suite
+  E008). Kind (b).
 - A registry SEED that is generic registers under `classOf[X[?]]`: scala's `classOf` takes no raw
   type, and every seed of gdx-ai's generic task tree was E170 (19 errors). Kind (a).
 - `requiredGivens`' transitive closure threads a witness at EVERY type parameter a given-bound class

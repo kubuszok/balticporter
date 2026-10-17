@@ -89,7 +89,10 @@ final class MemberRenameTransform(
       def refuse(what: String): Nil.type =
         bad += PolicyFinding(name, MemberRenameTransform.Setting, key, PolicyIssue.Malformed, what)
         Nil
-      MemberKey.parse(key) match
+      // `owner#name:field` names the FIELD alone, never a same-named method (a java field beside an inherited `layout()`)
+      val fieldOnly = key.endsWith(MemberRenameTransform.FieldSuffix)
+      val parsed    = MemberKey.parse(if fieldOnly then key.dropRight(MemberRenameTransform.FieldSuffix.length) else key)
+      parsed match
         case Left(m)                                               => refuse(m.what)
         case Right(_) if newName.isEmpty                           => refuse("the new name is empty, which names nothing")
         case Right(_) if !MemberRenamer.isValidMemberName(newName) =>
@@ -100,6 +103,24 @@ final class MemberRenameTransform(
               "list, a `.` or whitespace names an act it does not perform (an arity change is " +
               "`bean-properties`; a re-point is `type-redirect`)"
           )
+        case Right(mk) if fieldOnly =>
+          val p    = binder.program
+          val hits = p.symbols.all
+            .filter { s =>
+              s.name == mk.name && p.owns(s.id) && !PolicyBinder.isExecutable(s.info) && p.symbolOf(s.owner).exists(_.fullName == mk.owner)
+            }
+            .map(_.id)
+            .toList
+          if hits.isEmpty then
+            bad += PolicyFinding(
+              name,
+              MemberRenameTransform.Setting,
+              key,
+              PolicyIssue.NeverMatched,
+              s"`${mk.owner}` declares no field `${mk.name}` this program owns"
+            )
+            Nil
+          else List(MemberRenameTransform.Entry(key, newName, hits))
         case Right(mk) =>
           // flatMap(_.sym), not map: a hit with no symbol is a dropped member — a no-op, not a finding.
           val hits = binder.bindMembers(name, MemberRenameTransform.Setting, mk.render).toOption.getOrElse(Nil).flatMap(_.sym)
@@ -261,6 +282,9 @@ object MemberRenameTransform:
   val Name: String = "member-rename"
 
   val Setting: String = "MemberRenameTransform(renames)"
+
+  /** the key suffix that names a FIELD alone, the spelling a derived policy's field rows already use */
+  val FieldSuffix: String = ":field"
 
   /** one entry that parsed and bound: canonical key, new name, every declaration the key named. */
   final private[transform] case class Entry(key: String, newName: String, hits: List[SymId])

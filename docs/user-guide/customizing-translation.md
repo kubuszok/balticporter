@@ -195,6 +195,9 @@ override, not just the one you name:
 { transform = "member-rename", renames { "com.example.VisWindow#close" = "closeWindow" } }
 ```
 
+A key ending in `:field` names the field alone, for a java field that shares its name with a method
+(`"com.example.Label#layout:field" = "baseLayout"` leaves the inherited `layout()` alone).
+
 **`nullary-arity`** drops the empty parameter list from a getter-like method, mints scoped to
 *nothing* by default (adding an arity where java had one is a change to the surface, so it needs an
 explicit `scope`, or `force` naming exact members). **`visibility`** widens a member's visibility to
