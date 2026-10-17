@@ -1320,7 +1320,9 @@ private[dedicated] class BodyContext(
             case "match" =>
               refuse("regex-method")
               s"${scalaArgs.head}.findPrefixMatchOf($objExpr).isDefined"
+            // JS tests the text it makes of its argument (`true` is "true"): only a string reads alike
             case "test" =>
+              if args.size != 1 || !args.headOption.flatMap(exprType).contains("String") then refuse("value-to-string")
               s"${objExpr}.findFirstIn(${scalaArgs.mkString(", ")}).isDefined"
             case "exec" =>
               refuse("regex-method")

@@ -671,3 +671,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   present), and `null` beside a reference type is that type; numbers of two types are left
   untyped, since Scala widens only literals and infers `AnyVal` for an `Int` beside a `Double`.
   KaTeX 97 -> 98.
+- (a) A regex `test` reads alike only on a string argument: JS tests the text it makes of any
+  value (`true` is "true"), and `findFirstIn` of an `Any` did not compile. With it the translator
+  refuses every body terser's consumer had guarded with a text pattern (75 bodies, 0 of them
+  translated once the patterns are gone).

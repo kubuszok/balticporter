@@ -181,6 +181,20 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     )
     refuses(written, "local-type-annotation:TypeReference")
 
+  test("a regex test reads alike only on a string argument"):
+    val re  = RastNode("RegularExpressionLiteral", 0, (0, 0), text = Some("/strict/"))
+    val str = translate(
+      block(ret(call(prop(re, "test"), ident("s")))),
+      params = List("s"),
+      paramTypes = Map("s" -> "String"),
+      returnType = Some("Boolean")
+    )
+    assert(!str.refusalReasons.contains("value-to-string"), str.refusalReasons.toString)
+    refuses(
+      translate(block(ret(call(prop(re, "test"), ident("a")))), params = List("a"), paramTypes = Map("a" -> "Any"), returnType = Some("Boolean")),
+      "value-to-string"
+    )
+
   test("a conditional expression is of the type its branches agree on, and untyped where they do not"):
     def run(t: String) =
       translate(
