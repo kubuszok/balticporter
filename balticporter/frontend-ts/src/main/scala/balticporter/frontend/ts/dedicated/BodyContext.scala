@@ -116,6 +116,10 @@ private[dedicated] class BodyContext(
         val thenE = underNarrowing(narrowedBy(condNode))(underPresence(condNode)(translateExprAt(node.children(1), expectedType)))
         val elseE = underNarrowing(refutedBy(condNode))(translateExprAt(node.children(2), expectedType))
         s"(if (${translateCondition(condNode)}) $thenE else $elseE)"
+      // an object literal is never absent: at an optional slot it builds the inner type, present
+      case "ObjectLiteralExpression" if isOptionLike(expectedType) =>
+        val inner = translateExprAt(node, optionInner(expectedType))
+        if isNullableType(expectedType) then s"Nullable($inner)" else s"Some($inner)"
       // A present value at an optional slot is wrapped: JS stores the value itself, the reference's optional says it is there.
       case _ if isOptionLike(expectedType) && exprType(node).exists(t => !isOptionLike(t) && t != "Null") =>
         val inner = translateExprAt(node, optionInner(expectedType))

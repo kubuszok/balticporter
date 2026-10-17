@@ -594,3 +594,8 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   (the text "null"). `repeat` throws for a negative count as JS's RangeError does, where Scala's
   `*` answered "". Each takes an `Int` or integer-literal count on a `String` receiver, or is
   refused (`js-string-pad`); checked against node.
+- (a) An object literal is never absent: at an optional slot it builds the inner class and is
+  wrapped present (`Nullable(C(…))`). At a `LinkedHashMap` slot it is a `mutable.LinkedHashMap` of
+  its entries in the literal's order, as JS iterates an object's keys, refused where a key is
+  integer-like (JS iterates those first, ascending). KaTeX 86 -> 87, bodies refusing
+  `js-map-construction` 34 -> 25.

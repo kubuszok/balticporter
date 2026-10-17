@@ -186,6 +186,35 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     val extra = node("ObjectLiteralExpression", node("PropertyAssignment", ident("w"), num(2)), node("PropertyAssignment", ident("h"), num(1)))
     refuses(translate(block(ret(extra)), returnType = Some("Box"), ctorSchema = cs), "object-literal-unknown-field")
 
+  test("an object literal at an optional slot builds the inner class, present"):
+    val cs  = ReferenceSignatures.ConstructorSchema(Map("Box" -> List(ReferenceSignatures.CtorParam("w", "Double", false))))
+    val lit = node("ObjectLiteralExpression", node("PropertyAssignment", ident("w"), num(2)))
+    assertNoDiff(translate(block(ret(lit)), returnType = Some("Nullable[Box]"), ctorSchema = cs).scalaBody.trim, "Nullable(Box(w = 2))")
+
+  test("an object literal at a LinkedHashMap slot keeps JS's key order, refused where JS puts an integer-like key first"):
+    val attrs = node(
+      "ObjectLiteralExpression",
+      node("PropertyAssignment", str("width"), ident("w")),
+      node("PropertyAssignment", str("height"), ident("h"))
+    )
+    val types = Map("w" -> "String", "h" -> "String")
+    val built = translate(block(ret(attrs)), params = List("w", "h"), paramTypes = types, returnType = Some("LinkedHashMap[String, String]"))
+    accepts(built)
+    assertNoDiff(built.scalaBody.trim, "scala.collection.mutable.LinkedHashMap(\"width\" -> (w), \"height\" -> (h))")
+    val numbered = node(
+      "ObjectLiteralExpression",
+      node("PropertyAssignment", str("b"), ident("w")),
+      node("PropertyAssignment", str("1"), ident("h"))
+    )
+    refuses(
+      translate(block(ret(numbered)), params = List("w", "h"), paramTypes = types, returnType = Some("LinkedHashMap[String, String]")),
+      "js-map-construction"
+    )
+    assertNoDiff(
+      translate(block(ret(node("ObjectLiteralExpression"))), returnType = Some("LinkedHashMap[String, String]")).scalaBody.trim,
+      "scala.collection.mutable.LinkedHashMap.empty[String, String]"
+    )
+
   test("object reflection — delete, for-in, Object.keys — is refused on anything but a map"):
     refuses(
       translate(block(expr(node("DeleteExpression", prop(ident("o"), "k")))), params = List("o"), paramTypes = Map("o" -> "Shape")),

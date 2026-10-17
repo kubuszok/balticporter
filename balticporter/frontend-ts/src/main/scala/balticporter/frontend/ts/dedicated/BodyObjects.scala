@@ -53,8 +53,11 @@ private[dedicated] trait BodyObjects extends BodyScope:
       // `{}` is a map only where its slot declares a MUTABLE one, which JS may then fill; elsewhere it is an object of a shape nothing names.
       // The map takes the slot's key and value types, written out where the body can name them and inferred from the slot otherwise.
       val mutableMap = expected.filter(rt => rt.startsWith("mutable.Map[") || rt.startsWith("scala.collection.mutable.Map["))
-      if mutableMap.isEmpty then refuse("js-map-construction")
-      mutableMap.map(rt => rt.substring(rt.indexOf('['))).filter(writableType).fold("scala.collection.mutable.Map.empty")(args => s"scala.collection.mutable.Map.empty$args")
+      val linked     = expected.filter(rt => baseName(rt) == "LinkedHashMap" && mapValueType(rt).isDefined)
+      if mutableMap.isEmpty && linked.isEmpty then refuse("js-map-construction")
+      if linked.isDefined then
+        linked.map(rt => rt.substring(rt.indexOf('['))).filter(writableType).fold("scala.collection.mutable.LinkedHashMap.empty")(a => s"scala.collection.mutable.LinkedHashMap.empty$a")
+      else mutableMap.map(rt => rt.substring(rt.indexOf('['))).filter(writableType).fold("scala.collection.mutable.Map.empty")(args => s"scala.collection.mutable.Map.empty$args")
     else
       // Extract literal key-value pairs
       val litEntries = props.flatMap { p =>
@@ -101,7 +104,7 @@ private[dedicated] trait BodyObjects extends BodyScope:
             s"${tagged.flatMap(spelled).getOrElse(typeName.get)}(${args.mkString(", ")})"
         case None =>
           // No schema: fall back to mutable.Map, refuse unless the slot declares a Map
-          if !expected.exists(rt => baseName(rt) == "Map" && mapValueType(rt).isDefined) then refuse("js-map-construction")
+          if !expected.exists(rt => (baseName(rt) == "Map" || baseName(rt) == "LinkedHashMap") && mapValueType(rt).isDefined) then refuse("js-map-construction")
           emitObjectLiteralAsMap(props, expected)
 
   /** `{ ...src, k: v }` at a slot of the case class `cls`, where `src` is of that class: JS copies src's fields and then sets each key, as `src.copy(k = v)` does, evaluating src and then the values
@@ -165,7 +168,12 @@ private[dedicated] trait BodyObjects extends BodyScope:
           "??? /* entry */"
     }
     val mutable = expected.exists(rt => rt.startsWith("mutable.Map[") || rt.startsWith("scala.collection.mutable.Map["))
-    s"scala.collection.${if mutable then "mutable" else "immutable"}.Map(${entries.mkString(", ")})"
+    if expected.exists(rt => baseName(rt) == "LinkedHashMap") then
+      // JS iterates an object's keys in insertion order, as a LinkedHashMap does, except that it puts integer-like keys first, ascending
+      if props.exists(p => p.children.headOption.flatMap(k => k.text.orElse(k.value.collect { case balticporter.frontend.ts.RastValue.Str(s) => s })).exists(_.matches("0|[1-9][0-9]*"))) then
+        refuse("js-map-construction")
+      s"scala.collection.mutable.LinkedHashMap(${entries.mkString(", ")})"
+    else s"scala.collection.${if mutable then "mutable" else "immutable"}.Map(${entries.mkString(", ")})"
 
   /** A node-factory call `f(Cls, orig, { prop: val, ... })`: `{ val $n = new Cls(); $n.prop = val; $n }`. */
   protected def translateMakeNode(args: List[RastNode]): String =
