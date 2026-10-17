@@ -675,3 +675,6 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   value (`true` is "true"), and `findFirstIn` of an `Any` did not compile. With it the translator
   refuses every body terser's consumer had guarded with a text pattern (75 bodies, 0 of them
   translated once the patterns are gone).
+- (a) A relational test (`<`, `<=`, `>`, `>=`) of a number against an unproven read of numeric
+  elements answers false where the element is absent, as JS's comparison with `undefined` (NaN)
+  does: `{ val v = x; xs.lift(i).exists(v <= _) }`, both operands evaluated in order. KaTeX 98 -> 100.

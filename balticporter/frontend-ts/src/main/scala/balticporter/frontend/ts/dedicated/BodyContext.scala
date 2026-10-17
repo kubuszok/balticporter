@@ -1483,6 +1483,8 @@ private[dedicated] class BodyContext(
         val scalaArgs  = args.map(translateExpr)
         s"$calleeExpr(${scalaArgs.mkString(", ")})"
 
+  private val relational = Map("LessThanToken" -> "<", "LessThanEqualsToken" -> "<=", "GreaterThanToken" -> ">", "GreaterThanEqualsToken" -> ">=")
+
   private def translateBinaryExpr(node: RastNode): String =
     val children = node.children
     if children.size < 2 then return "??? /* bad binary */"
@@ -1509,6 +1511,9 @@ private[dedicated] class BodyContext(
           val lhs = translateExpr(children.head)
           s"$lhs.isInstanceOf[Any] /* instanceof */"
 
+      // a relational test against a read past the end answers false, as JS's NaN comparison does
+      case Some(op) if relational.contains(op) && comparedAbsentRead(children.head, children.last, relational(op)).isDefined =>
+        comparedAbsentRead(children.head, children.last, relational(op)).get()
       case Some(op) =>
         val lhs = children.head
         val rhs = children.last

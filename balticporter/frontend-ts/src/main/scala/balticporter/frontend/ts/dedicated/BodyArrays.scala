@@ -107,6 +107,15 @@ private[dedicated] trait BodyArrays extends BodyBounds with BodyStrings:
     * element (`xs.lift(i).exists(…)`). None for any other read, which renders as before.
     */
   protected def absentFalsyRead(node: RastNode): Option[() => String] =
+    absentRead(node).map { (option, t) => () =>
+      val e = freshLabel("e")
+      s"${option()}.exists($e => ${truthinessTest(t, e)})"
+    }
+
+  /** A read `xs[i]` or `m[k]` of primitive elements no guard proves present, as the `Option` of the element it reads (`xs.lift(i)`, `m.get(k)`) and the element's type; none for any other read. Where
+    * JS reads such an element only to test or compare it, `undefined` answers what an absent `Option` does.
+    */
+  protected def absentRead(node: RastNode): Option[(() => String, String)] =
     val children = node.children
     if node.kind != "ElementAccessExpression" || children.size < 2 || isWriteTarget(node) then None
     else
@@ -120,10 +129,26 @@ private[dedicated] trait BodyArrays extends BodyBounds with BodyStrings:
       val read    = element.map(("lift", _)).orElse(value.map(("get", _))).filterNot((_, t) => absentIsNull(t))
       val proven  =
         if value.isDefined then keyProven(node, recv, idx) else indexProven(node, recv, idx) || tupleProven(recv, idx)
-      read.filter(_ => !plain && !proven).map { (how, t) => () =>
-        for rt <- recvType; k <- mapKeyType(rt); have <- exprType(idx) do checkTypeCompatibility(have, k)
-        val e = freshLabel("e")
-        s"${translateExpr(recv)}.$how(${translateExpr(idx)}).exists($e => ${truthinessTest(t, e)})"
+      read.filter(_ => !plain && !proven).map { (how, t) =>
+        val option = () =>
+          for rt <- recvType; k <- mapKeyType(rt); have <- exprType(idx) do checkTypeCompatibility(have, k)
+          s"${translateExpr(recv)}.$how(${translateExpr(idx)})"
+        (option, t)
+      }
+
+  /** `a < b` (any of `<`, `<=`, `>`, `>=`) where an operand is a read past the end of numbers: JS compares `undefined` as NaN, false every way, which an absent `Option` answers; both operands are
+    * evaluated, in order, whether the element is there or not. None where neither operand is such a read or the other is no number.
+    */
+  protected def comparedAbsentRead(lhs: RastNode, rhs: RastNode, op: String): Option[() => String] =
+    val (l, r) = (absentRead(lhs).filter((_, t) => numericTypes(t)), absentRead(rhs).filter((_, t) => numericTypes(t)))
+    if l.isDefined == r.isDefined then None
+    else
+      val other = if l.isDefined then rhs else lhs
+      Option.when(exprType(other).exists(numericTypes)) { () =>
+        val (o, v) = (freshLabel("o"), freshLabel("v"))
+        l match
+          case Some((option, _)) => s"{ val $o = ${option()}; val $v = ${translateExpr(rhs)}; $o.exists(_ $op $v) }"
+          case None              => s"{ val $v = ${translateExpr(lhs)}; ${r.get._1()}.exists($v $op _) }"
       }
 
   /** The buffer type of `const xs = []` whose last read is the body's own `return xs`, read off the declared result: JS returns the array itself, and a buffer of the result's element type holds every

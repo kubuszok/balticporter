@@ -1182,6 +1182,13 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     )
     accepts(negated)
     assert(negated.scalaBody.contains("!(m.get(k).exists(e$"), negated.scalaBody)
+    // compared, a read past the end is false every way, the other operand evaluated first where it stands first
+    val cmp = test(bin("LessThanEqualsToken", ident("i"), node("ElementAccessExpression", ident("xs"), ident("i"))))
+    accepts(cmp)
+    assert(
+      cmp.scalaBody.contains("{ val v$") && cmp.scalaBody.contains("xs.lift(i).exists(v$") && cmp.scalaBody.contains(" <= _)"),
+      cmp.scalaBody
+    )
     // the same read as a value still needs its guard
     refuses(
       translate(
