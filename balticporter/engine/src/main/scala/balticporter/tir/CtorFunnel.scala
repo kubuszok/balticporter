@@ -620,7 +620,12 @@ object CtorFunnel:
                   // counts it), so only what the PARENT ran before the replay must be superseded
                   val parentPrologue = prologue.get.dropRight(p.primaryBody.size).drop(shared)
                   if usable(cd, d, stats, touched) && supersedes(after, parentPrologue) then
-                    out((cd.symbol, d.symbol)) = retyped(stats, parentTypeSubst(cd))
+                    // a folded `if` with no else leaves `()`, a pure statement scalac warns about
+                    val folded = stats.map(simplifyNullIfStat(_)(using program)).filter {
+                      case Tree.Literal(Constant.UnitC, _, _) => false
+                      case _                                  => true
+                    }
+                    out((cd.symbol, d.symbol)) = retyped(folded, parentTypeSubst(cd))
                     touched.foreach { case (s, viaPrefix) =>
                       if program.symbolOf(s).exists(sy => sy.flags.isPrivate && sy.owner != cd.symbol) then widened(s) = widened.getOrElse(s, false) || viaPrefix
                     }
@@ -880,25 +885,30 @@ object CtorFunnel:
     case Tree.Spread(e, _, _)                           => simple(e) // the array passed through a vararg slot
     case _                                              => false
 
-  /** Simplify `if (nullExpr != null)` to the else branch when the condition is always false. Avoids a Scala 3 parser issue with `null.asInstanceOf[T] != null` in `this(...)` arguments where the true
-    * branch contains a block.
+  /** Fold `if (null == null)` / `if (null != null)` — what substituting a `null` argument leaves — to the branch java takes. scalac constant-folds the rendered `null.asInstanceOf[T] != null` and then
+    * reads the following block as an application of `false`, so the comparison may not reach the emitted text.
     */
-  private def simplifyNullIf(t: Term)(using Program): Term =
-    def isNull(t: Term): Boolean = t match
-      case Tree.Literal(Constant.NullC, _, _) => true
-      case Tree.Typed(e, _, _, _)             => isNull(e)
-      case Tree.Commented(_, e)               => isNull(e)
-      case _                                  => false
-    // a WALK, not a top-level match: a phase may have wrapped the `if` (`Nullable(if (…) A else B)`)
-    val ph = new Phase:
-      def name:                                           String = "ctor-funnel/simplify-null-if"
-      override def transformTerm(x: Term)(using Program): Term   = x match
-        case Tree.If(cond, _, el, _, _) if isNullCompare(cond) => el
-        case other                                             => other
-    StandardTraversal.mapTerm(ph, t)
-  private def isNullCompare(cond: Term): Boolean = cond match
-    case Tree.Apply(Tree.Select(lhs, _, _, _), List(rhs), _, _, _) => isNull(lhs) && isNull(rhs)
-    case _                                                         => false
+  private def simplifyNullIf(t:     Term)(using Program):      Term      = StandardTraversal.mapTerm(nullIfFold, t)
+  private def simplifyNullIfStat(s: Statement)(using Program): Statement = StandardTraversal.mapStat(nullIfFold, s)
+  // a WALK, not a top-level match: a phase may have wrapped the `if` (`Nullable(if (…) A else B)`)
+  private val nullIfFold = new Phase:
+    def name:                                           String = "ctor-funnel/simplify-null-if"
+    override def transformTerm(x: Term)(using Program): Term   = x match
+      case Tree.If(cond, th, el, _, _) =>
+        nullCompare(cond) match
+          case Some(true)  => th
+          case Some(false) => el
+          case scala.None  => x
+      case other => other
+
+  /** the value of a `null` compared with `null`: `==` holds, `!=` does not; `None` for anything else. */
+  private def nullCompare(cond: Term)(using p: Program): Option[Boolean] = cond match
+    case Tree.Apply(Tree.Select(lhs, op, _, _), List(rhs), _, _, _) if isNull(lhs) && isNull(rhs) =>
+      p.symbolOf(op).map(_.name) match
+        case Some("==" | "eq") => Some(true)
+        case Some("!=" | "ne") => Some(false)
+        case _                 => scala.None
+    case _ => scala.None
   private def isNull(t: Term): Boolean = t match
     case Tree.Literal(Constant.NullC, _, _) => true
     case Tree.Typed(e, _, _, _)             => isNull(e)

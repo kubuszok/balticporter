@@ -20,6 +20,8 @@ class CtorReplayPromotedBodySpec extends munit.FunSuite:
       |  public Label(String t, String st) { this(t, st, st + "-font"); }
       |  public Label(String t, String st, String f) { font = f; style = st; text = t; touch(); }
       |  public Label(String t, String f, int c) { font = f; style = "none"; text = t + c; }
+      |  public Label(String t, StringBuilder f) { this(t, f, null); }
+      |  public Label(String t, StringBuilder f, String c) { font = f.toString(); style = "sb"; text = t; if (c != null) text = t + c; if (c == null) touch(); }
       |}
       |public class Typing extends Label {
       |  public int texts;
@@ -27,11 +29,12 @@ class CtorReplayPromotedBodySpec extends munit.FunSuite:
       |  public Typing(String t, String st) { super(t.trim(), st); setText(text); }
       |  public Typing(String t, String st, String f) { super(t, st, f); setText(text); }
       |  public Typing(String t, String f, int c) { super(t, f, c); setText(text); }
+      |  public Typing(String t, StringBuilder f) { super(t, f); setText(text); }
       |  void setText(String s) { texts++; }
       |  String show() { return font + "/" + style + "/" + text + "/" + touches; }
       |  public static String run() {
       |    return new Typing().show() + "|" + new Typing(" x ", "st").show() + "|" + new Typing("y", "st2", "F").show() + "|" +
-      |      new Typing("z", "G", 3).show();
+      |      new Typing("z", "G", 3).show() + "|" + new Typing("w", new StringBuilder("H")).show();
       |  }
       |}
       |""".stripMargin
@@ -59,5 +62,5 @@ class CtorReplayPromotedBodySpec extends munit.FunSuite:
   test("each subclass constructor runs the parent constructor java's `super(args)` named") {
     val loader = new java.net.URLClassLoader(Array(compiled.toUri.toURL), getClass.getClassLoader)
     val got    = loader.loadClass("demo.Typing").getMethod("run").invoke(null).asInstanceOf[String]
-    assertEquals(got, "default/s:default//0|st-font/st/x/1|F/st2/y/1|G/none/z3/0", emitted.mkString("\n"))
+    assertEquals(got, "default/s:default//0|st-font/st/x/1|F/st2/y/1|G/none/z3/0|H/sb/w/1", emitted.mkString("\n"))
   }
