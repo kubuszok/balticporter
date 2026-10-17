@@ -42,7 +42,8 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     enumIndex:     ReferenceSignatures.EnumIndex = ReferenceSignatures.EnumIndex.empty,
     memberRenames: Map[String, String] = Map.empty,
     oracle:        ReferenceSignatures.TypeOracle = ReferenceSignatures.TypeOracle.empty,
-    params:        List[String] = Nil
+    params:        List[String] = Nil,
+    owner:         Option[String] = None
   ): DefmethodBodyTranslator.TranslationResult =
     val entry = DefmethodEntry("_free_", "test", params, body)
     DefmethodBodyTranslator.translateBody(
@@ -57,7 +58,8 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ctorSchema = ctorSchema,
       enumIndex = enumIndex,
       memberRenames = memberRenames,
-      oracle = oracle
+      oracle = oracle,
+      enclosingOwner = owner
     )
 
   // ---- return lowering ----
@@ -596,6 +598,13 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val idx    = ReferenceSignatures.CalleeIndex(Map("helper" -> List("ModuleA", "ModuleB")))
     val result = translate(body, calleeIndex = idx)
     assert(result.refusalReasons.contains("callee-ambiguous"), s"ambiguous callee should refuse: ${result.refusalReasons}")
+
+  test("a callee several objects declare resolves to the body's own object where it declares one"):
+    val body   = block(ret(node("CallExpression", ident("helper"), num(1))))
+    val idx    = ReferenceSignatures.CalleeIndex(Map("helper" -> List("ModuleA", "ModuleB")))
+    val result = translate(body, calleeIndex = idx, owner = Some("ModuleB"))
+    assert(result.isComplete, s"should not refuse: ${result.refusalReasons}")
+    assertNoDiff(result.scalaBody.trim, "ModuleB.helper(1)")
 
   test("function call via apiLookup does not refuse"):
     val body   = block(ret(node("CallExpression", ident("makeSpan"), num(1))))

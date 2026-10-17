@@ -611,3 +611,8 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   3 had a call between the test and the read, and every other refused read had no guard on its
   receiver at all (most on an untyped receiver), so an aliasing analysis to admit intervening calls
   would move at most 3 bodies. Read-past-end refusal sites 359 -> 355.
+- (a) A bare call several objects declare resolves to the body's own object where that object
+  declares the name, as a bare identifier already did: a module's own function shadows every
+  other. A consumer's name-wide `apiLookup` must leave out the names a file declares itself, or
+  `buildExpression` in a MathML builder resolves to the HTML builder's (refused only because the
+  types differed). KaTeX 89 -> 90 with the consumer's per-file lookup.

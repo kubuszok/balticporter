@@ -1398,7 +1398,10 @@ private[dedicated] class BodyContext(
                 !conventions.isClassName(name) && scalaName == snakeToCamel(name)
               then
                 calleeIndex.resolveMember(scalaName) match
-                  case Right(ref)               => Some(ref)
+                  case Right(ref) => Some(ref)
+                  // ambiguous elsewhere, but the body's own object declares it, as a module's own function shadows every other
+                  case Left("callee-ambiguous") if enclosingOwner.flatMap(calleeIndex.declared(_, scalaName)).isDefined =>
+                    enclosingOwner.flatMap(calleeIndex.declared(_, scalaName))
                   case Left("callee-ambiguous") =>
                     refuse("callee-ambiguous")
                     None
