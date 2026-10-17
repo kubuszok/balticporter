@@ -724,6 +724,13 @@ abstract private[dedicated] class BodyScope(
     * nothing in `scope` (what `render` renders) and no nested function writes it.
     */
   protected def underPresence[A](cond: RastNode, scope: List[RastNode] = Nil)(render: => A): A =
+    // every operand of a holding `&&` holds too
+    unparenthesized(cond) match
+      case c if c.kind == "BinaryExpression" && c.operator.contains("AmpersandAmpersandToken") && c.children.size == 2 =>
+        underPresence(c.children.head, scope)(underPresence(c.children(1), scope)(render))
+      case _ => presentWhere(cond, scope)(render)
+
+  private def presentWhere[A](cond: RastNode, scope: List[RastNode])(render: => A): A =
     val id = unparenthesized(cond)
     def writes(n: String)(at: RastNode): Boolean =
       at.kind == "Identifier" && at.text.contains(n) && isWriteTarget(at) || at.children.exists(writes(n))

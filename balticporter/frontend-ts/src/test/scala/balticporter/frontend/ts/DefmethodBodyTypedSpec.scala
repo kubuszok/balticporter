@@ -217,6 +217,15 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     )
     accepts(stored)
     assert(stored.scalaBody.contains("break(g.get)"), stored.scalaBody)
+    // each operand of a holding `&&` is present
+    val both = translate(
+      block(ifThen(bin("AmpersandAmpersandToken", ident("c"), ident("r")), ret(ident("r"))), ret(str(""))),
+      params = List("c", "r"),
+      paramTypes = Map("c" -> "Boolean", "r" -> "Nullable[String]"),
+      returnType = Some("String")
+    )
+    accepts(both)
+    assert(both.scalaBody.contains("break(r.get)"), both.scalaBody)
 
   test("a name nothing declares is refused, a module member is qualified"):
     refuses(translate(block(ret(call(prop(ident("html"), "build"), num(1))))), "unresolved-identifier")

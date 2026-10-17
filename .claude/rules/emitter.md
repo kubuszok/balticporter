@@ -665,3 +665,5 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   values) falls out — or runs `default` — only for an absent selector, so that arm is `case null`:
   a `case _` there is Scala's unreachable-case warning, an error under `-Werror` (graphs-commons'
   `toPaths` over `OpSetType`). Emitted-body compile errors 1 -> 0.
+- (a) Every operand of a holding `&&` proves its optional present, as a bare `if (x)` does
+  (`if (accept && replace) symbols[replace] = …` reads `replace.get`). KaTeX 96 -> 97.
