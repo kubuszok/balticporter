@@ -657,3 +657,7 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   no definite assignment. Under `if (x)`, a ternary's test or after `if (!x) <leave>`, an optional
   local reads as its value even where the body reassigns it elsewhere, provided nothing in the
   guarded part writes it and no nested function does. graphs-commons 57 -> 58.
+- (a) An optional chain (`x?.p`, `x?.[i]`, `x?.m()`) is refused: the `?.` is a child token the
+  renderings never read, so it was emitted as the plain read, which throws on an absent `x` where
+  JS answers `undefined`. No body ssg's ports translate held one (translated unchanged); bodies
+  that did were refused for other reasons only by luck.

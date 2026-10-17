@@ -528,6 +528,9 @@ private[dedicated] class BodyContext(
   def translateExpr(node: RastNode): String = at(node)(renderExpr(node))
 
   private def renderExpr(node: RastNode): String =
+    // `x?.p`, `x?.[i]`, `x?.m()` answer undefined for an absent `x` where the plain read throws: the `?.` is a child token the renderings below never read
+    def chained(n: RastNode) = n.children.exists(_.kind == "QuestionDotToken")
+    if chained(node) || node.kind == "CallExpression" && node.children.headOption.exists(chained) then refuse("optional-chain")
     node.kind match
       case "NumericLiteral" | "FirstLiteralToken" =>
         node.value match

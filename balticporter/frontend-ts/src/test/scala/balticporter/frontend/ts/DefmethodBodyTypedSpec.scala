@@ -181,6 +181,12 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     )
     refuses(written, "local-type-annotation:TypeReference")
 
+  test("an optional chain is refused: the plain read it renders as throws where JS answers undefined"):
+    val chain = node("PropertyAccessExpression", ident("s"), node("QuestionDotToken"), ident("length"))
+    refuses(translate(block(ret(chain)), params = List("s"), paramTypes = Map("s" -> "String")), "optional-chain")
+    val call = node("CallExpression", node("PropertyAccessExpression", ident("s"), node("QuestionDotToken"), ident("trim")))
+    refuses(translate(block(ret(call)), params = List("s"), paramTypes = Map("s" -> "String")), "optional-chain")
+
   test("a `T | null | undefined` annotation is an optional T, absent until assigned"):
     val union = node(
       "UnionType",
