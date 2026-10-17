@@ -60,6 +60,45 @@ private[dedicated] trait BodyArrays extends BodyBounds:
         if !proven then refuse("read-past-end")
         s"$obj($idx)"
 
+  /** JS `xs.splice(start, count, ...items)` on a buffer: a negative start counts from the end, both bounds are clamped into the array, one argument removes to the end, the items are inserted where
+    * the removed run was, and the removed elements are the answer. Every argument is evaluated, a spread copied, before the array changes. A bound must be a number; anything else is refused.
+    */
+  protected def translateSplice(node: RastNode, obj: RastNode, objExpr: String, args: List[RastNode], scalaArgs: List[String]): String =
+    def bound(i: Int): String =
+      val t = args.lift(i).flatMap(exprType)
+      if !args.lift(i).exists(a => a.kind != "SpreadElement" && (intLiteral(a).isDefined || t.exists(Set("Int", "Double", "Float")))) then refuse("js-splice")
+      // JS truncates toward zero and reads NaN as 0, as `toInt` does; an infinity saturates and is clamped alike
+      if t.exists(x => x == "Double" || x == "Float") then s"(${scalaArgs.lift(i).getOrElse("0")}).toInt" else scalaArgs.lift(i).getOrElse("0")
+    if !exprType(obj).exists(isMutableBuffer) || args.isEmpty then
+      refuse("js-splice")
+      s"$objExpr.remove(${scalaArgs.mkString(", ")})"
+    else
+      val (b, s0, d0, s, d, r, p) = (freshLabel("b"), freshLabel("s"), freshLabel("c"), freshLabel("i"), freshLabel("d"), freshLabel("r"), freshLabel("p"))
+      val items                   = args.drop(2).zip(scalaArgs.drop(2)).map { (a, text) =>
+        val n = freshLabel("a")
+        if a.kind == "SpreadElement" then
+          val from = a.children.headOption.flatMap(exprType).flatMap(extractElementType)
+          if from.isEmpty then refuse("array-spread")
+          for f <- from; e <- exprType(obj).flatMap(extractElementType) do checkTypeCompatibility(f, e)
+          (n, s"val $n = ${text.stripSuffix("*")}.toList", true)
+        else (n, s"val $n = $text", false)
+      }
+      val head =
+        s"val $b = $objExpr; val $s0: Int = ${bound(0)}; ${if args.size >= 2 then s"val ${d0}: Int = ${bound(1)}; " else ""}${items.map(_._2).mkString("", "; ", if items.isEmpty then "" else "; ")}" +
+          s"val $s = if ($s0 < 0) math.max($b.length + $s0, 0) else math.min($s0, $b.length); " +
+          s"val $d = ${if args.size >= 2 then s"math.max(0, math.min($d0, $b.length - $s))" else s"$b.length - $s"}; "
+      val used    = statementRoot ne node
+      val removed = if used then s"val $r = $b.slice($s, $s + $d); " else ""
+      val inserts =
+        if items.isEmpty then ""
+        else
+          s"var $p = $s; " + items
+            .map { (n, _, spread) =>
+              if spread then s"$b.insertAll($p, $n); $p += $n.length" else s"$b.insert($p, $n); $p += 1"
+            }
+            .mkString("; ") + "; "
+      s"{ $head$removed$b.remove($s, $d); $inserts${if used then r else "()"} }"
+
   /** The truthiness of a read `xs[i]` or `m[k]` of primitive elements that no guard proves present: JS reads an absent one as `undefined`, which is falsy, so the test asks for a present truthy
     * element (`xs.lift(i).exists(…)`). None for any other read, which renders as before.
     */

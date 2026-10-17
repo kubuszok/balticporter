@@ -1102,7 +1102,7 @@ private[dedicated] class BodyContext(
                     if arg.children.count(_.kind == "Parameter") > 1 then refuse("callback-index-parameter")
                     translateFunctionExpr(arg, List(elem), discardsResult = method == "forEach")
                   // the element an array receives is of the array's element type
-                  else if elem.isDefined && (method == "push" || method == "unshift") && arg.kind != "SpreadElement" then
+                  else if elem.isDefined && (method == "push" || method == "unshift" || method == "splice" && i >= 2) && arg.kind != "SpreadElement" then
                     exprType(arg).foreach(checkTypeCompatibility(_, elem.get))
                     translateExprAt(arg, elem.get)
                   else translateExpr(arg)
@@ -1178,9 +1178,7 @@ private[dedicated] class BodyContext(
             case "hasOwnProperty" =>
               s"$objExpr.contains(${scalaArgs.mkString(", ")})"
             case "splice" =>
-              // JS clamps its bounds, removes to the end on one argument, inserts the rest and returns the removed array; no Buffer.remove does all that
-              refuse("js-splice")
-              s"$objExpr.remove(${scalaArgs.mkString(", ")})"
+              translateSplice(node, obj, objExpr, args, scalaArgs)
             case "concat" =>
               s"($objExpr ++ ${scalaArgs.mkString(" ++ ")})"
             case "join" =>

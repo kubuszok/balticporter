@@ -1038,6 +1038,26 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       "read-past-end"
     )
 
+  test("splice clamps its bounds, counts a negative start from the end, inserts its items and answers the removed run"):
+    val types                 = Map("xs" -> "ArrayBuffer[Int]", "i" -> "Int", "x" -> "Int", "ys" -> "ArrayBuffer[Int]", "f" -> "Double")
+    def run(stmts: RastNode*) = translate(block(stmts*), params = List("xs", "i", "x", "ys", "f"), paramTypes = types)
+    val stmt                  = run(expr(call(prop(ident("xs"), "splice"), ident("i"), num(1), ident("x"), node("SpreadElement", ident("ys")))))
+    accepts(stmt)
+    val body = stmt.scalaBody
+    assert(body.contains("math.max(b$") && body.contains("math.min(c$") && body.contains(".remove(i$"), body)
+    assert(body.contains(".insert(p$") && body.contains(".insertAll(p$") && body.contains("ys.toList"), body)
+    assert(!body.contains(".slice("), s"a statement discards the removed run: $body")
+    val used = translate(block(ret(call(prop(ident("xs"), "splice"), num(0)))), params = List("xs"), paramTypes = types)
+    accepts(used)
+    assert(used.scalaBody.contains(".slice(i$") && used.scalaBody.contains(".length - i$"), used.scalaBody)
+    // a fractional bound is truncated as JS truncates it; a bound of another type is refused
+    assert(run(expr(call(prop(ident("xs"), "splice"), ident("f"), num(1)))).scalaBody.contains("(f).toInt"))
+    refuses(run(expr(call(prop(ident("xs"), "splice"), ident("ys"), num(1)))), "js-splice")
+    refuses(
+      translate(block(expr(call(prop(ident("v"), "splice"), num(0)))), params = List("v"), paramTypes = Map("v" -> "Vector[Int]")),
+      "mutated-immutable-collection"
+    )
+
   test("a map read answers null for an absent key of reference values, and needs a has test otherwise"):
     val refs = translate(
       block(ret(call(prop(ident("m"), "get"), ident("k")))),

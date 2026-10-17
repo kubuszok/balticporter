@@ -406,8 +406,12 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   became typed. The checker's type answers only where it is unambiguous (a boolean; a LOCAL of a
   class the reference declares) — at a member read it was wider in the reference, a compile error.
 - (a) JS `splice` clamps its bounds, removes to the end on one argument, inserts the rest and
-  returns the removed array: no `Buffer.remove` call is faithful, so it is refused (one KaTeX body
-  was emitted as `remove(i, 1, xs*)`).
+  returns the removed array: no single `Buffer.remove` call is faithful (one KaTeX body was emitted
+  as `remove(i, 1, xs*)`). On a buffer it is written out inline: every argument evaluated first (a
+  spread copied with `toList`), a negative start counted from the end, both bounds clamped, `remove`
+  then `insert`/`insertAll` at the same place, the removed run (`slice`) answered only where the
+  value is read; a bound that is not a number is refused. Checked against node. KaTeX 87 -> 89,
+  terser 38 -> 39.
 - (b) A consumer's deliberate divergences from upstream are `NonJavaBodies.Library.recordedDivergences`,
   matched by file, member and overload: they keep the reference body ahead of every other reason,
   and an unmatched record is reported; a faithful translation would otherwise silently undo them.
