@@ -5,7 +5,7 @@ ThisBuild / organizationName := "Baltic Porter"
 // The one Scala version this build compiles with, named because the `runtime` project matrix has
 // to state it per platform row as well (`ThisBuild / scalaVersion` is not visible to the matrix's
 // axis constructors, which run while the build is being assembled).
-val scalaV = "3.8.4"
+val scalaV = "3.9.0"
 
 ThisBuild / scalaVersion     := scalaV
 

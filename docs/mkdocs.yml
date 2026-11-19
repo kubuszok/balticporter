@@ -94,6 +94,6 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/kubuszok/balticporter
   scala:
-    3: "3.8.4"
+    3: "3.9.0"
   local:
     commit: !ENV [CI_COMMIT, "commit"]
