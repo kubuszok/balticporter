@@ -802,7 +802,7 @@ private[transform] trait CollectionsRetarget:
     else valueType(recv.tpe).getOrElse(TypeRepr.NoType)
     if elemTpe == TypeRepr.NoType then return scala.None
     val n       = { collectSeq += 1; collectSeq }
-    val varName = s"r$$co$n"
+    val varName = s"`r$$co$n`" // backticked: scala 3.9 warns on a bare `$` in a definition
     val addName = "add"
     val block   = Tree.Opaque.spliced(
       List(s"{ val $varName = ${rw.into}[", s"](); ", s".${rw.via}($varName.$addName); $varName }"),
@@ -830,7 +830,7 @@ private[transform] trait CollectionsRetarget:
     val vTpe = valueType(recv.tpe).getOrElse(TypeRepr.NoType)
     if kTpe == TypeRepr.NoType || vTpe == TypeRepr.NoType then return scala.None
     val n                 = { collectSeq += 1; collectSeq }
-    val r                 = s"r$$ei$n"
+    val r                 = s"`r$$ei$n`"
     def hole(t: TypeRepr) = Tree.Ident(headSym(t).getOrElse(SymId.None), t, so)
     Some(
       Tree.Opaque.spliced(
@@ -838,8 +838,8 @@ private[transform] trait CollectionsRetarget:
           s"{ val $r = new scala.collection.mutable.ArrayBuffer[(",
           ", ",
           s")](); ",
-          s".$via((bp$$k: ",
-          s", bp$$v: ",
+          s".$via((`bp$$k`: ",
+          s", `bp$$v`: ",
           s") => { $r += ((bp$$k, bp$$v)); () }); $r.iterator }"
         ),
         List(hole(kTpe), hole(vTpe), recv, hole(kTpe), hole(vTpe)),
@@ -883,8 +883,8 @@ private[transform] trait CollectionsRetarget:
       case "lowlevel.util.DynamicArray" =>
         // $recv appears 3 times, so bind to a val to avoid multiple evaluation
         val n       = { collectSeq += 1; collectSeq }
-        val tmpName = s"bp$$da$n"
-        val riName  = "bp$ri"
+        val tmpName = s"`bp$$da$n`"
+        val riName  = "`bp$ri`"
         Some(
           Tree.Opaque.spliced(
             List(
@@ -899,8 +899,8 @@ private[transform] trait CollectionsRetarget:
       case "lowlevel.util.OrderedSet" =>
         // size and apply via orderedItems, removal via removeIndex on the SET (shrinks both).
         val n       = { collectSeq += 1; collectSeq }
-        val tmpName = s"bp$$os$n"
-        val riName  = "bp$ri"
+        val tmpName = s"`bp$$os$n`"
+        val riName  = "`bp$ri`"
         Some(
           Tree.Opaque.spliced(
             List(
@@ -923,10 +923,10 @@ private[transform] trait CollectionsRetarget:
     val valTpe   = valueType(mapRecv.tpe).getOrElse(TypeRepr.NoType)
     val elemTpe  = if isValues then valTpe else keyTpe
     val n        = { collectSeq += 1; collectSeq }
-    val ksName   = s"bp$$ks$n"
-    val vsName   = s"bp$$vs$n"
-    val mapName  = s"bp$$map$n"
-    val riName   = "bp$ri"
+    val ksName   = s"`bp$$ks$n`"
+    val vsName   = s"`bp$$vs$n`"
+    val mapName  = s"`bp$$map$n`"
+    val riName   = "`bp$ri`"
     val into     = "lowlevel.util.DynamicArray"
     // Build the block as an Opaque.spliced with the map receiver, key type and value type as holes.
     // The block collects keys and values in parallel, then creates a removing JavaIterator whose
@@ -934,8 +934,8 @@ private[transform] trait CollectionsRetarget:
     val iterExpr = if isValues then
       s"{ val $mapName = "; val part2 = s"""; val $ksName = $into["""; val part3 = s"""](); val $vsName = $into[""";
       val part4                       =
-        s"""](); $mapName.foreachEntry((bp$$k: """; val part5 = s""", bp$$v: """;
-        val part6                                             =
+        s"""](); $mapName.foreachEntry((`bp$$k`:"""; val part5 = s""", `bp$$v`: """;
+        val part6                                              =
           s""") => { $ksName.add(bp$$k); $vsName.add(bp$$v) }); balticporter.runtime.JavaIterator.removing(() => $vsName.size, ($riName: scala.Int) => $vsName.apply($riName), ($riName: scala.Int) => { $mapName.remove($ksName.apply($riName)); $ksName.removeIndex($riName); $vsName.removeIndex($riName); () }) }"""
       val keySym = headSym(keyTpe).getOrElse(SymId.None)
       val valSym = headSym(valTpe).getOrElse(SymId.None)
@@ -944,8 +944,8 @@ private[transform] trait CollectionsRetarget:
           s"{ val $mapName = ",
           s"; val $ksName = $into[",
           s"](); val $vsName = $into[",
-          s"](); $mapName.foreachEntry((bp$$k: ",
-          s", bp$$v: ",
+          s"](); $mapName.foreachEntry((`bp$$k`:",
+          s", `bp$$v`: ",
           s") => { $ksName.add(bp$$k); $vsName.add(bp$$v) }); balticporter.runtime.JavaIterator.removing(() => $vsName.size, ($riName: scala.Int) => $vsName.apply($riName), ($riName: scala.Int) => { $mapName.remove($ksName.apply($riName)); $ksName.removeIndex($riName); $vsName.removeIndex($riName); () }) }"
         ),
         List(
@@ -1346,7 +1346,7 @@ private[transform] trait CollectionsRetarget:
       val isTypeArgPh = ph.startsWith("$T") && ph.length > 2 && ph.charAt(2).isDigit
       if counts.getOrElse(ph, 0) > 1 && !isTypeArgPh then
         templateSeq += 1
-        val tmpName = s"bp$$tpl$templateSeq"
+        val tmpName = s"`bp$$tpl$templateSeq`"
         bindings += ((ph, term, tmpName))
         // explicit substring, not append(CharSequence,start,end) — avoids Scala 3 auto-tupling
         val phPositions = findTermPh(text, ph)
@@ -1452,8 +1452,8 @@ private[transform] trait CollectionsRetarget:
                   (retargetRewriteSyms.get((srcFqn, onTrue)), retargetRewriteSyms.get((srcFqn, onFalse))) match
                     case (Some(trueSym), Some(falseSym)) =>
                       val n         = { templateSeq += 1; templateSeq }
-                      val recvTmp   = s"bp$$bd$n"
-                      val argTmps   = remaining.indices.map(i => s"bp$$bd${n}a$i")
+                      val recvTmp   = s"`bp$$bd$n`"
+                      val argTmps   = remaining.indices.map(i => s"`bp$$bd${n}a$i`")
                       val recvBind  = s"val $recvTmp = "
                       val argBinds  = argTmps.map(t => s"; val $t = ")
                       val argList   = argTmps.mkString(", ")

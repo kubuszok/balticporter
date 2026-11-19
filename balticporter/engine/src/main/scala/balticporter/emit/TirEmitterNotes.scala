@@ -560,6 +560,9 @@ private[emit] trait TirEmitterNotes:
   /** backtick an identifier that collides with a Scala keyword. */
   private[emit] def esc(name: String): String = TirEmitter.esc(name)
 
+  /** the same, for the name a definition introduces (also backticks a `$`). */
+  private[emit] def escDef(name: String): String = TirEmitter.escDef(name)
+
   /** backtick every keyword SEGMENT of a qualified name (cut at the structural separators). */
   private[emit] def escPath(path: String): String = TirEmitter.escPath(path)
 

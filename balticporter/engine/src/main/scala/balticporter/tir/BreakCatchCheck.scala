@@ -16,7 +16,7 @@ object BreakCatchCheck:
     def classification(i: Issue): String = i match
       case UnguardedJump =>
         "engine (true of every Java program): this is a universal java-vs-scala fact, never port policy. The " +
-          "emitter interposes `case brkThru$: scala.util.boundary.Break[?] => throw brkThru$` " +
+          "emitter interposes `case brkThru: scala.util.boundary.Break[?] => throw brkThru`" +
           "(and, at a `Throwable` catch, the same arm for the `ControlThrowable` sentinel a NAMED " +
           "loop boundary throws) ahead of the java arms wherever a jump crosses a catch that could match it " +
           "(`TirEmitter.tryStr`/`crossesCatch`). A finding here means this walk sees a crossing " +

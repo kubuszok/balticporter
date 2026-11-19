@@ -130,7 +130,7 @@ private[emit] trait TirEmitterExprs:
           case Some(rt) =>
             lambdaSeq += 1
             val n = s"body$$$lambdaSeq"
-            head + s"{ def $n(): $rt = ${term(body, i)}; $n() }"
+            head + s"{ def ${escDef(n)}(): $rt = ${term(body, i)}; $n() }"
           // REFUSED rather than guessed: the def needs the SAM method's result
           // type, and a source-written lambda carries no method to read it off. Counted by
           // OmissionCheck.unnameableLambdaReturn.
@@ -194,7 +194,7 @@ private[emit] trait TirEmitterExprs:
         case None                    => s"new scala.Array[${tpe(el.tpe)}](${dims.map(term(_, i)).mkString(", ")})"
     case Tree.ForEach(b, it, body, _, _, lbl) =>
       val raw  = sym(b.symbol).name
-      val name = esc(raw)
+      val name = escDef(raw)
       // JS-S15 — java's enhanced-for evaluates the ITERABLE once; satisfied by construction (the
       // generator interpolates term(it, …) exactly once).
       Obligations.consult(JS.S(15), it.origin)(Some(()))
@@ -236,7 +236,7 @@ private[emit] trait TirEmitterExprs:
           loopWithJumps(
             body,
             lbl,
-            bd => s"{ val $itVar = ${term(it, i)}.iterator(); while ($itVar.hasNext()) { $kw $name: $decl = $nextExpr; $bd } }",
+            bd => s"{ val ${escDef(itVar)} = ${term(it, i)}.iterator(); while ($itVar.hasNext()) { $kw $name: $decl = $nextExpr; $bd } }",
             term(body, i)
           )
         case (_, _, _, true) =>
@@ -258,7 +258,7 @@ private[emit] trait TirEmitterExprs:
           loopWithJumps(
             body,
             lbl,
-            bd => s"{ val $itVar = ${term(it, i)}$iterCall; while ($itVar$hasNextCall) { $kw $name: $decl = $nextExpr; $bd } }",
+            bd => s"{ val ${escDef(itVar)} = ${term(it, i)}$iterCall; while ($itVar$hasNextCall) { $kw $name: $decl = $nextExpr; $bd } }",
             term(body, i)
           )
         case (widened, _, _, _) =>
@@ -271,7 +271,7 @@ private[emit] trait TirEmitterExprs:
           // declared type.
           val decl = widened.getOrElse(tpe(b.tpt.tpe))
           val rhs  = if widened.isDefined then s"$fresh.asInstanceOf[$decl]" else fresh
-          loopWithJumps(body, lbl, bd => s"for ($fresh <- ${term(it, i)}) { $kw $name: $decl = $rhs; $bd }", term(body, i))
+          loopWithJumps(body, lbl, bd => s"for (${escDef(fresh)} <- ${term(it, i)}) { $kw $name: $decl = $rhs; $bd }", term(body, i))
     case Tree.For(init, cond, upd, body, _, _, lbl) =>
       // the UPDATE must run on a continue too, so it sits OUTSIDE the per-iteration boundary.
       // ONE LINE joined by `;`: a comment here would swallow the rest of the loop header, so any
@@ -334,7 +334,7 @@ private[emit] trait TirEmitterExprs:
               val ps = referent match
                 case Referent.Instance(n) => (0 until n).map(k => s"a$k$$").toList
                 case Referent.Static(_)   => Nil // a constructor is never static; JLS 8.8.3
-              samAscribed(s"((${ps.mkString(", ")}) => new ${ctorTpe(tt.tpe)}(${ps.mkString(", ")}))", mrT, tt.tpe)
+              samAscribed(s"((${ps.map(escDef).mkString(", ")}) => new ${ctorTpe(tt.tpe)}(${ps.mkString(", ")}))", mrT, tt.tpe)
         // `Type::method` is TWO java forms sharing one syntax: STATIC is `Type.method`; INSTANCE
         // is UNBOUND (receiver becomes the first parameter). At arity ZERO the qualified name is
         // not a function at all — scala 3 refuses to eta-expand a nullary method — so a nilary
@@ -351,7 +351,7 @@ private[emit] trait TirEmitterExprs:
           val arity   = referent match { case Referent.Static(n) => n; case _ => 0 }
           val formals = methodParams(s)
           val named   = formals.sizeIs == arity && !hasWildcardArg(tt.tpe)
-          val ps      = (0 until arity).map(k => if named then s"a$k$$: ${tpe(formals(k))}" else s"a$k$$").mkString(", ")
+          val ps      = (0 until arity).map(k => if named then s"${escDef(s"a$k$$")}: ${tpe(formals(k))}" else escDef(s"a$k$$")).mkString(", ")
           val as      = (0 until arity).map(k => s"a$k$$").mkString(", ")
           samAscribed(s"(($ps) => ${tpe(tt.tpe)}.${local(s)}($as))", mrT, tt.tpe)
         case Left(tt) =>
@@ -369,13 +369,13 @@ private[emit] trait TirEmitterExprs:
           // qualifier annotated with it makes the call return an unusable capture, since java's
           // reference takes its meaning entirely from the TARGET (e.g. Comparator.comparing).
           val recvT = if named then s": ${tpe(tt.tpe)}" else ""
-          val extra = (0 until arity).toList.map(k => if named then s"a$k$$: ${tpe(formals(k))}" else s"a$k$$")
-          val ps    = (s"$self$recvT" :: extra).mkString(", ")
+          val extra = (0 until arity).toList.map(k => if named then s"${escDef(s"a$k$$")}: ${tpe(formals(k))}" else escDef(s"a$k$$"))
+          val ps    = (s"${escDef(self)}$recvT" :: extra).mkString(", ")
           samAscribed(s"(($ps) => $self.${local(s)}${callParens(s, as)})", mrT, tt.tpe)
         // a BOUND reference to a member declared PARENLESS has no method to eta-expand: a lambda
         // over the receiver, evaluated ONCE where java evaluated it (JLS 15.13.3)
         case Right(e) if referent == Referent.Instance(0) && parenlessDecl(s) =>
-          samAscribed(s"{ val recv$$ = ${term(e, i)}; (() => recv$$.${local(s)}) }", mrT, TypeRepr.NoType)
+          samAscribed(s"{ val `recv$$` = ${term(e, i)}; (() => recv$$.${local(s)}) }", mrT, TypeRepr.NoType)
         case Right(e) => s"${term(e, i)}.${local(s)}"
     // Java's break leaves the loop; scala.util.boundary/break is the faithful shape. A
     // LABELLED break reaches it through Tree.Labeled or the loop's own label field.
@@ -413,14 +413,14 @@ private[emit] trait TirEmitterExprs:
     // has put a named, value-carrying boundary around the arm. A TAIL yield never reaches here.
     // `case String s ->` — a java TYPE PATTERN as a case label (JLS 14.11.1); scala's typed
     // pattern is the exact image.
-    case Tree.TypePattern(b, tpt, _, _) => s"${TirEmitter.escBinder(sym(b).name)}: ${tpe(tpt.tpe)}"
+    case Tree.TypePattern(b, tpt, _, _) => TirEmitter.patBinder(sym(b).name, tpe(tpt.tpe))
     // `case Point(x, y)` — java's RECORD PATTERN derives over the record's ACCESSORS (JLS
     // 14.30.1, JS-C43). Named through typeValue (the companion's value path, where unapply is).
     case Tree.RecordPattern(tpt, ps, _, _) =>
       val nm = headSymOf(tpt.tpe).map(typeValue).getOrElse(tpe(tpt.tpe))
       s"$nm(${ps.map(term(_, i)).mkString(", ")})"
     // an UNCONDITIONAL component: the binding alone (a type test would be a different program).
-    case Tree.BindPattern(b, _, _)                    => TirEmitter.escBinder(sym(b).name).trim
+    case Tree.BindPattern(b, _, _)                    => TirEmitter.patBinder(sym(b).name)
     case Tree.Yield(v, _, _) if yieldTarget.isDefined =>
       s"scala.util.boundary.break(${term(v, i)})(using ${yieldTarget.get})"
     case y @ Tree.Yield(v, _, _) =>
@@ -471,7 +471,7 @@ private[emit] trait TirEmitterExprs:
         val inner =
           try term(s, i)
           finally saved match { case Some(v) => labelBreak(name) = v; case _ => labelBreak.remove(name) }
-        s"scala.util.boundary { ($n: scala.util.boundary.Label[scala.Unit]) ?=> $inner }"
+        s"scala.util.boundary { (${escDef(n)}: scala.util.boundary.Label[scala.Unit]) ?=> $inner }"
     case Tree.Assert(c, m, _, _) => s"assert(${term(c, i)}${m.map(x => ", " + term(x, i)).getOrElse("")})"
     // java's POST-increment yields the value BEFORE the update; the temporary is what makes it exact.
     case Tree.IncDec(tgt, op, post, _, _) =>
@@ -479,9 +479,9 @@ private[emit] trait TirEmitterExprs:
       if hasNonTrivialSubexpr(tgt) then
         val (bindings, lv) = bindLvalue(tgt, i)
         val prefix         = bindings.mkString("; ")
-        if post then s"{ $prefix; val ${'$'}prev = $lv; $lv $op= 1; ${'$'}prev }"
+        if post then s"{ $prefix; val `${'$'}prev` = $lv; $lv $op= 1; ${'$'}prev }"
         else s"{ $prefix; $lv $op= 1; $lv }"
-      else if post then s"{ val ${'$'}prev = ${term(tgt, i)}; ${term(tgt, i)} $op= 1; ${'$'}prev }"
+      else if post then s"{ val `${'$'}prev` = ${term(tgt, i)}; ${term(tgt, i)} $op= 1; ${'$'}prev }"
       else s"{ ${term(tgt, i)} $op= 1; ${term(tgt, i)} }"
     case Tree.DoWhile(b, c, _, _, lbl) => // Scala 3 has no do-while
       // JS-S18 — scala 3 removed do-while, so the body is lifted into the condition instead.
@@ -623,20 +623,20 @@ private[emit] trait TirEmitterExprs:
       val bindings = List.newBuilder[String]
       val arrStr   =
         if effectFree(arr) then term(arr, i)
-        else { lvSeq += 1; val n = s"$$lv$lvSeq"; bindings += s"val $n = ${term(arr, i)}"; n }
+        else { lvSeq += 1; val n = s"$$lv$lvSeq"; bindings += s"val ${escDef(n)} = ${term(arr, i)}"; n }
       val idxStr =
         if effectFree(idx) then term(idx, i)
-        else { lvSeq += 1; val n = s"$$lv$lvSeq"; bindings += s"val $n = ${term(idx, i)}"; n }
+        else { lvSeq += 1; val n = s"$$lv$lvSeq"; bindings += s"val ${escDef(n)} = ${term(idx, i)}"; n }
       (bindings.result(), s"$arrStr($idxStr)")
     case Tree.Select(qual, fld, _, _) =>
       lvSeq += 1
       val n = s"$$lv$lvSeq"
-      (List(s"val $n = ${term(qual, i)}"), s"$n.${local(fld)}")
+      (List(s"val ${escDef(n)} = ${term(qual, i)}"), s"$n.${local(fld)}")
     case _ =>
       // fallback: bind the whole thing
       lvSeq += 1
       val n = s"$$lv$lvSeq"
-      (List(s"val $n = ${term(lv, i)}"), n)
+      (List(s"val ${escDef(n)} = ${term(lv, i)}"), n)
 
   // `compoundAssignParts` removed — the compound-assignment fact is now carried on `Tree.Assign`'s
   // `compound` field, set by the frontend. No shape reconstruction needed.
@@ -914,8 +914,8 @@ private[emit] trait TirEmitterExprs:
           case (_, Tree.Ident(s, _, _)) if s == c.param.symbol => true
           case (acc, _)                                        => acc
         }(using program)
-        val pname = if paramUsed then TirEmitter.escBinder(sym(c.param.symbol).name) else "_"
-        s"${ind(i + 1)}case $pname: ${catchTpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}"
+        val pat = TirEmitter.patBinder(if paramUsed then sym(c.param.symbol).name else "_", catchTpe(c.param.tpt.tpe))
+        s"${ind(i + 1)}case $pat => ${term(c.body, i + 1)}"
       }
       .mkString("\n")
     val cl = if catches.isEmpty then "" else s" catch {\n$guard$cs\n${ind(i)}}"
@@ -946,14 +946,14 @@ private[emit] trait TirEmitterExprs:
         val b     = new StringBuilder
         b ++= "{\n"
         b ++= s"${ind(i + 1)}${valDef(v, 0)}\n"
-        b ++= s"${ind(i + 1)}var $p: java.lang.Throwable = null\n"
+        b ++= s"${ind(i + 1)}var ${escDef(p)}: java.lang.Throwable = null\n"
         b ++= s"${ind(i + 1)}try $inner\n"
         // the JUMP arm, AHEAD of the recorder — see the doc above.
         b ++= s"${ind(i + 1)}catch { case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard} // a java jump carries no exception to suppress into\n"
         b ++= s"${ind(i + 2)}case ${TirEmitter.BreakGuard}: scala.util.control.ControlThrowable => throw ${TirEmitter.BreakGuard}\n"
-        b ++= s"${ind(i + 2)}case $thr: java.lang.Throwable => { $p = $thr; throw $thr } }\n"
+        b ++= s"${ind(i + 2)}case ${TirEmitter.patBinder(thr, "java.lang.Throwable")} => { $p = $thr; throw $thr } }\n"
         b ++= s"${ind(i + 1)}finally if $name != null then {\n"
-        b ++= s"${ind(i + 2)}if $p != null then { try $name.close() catch { case $sup: java.lang.Throwable => $p.addSuppressed($sup) } }\n"
+        b ++= s"${ind(i + 2)}if $p != null then { try $name.close() catch { case ${TirEmitter.patBinder(sup, "java.lang.Throwable")} => $p.addSuppressed($sup) } }\n"
         b ++= s"${ind(i + 2)}else $name.close()\n"
         b ++= s"${ind(i + 1)}}\n"
         b ++= s"${ind(i)}}"
@@ -1013,13 +1013,13 @@ private[emit] trait TirEmitterExprs:
           labelSeq += 1
           val n = s"yield$$$labelSeq"
           val b = inYield(Some(n))(term(c.body, i + 1))
-          s"${ind(i + 1)}case $pat => scala.util.boundary { ($n: scala.util.boundary.Label[${tpe(m.tpe)}]) ?=> $b }"
+          s"${ind(i + 1)}case $pat => scala.util.boundary { (${escDef(n)}: scala.util.boundary.Label[${tpe(m.tpe)}]) ?=> $b }"
         else if !caseNeedsBoundary(c.body) then s"${ind(i + 1)}case $pat => ${inSwitch(scala.None)(term(c.body, i + 1))}"
         else
           labelSeq += 1
           val n = s"case$$$labelSeq"
           val b = inSwitch(Some(n))(term(c.body, i + 1))
-          s"${ind(i + 1)}case $pat => scala.util.boundary { ($n: scala.util.boundary.Label[scala.Unit]) ?=> $b }"
+          s"${ind(i + 1)}case $pat => scala.util.boundary { (${escDef(n)}: scala.util.boundary.Label[scala.Unit]) ?=> $b }"
       }
       .mkString("\n")
     // the SCRUTINEE is outside the switch — a `break` cannot occur in a java expression — but it

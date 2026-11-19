@@ -263,6 +263,13 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   operator identifier: `val other_: Pair = …` is a parse error); a PATTERN binder takes a space
   instead (`escBinder`), since a backticked name in a pattern is a stable identifier, not a binding.
   Kind (a).
+- Scala 3.9 warns (`E230`, fatal under `-Werror`) on a DEFINITION spelling `$` bare, and the engine
+  mints `$` names everywhere (`x$field`, `x$p`, `x$arr`, `brk$1`, `$lv1`, `that$rec`, `a0$`). A
+  definition goes through `TirEmitter.escDef` (backticked; a use stays bare), a pattern binder
+  through `patBinder` (`` `a$` @ (_: T) ``, since a backticked bare pattern is a stable identifier),
+  and a phase's raw template backticks its own temporaries. 81 -> 0 warnings over the engine suite's
+  compiled emissions. Not yet done: `frontend-ts`'s `freshLabel` names (ssg silences generated-code
+  warnings) and the legacy `ScalaPrinter`. Kind (a).
 
 - A java `T...` the port DECLARES is emitted `T*` (hand-port parity: the reference spells every
   vararg repeated, and a consumer hand-added `addRoomTypes(RoomType*)` beside the `Array` one). Every

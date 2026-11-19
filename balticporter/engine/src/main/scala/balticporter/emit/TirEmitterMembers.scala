@@ -289,12 +289,12 @@ private[emit] trait TirEmitterMembers:
 
       val eqM =
         if declaresEquals then Nil
-        else if comps.isEmpty then List(s"${ind(i + 1)}override def equals(o$$rec: scala.Any): scala.Boolean = o$$rec.isInstanceOf[$self$tpWild]")
+        else if comps.isEmpty then List(s"${ind(i + 1)}override def equals(`o$$rec`: scala.Any): scala.Boolean = o$$rec.isInstanceOf[$self$tpWild]")
         else
           val cmp = comps.map(c => eqOf(c, mine(c), theirs(c))).mkString(" && ")
           List(
-            s"${ind(i + 1)}override def equals(o$$rec: scala.Any): scala.Boolean = o$$rec match {",
-            s"${ind(i + 2)}case that$$rec: $self$tpWild => $cmp",
+            s"${ind(i + 1)}override def equals(`o$$rec`: scala.Any): scala.Boolean = o$$rec match {",
+            s"${ind(i + 2)}case ${TirEmitter.patBinder("that$rec", s"$self$tpWild")} => $cmp",
             s"${ind(i + 2)}case _ => false",
             s"${ind(i + 1)}}"
           )
@@ -302,7 +302,7 @@ private[emit] trait TirEmitterMembers:
         if declared(("hashCode", 0)) then Nil
         else if comps.isEmpty then List(s"${ind(i + 1)}override def hashCode(): scala.Int = 0")
         else
-          List(s"${ind(i + 1)}override def hashCode(): scala.Int = {", s"${ind(i + 2)}var hash$$rec: scala.Int = 0") ++
+          List(s"${ind(i + 1)}override def hashCode(): scala.Int = {", s"${ind(i + 2)}var `hash$$rec`: scala.Int = 0") ++
             comps.map(c => s"${ind(i + 2)}hash$$rec = hash$$rec * 31 + ${hashOf(c, mine(c))}") ++
             List(s"${ind(i + 2)}hash$$rec", s"${ind(i + 1)}}")
       val strM =
@@ -328,7 +328,7 @@ private[emit] trait TirEmitterMembers:
         else
           val ps  = comps.map(c => s"r$$rec.${local(c.accessor)}()")
           val ts  = comps.map(c => tpe(fieldTpe.getOrElse(c.field, sym(c.field).info)))
-          val sig = s"${ind(i + 1)}def unapply$tpDecl(r$$rec: $self$tpArgs)"
+          val sig = s"${ind(i + 1)}def unapply$tpDecl(`r$$rec`: $self$tpArgs)"
           if comps.isEmpty then List(s"$sig: scala.Boolean = true")
           // `Tuple1` and not the bare component: scala's extractor rules want a result with `_1`,
           // and an arity-1 tuple is the only product type that has exactly one.
@@ -495,7 +495,7 @@ private[emit] trait TirEmitterMembers:
       if isInitBlock(d) then d.rhs.map(r => s"${declNotes(d.symbol, i)}${ind(i)}locally ${term(r, i)}").getOrElse("")
       else defDef(d, i)
     case v: Tree.ValDef  => valDef(v, i)
-    case t: Tree.TypeDef => s"${ind(i)}${if sym(t.symbol).flags.isOpaque then "opaque " else ""}type ${esc(sym(t.symbol).name)} = ${tpe(t.rhs.tpe)}"
+    case t: Tree.TypeDef => s"${ind(i)}${if sym(t.symbol).flags.isOpaque then "opaque " else ""}type ${escDef(sym(t.symbol).name)} =${tpe(t.rhs.tpe)}"
     case t: Term         => ind(i) + term(t, i)
 
   /** ctor type-parameter substitution (Scala secondary ctors can't be generic) → their bounds. */
@@ -555,7 +555,7 @@ private[emit] trait TirEmitterMembers:
           // parameter list is the drift this whole change is about.
           val pss = d.paramss.map(ps => paramClause(ps.map(v => v.copy(tpt = v.tpt.copy(tpe = ParentSubst.subst(v.tpt.tpe, psub)))))).mkString
           val as  = d.paramss.map(ps => ps.map(v => esc(sym(v.symbol).name) + (if repeatedParams.contains(v.symbol) then "*" else "")).mkString("(", ", ", ")")).mkString
-          s"${ind(i)}override def $n$tps$pss: ${tpe(ParentSubst.subst(d.returnTpt.tpe, psub))} = super[$sn].$n$as"
+          s"${ind(i)}override def ${escDef(sym(d.symbol).name)}$tps$pss: ${tpe(ParentSubst.subst(d.returnTpt.tpe, psub))} = super[$sn].$n$as"
         }
       }
 
@@ -594,7 +594,7 @@ private[emit] trait TirEmitterMembers:
   private[emit] def defDef(d: Tree.DefDef, i: Int)(using Obligations): String =
     val s      = sym(d.symbol)
     val isCtor = s.name == "<init>"
-    val name   = if isCtor then "this" else esc(s.name)
+    val name   = if isCtor then "this" else escDef(s.name)
     // a Java generic constructor (`<T extends X> C(...)`) has no Scala form — secondary ctors can't
     // be generic. Drop the type params and substitute each with its upper bound throughout the ctor.
     val savedSubst = tparamSubst
@@ -625,7 +625,7 @@ private[emit] trait TirEmitterMembers:
     repeatedAlias = repeatedAlias ++ bound.map(p => p -> s"${sym(p).name}$$arr")
     val binds = bound.map { p =>
       val kw = if d.rhs.exists(r => assigns(r, p)) then "var" else "val"
-      s"${ind(i + 1)}$kw ${esc(repeatedAlias(p))}: scala.Array[${tpe(repeatedParams(p))}] = ${varargArray(p)}\n"
+      s"${ind(i + 1)}$kw ${escDef(repeatedAlias(p))}: scala.Array[${tpe(repeatedParams(p))}] = ${varargArray(p)}\n"
     }.mkString
     val rhs = inDeclaration {
       if isCtor then s" = ${ctorBody(d, i)}"
@@ -839,7 +839,7 @@ private[emit] trait TirEmitterMembers:
           inLoop(if hasB then Some(bName) else scala.None, if hasC then Some(cName) else scala.None) {
             if !hasC then bodyStr
             else if cName.isEmpty then s"scala.util.boundary { $bodyStr }"
-            else s"scala.util.boundary { ($cName: scala.util.boundary.Label[scala.Unit]) ?=> $bodyStr }"
+            else s"scala.util.boundary { (${escDef(cName)}: scala.util.boundary.Label[scala.Unit]) ?=> $bodyStr }"
           }
         finally
           lblB.foreach(labelBreak.remove); lblC.foreach(labelCont.remove)
@@ -847,8 +847,9 @@ private[emit] trait TirEmitterMembers:
       val loop = render(inner)
       if !hasB then loop
       else if bName.isEmpty then s"scala.util.boundary { $loop }"
-      else if useThrow then s"{ val $bName = new scala.util.control.ControlThrowable {}; try { $loop } catch { case $$e: scala.util.control.ControlThrowable if $$e eq $bName => () } }"
-      else s"scala.util.boundary { ($bName: scala.util.boundary.Label[scala.Unit]) ?=> $loop }"
+      else if useThrow then
+        s"{ val ${escDef(bName)} = new scala.util.control.ControlThrowable {}; try { $loop } catch { case ${TirEmitter.patBinder("$e", "scala.util.control.ControlThrowable")} if $$e eq $bName => () } }"
+      else s"scala.util.boundary { (${escDef(bName)}: scala.util.boundary.Label[scala.Unit]) ?=> $loop }"
 
   /** does this loop body contain a construct the emitter renders with a `boundary` of ITS OWN? `boundary.break(())` with no `using` resolves the innermost `Label`, so an interposed boundary silently
     * retargets an un-annotated jump — a [[Tree.Labeled]] actually broken to, or a switch case's mid-case `break`. Deliberately OVER-approximates; stops at a nested loop, lambda, `def` or anonymous
@@ -1001,7 +1002,9 @@ private[emit] trait TirEmitterMembers:
         val inner =
           try body.map(stat(_, i + 2)).filter(_.trim.nonEmpty) ++ CtorFunnel.trailingOf(cdef).map(triviaText(_, i + 2))
           finally ctorReturns = saved
-        List(s"${ind(i + 1)}scala.util.boundary[scala.Unit] { ${TirEmitter.CtorReturn} ?=>\n${joinStats(inner)}\n${ind(i + 1)}}")
+        List(
+          s"${ind(i + 1)}scala.util.boundary[scala.Unit] { ${escDef(TirEmitter.CtorReturn)} ?=>\n${joinStats(inner)}\n${ind(i + 1)}}"
+        )
     val lines = (head :: pre) ++ own
     s"{\n${joinStats(lines)}\n${ind(i)}}"
 
@@ -1195,10 +1198,11 @@ private[emit] trait TirEmitterMembers:
     val same          = "a$.unsafeArray.getClass"
     val (guard, copy) = made match
       case Some(m) =>
-        (s" if $same eq ${m.replace("{n}", "0")}.getClass", s"{ val c$$: scala.Array[$et] = ${m.replace("{n}", "s$.length")}; s$$.copyToArray(c$$); c$$ }")
+        (s" if $same eq ${m.replace("{n}", "0")}.getClass", s"{ val `c$$`: scala.Array[$et] = ${m.replace("{n}", "s$.length")}; s$$.copyToArray(c$$); c$$ }")
       case _ if untaggedElem(e) => ("", s"s$$.toArray[scala.Any].asInstanceOf[scala.Array[$et]]")
       case _                    => (s" if $same.getComponentType eq scala.reflect.classTag[$et].runtimeClass", s"s$$.toArray[$et]")
-    s"($n match { case null => null; case a$$: scala.collection.immutable.ArraySeq[?]$guard => a$$.unsafeArray.asInstanceOf[scala.Array[$et]]; case s$$ => $copy })"
+    val seqArm = TirEmitter.patBinder("a$", "scala.collection.immutable.ArraySeq[?]")
+    s"($n match { case null => null; case $seqArm$guard => a$$.unsafeArray.asInstanceOf[scala.Array[$et]]; case ${TirEmitter.patBinder("s$")} => $copy })"
 
   /** A REPEATED tail at an owned callee whose element is a type parameter nothing can build an array of: java's CALLER made the array, at its own static element type, so the call builds it and
     * spreads it — the only place that type is known.
@@ -1251,8 +1255,8 @@ private[emit] trait TirEmitterMembers:
     val df = v.rhs match
       case Some(o: Tree.Opaque) => s" = ${o.raw}"
       case _                    => ""
-    if t == TypeRepr.NoType then esc(sym(v.symbol).name) + df
-    else s"${esc(sym(v.symbol).name)}: ${paramType(v, t)}$df"
+    if t == TypeRepr.NoType then escDef(sym(v.symbol).name) + df
+    else s"${escDef(sym(v.symbol).name)}: ${paramType(v, t)}$df"
 
   /** a parameter's rendered type: `E*` for a java vararg (unless an injected parent states the slot), else the type. */
   private[emit] def paramType(v: Tree.ValDef, t: TypeRepr): String =
@@ -1300,7 +1304,7 @@ private[emit] trait TirEmitterMembers:
       // An EMPTY NAME renders an ANONYMOUS given: a minted name could shadow
       // an emitted root package, since this backend emits only fully-qualified references.
       val kw = if s.flags.isPrivate then "private given" else "given"
-      val nm = if s.name.isEmpty then "" else s"${esc(s.name)}: "
+      val nm = if s.name.isEmpty then "" else s"${escDef(s.name)}: "
       return s"${ind(i)}$kw $nm${tpe(v.tpt.tpe)}${v.rhs.map(r => s" = ${term(r, i)}").getOrElse("")}"
     // A FIELD SLOT — the constructor funnel hoisted this field's value into the synthesised
     // primary's parameter list, so the field binds that parameter (java's initialiser is gone).
@@ -1310,20 +1314,20 @@ private[emit] trait TirEmitterMembers:
         val kw = if fs.mutable then "var" else "val"
         val q  = privateQualifier(s.owner)
         val m  = if kw == "var" then mods(s, q).replace("final ", "") else mods(s, q)
-        return s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${fs.name}"
+        return s"${ind(i)}$m$kw ${escDef(s.name)}: ${tpe(v.tpt.tpe)} = ${fs.name}"
       case None => ()
     v.rhs match
       // a java constant at an OPAQUE type: scala refuses `inline val` there, and `inline def` is what
       // still reads the literal without initialising the object (measured on scalac 3)
       case Some(r) if OpaqueSpec.OwnClassTag.inlineConstantOf(s).isDefined =>
         val u = OpaqueSpec.OwnClassTag.inlineConstantOf(s).get
-        s"${ind(i)}${mods(s).replace("final ", "")}inline def ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${constAt(r, u)}"
+        s"${ind(i)}${mods(s).replace("final ", "")}inline def ${escDef(s.name)}: ${tpe(v.tpt.tpe)} = ${constAt(r, u)}"
       case Some(r) if isJavaConstant(v, s) && !isAnonOwner(s.owner) =>
         // a java CONSTANT VARIABLE (JLS 4.12.4) is INLINED by javac, so reading it triggers no
         // class initialiser — a typed `val` would (the Vector3/Matrix4 cycle). `inline val`
         // WITHOUT the type ascription, which would defeat the constant type. An ANONYMOUS CLASS
         // has no companion, so it stays an ordinary `val` in the anonymous body there.
-        s"${ind(i)}${mods(s).replace("final ", "")}inline val ${esc(s.name)} = ${constAt(r, v.tpt.tpe)}"
+        s"${ind(i)}${mods(s).replace("final ", "")}inline val ${escDef(s.name)} = ${constAt(r, v.tpt.tpe)}"
       case Some(r) =>
         // a non-final java local or PRIVATE field never ASSIGNED anywhere in the program (the
         // write set is BeanCollapse.writtenSymbols) emits val instead of var. NON-PRIVATE
@@ -1335,7 +1339,7 @@ private[emit] trait TirEmitterMembers:
           else "val"
         val q = privateQualifier(s.owner)
         val m = if kw == "var" then mods(s, q).replace("final ", "") else mods(s, q)
-        s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${term(r, i)}"
+        s"${ind(i)}$m$kw ${escDef(s.name)}: ${tpe(v.tpt.tpe)} = ${term(r, i)}"
       case None =>
         // an uninitialized java field: a var placeholder so constructors can assign it (a bare
         // `val x: T` is abstract); `final` is dropped. Substitutes
@@ -1345,7 +1349,7 @@ private[emit] trait TirEmitterMembers:
         val fieldOfAClass = program.definitionOf(s.owner).exists(_.isInstanceOf[Tree.ClassDef])
         val stated        = defaultFor(v.tpt.tpe)
         val blank         = if fieldOfAClass && stated.contains(".asInstanceOf[") then "scala.compiletime.uninitialized" else stated
-        s"${ind(i)}${mods(s, privateQualifier(s.owner)).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = $blank"
+        s"${ind(i)}${mods(s, privateQualifier(s.owner)).replace("final ", "")}var ${escDef(s.name)}: ${tpe(v.tpt.tpe)} = $blank"
 
   /** the literal rendered AT the field's declared type. `inline val` takes its constant type from the literal (a type ascription is rejected), so `static final float degFull = 360` must emit `360.0f`
     * and not `360`, or the field becomes an Int constant and divisions using it round.

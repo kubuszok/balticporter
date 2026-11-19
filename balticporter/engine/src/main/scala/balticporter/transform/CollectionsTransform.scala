@@ -1410,7 +1410,7 @@ object CollectionsTransform:
     * `Comparator[T]`, so only this direction needs it; a null comparator stays null, as java passed it.
     */
   private[balticporter] val RetargetBridges: Map[(String, String), String] = Map(
-    ("java.util.Comparator", "scala.math.Ordering") -> "{ val c$ = $0; if (c$ == null) null else scala.math.Ordering.comparatorToOrdering(using c$) }"
+    ("java.util.Comparator", "scala.math.Ordering") -> "{ val `c$` = $0; if (c$ == null) null else scala.math.Ordering.comparatorToOrdering(using c$) }"
   )
 
   /** `java.lang.Class` — the one reified carrier java itself guarantees. */

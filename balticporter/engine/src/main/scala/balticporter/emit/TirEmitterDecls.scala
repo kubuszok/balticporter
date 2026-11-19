@@ -280,7 +280,7 @@ private[emit] trait TirEmitterDecls:
     // `private` is CLASS-private, unreachable from a subclass) and not per-class-derived (a
     // whole-program question) — bare `protected`, matching the reference
     // ports. A DISAMBIGUATED synthesis adds a marker-typed parameter to change ARITY.
-    val markerParam = plan.marker.map(n => s"ctor$$: ${typeValue(cd.symbol)}.${esc(n)}").toList
+    val markerParam = plan.marker.map(n => s"`ctor$$`: ${typeValue(cd.symbol)}.${esc(n)}").toList
     // …and the CONTEXT CLAUSE a phase put on this class's constructors (`CtorFunnel.Plan.givens`),
     // rendered as its own GROUP — flattened into value parameters, `using` is lost and every
     // `summon` in the body goes unresolved. Empty for a port threading
@@ -325,7 +325,7 @@ private[emit] trait TirEmitterDecls:
       if superseded.isEmpty then ps.mkString(", ")
       else "\n" + ps.map(p => if p.startsWith(ind(i + 1)) || p.contains("\n") then p else ind(i + 1) + p).mkString(",\n") + "\n" + ind(i)
     val prim =
-      if plan.isSynthesised then s" protected (${(plan.synthetic.map((n, t) => s"$n: ${tpe(t)}") ++ markerParam).mkString(", ")})$givenClause"
+      if plan.isSynthesised then s" protected (${(plan.synthetic.map((n, t) => s"${escDef(n)}: ${tpe(t)}") ++ markerParam).mkString(", ")})$givenClause"
       else if pparams.nonEmpty then s"${if ctorVis.isEmpty then "" else " " + ctorVis}($paramList)$givenClause"
       // a class whose constructor java declared NILARY and the pipeline gave a clause: the clause
       // is the whole parameter list, `class C(using T)`. A NILARY constructor that is not public
@@ -392,7 +392,7 @@ private[emit] trait TirEmitterDecls:
       // an `object` has no constructor at all, so a context clause on this class's constructors has
       // nowhere to go here — counted rather than silently dropped.
       checkClause(cd, rendered = false, form = "object")
-      return s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
+      return s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}object ${escDef(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance0) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     // an `@interface`'s ELEMENTS (JLS 9.6.1) become the emitted class's CONSTRUCTOR
@@ -453,7 +453,7 @@ private[emit] trait TirEmitterDecls:
     // element name); a read becomes the field selection `applyStr0` renders parenless. No JVM
     // retention: `getAnnotation` still cannot recover one reflectively.
     val annotElemParams = annotElems.collect { case d: Tree.DefDef =>
-      val nm = esc(sym(d.symbol).name)
+      val nm = escDef(sym(d.symbol).name)
       val df = d.rhs.map(r => s" = ${term(r, i)}").getOrElse("")
       s"val $nm: ${tpe(d.returnTpt.tpe)}$df"
     }
@@ -461,9 +461,9 @@ private[emit] trait TirEmitterDecls:
     // each element's Javadoc joins the class's, since scala documents a primary ctor's params there.
     val annotLead = annotElems.flatMap { case d: Tree.DefDef => d.leading; case _ => Nil }
     val cls       =
-      if s.flags.isAnnotation then s"${leading(cd.leading ++ annotLead, i)}$cnote${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$annotPrim extends scala.annotation.StaticAnnotation"
+      if s.flags.isAnnotation then s"${leading(cd.leading ++ annotLead, i)}$cnote${annots(s, i)}${ind(i)}class ${escDef(s.name)}$tps$annotPrim extends scala.annotation.StaticAnnotation"
       else
-        s"${leading(cd.leading ++ ctorLead, i)}$cnote$ctorNote$sealNote$recNote${annots(s, i)}$promotedNowarn${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${esc(s.name)}$tps$prim$ext$open"
+        s"${leading(cd.leading ++ ctorLead, i)}$cnote$ctorNote$sealNote$recNote${annots(s, i)}$promotedNowarn${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${escDef(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, living in the parent's companion, which Scala
     // does NOT inherit — re-export each parent's companion so an inherited constant resolves,
     // excluding the class's OWN static names (a subtype may redeclare one). A STATIC INITIALIZER
@@ -532,7 +532,7 @@ private[emit] trait TirEmitterDecls:
       val sb = (superForce ++ parentExports ++ markerDecl ++
         orderBody(statics, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
         recStatics).mkString("\n")
-      s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
+      s"$cls\n${ind(i)}object ${escDef(s.name)} {\n$sb\n${ind(i)}}"
 
   /** a java constants class re-emitted as `opaque type N = Prim` plus `object N` holding every static (`OpaqueSpec.Target.OwnClass`): the object is the opaque type's companion, so it sees through `N`
     * and its members need no coercion.
@@ -546,7 +546,7 @@ private[emit] trait TirEmitterDecls:
     recordTypeShape(cd, "opaque", CtorFunnel.Plan.none, companion = true, statics = statics)
     val cnote = if cd.symbol == currentTopLevelSym then "" else declNotes(cd.symbol, i)
     val v     = vis(s, privateQualifier(s.owner))
-    s"${leading(cd.leading, i)}$cnote${ind(i)}${v}opaque type ${esc(s.name)} = ${tpe(underlying)}\n${ind(i)}${v}object ${esc(s.name)} {\n$ob\n${ind(i)}}"
+    s"${leading(cd.leading, i)}$cnote${ind(i)}${v}opaque type ${escDef(s.name)} = ${tpe(underlying)}\n${ind(i)}${v}object ${escDef(s.name)} {\n$ob\n${ind(i)}}"
 
   /** `this.x = x` — the NAME assigned, when the assignment is a field taking its own same-named source and nothing else. Both sides must resolve to the same simple name and the right-hand side must
     * be a bare identifier, so `this.up = new Vector3(upX, …)` and `this.a = b` are not this shape and are not touched.
@@ -649,7 +649,7 @@ private[emit] trait TirEmitterDecls:
     val es            = sym(cd.symbol)
     val enumPrivateIn = privateQualifier(es.owner).orElse(Some(esc(es.name)))
     def enumParam(v: Tree.ValDef): String =
-      val nm = esc(sym(v.symbol).name)
+      val nm = escDef(sym(v.symbol).name)
       val ty = tpe(v.tpt.tpe)
       standsFor.get(v.symbol) match
         case Some(f) =>
@@ -808,7 +808,7 @@ private[emit] trait TirEmitterDecls:
           // rendered at i+2 here too, or srcMapOf's lookup-by-produced-text cannot locate it.
           val stats = ordered.filter(inBody).map(memberStat(_, i + 2))
           List(
-            s"${ind(i)}{\n${ind(i + 1)}def $CtorBodyName(): scala.Unit = {\n" +
+            s"${ind(i)}{\n${ind(i + 1)}def ${escDef(CtorBodyName)}(): scala.Unit = {\n" +
               s"${stats.mkString("\n")}\n${ind(i + 1)}}\n${ind(i + 1)}$CtorBodyName()\n${ind(i)}}"
           )
       }
