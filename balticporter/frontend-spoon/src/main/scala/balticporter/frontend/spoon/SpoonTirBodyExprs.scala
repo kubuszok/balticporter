@@ -1345,10 +1345,11 @@ private[spoon] trait SpoonTirBodyExprs:
 
   private[spoon] def referenceIdentity(b: CtBinaryOperator[?]): Option[Term] =
     import BinaryOperatorKind.*
-    val (l, r)                       = (b.getLeftHandOperand, b.getRightHandOperand)
-    def isNull(e: CtExpression[?])   = e match { case lit: CtLiteral[?] => lit.getValue == null; case _ => false }
+    val (l, r)                     = (b.getLeftHandOperand, b.getRightHandOperand)
+    def isNull(e: CtExpression[?]) = e match { case lit: CtLiteral[?] => lit.getValue == null; case _ => false }
+    // read AFTER the source's casts: `boxed == (int) other` is numeric equality (JLS 15.21.1)
     def refTyped(e: CtExpression[?]) =
-      val t = e.getType
+      val t = castType(e)
       t != null && !t.isPrimitive
     if (b.getKind != EQ && b.getKind != NE) || isNull(l) || isNull(r) then scala.None
     else if !refTyped(l) || !refTyped(r) then scala.None

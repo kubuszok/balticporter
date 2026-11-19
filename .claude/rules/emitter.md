@@ -270,6 +270,10 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   and a phase's raw template backticks its own temporaries; `frontend-ts`'s `freshLabel` answers a
   backticked name (bound with `@ _` in a pattern). 81 -> 0 warnings over the engine suite's compiled
   emissions; ssg graphs-commons' translated bodies 6 -> 0. Not done: the legacy `ScalaPrinter`. Kind (a).
+- Java's `==` is a reference test only where BOTH operands are references AFTER the source's casts
+  (`castType`): `boxed == (int) other` is numeric (JLS 15.21.1). Read off the declared type it was
+  emitted `eq`, right only inside the `Integer` cache, and scala 3.9 no longer boxes an `Int` for
+  `eq` (flexmark `TocLevelsOptionParser`, 1 E007). Kind (a).
 
 - A java `T...` the port DECLARES is emitted `T*` (hand-port parity: the reference spells every
   vararg repeated, and a consumer hand-added `addRoomTypes(RoomType*)` beside the `Array` one). Every
