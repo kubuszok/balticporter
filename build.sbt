@@ -391,7 +391,6 @@ lazy val corpus = project
   .dependsOn(api, engine, testkit, `frontend-spoon`)
   .settings(
     name := "balticporter-corpus",
-    publish / skip := true,
     libraryDependencies += munit,
     // an end-to-end spec compiles an emission whose trees cannot share one build (one FQN per row)
     libraryDependencies += "org.scala-lang" %% "scala3-compiler" % scalaV % Test,
@@ -403,9 +402,9 @@ lazy val corpus = project
 
 lazy val root = project
   .in(file("."))
+  .enablePlugins(KubuszokRootPlugin)
   .aggregate(runtime.projectRefs *)
   .aggregate(api, `frontend-spoon`, engine, testkit, corpus, `frontend-ts`, `frontend-dart`)
   .settings(
     name := "balticporter",
-    publish / skip := true,
   )
