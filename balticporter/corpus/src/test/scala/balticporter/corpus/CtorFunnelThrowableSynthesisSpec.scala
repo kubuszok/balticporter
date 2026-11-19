@@ -62,7 +62,7 @@ class CtorFunnelThrowableSynthesisSpec extends munit.FunSuite:
   test("the synthesised primary sits at the JDK's WIDEST overload and passes it straight up") {
     assert(
       clue(classBody("Boom")).contains(
-        "protected (sup$0: java.lang.String, sup$1: java.lang.Throwable) " +
+        "protected (`sup$0`: java.lang.String, `sup$1`: java.lang.Throwable) " +
           "extends java.lang.RuntimeException(sup$0, sup$1)"
       )
     )

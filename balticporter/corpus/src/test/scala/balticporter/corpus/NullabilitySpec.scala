@@ -176,7 +176,7 @@ class NullabilitySpec extends PortSuite:
     // parameter moved and the signature silently did not: a disagreement no count can see, and
     // the reason the two lists are joined BY POSITION.
     val p = port(reassigning, new MutableParamsTransform, phase())
-    assertEmits(p, "def trim(s$arg: java.lang.String | scala.Null)")
+    assertEmits(p, "def trim(`s$arg`: java.lang.String | scala.Null)")
     val m          = p.after.symbols.all.find(_.fullName == "demo.Group#trim").getOrElse(fail("no `trim`"))
     val firstParam = m.info match
       case TypeRepr.MethodType(ps, _, _) => ps.head._2

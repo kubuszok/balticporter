@@ -260,7 +260,7 @@ class BeanPropertySpec extends munit.FunSuite:
     )
     assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
     assertEquals(nameOf(r, "Thing#getW"), "w")
-    assert(clue(r.out).contains("{ val recv$ = this; (() => recv$.w) }"))
+    assert(clue(r.out).contains("{ val `recv$` = this; (() => recv$.w) }"))
     assert(r.out.contains("self$.w)"))
     assert(r.out.contains("self$.w_=(a0$)"))
     assert(!r.out.contains("getW"))

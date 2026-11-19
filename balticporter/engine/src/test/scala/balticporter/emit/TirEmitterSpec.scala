@@ -278,7 +278,7 @@ class TirEmitterSpec extends munit.FunSuite:
 
   test("a for-each binding WRITTEN TO in the body becomes a shadowing var") {
     val text = foreachBody(assignBinding = true)
-    assert(clue(text).contains("for (obj$e <- "), clue(text))
+    assert(clue(text).contains("for (`obj$e` <- "), clue(text))
     assert(text.contains("var obj: java.lang.Object = obj$e"), clue(text))
     // no CAST: a re-bind exists to cast a variable declared at a wider type than the loop's
     // element, and this is not that case — the generator already yields the declared type.

@@ -29,7 +29,7 @@ class CtorFunnelSlotNullSpec extends munit.FunSuite:
   private lazy val out = emit(src)
 
   test("the synthesised primary really does hoist the field — the shape this is about") {
-    assert(clue(out).contains("class Data protected (f$path: java.lang.String)"))
+    assert(clue(out).contains("class Data protected (`f$path`: java.lang.String)"))
     assert(out.contains("def this(h: demo.Handle)"), "the ambiguous sibling is not in the fixture")
   }
 

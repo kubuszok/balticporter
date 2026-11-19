@@ -33,8 +33,12 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
 
   test("C1 — child resolves through parent plan: no withholding cascade") {
     // Sub resolves through Mid's synthesised plan, so Mid keeps its synthesis
-    assert(clue(withheld).contains("class Mid protected (sup$0: scala.Int, sup$1: scala.Int) extends with1.Base(sup$0, sup$1)"))
-    assert(clue(withheld).contains("class Sub protected (sup$0: scala.Int, sup$1: scala.Int) extends with1.Mid(sup$0, sup$1)"))
+    assert(
+      clue(withheld).contains("class Mid protected (`sup$0`: scala.Int, `sup$1`: scala.Int) extends with1.Base(sup$0, sup$1)")
+    )
+    assert(
+      clue(withheld).contains("class Sub protected (`sup$0`: scala.Int, `sup$1`: scala.Int) extends with1.Mid(sup$0, sup$1)")
+    )
   }
 
   test("C1 — a child with ONLY a nilary ctor still withholds the parent's synthesis") {
@@ -55,7 +59,7 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
     val o = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), Nil)).emit
     assert(clue(o).contains("extends with1b.Mid"), "nilary-only child has bare extends (no super args)")
     assert(!o.contains("extends with1b.Mid(sup$0"), "no paramful extends of a withheld parent")
-    assert(!o.contains("class Mid protected (sup$0"), "parent synthesis withheld by the nilary child")
+    assert(!o.contains("class Mid protected (`sup$0"), "parent synthesis withheld by the nilary child")
   }
 
   test("C1 — withholding is NOT a whole-program ban: a synthesis nothing reaches bare survives") {
@@ -73,7 +77,7 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     val o = new TirEmitter(Pipeline.run(SpoonTir.fromSource(ok), Nil)).emit
-    assert(clue(o).contains("class Mid protected (sup$0: scala.Int, sup$1: scala.Int) extends with2.Base(sup$0, sup$1)"))
+    assert(clue(o).contains("class Mid protected (`sup$0`: scala.Int, `sup$1`: scala.Int) extends with2.Base(sup$0, sup$1)"))
   }
 
   // ---- `nilaryPlan` and the two readings of "is this a synthesis" ----
@@ -94,7 +98,7 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     val o = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), Nil)).emit
-    assert(clue(o).contains("class Buf protected (f$cap: scala.Int)"))
+    assert(clue(o).contains("class Buf protected (`f$cap`: scala.Int)"))
     // and the nilary constructor is still there to be called, as a secondary
     assert(o.contains("def this() = {"))
   }
@@ -115,7 +119,7 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     val o = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), Nil)).emit
-    assert(clue(o).contains("class Two protected (ctor$: Two.Funnel)"))
+    assert(clue(o).contains("class Two protected (`ctor$`: Two.Funnel)"))
     assert(o.contains("def this() = {"))
     assert(o.contains("this((null: Two.Funnel))"))
     assert(o.contains("protected final class Funnel"))

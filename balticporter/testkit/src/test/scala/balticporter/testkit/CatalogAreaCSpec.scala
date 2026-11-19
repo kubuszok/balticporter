@@ -535,7 +535,7 @@ class CatalogAreaCSpec extends PortSuite:
         |}""".stripMargin
     )
     assertCites(p, JS.C(4), "Sub")
-    assertEmitsMatch(p, "(?s).*var v\\$[a-z]+: scala\\.Int = 2.*")
+    assertEmitsMatch(p, "(?s).*var `v\\$[a-z]+`: scala\\.Int = 2.*")
   }
 
   test("JS-C04 — a subclass with no shadowing field cites nothing; a citation is a DECISION taken") {

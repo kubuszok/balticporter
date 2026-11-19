@@ -25,7 +25,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
     // `xs` is a `java.util.List` the pipeline kept, so the emitter uses java's own desugaring
     // (JLS 14.14.2) — a while-loop over `iterator()`/`hasNext()`/`next()` — rather than `for`,
     // which would fail with "value foreach is not a member of java.util.List".
-    assertEmits(p, "e$it = xs.iterator()")
+    assertEmits(p, "`e$it` = xs.iterator()")
     assertEmits(p, "val e: java.lang.Object = e$it.next().asInstanceOf[java.lang.Object]")
     // the alias is INSIDE the body, so it is re-bound each iteration exactly as java's is.
     assertNotEmits(p, "for (e <- xs)")
@@ -60,7 +60,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
     )
     // `xs` is a `java.util.List` the pipeline kept, so the while-loop form is emitted.
     // The iterator variable derives from the RAW name: `object$it`, not `` `object`$it ``.
-    assertEmits(p, "object$it = xs.iterator()")
+    assertEmits(p, "`object$it` = xs.iterator()")
     assertEmits(p, "val `object`: java.lang.Object = object$it.next().asInstanceOf[java.lang.Object]")
     assertNotEmits(p, "`object`$it")
   }
@@ -80,7 +80,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    assertEmitsMatch(p, """\{ def body\$1\(\): scala\.Unit = """)
+    assertEmitsMatch(p, """\{ def `body\$1`\(\): scala\.Unit = """)
     assertEmits(p, "body$1() }")
   }
 
@@ -90,7 +90,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
         |class L { void go() { Runnable r = () -> { System.out.println("x"); }; r.run(); } }
         |""".stripMargin
     )
-    assertNotEmits(p, "def body$")
+    assertNotEmits(p, "def `body$")
   }
 
   test("a VALUE-returning lambda takes the SAM's result — ADAPTED at the target where it is generic") {
@@ -103,7 +103,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
         |class L { void go() { Supplier<String> s = () -> { return "a"; }; s.get(); } }
         |""".stripMargin
     )
-    assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
+    assertEmitsMatch(p, """def `body\$\d+`\(\): java\.lang\.String = """)
     assertEmits(p, "return \"a\"")
   }
 
@@ -118,7 +118,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
         |class L2 { void go() { Supplier s = () -> { return "a"; }; s.get(); } }
         |""".stripMargin
     )
-    assertNotEmits(p, "def body$")
+    assertNotEmits(p, "def `body$")
     assertEmits(p, "return \"a\"")
   }
 
@@ -139,8 +139,8 @@ class EmitterBindingAndReturnSpec extends PortSuite:
         |""".stripMargin
     )
     // exactly ONE wrapper, and it is the inner lambda's.
-    assertEquals(clue(p.out).sliding("def body$".length).count(_ == "def body$"), 1)
-    assertEmits(p, "val inner: java.lang.Runnable = () => { def body$1(): scala.Unit =")
+    assertEquals(clue(p.out).sliding("def `body$".length).count(_ == "def `body$"), 1)
+    assertEmits(p, "val inner: java.lang.Runnable = () => { def `body$1`(): scala.Unit =")
   }
 
   // -------------------------------------------------------------------------------------------

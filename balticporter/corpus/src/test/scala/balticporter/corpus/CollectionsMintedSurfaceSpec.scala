@@ -47,8 +47,8 @@ class CollectionsMintedSurfaceSpec extends PortSuite:
   test("a MAP class's clashing members are RENAMED and scala's are SYNTHESISED over them") {
     val p = port(src, new CollectionsTransform)
     // java's own member survives under a name nothing inherits…
-    assertEmits(p, "def put$java(k: java.lang.String, v: V): V")
-    assertEmits(p, "def get$java(o: java.lang.Object): V")
+    assertEmits(p, "def `put$java`(k: java.lang.String, v: V): V")
+    assertEmits(p, "def `get$java`(o: java.lang.Object): V")
     // …and the parent's member is the delegation over it. `Option(x)` is what java's own `put`/`get`
     // document: null means ABSENT, which is exactly `MapOps`' `None`.
     assertEmits(p, "override def put(key: java.lang.String, value: V): scala.Option[V] = scala.Option(this.put$java(key, value))")

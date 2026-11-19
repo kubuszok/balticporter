@@ -41,7 +41,7 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
 
   test("several PARAMFUL roots reaching ONE parent constructor synthesise — no nilary root needed") {
     assert(
-      clue(out).contains("class Narrowing protected (sup$0: java.lang.Object, sup$1: scala.Int) extends demo.Widened(sup$0, sup$1)")
+      clue(out).contains("class Narrowing protected (`sup$0`: java.lang.Object, `sup$1`: scala.Int) extends demo.Widened(sup$0, sup$1)")
     )
   }
 
@@ -49,8 +49,8 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     // `super(s, …)` passes a `String` and `super(i, 1)` an `Integer`; the slot is `Object`, which is
     // what `Widened` declares. Built from either call's argument types the primary could not take
     // the other's argument at all.
-    assert(!clue(out).contains("class Narrowing protected (sup$0: java.lang.String"))
-    assert(!out.contains("class Narrowing protected (sup$0: java.lang.Integer"))
+    assert(!clue(out).contains("class Narrowing protected (`sup$0`: java.lang.String"))
+    assert(!out.contains("class Narrowing protected (`sup$0`: java.lang.Integer"))
   }
 
   test("every root's super arguments survive, positionally, and none is reported") {
@@ -133,8 +133,8 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
   test("the leading `this.f = e` run becomes SLOTS, after the super slots and in declaration order") {
     assert(
       clue(fout).contains(
-        "class Clean protected (sup$0: java.lang.Object, sup$1: scala.Int, " +
-          "f$n: scala.Int, f$tag: java.lang.String, f$spare: scala.Int) extends fields.Widened(sup$0, sup$1)"
+        "class Clean protected (`sup$0`: java.lang.Object, `sup$1`: scala.Int, " +
+          "`f$n`: scala.Int, `f$tag`: java.lang.String, `f$spare`: scala.Int) extends fields.Widened(sup$0, sup$1)"
       )
     )
     // each root delegates with its own values, and the consumed statements are gone from its body
@@ -245,7 +245,7 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
         |""".stripMargin
     val p2 = Pipeline.run(SpoonTir.fromSource(commented), Nil)
     val o2 = new TirEmitter(p2).emit
-    assert(clue(o2).contains("class Q protected (sup$0: java.lang.String) extends demo3.P(sup$0)"))
+    assert(clue(o2).contains("class Q protected (`sup$0`: java.lang.String) extends demo3.P(sup$0)"))
     assert(o2.contains("// the base wants a name, not an index"))
     // …and it sits above the delegation, not orphaned at the end of the constructor
     val idx = o2.indexOf("// the base wants a name, not an index")

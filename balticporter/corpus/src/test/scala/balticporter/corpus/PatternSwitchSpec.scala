@@ -164,7 +164,7 @@ class PatternSwitchSpec extends PortSuite:
     assertConsults(p, balticporter.catalog.JS.S(10), fired = true)
     // …and the record itself carries the extractor this arm NAMES, which is what makes the pair a
     // lowering rather than two halves that happen to agree.
-    assert(clue(theRecord.out).contains("def unapply(r$rec: Pt): (scala.Int, scala.Int)"), theRecord.out)
+    assert(clue(theRecord.out).contains("def unapply(`r$rec`: Pt): (scala.Int, scala.Int)"), theRecord.out)
   }
 
   // ---------------------------------------------------------------------------------------------

@@ -20,8 +20,8 @@ class CollectionsBoundMethodRefSpec extends PortSuite:
     )
     // scala's `Map.get` answers an `Option`; java's answers the value or `null`, which is the
     // rewrite the phase already performs at a CALL — now performed at the REFERENCE too.
-    assertEmits(p, "val recv$")
-    assertEmits(p, "(a0$) => recv$.getOrElse(a0$, null.asInstanceOf[java.lang.String])")
+    assertEmits(p, "val `recv$`")
+    assertEmits(p, "(`a0$`) => recv$.getOrElse(a0$, null.asInstanceOf[java.lang.String])")
     // …and NOT the bare eta-expansion, which is what the port emitted before.
     assertNotEmits(p, "apply(map.get)")
   }

@@ -91,7 +91,7 @@ class SwitchExpressionSpec extends PortSuite:
     // jump, so the exact image is `boundary`/`break` — with the `Label` typed at the switch's own
     // type, which is what makes it a different boundary from the `Unit`-carrying one a mid-case
     // `break` gets.
-    assert(clue(nonTail.out).contains("scala.util.boundary { (yield$1: scala.util.boundary.Label["), nonTail.out)
+    assert(clue(nonTail.out).contains("scala.util.boundary { (`yield$1`: scala.util.boundary.Label["), nonTail.out)
     assert(clue(nonTail.out).contains("scala.util.boundary.break(1)(using yield$1)"), nonTail.out)
     // …and the TAIL one is still the block's value, not a second break.
     assert(!clue(nonTail.out).contains("break(2)"), nonTail.out)

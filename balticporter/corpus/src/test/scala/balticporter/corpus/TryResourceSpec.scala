@@ -42,7 +42,7 @@ class TryResourceSpec extends PortSuite:
 
   test("the body's exception is PRIMARY and a failing close() is SUPPRESSED, never a replacement") {
     val p = port(oneResource)
-    assertEmits(p, "var primary$1: java.lang.Throwable = null")
+    assertEmits(p, "var `primary$1`: java.lang.Throwable = null")
     assertEmits(p, "primary$1.addSuppressed")
     // …and the body's own throwable is re-thrown rather than swallowed, which is also why this
     // catch-all needs no BreakGuard beside it: a `boundary.Break` crossing it is re-thrown.
@@ -57,7 +57,7 @@ class TryResourceSpec extends PortSuite:
     // exception entirely. The arm below is what keeps `primary` null on a jump.
     val p    = port(oneResource)
     val out  = p.out
-    val jump = out.indexOf("scala.util.boundary.Break[?] => throw brkThru$")
+    val jump = out.indexOf("scala.util.boundary.Break[?] => throw brkThru")
     val rec  = out.indexOf("primary$1 = thrown$1")
     assert(clue(jump) >= 0, out)
     assert(clue(jump) < clue(rec), "the Break arm must precede the recorder, or it never matches")

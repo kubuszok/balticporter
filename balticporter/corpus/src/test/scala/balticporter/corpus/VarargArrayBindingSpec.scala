@@ -46,7 +46,7 @@ class VarargArrayBindingSpec extends PortSuite:
   test("an ArraySeq's backing array is taken only at the element's runtime class") {
     assertEmits(
       ported,
-      "case a$: scala.collection.immutable.ArraySeq[?] if a$.unsafeArray.getClass.getComponentType eq scala.reflect.classTag["
+      "case `a$` @ (_: scala.collection.immutable.ArraySeq[?]) if a$.unsafeArray.getClass.getComponentType eq scala.reflect.classTag["
     )
   }
 

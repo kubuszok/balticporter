@@ -184,7 +184,7 @@ class DefmethodBodyArraysSpec extends munit.FunSuite:
       returnType = Some("Vector[Point]")
     )
     accepts(r)
-    assert(r.scalaBody.contains("{ val a$1 = p; val a$2 = q; points += a$1; points += a$2 }"), r.scalaBody)
+    assert(r.scalaBody.contains("{ val `a$1` = p; val `a$2` = q; points += `a$1`; points += `a$2` }"), r.scalaBody)
 
   test("an array the reference holds as an immutable collection is never changed in place"):
     val r = translate(

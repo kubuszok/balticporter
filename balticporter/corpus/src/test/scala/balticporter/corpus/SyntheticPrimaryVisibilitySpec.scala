@@ -35,7 +35,7 @@ class SyntheticPrimaryVisibilitySpec extends munit.FunSuite:
   private val out     = new TirEmitter(program).emit
 
   private val syntheticPrimary =
-    raw"""class Synth protected \(sup\$$0: scala\.Int, sup\$$1: scala\.Boolean\) extends demo\.Base\(sup\$$0, sup\$$1\)""".r
+    raw"""class Synth protected \(`sup\$$0`: scala\.Int, `sup\$$1`: scala\.Boolean\) extends demo\.Base\(sup\$$0, sup\$$1\)""".r
 
   test("the synthesised primary is `protected` — a constructor java never declared is not published") {
     assert(syntheticPrimary.findFirstIn(clue(out)).isDefined)

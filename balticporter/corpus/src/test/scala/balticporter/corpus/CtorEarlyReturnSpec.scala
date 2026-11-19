@@ -63,7 +63,7 @@ class CtorEarlyReturnSpec extends munit.FunSuite:
 
   test("the constructor's own returns leave a named boundary, and a jump through the broad catch is re-thrown") {
     val t = ctorText
-    assert(clue(t).contains(s"scala.util.boundary[scala.Unit] { ${TirEmitter.CtorReturn} ?=>"))
+    assert(clue(t).contains(s"scala.util.boundary[scala.Unit] { `${TirEmitter.CtorReturn}` ?=>"))
     assert(t.contains(s"scala.util.boundary.break(())(using ${TirEmitter.CtorReturn})"), t)
     assert(t.contains(s"case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard}"), t)
   }

@@ -107,7 +107,7 @@ class OwnedVarargsEndToEndSpec extends PortSuite:
     assertEmits(ported, "def sum(xs: scala.Int*)")
     assertNotEmits(ported, "new scala.Array[java.lang.String](\"a\"")
     // a METHOD binds the array once; a CONSTRUCTOR reads it in place
-    assertEmits(ported, "val ts$arr: scala.Array[java.lang.String] = (ts match {")
+    assertEmits(ported, "val `ts$arr`: scala.Array[java.lang.String] = (ts match {")
     assertEmits(ported, "class Pair(head: java.lang.String, rest: java.lang.String*)")
     assertEmits(ported, "enum Kind(names: java.lang.String*)")
   }

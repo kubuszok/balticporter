@@ -16,10 +16,10 @@ class RecordSpec extends PortSuite:
 
   test("a record's four derived members are written out, and the row is consulted") {
     val p = rec("")
-    assertEmits(p, "override def equals(o$rec: scala.Any): scala.Boolean")
+    assertEmits(p, "override def equals(`o$rec`: scala.Any): scala.Boolean")
     assertEmits(p, "override def hashCode(): scala.Int")
     assertEmits(p, "override def toString(): java.lang.String")
-    assertEmits(p, "def unapply(r$rec: Point): (scala.Int, scala.Int)")
+    assertEmits(p, "def unapply(`r$rec`: Point): (scala.Int, scala.Int)")
     // …and the STRUCTURAL half, which the text cannot give: the difference was considered here and
     // it APPLIED. A record whose emitted text happened to be right without the row being consulted
     // is exactly the shape this obligation surface exists to catch.
@@ -60,7 +60,7 @@ class RecordSpec extends PortSuite:
 
   test("hashCode is javac's 31-fold from zero, per component, through the WRAPPER's static") {
     val p = rec("")
-    assertEmits(p, "var hash$rec: scala.Int = 0")
+    assertEmits(p, "var `hash$rec`: scala.Int = 0")
     assertEmits(p, "hash$rec = hash$rec * 31 + java.lang.Integer.hashCode(this.x$field)")
   }
 
@@ -79,7 +79,7 @@ class RecordSpec extends PortSuite:
     assert(clue(p.out).contains("return \"OWN\""), p.out)
     // exactly one `toString`, and it is java's
     assertEquals(clue(p.out).sliding("def toString".length).count(_ == "def toString"), 1, p.out)
-    assertEmits(p, "override def equals(o$rec: scala.Any)")
+    assertEmits(p, "override def equals(`o$rec`: scala.Any)")
   }
 
   test("…and an unrelated overload of the same NAME does not count as one") {
@@ -88,7 +88,7 @@ class RecordSpec extends PortSuite:
     // derived `equals(Object)` and leave the class abstract — the same shape as a match-by-signature
     // rule at a synthesis instead of at a body substitution.
     val p = rec("  boolean equals(int a, int b) { return a == b; }\n")
-    assertEmits(p, "override def equals(o$rec: scala.Any): scala.Boolean")
+    assertEmits(p, "override def equals(`o$rec`: scala.Any): scala.Boolean")
   }
 
   test("…and NEITHER does a same-ARITY overload — `equals(String)` is not java's `equals`") {
@@ -98,7 +98,7 @@ class RecordSpec extends PortSuite:
     // `AnyRef.equals` is concrete: the record silently downgrades to REFERENCE equality, with a
     // green compile, no moved count and no finding.
     val p = rec("  public boolean equals(String s) { return false; }\n")
-    assertEmits(p, "override def equals(o$rec: scala.Any): scala.Boolean = o$rec match {")
+    assertEmits(p, "override def equals(`o$rec`: scala.Any): scala.Boolean = o$rec match {")
     // both, and no more: java's own is kept beside the derived one.
     assertEquals(clue(p.out).sliding("def equals".length).count(_ == "def equals"), 2, p.out)
   }
@@ -114,21 +114,21 @@ class RecordSpec extends PortSuite:
 
   test("the ZERO-component record still gets all four — java does") {
     val p = port("package p;\npublic record Empty() { }\n")
-    assertEmits(p, "override def equals(o$rec: scala.Any): scala.Boolean = o$rec.isInstanceOf[Empty]")
+    assertEmits(p, "override def equals(`o$rec`: scala.Any): scala.Boolean = o$rec.isInstanceOf[Empty]")
     assertEmits(p, "override def hashCode(): scala.Int = 0")
     assertEmits(p, """override def toString(): java.lang.String = "Empty[]"""")
-    assertEmits(p, "def unapply(r$rec: Empty): scala.Boolean = true")
+    assertEmits(p, "def unapply(`r$rec`: Empty): scala.Boolean = true")
   }
 
   test("the ONE-component extractor is a Tuple1 — the only product type of arity one") {
     val p = port("package p;\npublic record One(String only) { }\n")
-    assertEmits(p, "def unapply(r$rec: One): scala.Tuple1[java.lang.String] = scala.Tuple1(r$rec.only())")
+    assertEmits(p, "def unapply(`r$rec`: One): scala.Tuple1[java.lang.String] = scala.Tuple1(r$rec.only())")
   }
 
   test("a GENERIC record's extractor re-declares the class's own parameters") {
     val p = port("package p;\npublic record Box<T>(T a, int n) { }\n")
-    assertEmits(p, "def unapply[T <: java.lang.Object](r$rec: Box[T]): (T, scala.Int)")
-    assertEmits(p, "case that$rec: Box[?] =>")
+    assertEmits(p, "def unapply[T <: java.lang.Object](`r$rec`: Box[T]): (T, scala.Int)")
+    assertEmits(p, "case `that$rec` @ (_: Box[?]) =>")
   }
 
   test("the extractor deconstructs through the ACCESSORS, which is what java's record pattern reads") {
@@ -137,7 +137,7 @@ class RecordSpec extends PortSuite:
     // pattern binds the ACCESSOR's answer (measured: `6`). A case class's generated `unapply` reads
     // the parameter, which is the field — so it would bind `3`.
     val p = rec("  public int y() { return y * 2; }\n")
-    assertEmits(p, "def unapply(r$rec: Point): (scala.Int, scala.Int) = (r$rec.x(), r$rec.y())")
+    assertEmits(p, "def unapply(`r$rec`: Point): (scala.Int, scala.Int) = (r$rec.x(), r$rec.y())")
     assertEmits(p, """"y=" + java.lang.String.valueOf(this.y$field)""")
   }
 
@@ -152,12 +152,12 @@ class RecordSpec extends PortSuite:
     // every record pattern over the type then named nothing — the loud half of the same defect the
     // `equals` cell above has silently.
     val p = rec("  Object unapply(String s) { return null; }\n")
-    assertEmits(p, "def unapply(r$rec: Point): (scala.Int, scala.Int)")
+    assertEmits(p, "def unapply(`r$rec`: Point): (scala.Int, scala.Int)")
   }
 
   test("…and neither is a STATIC one whose parameter is not the record — no erasure clash") {
     val p = rec("  static Object unapply(String s) { return null; }\n")
-    assertEmits(p, "def unapply(r$rec: Point): (scala.Int, scala.Int)")
+    assertEmits(p, "def unapply(`r$rec`: Point): (scala.Int, scala.Int)")
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -181,7 +181,7 @@ class RecordSpec extends PortSuite:
     // javac 22.0.2 on this exact record: `new R(3, 4)` prints `R[x=6, y=4]` and `new R(3)` prints
     // `R[x=6, y=0]`. Both paths run the canonical constructor, so both double `x`.
     val p = port("package p;\npublic record R(int x, int y) {\n  R(int x) { this(x, 0); }\n  public R { x = x * 2; }\n}\n")
-    assertEmits(p, "final class R(private var x$p: scala.Int, y$p: scala.Int)")
+    assertEmits(p, "final class R(private var `x$p`: scala.Int, `y$p`: scala.Int)")
     assertEmits(p, "def this(x: scala.Int)")
     assertEmits(p, "this(x, 0)")
     // …and JLS 8.10.4's order: the written body first, the appended field assignments after it, so
@@ -198,8 +198,8 @@ class RecordSpec extends PortSuite:
     val p = port("package p;\npublic record Prims(boolean bo, byte by, short sh, char ch, int in, long lo, float fl, double du) { }\n")
     assertEmits(
       p,
-      "final class Prims(bo$p: scala.Boolean, by$p: scala.Byte, sh$p: scala.Short, ch$p: scala.Char, " +
-        "in$p: scala.Int, lo$p: scala.Long, fl$p: scala.Float, du$p: scala.Double)"
+      "final class Prims(`bo$p`: scala.Boolean, `by$p`: scala.Byte, `sh$p`: scala.Short, `ch$p`: scala.Char, " +
+        "`in$p`: scala.Int, `lo$p`: scala.Long, `fl$p`: scala.Float, `du$p`: scala.Double)"
     )
   }
 
@@ -209,7 +209,7 @@ class RecordSpec extends PortSuite:
     // does not resolve — so `def bo()` emitted `return bo`, which in scala's ONE namespace is the
     // method, and the accessor calls itself forever. Green compile, StackOverflow at the first read.
     val p = port("package p;\npublic class Outer {\n  public record In(int a, String b) { }\n}\n")
-    assertEmits(p, "final class In(a$p: scala.Int, b$p: java.lang.String)")
+    assertEmits(p, "final class In(`a$p`: scala.Int, `b$p`: java.lang.String)")
     assertEmits(p, "this.a$field = a$p")
     assertEmits(p, "return this.a$field")
     assert(!clue(p.out).contains("return a\n"), p.out)

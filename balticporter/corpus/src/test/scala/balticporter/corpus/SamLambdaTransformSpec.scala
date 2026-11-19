@@ -90,7 +90,7 @@ class SamLambdaTransformSpec extends PortSuite:
     // interface's `Comparator[String]`.
     val p = port(valuedReturn, new SamLambdaTransform)
     assertIdiomConverts(p, IdiomKind.SamLambda, "C#c")
-    assertEmitsMatch(p, """def body\$\d+\(\): scala\.Int = """)
+    assertEmitsMatch(p, """def `body\$\d+`\(\): scala\.Int = """)
   }
 
   test("…and the refusal that USED to fire there is counted at ZERO for it") {
@@ -113,7 +113,7 @@ class SamLambdaTransformSpec extends PortSuite:
         |  }
         |}""".stripMargin
     )
-    assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
+    assertEmitsMatch(p, """def `body\$\d+`\(\): java\.lang\.String = """)
     assertEquals(clue(balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)).map(_.owner), Nil)
   }
 
@@ -147,7 +147,7 @@ class SamLambdaTransformSpec extends PortSuite:
         |}""".stripMargin,
       new SamLambdaTransform
     )
-    assertEmitsMatch(p, """def body\$\d+\(\): scala\.Unit = """)
+    assertEmitsMatch(p, """def `body\$\d+`\(\): scala\.Unit = """)
   }
 
   test("every REFUSAL leaves the anonymous class BYTE-IDENTICAL to what the port shipped before") {

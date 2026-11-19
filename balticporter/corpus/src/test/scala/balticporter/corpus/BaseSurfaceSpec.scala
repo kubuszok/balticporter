@@ -471,7 +471,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     // stop at. `q.Heir extends p.Base` declares `int x()` over an inherited `var x`: the same erased
     // signature, which cannot compile, and every count in the run was zero. The base settles ONE HALF
     // of the pair; the other half is THIS module's own declaration, so this module moves it.
-    assert(clue(out).contains("def x$method(): scala.Int"), out)
+    assert(clue(out).contains("def `x$method`(): scala.Int"), out)
     assert(!out.linesIterator.exists(_.trim.startsWith("def x(")), out)
     // it is a decision like any other rename, naming the field that could not move
     val ds = new TirEmitter(p, surfaceView = Some(published)).ownDecisions.filter(_.detail.get("clash").contains("field-vs-method-in-base"))
@@ -686,7 +686,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     assertEquals(clue(guarded.primaryKind), "synthesised-primary", "the fixture lost its synthesis")
     // the slot exists, and its type is the VALUE CLASS a phase minted — not a type the frontend
     // interned from java, which is what makes the two derivations reachable from two symbols.
-    assert(clue(text).contains("via$pb: scala.Boolean"), "the fixture lost its boolean guard slot")
+    assert(clue(text).contains("`via$pb`: scala.Boolean"), "the fixture lost its boolean guard slot")
     // the guard slot is java's `boolean`, not the wrapper's name: the slot's type is a value class
     // a phase minted, and its spelling is read off the type's identity.
     assertEquals(clue(guarded.primary.map(_.render)), Some("int,boolean"))

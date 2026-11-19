@@ -23,7 +23,7 @@ class PanamaFfiTransformSpec extends munit.FunSuite:
   private val out   = new TirEmitter(after).emit
 
   test("generates a downcall MethodHandle per native, with a signature-derived descriptor") {
-    assert(clue(out).contains("private val add$handle: java.lang.invoke.MethodHandle"))
+    assert(clue(out).contains("private val `add$handle`: java.lang.invoke.MethodHandle"))
     assert(out.contains("""java.lang.foreign.Linker.nativeLinker().downcallHandle("""))
     assert(out.contains("""defaultLookup().find("add").orElseThrow()"""))
     // int add(int,int) → descriptor of JAVA_INT × 3
@@ -83,12 +83,12 @@ class PanamaFfiTransformSpec extends munit.FunSuite:
     new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new PanamaFfiTransform()))).emit
 
   test("M10 — a native with NO same-named sibling needs no disambiguator at all") {
-    assert(clue(emit(overloaded)).contains("private val only$handle:"))
+    assert(clue(emit(overloaded)).contains("private val `only$handle`:"))
   }
 
   test("M10 — OVERLOADED natives get distinct handles, ordered by the erased signature") {
     val o = emit(overloaded)
-    List("copyJni$0$handle", "copyJni$1$handle", "copyJni$2$handle").foreach(n => assert(clue(o).contains(s"private val $n:"), s"missing $n"))
+    List("copyJni$0$handle", "copyJni$1$handle", "copyJni$2$handle").foreach(n => assert(clue(o).contains(s"private val `$n`:"), s"missing $n"))
     // and each body reads ITS OWN handle — the field and the call are one derivation, not two.
     assert(o.contains("copyJni$0$handle.invokeExact"))
     assert(o.contains("copyJni$2$handle.invokeExact"))

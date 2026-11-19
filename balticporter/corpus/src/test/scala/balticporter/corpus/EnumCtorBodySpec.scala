@@ -164,7 +164,7 @@ class EnumCtorBodySpec extends PortSuite:
     )
     // the parameter moves, not the method: the method is the java API and the `var` is the port's
     // own artefact (java's parameter was not a member at all).
-    assertEmits(p, "isStyled$p: scala.Boolean")
+    assertEmits(p, "`isStyled$p`: scala.Boolean")
     assertEmits(p, "def isStyled(): scala.Boolean")
     // the constants pass positionally, so the rename is invisible where it matters
     assertEmits(p, "case LIQUID extends Flavour(")

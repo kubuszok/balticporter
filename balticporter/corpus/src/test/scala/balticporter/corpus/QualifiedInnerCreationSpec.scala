@@ -43,7 +43,7 @@ class QualifiedInnerCreationSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     )
-    assert(clue(out).contains("val outer$q: demo.Chooser = this.chooser"), out)
+    assert(clue(out).contains("val `outer$q`: demo.Chooser = this.chooser"), out)
     assert(out.contains("new outer$q.Item()"), out)
     assert(!out.contains("new demo.Chooser#Item"), out)
     // …and the local the path names is a READ: the unused-symbol pass keeps it
@@ -55,5 +55,5 @@ class QualifiedInnerCreationSpec extends munit.FunSuite:
         List(new balticporter.transform.UnusedSymbolTransform)
       )
     ).emit
-    assert(clue(kept).contains("val outer$q"), kept)
+    assert(clue(kept).contains("val `outer$q`"), kept)
   }

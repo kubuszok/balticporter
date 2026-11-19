@@ -57,7 +57,7 @@ class ThreadConfinedStaticsTransformSpec extends munit.FunSuite:
     assertEquals(ds.head.subjectFqn, "com.demo.Demo#tmp")
     // `initialValue`, never `withInitial`: the Scala.js javalib ships no such factory (the reference port's own ISS-832 note)
     assert(
-      clue(ported.out).contains("private final val tmp$tl: java.lang.ThreadLocal[Demo] = new java.lang.ThreadLocal[Demo] {")
+      clue(ported.out).contains("private final val `tmp$tl`: java.lang.ThreadLocal[Demo] = new java.lang.ThreadLocal[Demo] {")
     )
     assert(clue(ported.out).contains("override def initialValue(): Demo = new Demo()"))
     assert(!ported.out.contains("withInitial"))

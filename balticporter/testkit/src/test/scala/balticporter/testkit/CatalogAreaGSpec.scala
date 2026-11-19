@@ -345,7 +345,7 @@ class CatalogAreaGSpec extends PortSuite:
     // `compareTo(T)` is arity 1, so the lambda is arity 2 — the receiver plus java's one argument.
     // Rendered off the symbol's `MethodType` it was `((self$) => self$.compareTo())`, which is a
     // one-parameter function at a `Comparator`: E086, and nothing else could see it.
-    assertEmitsMatch(p, """self\$[^)]*, a0\$[^)]*\) => self\$\.compareTo\(a0\$\)""")
+    assertEmitsMatch(p, """`self\$`[^)]*, `a0\$`[^)]*\) => self\$\.compareTo\(a0\$\)""")
   }
 
   test("JS-G43 — `T::new` takes THE CONSTRUCTOR'S parameters, not none") {
@@ -357,7 +357,7 @@ class CatalogAreaGSpec extends PortSuite:
         |}""".stripMargin
     )
     assertConsults(p, JS.G(43), fired = true)
-    assertEmitsMatch(p, """\(a0\$\) => new [^()]*Box\(a0\$\)""")
+    assertEmitsMatch(p, """\(`a0\$`\) => new [^()]*Box\(a0\$\)""")
   }
 
   test("JS-G43 — a NILARY `T::new` is still the no-argument factory it always was") {

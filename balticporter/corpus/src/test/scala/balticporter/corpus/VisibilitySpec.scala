@@ -157,8 +157,8 @@ class VisibilitySpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    assertEmits(p, "var align$field")
-    assertNotEmits(p, "private var align$field")
+    assertEmits(p, "var `align$field`")
+    assertNotEmits(p, "private var `align$field`")
     assertEquals(causes(p), List("member-rename"))
     val w = widenings(p).head
     assertEquals(w.detail.get("clash"), Some("field-vs-method"))
@@ -177,7 +177,7 @@ class VisibilitySpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    assertEmits(p, "var align$field")
+    assertEmits(p, "var `align$field`")
     assertEquals(causes(p), Nil)
   }
 

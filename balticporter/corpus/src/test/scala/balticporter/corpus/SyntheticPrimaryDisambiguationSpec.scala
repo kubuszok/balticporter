@@ -49,7 +49,7 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
   test("MARKER by ERASURE — same signature, nothing to collapse onto, so the arity changes") {
     assert(
       clue(out).contains(
-        "class Marked protected (sup$0: scala.Int, sup$1: scala.Boolean, ctor$: Marked.Funnel) extends demo.Base(sup$0, sup$1)"
+        "class Marked protected (`sup$0`: scala.Int, `sup$1`: scala.Boolean, `ctor$`: Marked.Funnel) extends demo.Base(sup$0, sup$1)"
       )
     )
   }
@@ -57,7 +57,7 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
   test("MARKER by APPLICABILITY — the C8 negative: the narrower real constructor must NOT win") {
     assert(
       clue(out).contains(
-        "class DCache protected (sup$0: demo.BFont, sup$1: scala.Boolean, ctor$: DCache.Funnel) extends demo.BCache(sup$0, sup$1)"
+        "class DCache protected (`sup$0`: demo.BFont, `sup$1`: scala.Boolean, `ctor$`: DCache.Funnel) extends demo.BCache(sup$0, sup$1)"
       )
     )
     // the delegation writes THREE arguments, so `DCache(DFont, boolean)` — which is applicable to
@@ -110,7 +110,7 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
     // ran on `new Escaping(5)` where java ran nothing.
     assert(
       clue(o3).contains(
-        "class Escaping protected (sup$0: scala.Int, sup$1: scala.Boolean, ctor$: Escaping.Funnel) extends demo3.EBase(sup$0, sup$1)"
+        "class Escaping protected (`sup$0`: scala.Int, `sup$1`: scala.Boolean, `ctor$`: Escaping.Funnel) extends demo3.EBase(sup$0, sup$1)"
       )
     )
     assert(o3.contains("protected final class Funnel"))
@@ -133,6 +133,6 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
     val o2 = new TirEmitter(Pipeline.run(SpoonTir.fromSource(clash), Nil)).emit
     // The renaming rule one level down: keep appending until the name is free rather than assuming the first
     // is — the java `Funnel` lives in the same companion the marker would.
-    assert(clue(o2).contains("ctor$: M2.Funnel$"))
-    assert(o2.contains("protected final class Funnel$"))
+    assert(clue(o2).contains("`ctor$`: M2.Funnel$"))
+    assert(o2.contains("protected final class `Funnel$`"))
   }

@@ -93,8 +93,8 @@ class MemberClashPlacementSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     )
-    assert(clue(field).contains("var x$field$:"), field)
-    assertEquals(clue(field.linesIterator.count(_.contains("var x$field:"))), 1, field)
+    assert(clue(field).contains("var `x$field$`:"), field)
+    assertEquals(clue(field.linesIterator.count(_.contains("var `x$field`:"))), 1, field)
 
     // (ii) …and a METHOD of the fresh name, which the clash test itself already holds.
     val method = emit(
@@ -106,8 +106,8 @@ class MemberClashPlacementSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     )
-    assert(clue(method).contains("var y$field$:"), method)
-    assertEquals(clue(method.linesIterator.count(_.contains("def y$field("))), 1, method)
+    assert(clue(method).contains("var `y$field$`:"), method)
+    assertEquals(clue(method.linesIterator.count(_.contains("def `y$field`("))), 1, method)
   }
 
   test("NEGATIVE: with nothing in the way it appends exactly once — the loop is a guard, not a policy") {

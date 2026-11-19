@@ -320,8 +320,8 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     // PARENT's own formals — read from the signature on purpose, since an argument's type may be
     // narrower than the formal. Stale, slot 1 emitted `scala.Int` against a parent formal of
     // `Handle.T`, and every `def this(...) = this(...)` delegation then failed to resolve.
-    assert(clue(emitted).contains("sup$1: Handle.T"), "the funnel read the parent's SIGNATURE")
-    assert(!emitted.contains("sup$1: scala.Int"))
+    assert(clue(emitted).contains("`sup$1`: Handle.T"), "the funnel read the parent's SIGNATURE")
+    assert(!emitted.contains("`sup$1`: scala.Int"))
   }
 
   // -------------------------------------------------------------------------

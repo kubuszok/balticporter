@@ -245,7 +245,7 @@ class CatalogAreaSSpec extends PortSuite:
     // reads it off the interface rather than leaving the lowering to guess.
     val p = port("public class R { interface Str { String get(); } Str s = () -> { return \"x\"; }; }")
     assertConsults(p, JS.S(21), fired = true)
-    assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
+    assertEmitsMatch(p, """def `body\$\d+`\(\): java\.lang\.String = """)
     assertEmits(p, "return \"x\"")
   }
 
@@ -254,7 +254,7 @@ class CatalogAreaSSpec extends PortSuite:
     // Spoon's own `TypeAdaptor` performs the substitution to get a real result type.
     val p = port("public class R2 { java.util.function.Supplier<String> s = () -> { return \"x\"; }; }")
     assertConsults(p, JS.S(21), fired = true)
-    assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
+    assertEmitsMatch(p, """def `body\$\d+`\(\): java\.lang\.String = """)
     assertEquals(clue(balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)).size, 0)
   }
 

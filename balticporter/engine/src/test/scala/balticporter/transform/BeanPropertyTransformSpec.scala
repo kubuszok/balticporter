@@ -307,7 +307,7 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
       new BeanPropertyTransform(scope = RuleScope.Everywhere())
     )
     assertEquals(nameOf(r, "Sprite#getRotation"), "rotation")
-    assert(clue(r.out).contains("var rotation$shadow"))
+    assert(clue(r.out).contains("var `rotation$shadow`"))
     assert(clue(r.out).contains("rotation$shadow * 2"))
   }
 

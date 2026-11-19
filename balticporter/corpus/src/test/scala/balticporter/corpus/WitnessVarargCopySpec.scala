@@ -60,7 +60,7 @@ class WitnessVarargCopySpec extends PortSuite:
     (port(src, threaded, p), p)
 
   test("the copy of a non-array Seq is made by the witness, never boxed through `toArray[Any]`") {
-    assertEmits(ported, "val c$: scala.Array[T] = scala.Predef.summon[demo.MkArray[T]].create(s$.length); s$.copyToArray(c$); c$")
+    assertEmits(ported, "val `c$`: scala.Array[T] = scala.Predef.summon[demo.MkArray[T]].create(s$.length); s$.copyToArray(c$); c$")
   }
 
   test("an unbound element with no witness in scope keeps the boxed copy, counted") {

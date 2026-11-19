@@ -36,7 +36,7 @@ class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
   private lazy val out = emit(src)
 
   test("a promoted body carrying `return` is wrapped in a LOCAL `def`, and the return is kept") {
-    assert(clue(out).contains("def ctorBody$(): scala.Unit = {"), "no local `def` was interposed")
+    assert(clue(out).contains("def `ctorBody$`(): scala.Unit = {"), "no local `def` was interposed")
     assert(out.contains("ctorBody$()"), "the interposed `def` is declared and never called")
     // the `return`s are UNCHANGED — a `def` is the construct they already mean, so nothing is
     // renamed, nothing is named and no `boundary` appears anywhere near them
@@ -48,15 +48,15 @@ class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
     // `private def ctorBody$` as a class MEMBER would be a name a consumer can see and a row in
     // `members.tsv` for a member java never had. Inside a block it is local to the construction
     // sequence, which is exactly what java's constructor body was.
-    assert(!out.contains("def ctorBody$(): scala.Unit = {\n  }"), clue(out))
+    assert(!out.contains("def `ctorBody$`(): scala.Unit = {\n  }"), clue(out))
     assert(
-      clue(out).contains("{\n    def ctorBody$(): scala.Unit = {"),
+      clue(out).contains("{\n    def `ctorBody$`(): scala.Unit = {"),
       "the `def` is not inside a block — as a class member it would be emitted surface"
     )
     // …and the block opens a statement, so `joinStats` must have put the `;` in front of it or the
     // `{` reads as an anonymous-class body of the statement above
     assert(
-      clue(out).contains(";\n  {\n    def ctorBody$()"),
+      clue(out).contains(";\n  {\n    def `ctorBody$`()"),
       "the block was emitted without the separator that keeps it a statement"
     )
   }
@@ -64,7 +64,7 @@ class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
   test("the FIELDS stay where JLS 12.5 step 4 put them — above the wrapper, not inside it") {
     val body    = out.linesIterator.toList
     val flags   = body.indexWhere(_.contains("var flags: scala.Int = 0"))
-    val wrapper = body.indexWhere(_.contains("def ctorBody$()"))
+    val wrapper = body.indexWhere(_.contains("def `ctorBody$`()"))
     assert(flags >= 0 && wrapper >= 0, clue(out))
     assert(flags < wrapper, "a field initialiser was pushed below the promoted body")
   }

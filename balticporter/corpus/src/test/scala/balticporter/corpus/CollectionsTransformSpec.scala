@@ -1748,7 +1748,7 @@ class CollectionsTransformSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform
     )
-    assertEmits(p, "((self$) => self$._1)")
+    assertEmits(p, "((`self$`) => self$._1)")
     assertNotEmits(p, "self$.getKey()")
   }
 
@@ -2078,7 +2078,7 @@ class CollectionsTransformSpec extends PortSuite:
     // The flag appears in an if condition
     assertEmitsMatch(p, """if\s*\(""")
     // the receiver is bound to a temp
-    assertEmitsMatch(p, """val bp\$bd\d+\s*=""")
+    assertEmitsMatch(p, """val `bp\$bd\d+`\s*=""")
   }
 
   // ---------------------------------------------------------------------------

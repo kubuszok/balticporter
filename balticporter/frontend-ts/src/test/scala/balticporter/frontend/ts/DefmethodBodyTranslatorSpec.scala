@@ -81,7 +81,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val types                = Map("c" -> "Boolean", "t" -> "Token")
     val endless              = translate(block(loop(RastNode("TrueKeyword", 0, (0, 0)))), params = List("c", "t"), paramTypes = types, returnType = Some("Token"))
     assert(endless.isComplete, s"should translate: ${endless.refusalReasons}")
-    assert(endless.scalaBody.contains("scala.util.boundary.break(t)(using ret$"), endless.scalaBody)
+    assert(endless.scalaBody.contains("scala.util.boundary.break(t)(using `ret$"), endless.scalaBody)
     assert(endless.scalaBody.contains("throw new IllegalStateException(\"unreachable"), endless.scalaBody)
     val forever = node("ForStatement", block(node("IfStatement", ident("c"), block(ret(ident("t"))))))
     assert(
@@ -106,14 +106,14 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       node("CatchClause", node("VariableDeclaration", ident("e")), block(expr(node("CallExpression", ident("g")))))
     )
     val early = translate(block(catching, ret(ident("t"))), params = List("t", "g"), paramTypes = Map("t" -> "Token"), returnType = Some("Token"))
-    assert(early.scalaBody.contains("scala.util.boundary.break(t)(using ret$"), early.scalaBody)
+    assert(early.scalaBody.contains("scala.util.boundary.break(t)(using `ret$"), early.scalaBody)
 
   test("a postfix step as a value answers the value before the step, and an lvalue with a call in it is refused"):
     def post(op: String, e: RastNode) = RastNode("PostfixUnaryExpression", 0, (0, 0), children = List(e), operator = Some(op))
     val loop                          = node("WhileStatement", post("MinusMinusToken", ident("n")), block(expr(node("CallExpression", ident("f")))))
     val r                             = translate(block(loop), params = List("n", "f"), paramTypes = Map("n" -> "Double"), returnType = Some("Unit"))
     assert(!r.refusalReasons.contains("increment-as-value"), r.refusalReasons.toString)
-    assert(r.scalaBody.contains("{ val p$") && r.scalaBody.contains("-= 1; p$") && r.scalaBody.contains("isNaN"), r.scalaBody)
+    assert(r.scalaBody.contains("{ val `p$") && r.scalaBody.contains("-= 1; `p$") && r.scalaBody.contains("isNaN"), r.scalaBody)
     val impure = node("ElementAccessExpression", ident("xs"), node("CallExpression", ident("f")))
     val stmt   = translate(block(expr(post("PlusPlusToken", impure))), params = List("xs", "f"), paramTypes = Map("xs" -> "ArrayBuffer[Int]"))
     assert(stmt.refusalReasons.contains("increment-as-value"), stmt.refusalReasons.toString)
@@ -127,7 +127,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     assert(result.scalaBody.contains("scala.util.boundary {"), s"early return needs boundary: ${result.scalaBody}")
     assert(result.scalaBody.contains("?=>"), s"boundary must be named: ${result.scalaBody}")
     assert(!result.scalaBody.contains("boundary[Any]"), s"no type argument on boundary: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using ret$"), s"break must target the named label: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using `ret$"), s"break must target the named label: ${result.scalaBody}")
     assert(!result.scalaBody.contains("return "), s"no raw 'return' keyword: ${result.scalaBody}")
     assert(result.scalaBody.contains("1\n"), s"tail return should be the value: ${result.scalaBody}")
 
@@ -138,7 +138,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     )
     val result = translate(body)
     assert(
-      result.scalaBody.contains("scala.util.boundary.break(null)(using ret$"),
+      result.scalaBody.contains("scala.util.boundary.break(null)(using `ret$"),
       s"void early return needs break(null)(using label): ${result.scalaBody}"
     )
 
@@ -269,8 +269,8 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ret(num(0))
     )
     val result = translate(body, params = List("cond", "done", "work"), paramTypes = Map("cond" -> "Boolean", "done" -> "Boolean", "work" -> "Int"))
-    assert(result.scalaBody.contains("(brk$"), s"break boundary must be named: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using brk$"), s"break must target named label: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(`brk$"), s"break boundary must be named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using `brk$"), s"break must target named label: ${result.scalaBody}")
     assert(result.isComplete, s"unlabelled break should not refuse: ${result.refusalReasons}")
 
   test("continue inside a while loop wraps the body in named boundary"):
@@ -286,8 +286,8 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ret(num(0))
     )
     val result = translate(body, params = List("cond", "skip", "work"), paramTypes = Map("cond" -> "Boolean", "skip" -> "Boolean", "work" -> "Int"))
-    assert(result.scalaBody.contains("(cnt$"), s"continue boundary must be named: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using cnt$"), s"continue must target named label: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(`cnt$"), s"continue boundary must be named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using `cnt$"), s"continue must target named label: ${result.scalaBody}")
     assert(result.isComplete, s"unlabelled continue should not refuse: ${result.refusalReasons}")
 
   test("break inside for-of loop wraps the loop in named boundary"):
@@ -304,8 +304,8 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ret(num(0))
     )
     val result = translate(body, params = List("items", "done", "process"), paramTypes = Map("items" -> "Vector[Int]", "done" -> "Boolean", "process" -> "Int"))
-    assert(result.scalaBody.contains("(brk$"), s"break boundary named: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using brk$"), s"break targets named label: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(`brk$"), s"break boundary named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using `brk$"), s"break targets named label: ${result.scalaBody}")
     assert(result.isComplete, s"unlabelled break should not refuse: ${result.refusalReasons}")
 
   // ---- nested boundary compilation specs ----
@@ -344,9 +344,9 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     )
     val result = translate(body, returnType = Some("Int"))
     assert(result.scalaBody.contains("Label[Int]"), s"return Label must carry the declared type: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(brk$"), s"break boundary named: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using ret$"), s"return targets ret label: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using brk$"), s"break targets brk label: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(`brk$"), s"break boundary named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using `ret$"), s"return targets ret label: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using `brk$"), s"break targets brk label: ${result.scalaBody}")
     assertCompiles(result.scalaBody, "def f(x: Int, cond: Boolean, done: Boolean, skip: Boolean): Int =")
 
   test("continue inside a loop with a break compiles with Int return type"):
@@ -363,10 +363,10 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
       ret(num(0))
     )
     val result = translate(body, returnType = Some("Int"))
-    assert(result.scalaBody.contains("(brk$"), s"break boundary named: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(cnt$"), s"continue boundary named: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using brk$"), s"break targets brk: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using cnt$"), s"continue targets cnt: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(`brk$"), s"break boundary named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(`cnt$"), s"continue boundary named: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using `brk$"), s"break targets brk: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using `cnt$"), s"continue targets cnt: ${result.scalaBody}")
     assertCompiles(result.scalaBody, "def f(x: Int, cond: Boolean, done: Boolean, skip: Boolean): Int =")
 
   test("return inside nested loops compiles with Int return type"):
@@ -376,7 +376,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     )
     val result = translate(body, returnType = Some("Int"))
     assert(result.scalaBody.contains("Label[Int]"), s"return Label type is Int: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using ret$"), s"inner return targets outer label: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using `ret$"), s"inner return targets outer label: ${result.scalaBody}")
     assertCompiles(result.scalaBody, "def f(x: Int, cond: Boolean, done: Boolean, skip: Boolean): Int =")
 
   test("early return in Unit-typed member compiles"):
@@ -411,7 +411,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = translate(body, returnType = Some("Int"))
     assert(!result.scalaBody.contains("(using )"), s"label must not be empty: ${result.scalaBody}")
     assert(result.scalaBody.contains("boundary"), s"non-tail return in then-branch needs boundary: ${result.scalaBody}")
-    assert(result.scalaBody.contains("(using ret$"), s"break targets the boundary label: ${result.scalaBody}")
+    assert(result.scalaBody.contains("(using `ret$"), s"break targets the boundary label: ${result.scalaBody}")
     assertCompiles(result.scalaBody, "def f(x: Int, cond: Boolean, done: Boolean, skip: Boolean): Int =")
 
   test("single if-else with returns compiles with String return type"):
@@ -831,7 +831,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = translate(block(ret(call)), paramTypes = Map("s" -> "String", "w" -> "Int"))
     assert(result.refusalReasons.isEmpty, s"should translate: ${result.refusalReasons}")
     assert(
-      result.scalaBody.contains(".substring(0, k$") && result.scalaBody.contains("isEmpty"),
+      result.scalaBody.contains(".substring(0, `k$") && result.scalaBody.contains("isEmpty"),
       s"fill must be repeated and cut: ${result.scalaBody}"
     )
     assert(!result.scalaBody.contains("padTo"), s"padTo counts a string fill as one element: ${result.scalaBody}")
@@ -841,7 +841,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val result = translate(block(ret(call)), paramTypes = Map("s" -> "String"))
     assert(result.refusalReasons.isEmpty, s"should translate: ${result.refusalReasons}")
     assert(
-      result.scalaBody.contains("\" \"") && result.scalaBody.matches("(?s).*s\\$\\d+ \\+ \\(f.*"),
+      result.scalaBody.contains("\" \"") && result.scalaBody.matches("(?s).*`s\\$\\d+` \\+ \\(`f.*"),
       s"padEnd appends the fill: ${result.scalaBody}"
     )
 
@@ -932,8 +932,8 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     val entry  = DefmethodEntry("_free_", "test", List("extraVinculum"), body)
     val result = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
     assert(!result.refusalReasons.contains("reassigned-immutable"), s"a body-level write is copied: ${result.refusalReasons}")
-    assert(result.scalaBody.contains("var extraVinculum$1 = extraVinculum"), result.scalaBody)
-    assert(result.scalaBody.contains("extraVinculum$1 = 1000 * extraVinculum$1"), result.scalaBody)
+    assert(result.scalaBody.contains("var `extraVinculum$1` = extraVinculum"), result.scalaBody)
+    assert(result.scalaBody.contains("`extraVinculum$1` = 1000 * `extraVinculum$1`"), result.scalaBody)
 
   test("non-reassigned parameter does not refuse reassigned-immutable"):
     val body = block(

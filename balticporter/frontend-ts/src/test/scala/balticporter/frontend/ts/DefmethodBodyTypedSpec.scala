@@ -212,9 +212,9 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     def cmp(op: String, l: String, r: String) = translate(block(ret(bin(op, ident(l), ident(r)))), params = List("f", "s", "o", "p"), paramTypes = types, returnType = Some("Boolean"))
     val ne                                    = cmp("ExclamationEqualsEqualsToken", "f", "s")
     accepts(ne)
-    assert(ne.scalaBody.contains("val a$1 = f; val b$2 = s; !(a$1.isDefined && a$1.get == b$2)"), ne.scalaBody)
+    assert(ne.scalaBody.contains("val `a$1` = f; val `b$2` = s; !(`a$1`.isDefined && `a$1`.get == `b$2`)"), ne.scalaBody)
     assert(
-      cmp("EqualsEqualsEqualsToken", "s", "f").scalaBody.contains("val b$2 = s; val a$1 = f;"),
+      cmp("EqualsEqualsEqualsToken", "s", "f").scalaBody.contains("val `b$2` = s; val `a$1` = f;"),
       cmp("EqualsEqualsEqualsToken", "s", "f").scalaBody
     )
     refuses(cmp("EqualsEqualsEqualsToken", "o", "p"), "optional-comparison")
@@ -504,7 +504,7 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       params = List("o"),
       conventions = nodeLib
     )
-    assertNoDiff(built.scalaBody.trim, "{ val $n = new NLeaf(); $n.v = 1; $n }")
+    assertNoDiff(built.scalaBody.trim, "{ val `$n` = new NLeaf(); $n.v = 1; $n }")
     // what the factory takes from its origin node is the library's rule, not an assignment
     refuses(built, "node-factory-origin")
     assertNoDiff(
@@ -578,7 +578,7 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     val d = tmpl("Double")
     accepts(d)
     assert(
-      d.scalaBody.contains("java.math.BigDecimal.valueOf(d$1)") && d.scalaBody.contains("\"e\" + (if (e$3 >= 0) \"+\" else \"-\")"),
+      d.scalaBody.contains("java.math.BigDecimal.valueOf(`d$1`)") && d.scalaBody.contains("\"e\" + (if (`e$3` >= 0) \"+\" else \"-\")"),
       d.scalaBody
     )
     refuses(tmpl("Float"), "number-to-string")
@@ -604,9 +604,9 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       RastNode("PrefixUnaryExpression", 0, (0, 0), children = List(call(prop(ident("x"), "toFixed"), num(4))), operator = Some("PlusToken"))
     )
     accepts(fixed)
-    assert(fixed.scalaBody.trim.startsWith("java.lang.Double.parseDouble({ val d$"), fixed.scalaBody)
+    assert(fixed.scalaBody.trim.startsWith("java.lang.Double.parseDouble({ val `d$"), fixed.scalaBody)
     // toFixed answers JS's text for a value it does not format: non-finite, or 1e21 and more
-    assert(onX("Double", call(prop(ident("x"), "toFixed"), num(2))).scalaBody.contains("math.abs(d$1) >= 1e21"))
+    assert(onX("Double", call(prop(ident("x"), "toFixed"), num(2))).scalaBody.contains("math.abs(`d$1`) >= 1e21"))
 
   test("a JS built-in's static with no Scala namesake is refused; java.lang.Math is used only where it agrees"):
     refuses(translate(block(ret(call(prop(ident("Object"), "getPrototypeOf"), ident("o")))), params = List("o")), "js-builtin")
@@ -942,7 +942,7 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       block(destructuring(pattern("ObjectBindingPattern", "x"), call(prop(ident("l"), "first"))), ret(ident("x"))),
       Map("l" -> "Line")
     )
-    assert(r.scalaBody.contains("val d$"), s"a call is bound once: ${r.scalaBody}")
+    assert(r.scalaBody.contains("val `d$"), s"a call is bound once: ${r.scalaBody}")
     refuses(
       onPoints(block(destructuring(pattern("ObjectBindingPattern", "z"), ident("p")), ret(ident("z"))), Map("p" -> "Point")),
       "wrong-member-access"
@@ -1031,13 +1031,16 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     // JS answers "" past the end for charAt, `undefined` for an index, and NaN for charCodeAt
     val onS = translate(block(ret(call(prop(ident("s"), "charAt"), num(0)))), params = List("s"), paramTypes = Map("s" -> "String"))
     accepts(onS)
-    assert(onS.scalaBody.contains("if (i$2 >= 0 && i$2 < s$1.length) s$1.charAt(i$2).toString else \"\""), onS.scalaBody)
+    assert(
+      onS.scalaBody.contains("if (`i$2` >= 0 && `i$2` < `s$1`.length) `s$1`.charAt(`i$2`).toString else \"\""),
+      onS.scalaBody
+    )
     val code = translate(
       block(ret(call(prop(ident("s"), "charCodeAt"), ident("i")))),
       params = List("s", "i"),
       paramTypes = Map("s" -> "String", "i" -> "Int")
     )
-    assert(code.scalaBody.contains("charAt(i$2).toDouble else Double.NaN"), code.scalaBody)
+    assert(code.scalaBody.contains("charAt(`i$2`).toDouble else Double.NaN"), code.scalaBody)
     refuses(
       translate(
         block(ret(call(prop(ident("s"), "charAt"), ident("f")))),
@@ -1060,7 +1063,7 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     )
     accepts(sub)
     assert(
-      sub.scalaBody.contains("substring(math.min(a$2, b$3), math.max(a$2, b$3))") && sub.scalaBody.contains("math.max(i, 0)"),
+      sub.scalaBody.contains("substring(math.min(`a$2`, `b$3`), math.max(`a$2`, `b$3`))") && sub.scalaBody.contains("math.max(i, 0)"),
       sub.scalaBody
     )
 
@@ -1133,7 +1136,7 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     // a string indexes to a one-character string, or undefined (null) past its end
     val char = translate(block(ret(node("ElementAccessExpression", ident("s"), num(0)))), params = List("s"), paramTypes = Map("s" -> "String"))
     accepts(char)
-    assert(char.scalaBody.contains("s$1.charAt(i$2).toString else null"), char.scalaBody)
+    assert(char.scalaBody.contains("`s$1`.charAt(`i$2`).toString else null"), char.scalaBody)
 
   private def lengthOf(r: RastNode):                  RastNode = prop(r, "length")
   private def ifThen(c:   RastNode, body: RastNode*): RastNode = node("IfStatement", c, block(body*))
@@ -1199,17 +1202,17 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       translate(block(ifThen(c, ret(num(1))), ret(num(0))), params = List("xs", "m", "i", "k"), paramTypes = types, returnType = Some("Int"))
     val read = test(node("ElementAccessExpression", ident("xs"), ident("i")))
     accepts(read)
-    assert(read.scalaBody.contains("xs.lift(i).exists(e$") && read.scalaBody.contains("isNaN"), read.scalaBody)
+    assert(read.scalaBody.contains("xs.lift(i).exists(`e$") && read.scalaBody.contains("isNaN"), read.scalaBody)
     val negated = test(
       node("PrefixUnaryExpression", node("ElementAccessExpression", ident("m"), ident("k"))).copy(operator = Some("ExclamationToken"))
     )
     accepts(negated)
-    assert(negated.scalaBody.contains("!(m.get(k).exists(e$"), negated.scalaBody)
+    assert(negated.scalaBody.contains("!(m.get(k).exists(`e$"), negated.scalaBody)
     // compared, a read past the end is false every way, the other operand evaluated first where it stands first
     val cmp = test(bin("LessThanEqualsToken", ident("i"), node("ElementAccessExpression", ident("xs"), ident("i"))))
     accepts(cmp)
     assert(
-      cmp.scalaBody.contains("{ val v$") && cmp.scalaBody.contains("xs.lift(i).exists(v$") && cmp.scalaBody.contains(" <= _)"),
+      cmp.scalaBody.contains("{ val `v$") && cmp.scalaBody.contains("xs.lift(i).exists(`v$") && cmp.scalaBody.contains(" <= _)"),
       cmp.scalaBody
     )
     // the same read as a value still needs its guard
@@ -1229,12 +1232,12 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
     val stmt                  = run(expr(call(prop(ident("xs"), "splice"), ident("i"), num(1), ident("x"), node("SpreadElement", ident("ys")))))
     accepts(stmt)
     val body = stmt.scalaBody
-    assert(body.contains("math.max(b$") && body.contains("math.min(c$") && body.contains(".remove(i$"), body)
-    assert(body.contains(".insert(p$") && body.contains(".insertAll(p$") && body.contains("ys.toList"), body)
+    assert(body.contains("math.max(`b$") && body.contains("math.min(`c$") && body.contains(".remove(`i$"), body)
+    assert(body.contains(".insert(`p$") && body.contains(".insertAll(`p$") && body.contains("ys.toList"), body)
     assert(!body.contains(".slice("), s"a statement discards the removed run: $body")
     val used = translate(block(ret(call(prop(ident("xs"), "splice"), num(0)))), params = List("xs"), paramTypes = types)
     accepts(used)
-    assert(used.scalaBody.contains(".slice(i$") && used.scalaBody.contains(".length - i$"), used.scalaBody)
+    assert(used.scalaBody.contains(".slice(`i$") && used.scalaBody.contains(".length - `i$"), used.scalaBody)
     // a fractional bound is truncated as JS truncates it; a bound of another type is refused
     assert(run(expr(call(prop(ident("xs"), "splice"), ident("f"), num(1)))).scalaBody.contains("(f).toInt"))
     refuses(run(expr(call(prop(ident("xs"), "splice"), ident("ys"), num(1)))), "js-splice")
@@ -1267,7 +1270,7 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
 
   test("pop and shift on an empty array answer null for references, and need a length test otherwise"):
     val nodes = translate(block(ret(call(prop(ident("xs"), "pop")))), params = List("xs"), paramTypes = Map("xs" -> "ArrayBuffer[Node]"))
-    assertNoDiff(nodes.scalaBody.trim, "{ val b$ = xs; if (b$.isEmpty) null else b$.remove(b$.length - 1) }")
+    assertNoDiff(nodes.scalaBody.trim, "{ val `b$` = xs; if (b$.isEmpty) null else b$.remove(b$.length - 1) }")
     val ints = Map("xs" -> "ArrayBuffer[Int]")
     refuses(
       translate(block(ret(call(prop(ident("xs"), "shift")))), params = List("xs"), paramTypes = ints, returnType = Some("Int")),
@@ -1285,7 +1288,7 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
   test("a pop nothing reads removes only when there is something to remove"):
     val r = translate(block(expr(call(prop(ident("xs"), "pop")))), params = List("xs"), paramTypes = Map("xs" -> "ArrayBuffer[Int]"))
     accepts(r)
-    assertNoDiff(r.scalaBody.trim, "{ val b$ = xs; if (b$.nonEmpty) b$.remove(b$.length - 1) }")
+    assertNoDiff(r.scalaBody.trim, "{ val `b$` = xs; if (b$.nonEmpty) b$.remove(b$.length - 1) }")
 
   test("`xs || []` builds the empty array at the left operand's collection type, and reads the left operand once"):
     def orEmpty(tpe: String, left: RastNode, params: List[String]) = translate(
@@ -1318,7 +1321,7 @@ class DefmethodBodyTypedSpec extends munit.FunSuite:
       returnType = Some("ArrayBuffer[Int]"),
       oracle = oracle
     )
-    assert(called.scalaBody.contains("{ val v$1 = src.next(); if ((v$1 != null)) v$1 else"), called.scalaBody)
+    assert(called.scalaBody.contains("{ val `v$1` = src.next(); if ((`v$1` != null)) `v$1` else"), called.scalaBody)
 
   test("`x || 0` on a fractional value writes the fallback at that type"):
     val r = translate(

@@ -49,7 +49,7 @@ class DefmethodBodySwitchSpec extends munit.FunSuite:
       Map("n" -> "Double")
     )
     assert(r.isComplete, r.refusalReasons.toString)
-    assertNoDiff(lines(r), "{\n(n) match {\ncase s$1 if s$1 == (1) =>\nObj.f()\ncase _ =>\nObj.g()\nObj.f()\n}\n}")
+    assertNoDiff(lines(r), "{\n(n) match {\ncase `s$1` @ _ if `s$1` == (1) =>\nObj.f()\ncase _ =>\nObj.g()\nObj.f()\n}\n}")
 
   test("a break before a clause's end leaves the switch from the middle of an arm, which a match cannot"):
     val early = node("IfStatement", ident("c"), block(brk))

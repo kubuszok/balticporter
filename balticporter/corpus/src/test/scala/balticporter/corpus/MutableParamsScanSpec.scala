@@ -69,22 +69,22 @@ class MutableParamsScanSpec extends munit.FunSuite:
 
   test("a parameter written inside a local variable's initialiser becomes a var") {
     assert(clue(out).contains("var p: scala.Int = p$arg"))
-    assert(out.contains("def inLocalInit(p$arg: scala.Int)"))
+    assert(out.contains("def inLocalInit(`p$arg`: scala.Int)"))
   }
 
   test("a parameter written inside an array initialiser, a dimension or a vararg becomes a var") {
-    assert(clue(out).contains("def inArrayInit(p$arg: scala.Int)"))
-    assert(out.contains("def inArrayDim(p$arg: scala.Int)"))
-    assert(out.contains("def inVarargs(p$arg: scala.Int)"))
+    assert(clue(out).contains("def inArrayInit(`p$arg`: scala.Int)"))
+    assert(out.contains("def inArrayDim(`p$arg`: scala.Int)"))
+    assert(out.contains("def inVarargs(`p$arg`: scala.Int)"))
   }
 
   test("a parameter written inside an instanceof scrutinee or a resource head becomes a var") {
-    assert(clue(out).contains("def inInstanceOf(p$arg: "))
-    assert(out.contains("def inResource(p$arg: "))
+    assert(clue(out).contains("def inInstanceOf(`p$arg`: "))
+    assert(out.contains("def inResource(`p$arg`: "))
   }
 
   test("a parameter written in a for-loop's initialiser declaration becomes a var") {
-    assert(clue(out).contains("def inForInit(p$arg: scala.Int)"))
+    assert(clue(out).contains("def inForInit(`p$arg`: scala.Int)"))
   }
 
   test("a parameter that is never written is left ALONE — no spurious shadow") {
@@ -138,7 +138,7 @@ class MutableParamsScanSpec extends munit.FunSuite:
     new TirEmitter(Pipeline.run(SpoonTir.fromSource(catchSrc), List(new MutableParamsTransform))).emit
 
   test("a reassigned catch parameter binds `$arg` and opens its handler with the var") {
-    assert(clue(catchOut).contains("case ex$arg: java.lang.Exception =>"))
+    assert(clue(catchOut).contains("case `ex$arg` @ (_: java.lang.Exception) =>"))
     assert(catchOut.contains("var ex: java.lang.Exception = ex$arg"))
     assert(catchOut.contains("ex = second"))
   }

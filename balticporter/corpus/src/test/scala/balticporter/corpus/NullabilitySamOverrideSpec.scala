@@ -78,7 +78,7 @@ class NullabilitySamOverrideSpec extends PortSuite:
 
   test("the lambda's parameters and its nested result take the SAM's retyped slots") {
     assertEmits(ported, s"(item: $W[demo.Item], o: $W[demo.Item]) =>")
-    assertEmits(ported, s"def body$$1(): $W[java.lang.String]")
+    assertEmits(ported, s"def `body$$1`(): $W[java.lang.String]")
     assertNotEmits(ported, "(item: demo.Item, o: demo.Item) =>")
   }
 

@@ -41,8 +41,8 @@ class ParentSubstFunnelSpec extends munit.FunSuite:
   private val out     = new TirEmitter(program).emit
 
   test("a synthesised slot is typed at the PARENT'S INSTANTIATION, not at its parameter") {
-    assert(clue(out).contains("class Widget protected (sup$0: fbound2.Adapter[fbound2.Panel])"))
-    assert(!out.contains("sup$0: fbound2.Adapter[N]"))
+    assert(clue(out).contains("class Widget protected (`sup$0`: fbound2.Adapter[fbound2.Panel])"))
+    assert(!out.contains("`sup$0`: fbound2.Adapter[N]"))
     // the `extends` clause passes the same slot, so both halves of the line agree
     assert(
       out.contains("extends fbound2.Handler[fbound2.Widget, fbound2.Panel](sup$0)") ||
@@ -52,10 +52,10 @@ class ParentSubstFunnelSpec extends munit.FunSuite:
   }
 
   test("TRANSITIVE — the parameter is bound by a GRANDparent") {
-    assert(clue(out).contains("class Deep protected (sup$0: fbound2.Adapter[fbound2.Panel])"))
-    assert(!out.contains("sup$0: fbound2.Adapter[X]"))
+    assert(clue(out).contains("class Deep protected (`sup$0`: fbound2.Adapter[fbound2.Panel])"))
+    assert(!out.contains("`sup$0`: fbound2.Adapter[X]"))
   }
 
   test("NEGATIVE — a parent whose formals name no parameter is unmoved") {
-    assert(clue(out).contains("class Plain protected (sup$0: scala.Int, sup$1: java.lang.String)"))
+    assert(clue(out).contains("class Plain protected (`sup$0`: scala.Int, `sup$1`: java.lang.String)"))
   }

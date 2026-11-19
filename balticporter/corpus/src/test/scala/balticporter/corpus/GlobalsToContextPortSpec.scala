@@ -249,7 +249,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     // …and the emitted text really is the uncompilable shape the seam is about: the reference
     // lowered to a lambda that runs the constructor, inside a `locally` with no given in it.
     assert(clue(code(o)).contains("class Link(p: java.lang.String)(using demo.Ctx)"), code(o))
-    assert(clue(code(o)).contains("(((a0$) => new demo.Link(a0$)): demo.Builder)"), code(o))
+    assert(clue(code(o)).contains("(((`a0$`) => new demo.Link(a0$)): demo.Builder)"), code(o))
     val lo = code(o).linesIterator.dropWhile(!_.contains("locally {")).take(4).mkString("\n")
     assert(!clue(lo).contains("using"), lo)
   }
@@ -419,7 +419,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     // and `Boot` is in no threaded arm at all, so the class the key names emits exactly as before.
     val (_, _, _, o) = portedFrom(cacheSrc, cacheHolder.copy(cache = Map("demo.Boot" -> "demoCtx")))
     val c            = code(o)
-    assert(clue(c).contains("private var demoCtx$cache: demo.Ctx"), c)
+    assert(clue(c).contains("private var `demoCtx$cache`: demo.Ctx"), c)
     assert(c.contains("def demoCtx: demo.Ctx"), c)
     // the capture, at the head of the ONE method the closure threaded.
     assert(c.contains("def load()(using demo.Ctx)"), c)
@@ -669,7 +669,9 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     val (_, _, _, o) = portedFrom(synthSrc, holder)
     val c            = code(o)
     assert(
-      clue(c).contains("class Panel protected (sup$0: scala.Int, sup$1: scala.Boolean)(using demo.Ctx) extends demo.Widget(sup$0, sup$1)"),
+      clue(c).contains(
+        "class Panel protected (`sup$0`: scala.Int, `sup$1`: scala.Boolean)(using demo.Ctx) extends demo.Widget(sup$0, sup$1)"
+      ),
       c
     )
     // both java constructors survive as secondaries, each carrying the clause its delegation needs

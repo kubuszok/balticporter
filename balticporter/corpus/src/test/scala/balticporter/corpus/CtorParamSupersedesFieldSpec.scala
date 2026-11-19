@@ -31,7 +31,7 @@ class CtorParamSupersedesFieldSpec extends PortSuite:
 
   test("a field read before java assigns it keeps the parameter apart: the merged field would hold the argument there") {
     val p = port("package p;\npublic class W {\n  int seen;\n  int x;\n  public W(int x) { this.seen = this.x; this.x = x; }\n}\n")
-    assertEmits(p, "x$p: scala.Int")
+    assertEmits(p, "`x$p`: scala.Int")
     assertEmits(p, "this.x = x$p")
   }
 
@@ -40,7 +40,7 @@ class CtorParamSupersedesFieldSpec extends PortSuite:
       "package p;\nabstract class B {\n  int seen;\n  B() { seen = peek(); }\n  abstract int peek();\n}\n" +
         "class D extends B {\n  int x;\n  D(int x) { this.x = x; }\n  int peek() { return x; }\n}\n"
     )
-    assertEmits(p, "x$p: scala.Int")
+    assertEmits(p, "`x$p`: scala.Int")
     assertEmits(p, "this.x = x$p")
   }
 
@@ -49,7 +49,7 @@ class CtorParamSupersedesFieldSpec extends PortSuite:
       "package p;\npublic class B {\n  protected int child;\n  public B(int child) { this.child = child; }\n  public int get() { return child; }\n}\n" +
         "public class R extends B {\n  int n;\n  public R(int n, int child) { super(child); this.n = n * 2; }\n  public R(int child) { this(1, child); }\n}\n"
     )
-    assertEmits(p, "(n$p: scala.Int, child: scala.Int) extends p.B(child)")
+    assertEmits(p, "(`n$p`: scala.Int, child: scala.Int) extends p.B(child)")
   }
 
   test("…but one the class body names is renamed: a class parameter captures `this.child`") {
@@ -57,11 +57,11 @@ class CtorParamSupersedesFieldSpec extends PortSuite:
       "package p;\npublic class B {\n  protected int child;\n  public B(int child) { this.child = child; }\n}\n" +
         "public class S extends B {\n  public S(int child) { super(child); }\n  public int get() { return child; }\n}\n"
     )
-    assertEmits(p, "(child$p: scala.Int) extends p.B(child$p)")
+    assertEmits(p, "(`child$p`: scala.Int) extends p.B(child$p)")
   }
 
   test("a field the constructor computes is a different member: the parameter is renamed, never merged") {
     val p = port("package p;\nclass U {\n  int x;\n  U(int x) { this.x = x * 2; }\n}\n")
-    assertEmits(p, "x$p: scala.Int")
+    assertEmits(p, "`x$p`: scala.Int")
     assertEmits(p, "this.x = x$p * 2")
   }

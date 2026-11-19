@@ -6,10 +6,10 @@ class BreakInCatchSpec extends PortSuite:
   private def emit(java: String): String = port(java).out
 
   /** the arm the emitter must interpose, spelled once. */
-  private val Guard = "case brkThru$: scala.util.boundary.Break[?] => throw brkThru$"
+  private val Guard = "case brkThru: scala.util.boundary.Break[?] => throw brkThru"
 
   /** the second arm, owed only where the catch can receive a `ControlThrowable` (a `Throwable` catch). */
-  private val SentinelGuard = "case brkThru$: scala.util.control.ControlThrowable => throw brkThru$"
+  private val SentinelGuard = "case brkThru: scala.util.control.ControlThrowable => throw brkThru"
 
   // ---- the jump crosses the catch ----
 

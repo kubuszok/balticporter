@@ -42,7 +42,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
 
   test("a captured parameter shadowed by the nested class's own member is renamed") {
     val out = emit(captured)
-    assert(clue(out).contains("def check(filter$local: demo.Filter)"))
+    assert(clue(out).contains("def check(`filter$local`: demo.Filter)"))
     // the MEMBER keeps java's name — it implements the interface and cannot move
     assert(out.contains("override def filter(a: java.lang.String)"))
   }
@@ -92,7 +92,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     )
-    assert(clue(out).contains("def go(tag$local: java.lang.String)"))
+    assert(clue(out).contains("def go(`tag$local`: java.lang.String)"))
     assert(out.contains("println(tag$local)"))
   }
 
@@ -121,7 +121,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
 
   test("a capture and an INHERITED FIELD of the same name — the capture moves") {
     val out = emit(ambiguous)
-    assert(clue(out).contains("def go(html$local: java.lang.String)"))
+    assert(clue(out).contains("def go(`html$local`: java.lang.String)"))
   }
 
   test("…and the reference inside the body keeps naming the INHERITED member, as java bound it") {
@@ -147,7 +147,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     )
-    assert(clue(out).contains("def go(tag$local: java.lang.String)"))
+    assert(clue(out).contains("def go(`tag$local`: java.lang.String)"))
   }
 
   test("the rename carries its OWN clash reason, so a reader can tell the two rules apart") {
@@ -391,7 +391,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     )
-    assert(clue(out).contains("def go(x$local: java.lang.String)"))
+    assert(clue(out).contains("def go(`x$local`: java.lang.String)"))
   }
 
   test("a resolution-root parent's FIELD also triggers the ambiguity rename") {
@@ -411,7 +411,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     )
-    assert(clue(out).contains("def go(engine$local: java.lang.String)"))
+    assert(clue(out).contains("def go(`engine$local`: java.lang.String)"))
   }
 
   test("rule (1) also works for resolution-root parents: a captured local is renamed") {
@@ -432,5 +432,5 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     )
-    assert(clue(out).contains("def go(filter$local: demo.Base)"))
+    assert(clue(out).contains("def go(`filter$local`: demo.Base)"))
   }
