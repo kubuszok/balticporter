@@ -248,9 +248,12 @@ private[dedicated] object BodySyntax:
   def optionInner(tpe: String): String =
     tpe.dropWhile(_ != '[').drop(1).stripSuffix("]")
 
-  /** An identifier or a dotted path of them: reading it twice evaluates nothing twice. */
+  /** An identifier, backticked or not, or a dotted path of them: reading it twice evaluates nothing twice. */
   def isSimplePath(expr: String): Boolean =
-    expr.nonEmpty && expr.split('.').forall(p => p.nonEmpty && (p.head.isLetter || p.head == '_' || p.head == '$') && p.forall(c => c.isLetterOrDigit || c == '_' || c == '$'))
+    expr.nonEmpty && expr.split('.').forall { seg =>
+      val p = if seg.length > 2 && seg.head == '`' && seg.last == '`' then seg.drop(1).dropRight(1) else seg
+      p.nonEmpty && (p.head.isLetter || p.head == '_' || p.head == '$') && p.forall(c => c.isLetterOrDigit || c == '_' || c == '$')
+    }
 
   val numericTypes: Set[String] = Set(
     "Int",

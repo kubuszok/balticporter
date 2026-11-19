@@ -76,4 +76,4 @@ private[dedicated] trait BodySwitch extends BodyScope:
         if !agree then refuse("switch-label-type")
         val v = freshLabel("s")
         val e = translateExpr(label)
-        if labelType.exists(comparesByIdentity) then s"case $v if $v eq ($e)" else s"case $v if $v == ($e)"
+        if labelType.exists(comparesByIdentity) then s"case $v @ _ if $v eq ($e)" else s"case $v @ _ if $v == ($e)"

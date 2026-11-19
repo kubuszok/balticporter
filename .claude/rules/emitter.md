@@ -267,9 +267,9 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   mints `$` names everywhere (`x$field`, `x$p`, `x$arr`, `brk$1`, `$lv1`, `that$rec`, `a0$`). A
   definition goes through `TirEmitter.escDef` (backticked; a use stays bare), a pattern binder
   through `patBinder` (`` `a$` @ (_: T) ``, since a backticked bare pattern is a stable identifier),
-  and a phase's raw template backticks its own temporaries. 81 -> 0 warnings over the engine suite's
-  compiled emissions. Not yet done: `frontend-ts`'s `freshLabel` names (ssg silences generated-code
-  warnings) and the legacy `ScalaPrinter`. Kind (a).
+  and a phase's raw template backticks its own temporaries; `frontend-ts`'s `freshLabel` answers a
+  backticked name (bound with `@ _` in a pattern). 81 -> 0 warnings over the engine suite's compiled
+  emissions; ssg graphs-commons' translated bodies 6 -> 0. Not done: the legacy `ScalaPrinter`. Kind (a).
 
 - A java `T...` the port DECLARES is emitted `T*` (hand-port parity: the reference spells every
   vararg repeated, and a consumer hand-added `addRoomTypes(RoomType*)` beside the `Array` one). Every

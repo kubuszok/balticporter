@@ -208,6 +208,6 @@ private[dedicated] trait BodyObjects extends BodyScope:
                 s"$$n.${snakeToCamel(key)} = ${snakeToCamel(key)}"
               case _ => "???"
           }
-          s"{ val $$n = new $scalaClass(); ${assignments.mkString("; ")}; $$n }"
+          s"{ val `$$n` = new $scalaClass(); ${assignments.mkString("; ")}; $$n }"
       case None =>
         s"new $scalaClass()"

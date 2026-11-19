@@ -49,9 +49,11 @@ abstract private[dedicated] class BodyScope(
   // The label name for the current loop's continue boundary
   protected var continueLabel = ""
 
+  /** a name no JS binding spells, backticked: scala 3.9 warns on a definition spelling `$` bare. A pattern binder takes it as `` `x$1` @ _ ``, since a backticked bare pattern is a stable identifier.
+    */
   protected def freshLabel(prefix: String): String =
     labelSeq += 1
-    s"$prefix$$$labelSeq"
+    s"`${prefix.stripPrefix("`").stripSuffix("`")}$$$labelSeq`"
 
   // Build lookup of class properties for `this.x` resolution
   protected val byName: Map[String, DefnodeClass] =

@@ -28,7 +28,7 @@ private[dedicated] trait BodyLoops extends BodyScope:
       continueLabel = cntLbl
     if isDoWhile then
       if hasContinue then
-        sb.append(s"${loopIndent}var $$doFirst = true\n")
+        sb.append(s"${loopIndent}var `$$doFirst` = true\n")
         sb.append(
           s"${loopIndent}while ($$doFirst || $cond) scala.util.boundary { ($continueLabel: scala.util.boundary.Label[scala.Unit]) ?=>\n"
         )
@@ -36,7 +36,7 @@ private[dedicated] trait BodyLoops extends BodyScope:
         translateStatementBody(bodyNode, loopIndent + "  ", false)
         sb.append(s"$loopIndent}\n")
       else
-        sb.append(s"${loopIndent}var $$doFirst = true\n")
+        sb.append(s"${loopIndent}var `$$doFirst` = true\n")
         sb.append(s"${loopIndent}while ($$doFirst || $cond) {\n")
         sb.append(s"$loopIndent  $$doFirst = false\n")
         translateStatementBody(bodyNode, loopIndent + "  ", false)

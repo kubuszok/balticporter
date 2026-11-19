@@ -809,7 +809,7 @@ private[dedicated] class BodyContext(
           val target   = translateExpr(children.head)
           val cascades = children.tail.map(translateExpr)
           if cascades.isEmpty then target
-          else s"{ val $$t = $target; ${cascades.map(c => s"$$t.$c").mkString("; ")}; $$t }"
+          else s"{ val `$$t` = $target; ${cascades.map(c => s"$$t.$c").mkString("; ")}; $$t }"
 
       case "NamedExpression" =>
         val label = node.children.find(_.kind.contains("Label")).flatMap(_.children.find(_.kind.contains("Identifier")).flatMap(_.text)).orElse(node.children.headOption.flatMap(_.text)).getOrElse("_")
