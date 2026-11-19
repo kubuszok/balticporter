@@ -1212,12 +1212,12 @@ private[dedicated] class BodyContext(
             case "pop" | "shift" =>
               val at = if method == "pop" then "b$.length - 1" else "0"
               // as a statement nothing reads the answer, so an empty array just leaves nothing to remove
-              if statementRoot eq node then s"{ val b$$ = $objExpr; if (b$$.nonEmpty) b$$.remove(${at}) }"
-              else if exprType(obj).flatMap(extractElementType).exists(absentIsNull) then s"{ val b$$ = $objExpr; if (b$$.isEmpty) null else b$$.remove(${at}) }"
+              if statementRoot eq node then s"{ val `b$$` = $objExpr; if (b$$.nonEmpty) b$$.remove(${at}) }"
+              else if exprType(obj).flatMap(extractElementType).exists(absentIsNull) then s"{ val `b$$` = $objExpr; if (b$$.isEmpty) null else b$$.remove(${at}) }"
               else
                 // an element to remove is a first one there
                 if !indexProven(node, obj, RastNode("NumericLiteral", 0, node.pos, value = Some(RastValue.Num(0)))) then refuse("read-past-end")
-                s"{ val b$$ = $objExpr; b$$.remove(${at}) }"
+                s"{ val `b$$` = $objExpr; b$$.remove(${at}) }"
             case "unshift" =>
               s"$objExpr.prepend(${scalaArgs.mkString(", ")})"
             case "indexOf" =>

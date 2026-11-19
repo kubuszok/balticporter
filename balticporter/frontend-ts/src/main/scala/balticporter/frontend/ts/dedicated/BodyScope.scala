@@ -372,13 +372,13 @@ abstract private[dedicated] class BodyScope(
     // a present "", 0, NaN or false is as falsy as an absent value
     if isOptionLike(tpe) && (optionInner(tpe) == "String" || optionInner(tpe) == "Boolean" || numericTypes(optionInner(tpe))) then
       if isSimplePath(operand) then s"($operand.isDefined && ${truthinessTest(optionInner(tpe), s"$operand.get")})"
-      else s"{ val o$$ = $operand; o$$.isDefined && ${truthinessTest(optionInner(tpe), "o$.get")} }"
+      else s"{ val `o$$` = $operand; o$$.isDefined && ${truthinessTest(optionInner(tpe), "o$.get")} }"
     else if isOptionLike(tpe) then s"$p.isDefined"
     else if tpe == "String" then s"$p.nonEmpty"
     else if tpe == "Double" || tpe == "Float" then
       // NaN is falsy in JS; the operand is read once.
       if isSimplePath(operand) then s"($operand != 0 && !$operand.isNaN)"
-      else s"{ val n$$ = $operand; n$$ != 0 && !n$$.isNaN }"
+      else s"{ val `n$$` = $operand; n$$ != 0 && !n$$.isNaN }"
     else if numericTypes.contains(tpe) then s"$p != 0"
     else if tpe == "Boolean" then operand
     else if tpe == "Null" then "false"
