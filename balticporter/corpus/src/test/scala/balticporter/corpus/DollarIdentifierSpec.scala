@@ -6,8 +6,8 @@ import balticporter.tir.Pipeline
 
 import java.nio.file.{ Files, Path }
 
-/** Scala 3.9 warns on a DEFINITION that spells `$` bare, and the emitter mints `$`-bearing names (renames, temporaries, labels, record and vararg binders). Every construct that mints one is
-  * emitted here, COMPILED under `-Werror`, and RUN: the answer is java's own, so a binder spelled `` `n` @ (_: T) `` binds what `n: T` bound.
+/** Scala 3.9 warns on a DEFINITION that spells `$` bare, and the emitter mints `$`-bearing names (renames, temporaries, labels, record and vararg binders). Every construct that mints one is emitted
+  * here, COMPILED under `-Werror`, and RUN: the answer is java's own, so a binder spelled `` `n` @ (_: T) `` binds what `n: T` bound.
   */
 class DollarIdentifierSpec extends munit.FunSuite:
 
@@ -79,7 +79,10 @@ class DollarIdentifierSpec extends munit.FunSuite:
     val stdlib = List(classOf[scala.Option[?]], classOf[scala.deriving.Mirror]).map(c => Path.of(c.getProtectionDomain.getCodeSource.getLocation.toURI).toString).distinct
     val args   = "-Werror" :: "-classpath" :: stdlib.mkString(java.io.File.pathSeparator) :: "-d" :: out.toString :: files
     val rep    = dotty.tools.dotc.Main.process(args.toArray)
-    assert(!rep.hasErrors, s"the emission does not compile warning-free:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${emitted.mkString("\n")}")
+    assert(
+      !rep.hasErrors,
+      s"the emission does not compile warning-free:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${emitted.mkString("\n")}"
+    )
     out
 
   test("a pattern binder holding `$` is bound with `@`, a definition is backticked, a plain name is untouched") {
