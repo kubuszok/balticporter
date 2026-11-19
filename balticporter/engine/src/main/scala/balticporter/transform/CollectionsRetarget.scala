@@ -934,8 +934,8 @@ private[transform] trait CollectionsRetarget:
     val iterExpr = if isValues then
       s"{ val $mapName = "; val part2 = s"""; val $ksName = $into["""; val part3 = s"""](); val $vsName = $into[""";
       val part4                       =
-        s"""](); $mapName.foreachEntry((`bp$$k`:"""; val part5 = s""", `bp$$v`: """;
-        val part6                                              =
+        s"""](); $mapName.foreachEntry((`bp$$k`: """; val part5 = s""", `bp$$v`: """;
+        val part6                                               =
           s""") => { $ksName.add(bp$$k); $vsName.add(bp$$v) }); balticporter.runtime.JavaIterator.removing(() => $vsName.size, ($riName: scala.Int) => $vsName.apply($riName), ($riName: scala.Int) => { $mapName.remove($ksName.apply($riName)); $ksName.removeIndex($riName); $vsName.removeIndex($riName); () }) }"""
       val keySym = headSym(keyTpe).getOrElse(SymId.None)
       val valSym = headSym(valTpe).getOrElse(SymId.None)
@@ -944,7 +944,7 @@ private[transform] trait CollectionsRetarget:
           s"{ val $mapName = ",
           s"; val $ksName = $into[",
           s"](); val $vsName = $into[",
-          s"](); $mapName.foreachEntry((`bp$$k`:",
+          s"](); $mapName.foreachEntry((`bp$$k`: ",
           s", `bp$$v`: ",
           s") => { $ksName.add(bp$$k); $vsName.add(bp$$v) }); balticporter.runtime.JavaIterator.removing(() => $vsName.size, ($riName: scala.Int) => $vsName.apply($riName), ($riName: scala.Int) => { $mapName.remove($ksName.apply($riName)); $ksName.removeIndex($riName); $vsName.removeIndex($riName); () }) }"
         ),

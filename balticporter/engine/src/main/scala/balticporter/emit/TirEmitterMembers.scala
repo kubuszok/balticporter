@@ -495,7 +495,7 @@ private[emit] trait TirEmitterMembers:
       if isInitBlock(d) then d.rhs.map(r => s"${declNotes(d.symbol, i)}${ind(i)}locally ${term(r, i)}").getOrElse("")
       else defDef(d, i)
     case v: Tree.ValDef  => valDef(v, i)
-    case t: Tree.TypeDef => s"${ind(i)}${if sym(t.symbol).flags.isOpaque then "opaque " else ""}type ${escDef(sym(t.symbol).name)} =${tpe(t.rhs.tpe)}"
+    case t: Tree.TypeDef => s"${ind(i)}${if sym(t.symbol).flags.isOpaque then "opaque " else ""}type ${escDef(sym(t.symbol).name)} = ${tpe(t.rhs.tpe)}"
     case t: Term         => ind(i) + term(t, i)
 
   /** ctor type-parameter substitution (Scala secondary ctors can't be generic) → their bounds. */

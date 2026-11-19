@@ -6,8 +6,8 @@ import balticporter.tir.Pipeline
 
 import java.nio.file.{ Files, Path }
 
-/** `boxed == (int) other` is NUMERIC equality (JLS 15.21.1): the cast makes one operand primitive. Read off the operand's declared type the comparison was emitted `eq`, which compared two
-  * references (right only inside the `Integer` cache) and which scala 3.9 refuses to compile. Compiled under `-Werror` and run outside the cache, against javac's answer.
+/** `boxed == (int) other` is NUMERIC equality (JLS 15.21.1): the cast makes one operand primitive. Read off the operand's declared type the comparison was emitted `eq`, which compared two references
+  * (right only inside the `Integer` cache) and which scala 3.9 refuses to compile. Compiled under `-Werror` and run outside the cache, against javac's answer.
   */
 class BoxedCastEqualitySpec extends munit.FunSuite:
 
@@ -38,7 +38,10 @@ class BoxedCastEqualitySpec extends munit.FunSuite:
     val stdlib = List(classOf[scala.Option[?]], classOf[scala.deriving.Mirror]).map(c => Path.of(c.getProtectionDomain.getCodeSource.getLocation.toURI).toString).distinct
     val args   = "-Werror" :: "-classpath" :: stdlib.mkString(java.io.File.pathSeparator) :: "-d" :: out.toString :: files
     val rep    = dotty.tools.dotc.Main.process(args.toArray)
-    assert(!rep.hasErrors, s"the emission does not compile:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${emitted.mkString("\n")}")
+    assert(
+      !rep.hasErrors,
+      s"the emission does not compile:\n${rep.allErrors.map(_.msg.message).mkString("\n")}\n${emitted.mkString("\n")}"
+    )
     out
 
   test("a cast to a primitive on one side keeps java's numeric comparison; two boxes stay a reference test") {

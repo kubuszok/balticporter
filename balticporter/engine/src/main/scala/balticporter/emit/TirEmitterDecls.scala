@@ -506,7 +506,7 @@ private[emit] trait TirEmitterDecls:
     // it is here rather than in `runtime/` is that emitted code then carries no dependency on the
     // engine's runtime artifact for a purely local encoding. A class that needs
     // one may have no companion at all, so the companion is emitted for it.
-    val markerDecl = plan.marker.toList.map(n => s"${ind(i + 1)}protected final class ${esc(n)}")
+    val markerDecl = plan.marker.toList.map(n => s"${ind(i + 1)}protected final class ${escDef(n)}")
     // …and the record's EXTRACTOR, which is the one member of JS-C43's synthesis with no home in
     // the class. A record with no statics has no companion at all, so it is emitted for it — the
     // marker declaration above is the same shape and the same reason.
