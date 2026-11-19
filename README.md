@@ -98,16 +98,18 @@ holds what the run decided, what it refused and what it could not resolve. Wire 
 
 ## Working on a port with Claude Code
 
-The repository is also a [Claude Code plugin marketplace](.claude-plugin/marketplace.json). The
-`balticporter` plugin gives an agent working in a *consuming* repository the procedures it needs
-(how generation is wired, tracing a generated defect back to the rule that produced it, bumping the
-pinned engine version, the local gate before a push) and guard hooks for the mistakes that cost the
-most time. Enable it in the consumer's `.claude/settings.json`:
+The `baltic-porter` plugin, published in the `kubuszok` marketplace
+([kubuszok/agent-skills](https://github.com/kubuszok/agent-skills)), gives an agent working in a
+*consuming* repository the procedures it needs (how generation is wired, tracing a generated defect
+back to the rule that produced it, bumping the pinned engine version, the local gate before a push)
+and guard hooks for the mistakes that cost the most time. Install it with
+`/plugin marketplace add kubuszok/agent-skills` and `/plugin install baltic-porter@kubuszok`, or
+enable it for everyone in the consumer's `.claude/settings.json`:
 
 ```json
 {
-  "extraKnownMarketplaces": { "balticporter": { "source": { "source": "github", "repo": "kubuszok/balticporter" } } },
-  "enabledPlugins": { "balticporter@balticporter": true }
+  "extraKnownMarketplaces": { "kubuszok": { "source": { "source": "github", "repo": "kubuszok/agent-skills" } } },
+  "enabledPlugins": { "baltic-porter@kubuszok": true }
 }
 ```
 

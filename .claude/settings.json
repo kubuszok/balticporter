@@ -4,7 +4,8 @@
     "kubuszok": { "source": { "source": "github", "repo": "kubuszok/agent-skills" } }
   },
   "enabledPlugins": {
-    "sbt-kubuszok@kubuszok": true
+    "sbt-kubuszok@kubuszok": true,
+    "baltic-porter@kubuszok": true
   },
   "permissions": {
     "allow": [
@@ -27,16 +28,6 @@
     ]
   },
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [{ "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/plugin/hooks/guard.py\"", "timeout": 15 }]
-      },
-      {
-        "matcher": "Edit|Write|NotebookEdit",
-        "hooks": [{ "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/plugin/hooks/guard.py\"", "timeout": 15 }]
-      }
-    ],
     "SessionStart": [
       {
         "matcher": "*",

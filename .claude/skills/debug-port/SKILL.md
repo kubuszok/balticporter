@@ -6,7 +6,8 @@ description: Instrument a Baltic Porter run -- the debug flags through `just deb
 # Debugging a porting run
 
 Use this when the question is **"which code produced this?"** rather than "what does this finding
-mean" (that is **`read-port-issues`**) or "what should it do instead" (**`customize-port`**).
+mean" (that is **`baltic-porter-read-port-issues`**) or "what should it do instead"
+(**`baltic-porter-customize-port`**), both in the `baltic-porter` plugin.
 
 **The governing rule is `CLAUDE.md` §4.6: a kill switch beats another condition.** When a
 synthesized construct is wrong, establish which code produces it before touching the gate you

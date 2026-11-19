@@ -167,7 +167,7 @@ a discovery goes into whichever fits, in the same commit that learned it:
 |---|---|
 | this file | a governing rule or constraint for all porting work (core, ≤ 400 lines) |
 | `.claude/rules/<area>.md` | a MEASURED limit or dead end, as ONE RULE LINE with its trigger: the file's `paths:` loads it exactly when those files are edited (`phases.md` for transforms, `emitter.md`, `collections.md`, `measurement.md`, `dependents.md`). The number goes in the commit subject (`before->after`) |
-| a skill | a PROCEDURE, triggered by its description — a task shape an agent will meet again (see the index below). One a CONSUMER repository needs lives in `plugin/skills/` (shipped as the Claude Code plugin); an engine-development one in `.claude/skills/` |
+| a skill | a PROCEDURE, triggered by its description — a task shape an agent will meet again (see the index below). One a CONSUMER repository needs goes to the `baltic-porter` plugin in kubuszok/agent-skills (`plugins/baltic-porter/skills/baltic-porter-<topic>/`); an engine-development one in `.claude/skills/` |
 | `docs/contributing/architecture/` | a DECISION about what the engine is or how it is built |
 | `docs/user-guide/` | how a USER configures, runs, reads and debugs a port |
 | the CONSUMER's own tracker (sge, ssg, lls: re-scale issues) | the STATE of a port — residues, remaining work. This repository tracks no port's progress |
@@ -181,10 +181,12 @@ an opinion.
 
 ### 3.6.1 Skills — each fires on the task shape in its description
 
-Shipped to consumers in the plugin (`plugin/skills/`, with the blocking guard hook): `sbt2-client`
-(before ANY sbt invocation), `generated-code`, `consumer-ci` (before pushing to a consumer branch),
-`root-cause-port` (before any workaround), `cross-platform-port`, `ci-caching`, `configure-port`,
-`customize-port`, `read-port-issues`. Engine development (`.claude/skills/`): `debug-port`.
+Shipped to consumers in the `baltic-porter` plugin of the `kubuszok` marketplace (kubuszok/agent-skills,
+with the blocking guard hook; this repository enables it too), each named `baltic-porter-<topic>`:
+`sbt2-client` (before ANY sbt invocation), `generated-code`, `consumer-ci` (before pushing to a
+consumer branch), `root-cause-port` (before any workaround), `cross-platform-port`, `ci-caching`,
+`configure-port`, `customize-port`, `read-port-issues`. A consumer-facing procedure, or a guard rule,
+changes THERE. Engine development (`.claude/skills/`): `debug-port`.
 
 ## 3.7 A RESEARCH FILE IS NOT A DELIVERABLE
 
